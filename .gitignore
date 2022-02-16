@@ -1,0 +1,17 @@
+local.properties
+
+build-cache
+.idea
+.attach_pid*
+.gradle
+*.iml
+/.idea
+/.idea/**
+.DS_Store
+build/
+#Python
+__pycache__
+*.py[cod]
+integration-test-env/
+
+**/google-services.json

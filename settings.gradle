@@ -1,0 +1,26 @@
+include ":nfc:core", ":nfc:external", ':nfc:external-acs'
+
+// automatically set jacoco report paths in folders with a build file, excluding root
+def findJacocoReports(parentProject, reports) { 
+    parentProject.children.each { project ->
+        if(new File(project.projectDir, 'build.gradle').exists()) {
+                boolean empty = reports.isEmpty();
+		if(!reports.isEmpty()) {
+                    reports += ","
+		}
+		reports += project.projectDir.getAbsolutePath() + "/build/jacoco/jacoco.xml"
+        }
+        findJacocoReports(project, reports)
+
+    }
+    return reports;
+}
+
+gradle.ext.xmlReportPaths = findJacocoReports(rootProject, "")
+
+buildCache {
+    local {
+        directory = new File(rootDir, 'build-cache')
+        removeUnusedEntriesAfterDays = 1
+    }
+}

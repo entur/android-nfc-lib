@@ -1,0 +1,316 @@
+buildscript {
+   ext.repos = {
+        google()
+        jcenter()
+    }
+
+    repositories repos
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.1'
+    }
+}
+
+plugins {
+    id 'com.diffplug.spotless' version '6.2.0' apply false
+    id "com.github.spotbugs" version '5.0.5' apply false
+    id 'org.owasp.dependencycheck' version '6.5.3' apply false
+    id 'com.github.ben-manes.versions' version '0.42.0' apply false
+    id('io.github.gradle-nexus.publish-plugin') version '1.1.0'
+}
+
+def buildProjects() {
+    subprojects.findAll { new File(it.projectDir, 'build.gradle').file }
+}
+
+def androidProjects() {
+    buildProjects().findAll { !it.projectDir.path.substring(rootProject.projectDir.path.length()).contains('utilities') }
+}
+
+def appProjects() {
+    androidProjects().findAll { it.name.endsWith("app")}
+}
+
+def libraryProjects() {
+    androidProjects().findAll { !appProjects().contains(it)}
+}
+
+def utilityProjects() {
+    buildProjects().findAll { !androidProjects().contains(it) }
+}
+
+allprojects {
+    // skip checking test configurations (like lint) or test libraries for vulnerabilities
+    apply plugin: 'org.owasp.dependencycheck'
+
+    configurations {
+        // add more on demand
+        androidTestImplementation
+        api
+        implementation
+        testImplementation
+        annotationProcessor
+    }
+
+    buildscript {
+        repositories repos
+    }
+    repositories repos
+
+    configurations.all {
+        // Check for updates every build
+        // A module with a *-SNAPSHOT version coming from a Maven repository will be considered changing by default.
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+        resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+    }
+
+    dependencyCheck {
+        failOnError = false // let's ignore errors to make builds more stable
+        analyzedTypes = ['jar'] // the default artifact types that will be analyzed.
+        // OWASP Dependency Check plugin for Jenkins needs an XML report, but humans may also need an HTML one
+        format = 'ALL'
+        // Specifies if the build should be failed if a CVSS score equal to or above a specified level is identified.
+        failBuildOnCVSS = 7
+        // specify a list of known issues which contain false-positives
+        suppressionFiles = ["$rootDir/dependencycheck-root-suppression.xml"]
+    }
+}
+
+ext {
+    // note: see abt alignment rule
+    androidxAppcompatVersion = '1.4.1'
+
+    // note: androidx test lower down
+    desugarVersion = '1.1.5'
+
+    // test
+    unitVersion = '4.13.2'
+
+    androidxTestRunnerVersion = '1.4.0'
+    androidxTestExtJunitVersion = '1.1.3'
+    googleTruthVersion = '1.1.3'
+
+    mockitoVersion = '4.3.1'
+    byteBuddyVersion = '1.12.7'
+}
+
+ext.commonDependencies = {
+
+    testImplementation "junit:junit:${unitVersion}"
+    testImplementation "androidx.test:runner:${androidxTestRunnerVersion}"
+    testImplementation "androidx.test:core:${androidxTestRunnerVersion}"
+    testImplementation "androidx.test.ext:junit:${androidxTestExtJunitVersion}"
+
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${mockitoVersion}"
+    testImplementation "net.bytebuddy:byte-buddy-android:${byteBuddyVersion}"
+
+    testImplementation "com.google.truth:truth:${googleTruthVersion}"
+
+    androidTestImplementation "junit:junit:${unitVersion}"
+    androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
+}
+
+configure(buildProjects()) {
+
+    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'com.github.ben-manes.versions'
+    apply plugin: 'com.github.spotbugs'
+
+    gradle.projectsEvaluated {
+        // do not scan testing tools and so on, see https://medium.com/@appmattus/android-security-scanning-your-app-for-known-vulnerabilities-421384603fc5
+        // note: must be set after project is evaluated, as Android creates configurations based on the build types
+        dependencyCheck {
+            scanConfigurations = configurations.findAll {
+                (!it.name.startsWithAny('androidTest', 'test', 'debug', 'lint', 'kapt') && !it.name.contains("AndroidTest") && !it.name.contains("Test") && !it.name.contains("AnnotationProcessor"))
+            }.collect {
+                it.name
+            }
+        }
+
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:deprecation"
+        }
+    }
+
+    spotbugs {
+        ignoreFailures = false
+        showStackTraces = true
+        showProgress = true
+        effort = 'max'
+        reportLevel = 'high'
+        maxHeapSize = '1g'
+        reportsDir = file("$buildDir/spotbugs")
+        excludeFilter = rootProject.file("spotbugs-exclude.xml")
+    }
+
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+        reports {
+            xml.enabled = false
+            html.enabled = true
+        }
+    }
+}
+
+
+// build config
+configure(libraryProjects()) {
+    apply plugin: 'com.android.library'
+
+    android {
+        compileSdkVersion 31
+        testOptions.unitTests.includeAndroidResources = true
+
+        defaultConfig {
+            // set minSdkVersion per subproject
+            targetSdkVersion 31
+            // versions are copied here from the properties to improve build time. See the version.gradle script.
+            versionCode 2
+            versionName project.findProperty('version')
+            testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        }
+
+        buildTypes {
+            release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+                crunchPngs false
+            }
+
+            debug {
+                debuggable true
+            }
+        }
+
+        compileOptions {
+            // Sets Java compatibility to Java 8
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+
+        lintOptions {
+            // disable lint in projects
+            // add lint in app, including dependencies
+            tasks.lint.enabled = false
+        }
+
+        testOptions {
+            unitTests {
+                all {
+                    maxHeapSize = "4g"
+                }
+                returnDefaultValues = true
+            }
+        }
+
+        buildFeatures {
+            buildConfig = false
+        }
+
+        packagingOptions {
+            exclude 'META-INF/INDEX.LIST'
+            exclude 'META-INF/DEPENDENCIES'
+            exclude 'META-INF/LICENSE'
+            exclude 'META-INF/LICENSE.md'
+            exclude 'META-INF/LICENSE.txt'
+            exclude 'META-INF/license.txt'
+            exclude 'META-INF/LICENSE-notice.md'
+            exclude 'META-INF/NOTICE'
+            exclude 'META-INF/NOTICE.txt'
+            exclude 'META-INF/notice.txt'
+            exclude 'META-INF/ASL2.0'
+        }
+    }
+
+    dependencies commonDependencies
+}
+
+
+// quality control + release
+configure(libraryProjects()) {
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    task sourceJar(type: Jar) {
+        archiveClassifier.set('sources')
+        into ("", { from android.sourceSets.main.java.srcDirs} )
+        into ("", { from rootProject.file("LICENSE.txt")})
+    }
+
+    task javadoc(type: Javadoc) {
+        options.encoding = 'UTF-8'
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        title = "${project.name} ${project.version} API"
+        failOnError = false
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        archiveClassifier.set('javadoc')
+        from javadoc.destinationDir
+    }
+
+    afterEvaluate {
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    from components.release
+
+                    groupId 'no.entur.android.nfc'
+                    artifactId "$project.ext.artifactId"
+                    version = android.defaultConfig.versionName
+
+                    artifact sourceJar
+                    artifact javadocJar
+
+                    pom {
+                        name = "$project.ext.artifactId"
+                        description = 'NFC libraries for Android'
+                        url = 'https://github.com/entur/android-nfc-lib'
+                        packaging = 'aar'
+                        inceptionYear = '2022'
+                        licenses {
+                            license {
+                                name = 'European Union Public Licence v1.2'
+                                url = 'https://www.eupl.eu/'
+                                distribution = 'repo'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id = "skjolber"
+                                name = "Thomas Skjølberg"
+                                email = "thomas.rorvik.skjolberg@entur.org"
+                            }
+                        }
+                        scm {
+                            url = 'https://github.com/entur/android-nfc-lib'
+                            connection = 'git@github.com:entur/android-nfc-lib.git'
+                        }
+                    }
+                }
+            }
+        }
+
+        signing {
+            useGpgCmd()
+
+            // set
+            // signing.gnupg.keyName=xxx
+            // signing.gnupg.passphrase=yyy
+
+            sign publishing.publications.release
+        }
+    }
+
+}
+
+group = 'no.entur.android.nfc'
+
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
+}
+
+

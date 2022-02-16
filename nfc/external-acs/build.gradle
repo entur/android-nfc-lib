@@ -1,0 +1,22 @@
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+    }
+
+}
+
+dependencies {
+    implementation files('libs/acssmc-1.1.5.jar')
+    implementation files('libs/acsbt-1.0.1.ext.jar')
+
+    api project(":nfc:core")
+    api project(":nfc:external")
+
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
+}
+
+

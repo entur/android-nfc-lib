@@ -1,0 +1,192 @@
+// Version modifications for android + java multi-module gradle builds.
+//
+// Increments 'version' and 'versionCode' in gradle.properties in root directory.
+// then copies them to the root build configuration (assumes common android configuration in the root)
+//
+// Example use:
+// ./gradlew -b version.gradle toReleaseVersion
+// ./gradlew -b version.gradle nextPatchSnapshotVersion
+//
+// See also https://stackoverflow.com/a/58899378/459579
+
+class Version {
+
+    private int major
+    private int minor
+    private int patch
+    private int code
+
+    Version(int code, String version) {
+        this.code = code
+
+        def (major, minor, patch) = version.tokenize('.')
+        this.major = major.toInteger()
+        this.minor = minor.toInteger()
+        this.patch = patch.toInteger()
+    }
+
+    @SuppressWarnings("unused")
+    void bumpMajor() {
+        major += 1
+        minor = 0
+        patch = 0
+
+        code += 1
+    }
+
+    @SuppressWarnings("unused")
+    void bumpMinor() {
+        minor += 1
+        patch = 0
+
+        code += 1
+    }
+
+    @SuppressWarnings("unused")
+    void bumpPatch() {
+        patch += 1
+        code += 1
+    }
+
+    String getName() { "$major.$minor.$patch" }
+
+    int getCode() { code }
+}
+
+def burnAndroidVersionName(String version) {
+    // copy version and versionCode into the build files
+    File buildFile = new File('build.gradle')
+
+    String build = buildFile.getText('UTF-8')
+
+    // versionCode 1
+    // versionName "1.0.0"
+    // versionName '1.0.0'
+    // versionName "1.0.0-SNAPSHOT"
+
+    String versionNameBuild = build.replaceAll('versionName [\'\\."A-Z0-9-]+', "versionName \"" + version + "\"")
+
+    if(versionNameBuild.equals(build)) throw new RuntimeException("Unable to copy version name into android configuration")
+
+    buildFile.write(versionNameBuild, 'UTF-8')
+}
+
+def burnAndroidVersions(String versionCode, String version) {
+    // copy version and versionCode into the build files
+    File buildFile = new File('build.gradle')
+
+    String build = buildFile.getText('UTF-8')
+
+    // copy values into the android build, to improve build performance
+    // versionCode 1
+    // versionName "1.0.0"
+    // versionName '1.0.0'
+    // versionName "1.0.0-SNAPSHOT"
+    String versionCodeBuild = build.replaceAll("versionCode [0-9]+", "versionCode " + versionCode);
+
+    if(versionCodeBuild.equals(build)) throw new RuntimeException("Unable to copy version code into android configuration")
+
+    String versionNameBuild = versionCodeBuild.replaceAll('versionName [\'\\."A-Z0-9-]+', "versionName \"" + version + "\"")
+
+    if(versionNameBuild.equals(versionCodeBuild)) throw new RuntimeException("Unable to copy version name into android configuration")
+
+    buildFile.write(versionNameBuild, 'UTF-8')
+}
+
+task toReleaseVersion {
+    doFirst {
+        def props = new Properties()
+        def propertyFile = file("gradle.properties")
+        propertyFile.withInputStream { props.load(it) }
+        
+        String value = props.getProperty("version")
+
+        if(value.endsWith("-SNAPSHOT")) {
+            def versionWithoutSnapshot = value.substring(0, value.length() - 9)
+            props.setProperty("version", versionWithoutSnapshot)
+            props.store(propertyFile.newWriter(), null)
+
+            burnAndroidVersionName(versionWithoutSnapshot)
+
+            println "Now at version $versionWithoutSnapshot"
+        } else {
+            println "Already at version $value"
+        }
+    }
+}
+
+task toSnapshotVersion {
+    doFirst {
+        def props = new Properties()
+        def propertyFile = file("gradle.properties")
+        propertyFile.withInputStream { props.load(it) }
+        
+        String value = props.getProperty("version")
+
+        if(value.endsWith("-SNAPSHOT")) {
+            println "Already at version $value"
+        } else {
+            def versionWithSnapshot = value + "-SNAPSHOT";
+            props.setProperty("version", versionWithSnapshot)
+            props.store(propertyFile.newWriter(), null)
+
+            burnAndroidVersionName(versionWithSnapshot)
+
+            println "Now at version $versionWithSnapshot"
+        }
+    }
+}
+
+// handles both snapshot and release versions
+tasks.addRule("Pattern: bump<TYPE>Version") { String taskName ->
+    if (taskName.matches("bump(Major|Minor|Patch)Version")) {
+        task(taskName) {
+            doLast {
+
+                def props = new Properties()
+                def propertyFile = file("gradle.properties")
+                propertyFile.withInputStream { props.load(it) }
+                
+                String value = props.getProperty("version")
+
+                String type = (taskName - 'bump' - 'Version')
+
+                String oldVersionName = props.getProperty("version")
+                int oldVersionCode = Integer.parseInt(props.getProperty("versionCode"))
+
+                if(oldVersionName.endsWith("-SNAPSHOT")) {
+                    def versionWithoutSnapshot = oldVersionName.substring(0, oldVersionName.length() - 9)
+
+                    version = new Version(oldVersionCode, versionWithoutSnapshot)
+                } else {
+                    version = new Version(oldVersionCode, oldVersionName)
+                }
+                version."bump$type"()
+
+                String newVersionName = version.getName()
+                String newVersionCode = version.getCode()
+
+                if(!oldVersionName.endsWith("-SNAPSHOT")) {
+                    props.setProperty("version", version.getName())
+                } else {
+                    props.setProperty("version", version.getName() + "-SNAPSHOT")
+                }
+                props.setProperty("versionCode", Integer.toString(version.getCode()))
+                props.store(propertyFile.newWriter(), null)
+
+				burnAndroidVersions(props.getProperty("versionCode"), props.getProperty("version"))
+
+                println "Bumped ${type.toLowerCase()} version, now at ${props.getProperty('version')} / $version.code"
+            }
+        }
+    }
+}
+
+// handles both snapshot and release versions
+tasks.addRule("Pattern: next<TYPE>SnapshotVersion") { String taskName ->
+    if (taskName.matches("next(Major|Minor|Patch)SnapshotVersion")) {
+        String type = (taskName - 'next' - 'SnapshotVersion')
+
+        task(taskName).dependsOn "bump${type}Version", toSnapshotVersion
+    }
+}

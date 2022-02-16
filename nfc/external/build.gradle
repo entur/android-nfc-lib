@@ -1,0 +1,14 @@
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+
+}
+
+dependencies {
+    api project(":nfc:core")
+
+    implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
+}
+
+
