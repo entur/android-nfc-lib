@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.acs.tag;
+package no.entur.android.nfc.external.tag;
 
 import android.content.Intent;
 import android.nfc.NfcAdapter;
@@ -30,6 +30,9 @@ public class MifareDesfireTagFactory extends TagFactory {
 	 */
 	public static final String EXTRA_HIST_BYTES = "histbytes";
 
+	protected static final String EXTRA_SAK = "sak";
+	protected static final String EXTRA_ATQA = "atqa";
+
 	protected static final byte[] EXTRA_ATQA_VALUE = new byte[] { 0x44, 0x03 };
 	protected static final short EXTRA_SAK_VALUE = 0x20;
 
@@ -50,8 +53,8 @@ public class MifareDesfireTagFactory extends TagFactory {
 		List<Integer> tech = new ArrayList<Integer>();
 
 		Bundle nfcA = new Bundle();
-		nfcA.putShort(MifareUltralightTagFactory.EXTRA_SAK, EXTRA_SAK_VALUE);
-		nfcA.putByteArray(MifareUltralightTagFactory.EXTRA_ATQA, EXTRA_ATQA_VALUE);
+		nfcA.putShort(EXTRA_SAK, EXTRA_SAK_VALUE);
+		nfcA.putByteArray(EXTRA_ATQA, EXTRA_ATQA_VALUE);
 		bundles.add(nfcA);
 		tech.add(TagTechnology.NFC_A);
 

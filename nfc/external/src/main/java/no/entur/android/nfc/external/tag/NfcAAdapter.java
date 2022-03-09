@@ -1,15 +1,12 @@
-package no.entur.android.nfc.external.acs.tag;
+package no.entur.android.nfc.external.tag;
 
 import android.os.RemoteException;
 import android.util.Log;
 
 import java.io.IOException;
 
-import com.acs.smartcard.ReaderException;
-
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
-import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.NfcA;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
@@ -18,11 +15,12 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 
 	protected static final String TAG = NfcAAdapter.class.getName();
 
-	private ACSIsoDepWrapper wrapper;
+	private AbstractReaderIsoDepWrapper wrapper;
 	private boolean print;
 
-	public NfcAAdapter(int slotNumber, ACSIsoDepWrapper wrapper, boolean print) {
+	public NfcAAdapter(int slotNumber, AbstractReaderIsoDepWrapper wrapper, boolean print) {
 		super(TagTechnology.NFC_A, slotNumber);
+		this.wrapper = wrapper;
 		this.print = print;
 	}
 
@@ -51,7 +49,7 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 			}
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-		} catch (ReaderException e) {
+		} catch (Exception e) {
 			Log.d(TAG, "Problem sending command", e);
 
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
@@ -59,11 +57,11 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 
 	}
 
-	public byte[] transmitRaw(byte[] adpu) throws ReaderException {
+	public byte[] transmitRaw(byte[] adpu) throws Exception {
 		return DESFireAdapter.responseADPUToRaw(rawToRequestADPU(adpu));
 	}
 
-	public byte[] rawToRequestADPU(byte[] commandMessage) throws ReaderException {
+	public byte[] rawToRequestADPU(byte[] commandMessage) throws Exception {
 		return transceive(DESFireAdapter.wrapMessage(commandMessage[0], commandMessage, 1, commandMessage.length - 1));
 	}
 
@@ -74,7 +72,7 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 	 * @throws IOException
 	 * @return the PICC response
 	 */
-	public byte[] transceive(byte[] command) throws ReaderException {
+	public byte[] transceive(byte[] command) throws Exception {
 
 		if (print) {
 			Log.d(TAG, "===> " + getHexString(command, true) + " (" + command.length + ")");

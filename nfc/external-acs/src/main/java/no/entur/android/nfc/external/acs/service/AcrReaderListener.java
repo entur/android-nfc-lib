@@ -126,12 +126,6 @@ public class AcrReaderListener implements ExternalUsbNfcServiceSupport.Listener<
 		sendBroadcastForNfcPermission(intent);
 	}
 
-	public void broadcast(String action) {
-		Intent intent = new Intent();
-		intent.setAction(action);
-		sendBroadcastForNfcPermission(intent);
-	}
-
 	private void sendBroadcastForNfcPermission(Intent intent) {
 		Log.d(TAG, "Broadcast " + intent.getAction());
 

@@ -164,6 +164,7 @@ public class AcsUsbService extends AbstractService {
 
 		int state = reader.getState(slotNumber);
 		if (state != Reader.CARD_SPECIFIC) {
+			// i.e. card is not powered / in good shape
 			TagUtility.sendTechBroadcast(this);
 		} else {
 			handleTagInitRegularMode(slotNumber, atr, tagType);
@@ -176,12 +177,22 @@ public class AcsUsbService extends AbstractService {
 		ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, slotNumber);
 
 		if (tagType == TagType.MIFARE_ULTRALIGHT || tagType == TagType.MIFARE_ULTRALIGHT_C) {
-			mifareUltralight(slotNumber, atr, tagType, acsTag, wrapper, reader.getReaderName());
+			mifareUltralightTagServiceSupport.mifareUltralight(slotNumber, atr, tagType, acsTag, wrapper, reader.getReaderName());
 		} else if (tagType == TagType.DESFIRE_EV1) {
-			desfire(slotNumber, atr, wrapper);
+			byte[] uid = TagUtility.getPcscUid(wrapper);
+			if (uid != null) {
+				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
+			}
+
+			mifareDesfireTagServiceSupport.desfire(slotNumber, atr, wrapper, uid);
 		} else if (tagType == TagType.ISO_14443_TYPE_B_NO_HISTORICAL_BYTES || tagType == TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES
 				|| tagType == TagType.ISO_14443_TYPE_A) {
-			hce(slotNumber, atr, wrapper);
+			byte[] uid = TagUtility.getPcscUid(wrapper);
+			if (uid != null) {
+				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
+			}
+
+			mifareDesfireTagServiceSupport.hce(slotNumber, atr, wrapper, uid);
 		} else {
 			TagUtility.sendTechBroadcast(AcsUsbService.this);
 		}

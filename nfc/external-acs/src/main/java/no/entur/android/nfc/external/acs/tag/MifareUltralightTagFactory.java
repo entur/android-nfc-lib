@@ -7,9 +7,10 @@ import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.service.tag.TagFactory;
+import no.entur.android.nfc.external.tag.TechnologyType;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 

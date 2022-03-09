@@ -1,13 +1,8 @@
-package no.entur.android.nfc.external.acs.tag;
+package no.entur.android.nfc.external.tag;
 
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import com.acs.smartcard.ReaderException;
-
-import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 
 public class DESFireAdapter {
 
@@ -21,15 +16,15 @@ public class DESFireAdapter {
 	public static final int MAX_CAPDU_SIZE = 55;
 	public static final int MAX_RAPDU_SIZE = 60;
 
-	private ACSIsoDepWrapper isoDep;
+	private AbstractReaderIsoDepWrapper isoDep;
 	private boolean print;
 
-	public DESFireAdapter(ACSIsoDepWrapper isoDep, boolean print) {
+	public DESFireAdapter(AbstractReaderIsoDepWrapper isoDep, boolean print) {
 		this.isoDep = isoDep;
 		this.print = print;
 	}
 
-	public ACSIsoDepWrapper getIsoDep() {
+	public AbstractReaderIsoDepWrapper getIsoDep() {
 		return isoDep;
 	}
 
@@ -41,11 +36,11 @@ public class DESFireAdapter {
 	 * @throws Exception
 	 */
 
-	public byte[] transmitRaw(byte[] adpu) throws IOException, ReaderException {
+	public byte[] transmitRaw(byte[] adpu) throws Exception {
 		return responseADPUToRaw(rawToRequestADPU(adpu));
 	}
 
-	public static byte[] responseADPUToRaw(byte[] response) throws ReaderException {
+	public static byte[] responseADPUToRaw(byte[] response) {
 
 		byte[] result = new byte[response.length - 1];
 		result[0] = response[response.length - 1];
@@ -55,7 +50,7 @@ public class DESFireAdapter {
 		return result;
 	}
 
-	public byte[] rawToRequestADPU(byte[] commandMessage) throws IOException, ReaderException {
+	public byte[] rawToRequestADPU(byte[] commandMessage) throws Exception {
 		return transceive(wrapMessage(commandMessage[0], commandMessage, 1, commandMessage.length - 1));
 	}
 
@@ -106,10 +101,10 @@ public class DESFireAdapter {
 	 * Send a command to the card and return the response.
 	 *
 	 * @param command the command
-	 * @throws ReaderException
+	 * @throws Exception
 	 * @return the PICC response
 	 */
-	public byte[] transceive(byte[] command) throws IOException, ReaderException {
+	public byte[] transceive(byte[] command) throws Exception {
 
 		if (print) {
 			Log.d(TAG, "===> " + getHexString(command, true) + " (" + command.length + ")");
@@ -135,11 +130,11 @@ public class DESFireAdapter {
 		return sb.toString().trim().toUpperCase();
 	}
 
-	public byte[] transmitChain(byte[] adpu) throws IOException, ReaderException {
+	public byte[] transmitChain(byte[] adpu) throws Exception {
 		return receieveResponseChain(sendRequestChain(adpu));
 	}
 
-	public byte[] receieveResponseChain(byte[] response) throws IOException, ReaderException {
+	public byte[] receieveResponseChain(byte[] response) throws Exception {
 
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 
@@ -160,7 +155,7 @@ public class DESFireAdapter {
 		} while (true);
 	}
 
-	public byte[] sendRequestChain(byte[] commandMessage) throws IOException, ReaderException {
+	public byte[] sendRequestChain(byte[] commandMessage) throws Exception {
 
 		int offset = 1; // data area of apdu
 
@@ -185,7 +180,7 @@ public class DESFireAdapter {
 			}
 			byte status = response[response.length - 1];
 			if (status != ADDITIONAL_FRAME) {
-				throw new ReaderException("PICC error code: " + Integer.toHexString(status & 0xFF));
+				throw new Exception("PICC error code: " + Integer.toHexString(status & 0xFF));
 			}
 			nextCommand = ADDITIONAL_FRAME;
 		}

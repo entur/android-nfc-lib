@@ -1,14 +1,9 @@
-package no.entur.android.nfc.external.acs.tag;
+package no.entur.android.nfc.external.tag;
 
 import android.nfc.tech.IsoDep;
 import android.os.RemoteException;
 import android.util.Log;
 
-import java.io.IOException;
-
-import com.acs.smartcard.ReaderException;
-
-import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
@@ -20,7 +15,7 @@ public class IsoDepAdapter extends DefaultTechnology implements CommandTechnolog
 	private DESFireAdapter adapter;
 	private boolean hostCardEmulation;
 
-	public IsoDepAdapter(int slotNumber, ACSIsoDepWrapper isoDep, boolean hostCardEmulation) {
+	public IsoDepAdapter(int slotNumber, AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation) {
 		super(TagTechnology.ISO_DEP, slotNumber);
 		this.adapter = new DESFireAdapter(isoDep, false);
 		this.hostCardEmulation = hostCardEmulation;
@@ -42,7 +37,7 @@ public class IsoDepAdapter extends DefaultTechnology implements CommandTechnolog
 			}
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-		} catch (ReaderException | IOException e) {
+		} catch (Exception e) {
 			Log.d(TAG, "Problem sending command", e);
 
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);

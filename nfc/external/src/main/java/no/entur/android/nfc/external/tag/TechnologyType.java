@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.acs.tag;
+package no.entur.android.nfc.external.tag;
 
 public class TechnologyType {
 
