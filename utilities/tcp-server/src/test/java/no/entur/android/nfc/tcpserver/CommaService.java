@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +24,8 @@ public class CommaService implements CommandServer.Listener, CommandInputOutputT
 
     @Override
     public void onServerSocketConnection(int port, Socket socket) throws IOException {
-        CommandInput<String> input = new CommaCommandInput(new InputStreamReader(socket.getInputStream()));
-        CommandOutput<String> output = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream()));
+        CommandInput<String> input = new CommaCommandInput(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        CommandOutput<String> output = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
         CommandInputOutputThread thread = new CommandInputOutputThread(this, socket, output, input);
 
         synchronized (clients) {

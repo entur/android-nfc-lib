@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class CommaClient implements Closeable {
 
@@ -23,10 +24,10 @@ public class CommaClient implements Closeable {
     }
 
     public void connect() throws IOException {
-        socket = new Socket("localhost",8080);
+        socket = new Socket(host, port);
 
-        in = new CommaCommandInput(new InputStreamReader(socket.getInputStream()));
-        out = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream()));
+        in = new CommaCommandInput(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        out = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
     }
 
     public void write(String command) throws IOException {
