@@ -304,7 +304,7 @@ public class ExternalUsbNfcServiceSupport {
 		usbManager = (UsbManager) service.getSystemService(Context.USB_SERVICE);
 
 		// Register receiver for USB permission
-		permissionIntent = PendingIntent.getBroadcast(service, 0, new Intent(ACTION_USB_PERMISSION), 0);
+		permissionIntent = PendingIntent.getBroadcast(service, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
 
 		readerScanner = new Scanner(this);
 	}
