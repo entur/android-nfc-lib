@@ -11,7 +11,7 @@ This project hosts tools for working with NFC on Android. Modules:
 [European Union Public Licence v1.2](https://eupl.eu/).
 
 # Obtain
-The project is built with Gradle and is available on the central Maven repository. 
+The project is built with Gradle and is [available](https://mvnrepository.com/artifact/no.entur.android.nfc) on the central Maven repository. 
 
 # Acknowledgements
 This project includes some code from the following projects:
@@ -24,5 +24,5 @@ This project includes some code from the following projects:
  
 # Publish
 
-> ./gradlew build publishToSonatype --info --stacktrace
+> ./gradlew build publishToSonatype --info --stacktrace -Psigning.gnupg.passphrase=xxx -Psigning.gnupg.keyName=yyy
 

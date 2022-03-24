@@ -298,7 +298,8 @@ configure(libraryProjects()) {
             // set
             // signing.gnupg.keyName=xxx
             // signing.gnupg.passphrase=yyy
-
+            // via command line
+            
             sign publishing.publications.release
         }
     }
