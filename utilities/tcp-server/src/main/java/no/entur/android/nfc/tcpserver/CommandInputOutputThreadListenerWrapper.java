@@ -32,11 +32,17 @@ public class CommandInputOutputThreadListenerWrapper<T, S> implements CommandInp
 
     @Override
     public void onReaderClosed(CommandInputOutputThread<T, S> reader, Exception e) {
-        executor.submit(() -> delegate.onReaderClosed(reader, e));
+        executor.submit(() -> {
+            try {
+                delegate.onReaderClosed(reader, e);
+            } finally {
+                close();
+            }
+        });
     }
 
     @Override
     public void close() {
-        executor.shutdownNow();
+        executor.shutdown();
     }
 }

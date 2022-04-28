@@ -17,22 +17,27 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
 
         private T in;
         private boolean closed;
+        private Object ioLock;
+
+        public PendingInputConsumer(Object ioLock) {
+            this.ioLock = ioLock;
+        }
 
         public void waitClosed() throws InterruptedException {
-            synchronized (this) {
+            synchronized (ioLock) {
                 while(!closed) {
-                    wait();
+                    ioLock.wait();
                 }
             }
         }
 
         // TODO could add some kind of check that the input is indeed a response to the output
         public void close(T in) {
-            synchronized (this) {
+            synchronized (ioLock) {
                 this.in = in;
 
                 this.closed = true;
-                notifyAll();
+                ioLock.notifyAll();
             }
         }
 
@@ -46,6 +51,11 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     private final CommandOutput<S> out;
     private final CommandInput<T> in;
     private boolean closed;
+
+    private Object pendingInputLock = new Object();
+
+    // only one in-flight message at a time (one-shot output or output/input).
+    private Object readWriteLock = new Object();
 
     private PendingInputConsumer<T> pendigInputConsumer;
 
@@ -62,9 +72,9 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         try {
             while(!closed) {
                 T next = in.read();
-
                 PendingInputConsumer<T> pending;
-                synchronized(this) {
+
+                synchronized(pendingInputLock) {
                     pending = pendigInputConsumer;
                 }
                 if(pending == null) {
@@ -76,8 +86,6 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             }
             listener.onReaderClosed(this, null);
         } catch (Exception e) {
-            listener.onReaderClosed(this, e);
-
             if(closed) {
                 listener.onReaderClosed(this, null);
             } else {
@@ -87,22 +95,25 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     }
 
     public T outputInput(S output) throws IOException, InterruptedException {
-        PendingInputConsumer<T> consumer = new PendingInputConsumer<>();
-        synchronized(this) {
-            this.pendigInputConsumer = consumer;
-            try {
-                out.write(output);
+        PendingInputConsumer<T> consumer = new PendingInputConsumer<>(pendingInputLock);
+        synchronized (readWriteLock) {
+            synchronized (pendingInputLock) {
+                try {
+                    this.pendigInputConsumer = consumer;
 
-                consumer.waitClosed();
-            } finally {
-                this.pendigInputConsumer = null;
+                    out.write(output);
+
+                    consumer.waitClosed(); // releases pendingInputLock but holds on to readWriteLock
+                } finally {
+                    this.pendigInputConsumer = null;
+                }
             }
         }
         return consumer.getIn();
     }
 
     public void output(S output) throws IOException {
-        synchronized(this) {
+        synchronized(readWriteLock) {
             out.write(output);
         }
     }
@@ -126,16 +137,13 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             } catch(Exception e) {
                 // ignore
             }
-            try {
-                listener.close();
-            } catch(Exception e) {
-                // ignore
-            }
         }
     }
 
     public void write(S command) throws IOException {
-        out.write(command);
+        synchronized(readWriteLock) {
+            out.write(command);
+        }
     }
 
 }

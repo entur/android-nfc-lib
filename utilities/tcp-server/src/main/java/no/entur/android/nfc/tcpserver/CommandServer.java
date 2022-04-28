@@ -36,8 +36,6 @@ public class CommandServer {
                 }
                 listener.onServerSocketClosed(port, null);
             } catch (Exception e) {
-                listener.onServerSocketClosed(port, e);
-
                 if(closed) {
                     listener.onServerSocketClosed(port, null);
                 } else {

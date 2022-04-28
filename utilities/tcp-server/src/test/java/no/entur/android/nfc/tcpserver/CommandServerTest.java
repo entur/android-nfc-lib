@@ -1,33 +1,37 @@
 package no.entur.android.nfc.tcpserver;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 public class CommandServerTest {
 
     @Test
     public void testListener() throws IOException, InterruptedException {
 
-        CommaService service = new CommaService(8080);
+        CharService service = new CharService('\n', 8080);
         try {
             service.start();
 
-            CommaClient client = new CommaClient("127.0.0.1", 8080);
+            CharClient externalNfcReader = new CharClient('\n', "127.0.0.1", 8080);
 
             Thread.sleep(100);
 
-            client.connect();
+            externalNfcReader.connect();
 
-            client.write("TestCommand");
-            String read = client.read();
-            System.out.println("Server responded with " + read);
-            System.out.println(read);
+            // write without expecting anything in return
+            externalNfcReader.write("MCR04G, UID=803BD2E26E2C04");
+
+            String read = externalNfcReader.read();
+            System.out.println(Thread.currentThread().getName() + ": Server asks " + read);
             Thread.sleep(100);
-
-            System.out.println("Emulate tag read");
-            client.write("ping");
-
+            externalNfcReader.write("CARDTYPE=0344;20;067577810280");
+            Thread.sleep(100);
+            List<String> commandHistory = service.getCommandHistory();
+            assertEquals(commandHistory.get(0), "CARDTYPE=0344;20;067577810280");
         } finally {
             service.stop();
         }
