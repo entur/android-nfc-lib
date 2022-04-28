@@ -8,7 +8,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
 
     public interface Listener<T, S> {
         void onReaderStart(CommandInputOutputThread<T, S> reader);
-        void onReaderCommand(CommandInputOutputThread<T, S> reader, T input) throws IOException;
+        void onReaderCommand(CommandInputOutputThread<T, S> reader, T input);
         void onReaderClosed(CommandInputOutputThread<T, S> reader, Exception e);
     }
 
@@ -41,7 +41,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         }
     }
 
-    private final Listener<T, S> listener;
+    private final CommandInputOutputThreadListenerWrapper<T, S> listener;
     private final Socket clientSocket;
     private final CommandOutput<S> out;
     private final CommandInput<T> in;
@@ -50,7 +50,8 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     private PendingInputConsumer<T> pendigInputConsumer;
 
     public CommandInputOutputThread(Listener<T, S> listener, Socket clientSocket, CommandOutput<S> out, CommandInput<T> in) {
-        this.listener = listener;
+        // wrap all listeners in a dispatch thread, because subsequent command interaction would otherwise be blocked
+        this.listener = new CommandInputOutputThreadListenerWrapper<>(listener);
         this.clientSocket = clientSocket;
         this.out = out;
         this.in = in;
@@ -122,6 +123,11 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             }
             try {
                 out.close();
+            } catch(Exception e) {
+                // ignore
+            }
+            try {
+                listener.close();
             } catch(Exception e) {
                 // ignore
             }

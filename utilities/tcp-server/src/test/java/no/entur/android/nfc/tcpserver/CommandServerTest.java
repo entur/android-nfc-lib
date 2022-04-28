@@ -24,6 +24,10 @@ public class CommandServerTest {
             System.out.println("Server responded with " + read);
             System.out.println(read);
             Thread.sleep(100);
+
+            System.out.println("Emulate tag read");
+            client.write("ping");
+
         } finally {
             service.stop();
         }

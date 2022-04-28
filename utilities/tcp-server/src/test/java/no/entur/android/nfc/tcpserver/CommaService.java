@@ -57,10 +57,14 @@ public class CommaService implements CommandServer.Listener, CommandInputOutputT
     }
 
     @Override
-    public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) throws IOException {
+    public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input)  {
         System.out.println("On reader command " + reader + " " + input);
 
-        reader.write("TestResponse");
+        try {
+            reader.write("TestResponse");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

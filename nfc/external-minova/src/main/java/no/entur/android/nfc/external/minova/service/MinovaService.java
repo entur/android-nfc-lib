@@ -12,6 +12,7 @@ import java.util.List;
 
 import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
+import no.entur.android.nfc.tcpserver.CommandInputOutputThreadListenerWrapper;
 import no.entur.android.nfc.tcpserver.CommandOutput;
 import no.entur.android.nfc.tcpserver.CommandServer;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -39,6 +40,7 @@ public class MinovaService implements CommandServer.Listener, CommandInputOutput
     public void onServerSocketConnection(int port, Socket socket) throws IOException {
         CommandInput<String> input = new CommaCommandInput(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         CommandOutput<String> output = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+
         CommandInputOutputThread thread = new CommandInputOutputThread(this, socket, output, input);
 
         synchronized (clients) {
@@ -70,7 +72,7 @@ public class MinovaService implements CommandServer.Listener, CommandInputOutput
     }
 
     @Override
-    public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) throws IOException {
+    public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) {
         System.out.println("On reader command " + reader + " " + input);
 
         if(input.contains("UID")) {
