@@ -14,8 +14,6 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 
     @Override
     public byte[] transceive(byte[] data) throws Exception {
-        String command = ByteArrayHexStringConverter.toHexString(data);
-
         reader.transmit(data);
 
         return new byte[0];

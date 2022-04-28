@@ -16,7 +16,6 @@ public class CommaCommandOutput implements CommandOutput<String> {
     @Override
     public void write(String command) throws IOException {
         writer.write(command);
-        writer.write(',');
         writer.flush();
     }
 

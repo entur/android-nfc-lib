@@ -1,7 +1,9 @@
 package no.entur.android.nfc.external.minova.service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Scanner;
 
 import no.entur.android.nfc.tcpserver.CommandInput;
 
@@ -17,16 +19,14 @@ public class CommaCommandInput implements CommandInput<String> {
     public String read() throws IOException {
 
         StringBuilder builder = new StringBuilder(128);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String str;
 
-        do {
-            int read = reader.read();
-            if(read == -1) {
-                return null;
-            } else if(read == ',') {
-                break;
-            }
-            builder.append((char)read);
-        } while(true);
+        if ((str = bufRead.readLine()) == null) {
+            return null;
+        } else {
+            builder.append(str);
+        }
 
         return builder.toString();
     }
