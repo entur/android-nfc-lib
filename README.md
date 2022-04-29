@@ -1,8 +1,9 @@
 # android-nfc-lib
 This project hosts tools for working with NFC on Android. Modules:
 
+ * [wrapper](nfc/wrapper) - wrappers for classes in the `android.nfc` package
+   * for working with external and internal tags in parallel
  * [core](nfc/core) - various helpers for NFC support
-   * wrapper for native NFC objects for simplified testing and/or support for custom NFC services (i.e. supporting external NFC readers)
    * abstract reader activities and Host Card Emulation services
  * [external](nfc/external) - basic support for external NFC readers
  * [external-acs](nfc/external-acs) - support for ACS readers external NFC readers

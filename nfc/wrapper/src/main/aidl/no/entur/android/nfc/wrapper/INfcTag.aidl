@@ -32,7 +32,13 @@ interface INfcTag
     boolean isPresent(int nativeHandle);
     TransceiveResult transceive(int nativeHandle, in byte[] data, boolean raw);
 
+    NdefMessage ndefRead(int nativeHandle);
+    int ndefWrite(int nativeHandle, in NdefMessage msg);
+    int ndefMakeReadOnly(int nativeHandle);
+    boolean ndefIsWritable(int nativeHandle);
+    int formatNdef(int nativeHandle, in byte[] key);
     TagImpl rediscover(int nativehandle);
+
 
     int setTimeout(int technology, int timeout);
     int getTimeout(int technology);
