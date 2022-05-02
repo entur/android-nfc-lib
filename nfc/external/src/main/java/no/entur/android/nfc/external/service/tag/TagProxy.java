@@ -1,8 +1,13 @@
 package no.entur.android.nfc.external.service.tag;
 
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+
 import java.util.List;
 
 import no.entur.android.nfc.wrapper.TagImpl;
+import no.entur.android.nfc.wrapper.tech.Ndef;
+import no.entur.android.nfc.wrapper.tech.NdefFormatable;
 
 public class TagProxy {
 
@@ -92,5 +97,24 @@ public class TagProxy {
 
 	public void setPresent(boolean present) {
 		this.present = present;
+	}
+
+	public boolean isNdef() {
+		for(TagTechnology t : technologies) {
+			if(t instanceof Ndef) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean ndefIsWritable() {
+		for(TagTechnology t : technologies) {
+			if(t instanceof Ndef) {
+				Ndef ndef = (Ndef)t;
+				return ndef.isWritable();
+			}
+		}
+		return false;
 	}
 }

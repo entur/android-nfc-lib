@@ -12,6 +12,8 @@ import no.entur.android.nfc.wrapper.ErrorCodes;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
+import no.entur.android.nfc.wrapper.tech.Ndef;
+import no.entur.android.nfc.wrapper.tech.NdefFormatable;
 
 public class INFcTagBinder extends INfcTag.Stub {
 
@@ -85,9 +87,17 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int formatNdef(int nativeHandle, byte[] key) throws RemoteException {
-		Log.e(TAG, "Attempt to call unsupported NDEF operation: formatNdef");
+		TagTechnology adapter = getConnected(nativeHandle);
+		if (adapter != null) {
+			if (adapter instanceof NdefFormattableTechnology) {
+				NdefFormattableTechnology technology = (NdefFormattableTechnology) adapter;
 
-		return ErrorCodes.ERROR_IO;
+				return technology.formatNdef();
+			} else {
+				throw new RemoteException("Tag technology " + adapter.getClass().getName() + " does not support formatNdef(..)");
+			}
+		}
+		throw new RemoteException("No connected tag technology");
 	}
 
 	public boolean getExtendedLengthApdusSupported() throws RemoteException {
@@ -142,9 +152,13 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean isNdef(int nativeHandle) throws RemoteException {
-		Log.e(TAG, "Attempt to call unsupported NDEF operation: isNdef");
+		TagProxy proxy = store.get(nativeHandle);
 
-		throw new RemoteException(UNSUPPORTED_OPERATION_MSG);
+		if (proxy == null) {
+			throw new RemoteException();
+		}
+
+		return proxy.isNdef();
 	}
 
 	public boolean isPresent(int nativeHandle) throws RemoteException {
@@ -159,27 +173,55 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean ndefIsWritable(int nativeHandle) throws RemoteException {
-		Log.e(TAG, "Attempt to call unsupported NDEF operation: ndefIsWritable");
+		TagProxy proxy = store.get(nativeHandle);
 
-		throw new RemoteException(UNSUPPORTED_OPERATION_MSG);
+		if (proxy == null) {
+			throw new RemoteException();
+		}
+
+		return proxy.ndefIsWritable();
 	}
 
 	public int ndefMakeReadOnly(int nativeHandle) throws RemoteException {
-		Log.e(TAG, "Attempt to call unsupported NDEF operation: ndefMakeReadOnly");
+		TagTechnology adapter = getConnected(nativeHandle);
+		if (adapter != null) {
+			if (adapter instanceof NdefTechnology) {
+				NdefTechnology technology = (NdefTechnology) adapter;
 
-		throw new RemoteException(UNSUPPORTED_OPERATION_MSG);
+				return technology.ndefMakeReadOnly();
+			} else {
+				throw new RemoteException("Tag technology " + adapter.getClass().getName() + " does not support transceive(..)");
+			}
+		}
+		throw new RemoteException("No connected tag technology");
 	}
 
 	public NdefMessage ndefRead(int nativeHandle) throws RemoteException {
-		Log.e(TAG, "Attempt to call unsupported NDEF operation: ndefRead");
+		TagTechnology adapter = getConnected(nativeHandle);
+		if (adapter != null) {
+			if (adapter instanceof NdefTechnology) {
+				NdefTechnology technology = (NdefTechnology) adapter;
 
-		throw new RemoteException(UNSUPPORTED_OPERATION_MSG);
+				return technology.ndefRead();
+			} else {
+				throw new RemoteException("Tag technology " + adapter.getClass().getName() + " does not support transceive(..)");
+			}
+		}
+		throw new RemoteException("No connected tag technology");
 	}
 
 	public int ndefWrite(int nativeHandle, NdefMessage msg) throws RemoteException {
-		Log.e(TAG, "Attempt to call unsupported NDEF operation: ndefWrite");
+		TagTechnology adapter = getConnected(nativeHandle);
+		if (adapter != null) {
+			if (adapter instanceof NdefTechnology) {
+				NdefTechnology technology = (NdefTechnology) adapter;
 
-		throw new RemoteException(UNSUPPORTED_OPERATION_MSG);
+				return technology.ndefWrite(msg);
+			} else {
+				throw new RemoteException("Tag technology " + adapter.getClass().getName() + " does not support transceive(..)");
+			}
+		}
+		throw new RemoteException("No connected tag technology");
 	}
 
 	public int reconnect(int nativehandle) throws RemoteException {

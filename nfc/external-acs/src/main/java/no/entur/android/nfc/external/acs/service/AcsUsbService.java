@@ -14,6 +14,7 @@ import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
@@ -109,7 +110,7 @@ public class AcsUsbService extends AbstractService {
 		store.removeItem(slot);
 
 		Intent intent = new Intent();
-		intent.setAction(ExternalNfcReaderCallback.ACTION_TAG_LEFT_FIELD);
+		intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
 		sendBroadcast(intent, "android.permission.NFC");
 	}
 
@@ -170,7 +171,7 @@ public class AcsUsbService extends AbstractService {
 		}
 	}
 
-	private void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
+	protected void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
 		Log.d(TAG, "Handle tag in regular mode");
 		AcsTag acsTag = new AcsTag(tagType, atr, reader, slotNumber);
 		ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, slotNumber);

@@ -144,18 +144,6 @@ public abstract class AbstractService extends Service {
 		}
 	}
 
-	private boolean isLocked(MfUlReaderWriter readerWriter, MemoryLayout memoryLayout) throws IOException, ReaderException {
-		for (LockPage lockPage : memoryLayout.getLockPages()) {
-			MfBlock[] block = readerWriter.readBlock(lockPage.getPage(), 1);
-			for (int lockByte : lockPage.getLockBytes()) {
-				if (block[0].getData()[lockByte] != 0) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	@SuppressWarnings("java:S3776")
 	protected void mifareUltralight(int slotNumber, byte[] atr, TagType tagType, ApduTag acsTag, ACSIsoDepWrapper wrapper, String readerName) {
 		List<TagTechnology> technologies = new ArrayList<>();

@@ -31,17 +31,6 @@ public interface ExternalNfcReaderCallback extends ReaderCallback {
 	 */
 	public static final String ACTION_READER_STATUS = ExternalNfcReaderCallback.class.getName() + ".action.READER_STATUS";
 
-	/** Action corresponding to {@linkplain android.nfc.NfcAdapter#ACTION_TAG_DISCOVERED}. */
-	public static final String ACTION_TAG_DISCOVERED = ExternalNfcReaderCallback.class.getName() + "action.TAG_DISCOVERED";
-	/** Action corresponding to {@linkplain android.nfc.NfcAdapter#ACTION_TECH_DISCOVERED}. */
-	public static final String ACTION_TECH_DISCOVERED = ExternalNfcReaderCallback.class.getName() + ".action.TECH_DISCOVERED";
-	/** Action corresponding to hidden {@linkplain android.nfc.NfcAdapter#ACTION_TAG_LEFT_FIELD}. */
-	public static final String ACTION_TAG_LEFT_FIELD = ExternalNfcReaderCallback.class.getName() + ".action.TAG_LEFT_FIELD";
-
-	default void onExternalTagDiscovered(Tag tag) {
-		onTagDiscovered(tag);
-	}
-
 	void onExternalNfcReaderOpened(Intent intent);
 
 	/**

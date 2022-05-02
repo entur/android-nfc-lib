@@ -11,6 +11,7 @@ import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
 import org.nfctools.spi.acs.AcrMfUlReaderWriter;
 
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
@@ -24,7 +25,7 @@ public class TagUtility {
 	private static final byte[] GET_TAG_ID = new byte[] { (byte) 0xFF, (byte) 0xCA, 0x00, 0x00, 0x00 };
 
 	public static void sendTagIdIndent(Context context, byte[] uid) {
-		final Intent intent = new Intent(ExternalNfcReaderCallback.ACTION_TAG_DISCOVERED);
+		final Intent intent = new Intent(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
 
 		if (uid != null) {
 			intent.putExtra(NfcAdapter.EXTRA_ID, uid);
@@ -73,7 +74,7 @@ public class TagUtility {
 	}
 
 	public static void sendTechBroadcast(Context context) {
-		Intent intent = new Intent(ExternalNfcReaderCallback.ACTION_TECH_DISCOVERED);
+		Intent intent = new Intent(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
 
 		context.sendBroadcast(intent, "android.permission.NFC");
 	}
