@@ -10,15 +10,15 @@ import android.util.Log;
 
 import no.entur.android.nfc.wrapper.Tag;
 
-public class ExternalNfcTagSupport {
+public class ExternalNfcTagCallbackSupport {
 
-	private static final String TAG = ExternalNfcTagSupport.class.getName();
+	private static final String TAG = ExternalNfcTagCallbackSupport.class.getName();
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcTagCallback callback;
 	protected final Activity activity;
 
-	public ExternalNfcTagSupport(ExternalNfcTagCallback callback, Activity activity) {
+	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Activity activity) {
 		this.callback = callback;
 		this.activity = activity;
 	}
