@@ -22,7 +22,4 @@ public interface ExternalNfcTagCallback extends ReaderCallback {
 		onTagDiscovered(tag);
 	}
 
-	void onExternalTechDiscovered(Intent intent);
-
-	void onExternalNdefDiscovered(Intent intent);
 }
