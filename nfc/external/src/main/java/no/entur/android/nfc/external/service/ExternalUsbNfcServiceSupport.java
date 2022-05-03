@@ -103,8 +103,6 @@ public class ExternalUsbNfcServiceSupport {
 
 			if (ACTION_USB_PERMISSION.equals(action)) {
 
-				Log.d(TAG, "Usb permission action with " + intent.getExtras().keySet());
-
 				UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 
 				if (device != null) {
