@@ -7,17 +7,28 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ExternalNfcIntentCallbackSupport {
+
+	private static final List<String> DEFAULT_ACTIONS = Arrays.asList(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED, ExternalNfcTagCallback.ACTION_TECH_DISCOVERED, ExternalNfcTagCallback.ACTION_NDEF_DISCOVERED);
 
 	private static final String TAG = ExternalNfcIntentCallbackSupport.class.getName();
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcIntentCallback callback;
 	protected final Activity activity;
+	protected final List<String> actions;
 
 	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Activity activity) {
+		this(DEFAULT_ACTIONS, callback, activity);
+	}
+
+	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Activity activity) {
 		this.callback = callback;
 		this.activity = activity;
+		this.actions = actions;
 	}
 
 	private boolean recieveNfcIntentBroadcasts = false;
@@ -68,9 +79,9 @@ public class ExternalNfcIntentCallbackSupport {
 
 			// register receiver
 			IntentFilter filter = new IntentFilter();
-			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
-			filter.addAction(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
-			filter.addAction(ExternalNfcTagCallback.ACTION_NDEF_DISCOVERED);
+			for(String action : actions) {
+				filter.addAction(action);
+			}
 
 			activity.registerReceiver(intentReceiver, filter, ANDROID_PERMISSION_NFC, null);
 		}
