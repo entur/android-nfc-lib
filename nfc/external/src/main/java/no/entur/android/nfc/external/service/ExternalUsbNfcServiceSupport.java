@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -303,8 +304,14 @@ public class ExternalUsbNfcServiceSupport {
 		// Get USB manager
 		usbManager = (UsbManager) service.getSystemService(Context.USB_SERVICE);
 
+		int flag = 0;
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			flag = PendingIntent.FLAG_MUTABLE;
+		}
+
 		// Register receiver for USB permission
-		permissionIntent = PendingIntent.getBroadcast(service, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
+		permissionIntent = PendingIntent.getBroadcast(service, 0, new Intent(ACTION_USB_PERMISSION), flag);
 
 		readerScanner = new Scanner(this);
 	}
