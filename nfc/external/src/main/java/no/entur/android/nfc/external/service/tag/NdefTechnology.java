@@ -4,7 +4,7 @@ import android.nfc.NdefMessage;
 
 public interface NdefTechnology extends TagTechnology {
     
-    int ndefMakeReadOnly();
+    int ndefMakeReadOnly() ;
 
     NdefMessage ndefRead();
 
