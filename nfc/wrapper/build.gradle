@@ -11,8 +11,6 @@ android {
 dependencies {
     implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
 
-    api project(":nfc:wrapper")
-
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
 }
 

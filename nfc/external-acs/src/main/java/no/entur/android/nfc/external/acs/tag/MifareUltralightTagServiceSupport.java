@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
@@ -113,7 +114,7 @@ public class MifareUltralightTagServiceSupport extends AbstractTagServiceSupport
                     } catch (MfException e) {
                         Log.d(TAG, "No version for Ultralight tag - non NTAG 21x-tag?");
 
-                        broadcast(ExternalNfcReaderCallback.ACTION_TECH_DISCOVERED);
+                        broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
                         return;
                     }
                 }
@@ -211,7 +212,7 @@ public class MifareUltralightTagServiceSupport extends AbstractTagServiceSupport
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
         } catch (Exception e) {
             Log.d(TAG, "Problem reading from tag", e);
-            broadcast(ExternalNfcReaderCallback.ACTION_TECH_DISCOVERED);
+            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
     }
 
