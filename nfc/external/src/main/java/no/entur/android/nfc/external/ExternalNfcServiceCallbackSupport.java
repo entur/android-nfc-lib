@@ -9,9 +9,9 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.util.Log;
 
-public class ExternalNfcReaderServiceSupport {
+public class ExternalNfcServiceCallbackSupport {
 
-	private static final String TAG = ExternalNfcReaderServiceSupport.class.getName();
+	private static final String TAG = ExternalNfcServiceCallbackSupport.class.getName();
 
 	protected final ExternalNfcServiceCallback callback;
 	protected final Activity activity;
@@ -21,7 +21,7 @@ public class ExternalNfcReaderServiceSupport {
 	private boolean recieveServiceBroadcasts = false;
 	private volatile boolean open = false;
 
-	public ExternalNfcReaderServiceSupport(ExternalNfcServiceCallback callback, Activity activity, Class<? extends Service> serviceClass, boolean foreground) {
+	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Activity activity, Class<? extends Service> serviceClass, boolean foreground) {
 		this.callback = callback;
 		this.activity = activity;
 		this.serviceClass = serviceClass;

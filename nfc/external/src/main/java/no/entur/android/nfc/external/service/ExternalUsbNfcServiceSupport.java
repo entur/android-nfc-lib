@@ -104,8 +104,6 @@ public class ExternalUsbNfcServiceSupport {
 
 			if (ACTION_USB_PERMISSION.equals(action)) {
 
-				Log.d(TAG, "Usb permission action with " + intent.getExtras().keySet());
-
 				UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 
 				if (device != null) {
@@ -183,7 +181,7 @@ public class ExternalUsbNfcServiceSupport {
 					Log.d(TAG, "Opened reader " + name);
 					setNfcReaderStatus(ExternalNfcReaderCallback.READER_STATUS_OK, null);
 				} else {
-					Log.d(TAG, "Unabele to open reader " + name);
+					Log.d(TAG, "Unable to open reader " + name);
 					setNfcReaderStatus(ExternalNfcReaderCallback.READER_STATUS_ERROR, null);
 				}
 			} catch (Exception e) {

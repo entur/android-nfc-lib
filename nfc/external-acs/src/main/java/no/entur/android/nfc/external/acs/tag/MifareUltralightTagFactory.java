@@ -104,13 +104,6 @@ public class MifareUltralightTagFactory extends TagFactory {
 	 */
 	public static final int TYPE_ICODE_SLI = 102;
 
-	/*
-	 * private int serviceHandle; private int type; private byte[] id; private int maxNdefSize; private NdefMessage message; private Boolean writable;
-	 * 
-	 * public MifareUltralightTagFactory(int serviceHandle, int type, byte[] id, int maxNdefSize, NdefMessage message, Boolean writable) { this.serviceHandle =
-	 * serviceHandle; this.type = type; this.id = id; this.maxNdefSize = maxNdefSize; this.message = message; this.writable = writable; }
-	 */
-
 	public Intent getTag(int serviceHandle, int slotNumber, int type, Integer ntagType, byte[] id, byte[] atr, INfcTag tagService) {
 
 		if (id != null) {
@@ -122,6 +115,21 @@ public class MifareUltralightTagFactory extends TagFactory {
 		List<Bundle> bundles = new ArrayList<Bundle>();
 		List<Integer> tech = new ArrayList<Integer>();
 
+		addTechBundles(type, id, atr, bundles, tech);
+
+		final Intent intent = getIntent(bundles, tech);
+
+		int[] techArray = new int[tech.size()];
+		for (int i = 0; i < techArray.length; i++) {
+			techArray[i] = tech.get(i);
+		}
+
+		intent.putExtra(NfcAdapter.EXTRA_TAG, createTag(id, techArray, bundles.toArray(new Bundle[bundles.size()]), serviceHandle, tagService));
+
+		return intent;
+	}
+
+	protected void addTechBundles(int type, byte[] id, byte[] atr, List<Bundle> bundles, List<Integer> tech) {
 		if (TechnologyType.isNFCA(atr)) {
 			Bundle nfcA = new Bundle();
 			nfcA.putShort(EXTRA_SAK, EXTRA_SAK_VALUE);
@@ -136,23 +144,6 @@ public class MifareUltralightTagFactory extends TagFactory {
 			bundles.add(ultralight);
 			tech.add(TagTechnology.MIFARE_ULTRALIGHT);
 		}
-
-		final Intent intent = new Intent(ExternalNfcReaderCallback.ACTION_TAG_DISCOVERED);
-
-		Bundle ndefFormatable = new Bundle();
-		bundles.add(ndefFormatable);
-
-		tech.add(TagTechnology.NDEF_FORMATABLE);
-
-		int[] techArray = new int[tech.size()];
-		for (int i = 0; i < techArray.length; i++) {
-			techArray[i] = tech.get(i);
-		}
-
-		intent.putExtra(NfcAdapter.EXTRA_TAG, createTag(id, techArray, bundles.toArray(new Bundle[bundles.size()]), serviceHandle, tagService));
-		intent.putExtra(NfcAdapter.EXTRA_ID, id);
-
-		return intent;
 
 	}
 

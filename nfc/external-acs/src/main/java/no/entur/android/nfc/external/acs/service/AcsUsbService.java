@@ -4,187 +4,234 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbManager;
+import android.nfc.tech.MifareUltralight;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.nfctools.api.ApduTag;
 import org.nfctools.api.TagType;
+import org.nfctools.mf.MfException;
+import org.nfctools.mf.block.MfBlock;
+import org.nfctools.mf.ul.MfUlReaderWriter;
+import org.nfctools.mf.ul.ntag.NfcNtag;
+import org.nfctools.mf.ul.ntag.NfcNtagVersion;
+import org.nfctools.spi.acs.AcrMfUlReaderWriter;
 import org.nfctools.spi.acs.AcsTag;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
+import no.entur.android.nfc.external.acs.tag.IsoDepAdapter;
+import no.entur.android.nfc.external.acs.tag.MifareDesfireTagFactory;
+import no.entur.android.nfc.external.acs.tag.MifareUltralightAdapter;
+import no.entur.android.nfc.external.acs.tag.MifareUltralightTagFactory;
+import no.entur.android.nfc.external.acs.tag.NfcAAdapter;
+import no.entur.android.nfc.external.acs.tag.PN532NfcAAdapter;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
+import no.entur.android.nfc.external.acs.tag.TechnologyType;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
+import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
-public class AcsUsbService extends AbstractService {
-
-	static final String[] STATE_STRINGS = { "Unknown", "Absent", "Present", "Swallowed", "Powered", "Negotiable", "Specific" };
+public class AcsUsbService extends AbstractAcsUsbService {
 
 	private static final String TAG = AcsUsbService.class.getName();
 
-	protected AcrExternalUsbNfcServiceSupport acrExternalUsbNfcServiceSupport;
-	protected AcrReaderListener acrReaderListener = new AcrReaderListener(this);
-	protected ExternalUsbNfcServiceSupport support;
-	protected ReaderWrapper reader;
+	protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
+	protected MifareDesfireTagFactory mifareDesfireTagFactory = new MifareDesfireTagFactory();
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
+	protected boolean ntag21xUltralights = true;
 
-		// Get USB manager
-		UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+	protected void hce(int slotNumber, byte[] atr, ACSIsoDepWrapper wrapper) {
+		try {
+			List<TagTechnology> technologies = new ArrayList<>();
+			technologies.add(new NfcAAdapter(slotNumber, wrapper, true));
+			technologies.add(new IsoDepAdapter(slotNumber, wrapper, true));
 
-		// Initialize reader
-		reader = new ReaderWrapper(manager);
+			int serviceHandle = store.add(slotNumber, technologies);
 
-		acrExternalUsbNfcServiceSupport = new AcrExternalUsbNfcServiceSupport(reader, binder);
-		acrReaderListener = new AcrReaderListener(this);
-		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrExternalUsbNfcServiceSupport);
-
-		support.onCreate();
-
-		reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
-
-			@Override
-			public void onStateChange(int slot, int prevState, int currState) {
-
-				// Log.d(TAG, "From state " + prevState + " to " + currState);
-
-				if (prevState < Reader.CARD_UNKNOWN || prevState > Reader.CARD_SPECIFIC) {
-					prevState = Reader.CARD_UNKNOWN;
-				}
-
-				if (currState < Reader.CARD_UNKNOWN || currState > Reader.CARD_SPECIFIC) {
-					currState = Reader.CARD_UNKNOWN;
-				}
-
-				if (prevState == Reader.CARD_ABSENT && currState == Reader.CARD_PRESENT) {
-					// Log.v(TAG, "Tag present on reader");
-
-					onTagPresent(slot);
-				} else if (currState == Reader.CARD_ABSENT) {
-					// Log.v(TAG, "Tag absent on reader");
-
-					onTagAbsent(slot);
-				} else {
-					Log.d(TAG, "Not action for state transition from " + STATE_STRINGS[prevState] + " to " + STATE_STRINGS[currState]);
-				}
-
-			}
-		});
-	}
-
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-
-		broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
-
-		support.scanForDevices();
-
-		return Service.START_STICKY;
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-
-		broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
-
-		support.onDestroy();
-	}
-
-	public void onTagPresent(int slot) {
-		new InitTagTask().execute(slot);
-	}
-
-	public void onTagAbsent(int slot) {
-		Log.i(TAG, "onTagAbsent");
-
-		store.removeItem(slot);
-
-		Intent intent = new Intent();
-		intent.setAction(ExternalNfcReaderCallback.ACTION_TAG_LEFT_FIELD);
-		sendBroadcast(intent, "android.permission.NFC");
-	}
-
-	private class InitTagTask extends AsyncTask<Integer, Void, Exception> {
-
-		@Override
-		protected Exception doInBackground(Integer... params) {
-
-			Exception result = null;
-
-			int slotNumber = params[0];
-
-			try {
-				Log.i(TAG, "Init tag at slot " + slotNumber);
-
-				// https://en.wikipedia.org/wiki/Answer_to_reset#General_structure
-				// http://smartcard-atr.appspot.com
-
-				byte[] atr = reader.power(slotNumber, Reader.CARD_WARM_RESET);
-				if (atr == null) {
-					Log.d(TAG, "No ATR, ignoring");
-
-					return null;
-				}
-				final TagType tagType = TagUtility.identifyTagType(reader.getReaderName(), atr);
-
-				Log.d(TAG, "Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
-
-				handleTagInit(slotNumber, atr, tagType);
-			} catch (RemovedCardException e) {
-				Log.d(TAG, "Tag removed before it could be powered; ignore.", e);
-			} catch (Exception e) {
-				Log.w(TAG, "Problem initiating tag", e);
-
-				TagUtility.sendTechBroadcast(AcsUsbService.this);
-
-				result = e;
+			byte[] uid = TagUtility.getPcscUid(wrapper);
+			if (uid != null) {
+				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
-			return result;
-		}
+			Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, slotNumber, atr, null, uid, true, TechnologyType.getHistoricalBytes(atr), binder);
 
-		@Override
-		protected void onPostExecute(Exception result) {
-			// publish result?
-		}
-	}
+			Log.d(TAG, "Broadcast hce");
 
-	public void handleTagInit(int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
-		int preferredProtocols = Reader.PROTOCOL_T0 | Reader.PROTOCOL_T1;
-		reader.setProtocol(0, preferredProtocols);
+			sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+		} catch (Exception e) {
+			Log.d(TAG, "Problem reading from tag", e);
 
-		int state = reader.getState(slotNumber);
-		if (state != Reader.CARD_SPECIFIC) {
 			TagUtility.sendTechBroadcast(this);
-		} else {
-			handleTagInitRegularMode(slotNumber, atr, tagType);
 		}
 	}
 
-	private void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
-		Log.d(TAG, "Handle tag in regular mode");
-		AcsTag acsTag = new AcsTag(tagType, atr, reader, slotNumber);
-		ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, slotNumber);
+	protected void desfire(int slotNumber, byte[] atr, ACSIsoDepWrapper wrapper) {
+		try {
+			byte[] uid = TagUtility.getPcscUid(wrapper);
+			if (uid != null) {
+				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
+			}
 
-		if (tagType == TagType.MIFARE_ULTRALIGHT || tagType == TagType.MIFARE_ULTRALIGHT_C) {
-			mifareUltralight(slotNumber, atr, tagType, acsTag, wrapper, reader.getReaderName());
-		} else if (tagType == TagType.DESFIRE_EV1) {
-			desfire(slotNumber, atr, wrapper);
-		} else if (tagType == TagType.ISO_14443_TYPE_B_NO_HISTORICAL_BYTES || tagType == TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES
-				|| tagType == TagType.ISO_14443_TYPE_A) {
-			hce(slotNumber, atr, wrapper);
-		} else {
-			TagUtility.sendTechBroadcast(AcsUsbService.this);
+			List<TagTechnology> technologies = new ArrayList<>();
+			technologies.add(new NfcAAdapter(slotNumber, wrapper, false));
+			technologies.add(new IsoDepAdapter(slotNumber, wrapper, false));
+
+			int serviceHandle = store.add(slotNumber, technologies);
+
+			Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, slotNumber, atr, null, uid, false, TechnologyType.getHistoricalBytes(atr), binder);
+
+			Log.i(TAG, "Tag technologies " + technologies);
+
+			Log.d(TAG, "Broadcast desfire");
+
+			sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+		} catch (Exception e) {
+			Log.d(TAG, "Problem reading from tag", e);
+
+			TagUtility.sendTechBroadcast(this);
 		}
 	}
+
+	@SuppressWarnings("java:S3776")
+	protected void mifareUltralight(int slotNumber, byte[] atr, TagType tagType, AcsTag acsTag, ACSIsoDepWrapper wrapper, String readerName) {
+		List<TagTechnology> technologies = new ArrayList<>();
+
+		Boolean canReadBlocks = null;
+		try {
+			// https://github.com/marshmellow42/proxmark3/commit/4745afb647c96a80f3f088f2afebf9686499680d
+
+			MfUlReaderWriter readerWriter;
+
+			Integer version = null;
+			MfBlock[] initBlocks = null;
+			if (ntag21xUltralights) {
+				if (!(readerName.contains("1255") || readerName.contains("1252"))) {
+					// detect via get version
+					try {
+						NfcNtag ntag = new NfcNtag(wrapper);
+
+						NfcNtagVersion ntagVersion = new NfcNtagVersion(ntag.getVersion());
+						version = ntagVersion.getType();
+
+						// Log.d(TAG, "Detected version " + version);
+					} catch (MfException e) {
+						Log.d(TAG, "No version for Ultralight tag - non NTAG 21x-tag?");
+
+						TagUtility.sendTechBroadcast(this);
+
+						return;
+					}
+				}
+			}
+
+			MfBlock[] capabilityBlock = null;
+			if (version == null) {
+				// Log.d(TAG, "Detect tag via capability container");
+
+				readerWriter = new AcrMfUlReaderWriter(acsTag);
+
+				// detect via capability container
+				// can't really see difference between outdated 203 and 213 tag or ultralight and 210 tag
+
+				try {
+					// capability block at index 3
+					capabilityBlock = readerWriter.readBlock(3, 1);
+
+					version = NfcNtagVersion.getVersion(capabilityBlock[0], ntag21xUltralights);
+
+					// Log.d(TAG, "Detected version " + version);
+
+					canReadBlocks = true;
+				} catch (Exception e) {
+					Log.w(TAG, "Problem reading tag UID", e);
+
+					canReadBlocks = false;
+				}
+			}
+
+			// init reader finally
+			if (version != null) {
+				if (version > 0) {
+					// readerWriter = new AcrMfUlNTAGReaderWriter(acsTag, new NfcNtag(reader, slotNumber), version);
+					readerWriter = new AcrMfUlReaderWriter(acsTag);
+
+					tagType = TagType.MIFARE_ULTRALIGHT_C;
+				} else {
+					readerWriter = new AcrMfUlReaderWriter(acsTag);
+				}
+			} else {
+				readerWriter = new AcrMfUlReaderWriter(acsTag);
+			}
+
+			if (canReadBlocks == null || canReadBlocks) {
+				try {
+					if (capabilityBlock == null) {
+						initBlocks = readerWriter.readBlock(0, 4);
+					} else {
+						initBlocks = readerWriter.readBlock(0, 3);
+						initBlocks = new MfBlock[] { initBlocks[0], initBlocks[1], initBlocks[2], capabilityBlock[0] };
+					}
+					canReadBlocks = true;
+				} catch (Exception e) {
+					Log.w(TAG, "Problem reading tag UID", e);
+
+					canReadBlocks = false;
+				}
+			}
+
+			// get uid from first two blocks:
+			// 3 bytes from index 0
+			// 4 bytes from index 1
+
+			byte[] uid;
+			if (canReadBlocks) {
+				uid = new byte[7];
+				System.arraycopy(initBlocks[0].getData(), 0, uid, 0, 3);
+				System.arraycopy(initBlocks[1].getData(), 0, uid, 3, 4);
+			} else {
+				uid = new byte[] { MifareUltralightTagFactory.NXP_MANUFACTURER_ID };
+			}
+
+			int type = MifareUltralight.TYPE_UNKNOWN;
+
+			if (tagType == TagType.MIFARE_ULTRALIGHT_C || !canReadBlocks) {
+				type = MifareUltralight.TYPE_ULTRALIGHT_C;
+			}
+
+			if (canReadBlocks) {
+				technologies.add(new MifareUltralightAdapter(slotNumber, readerWriter));
+			}
+
+			if (TechnologyType.isNFCA(atr)) {
+				technologies.add(new PN532NfcAAdapter(slotNumber, wrapper, false));
+				// technologies.add(new NfcAAdapter(slotNumber, reader, false));
+			}
+
+			int serviceHandle = store.add(slotNumber, technologies);
+
+			Intent intent = mifareUltralightTagFactory.getTag(serviceHandle, slotNumber, type, version, uid, atr, binder);
+
+			Log.d(TAG, "Broadcast mifare ultralight");
+
+			sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+		} catch (Exception e) {
+			Log.d(TAG, "Problem reading from tag", e);
+
+			TagUtility.sendTechBroadcast(this);
+
+		}
+	}
+
 
 }

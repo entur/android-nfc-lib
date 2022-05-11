@@ -49,21 +49,9 @@ public class MifareDesfireTagFactory extends TagFactory {
 		List<Bundle> bundles = new ArrayList<Bundle>();
 		List<Integer> tech = new ArrayList<Integer>();
 
-		Bundle nfcA = new Bundle();
-		nfcA.putShort(MifareUltralightTagFactory.EXTRA_SAK, EXTRA_SAK_VALUE);
-		nfcA.putByteArray(MifareUltralightTagFactory.EXTRA_ATQA, EXTRA_ATQA_VALUE);
-		bundles.add(nfcA);
-		tech.add(TagTechnology.NFC_A);
+		addTechBundles(hiLayer, historicalBytes, bundles, tech);
 
-		Bundle desfire = new Bundle();
-		desfire.putByteArray(EXTRA_HIST_BYTES, historicalBytes);
-		if (hiLayer != null) {
-			desfire.putByteArray(EXTRA_HI_LAYER_RESP, hiLayer);
-		}
-		bundles.add(desfire);
-		tech.add(TagTechnology.ISO_DEP);
-
-		final Intent intent = new Intent(ExternalNfcReaderCallback.ACTION_TAG_DISCOVERED);
+		final Intent intent = getIntent(bundles, tech);
 
 		int[] techArray = new int[tech.size()];
 		for (int i = 0; i < techArray.length; i++) {
@@ -77,6 +65,22 @@ public class MifareDesfireTagFactory extends TagFactory {
 
 		return intent;
 
+	}
+
+	private void addTechBundles(byte[] hiLayer, byte[] historicalBytes, List<Bundle> bundles, List<Integer> tech) {
+		Bundle nfcA = new Bundle();
+		nfcA.putShort(MifareUltralightTagFactory.EXTRA_SAK, EXTRA_SAK_VALUE);
+		nfcA.putByteArray(MifareUltralightTagFactory.EXTRA_ATQA, EXTRA_ATQA_VALUE);
+		bundles.add(nfcA);
+		tech.add(TagTechnology.NFC_A);
+
+		Bundle desfire = new Bundle();
+		desfire.putByteArray(EXTRA_HIST_BYTES, historicalBytes);
+		if (hiLayer != null) {
+			desfire.putByteArray(EXTRA_HI_LAYER_RESP, hiLayer);
+		}
+		bundles.add(desfire);
+		tech.add(TagTechnology.ISO_DEP);
 	}
 
 }

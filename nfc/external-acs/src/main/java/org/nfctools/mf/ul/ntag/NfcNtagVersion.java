@@ -23,7 +23,42 @@ package org.nfctools.mf.ul.ntag;
  * #*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#
  */
 
+import org.nfctools.mf.block.MfBlock;
+
 public class NfcNtagVersion {
+
+	public static int getVersion(MfBlock initBlock, boolean ntag21xUltralights) {
+
+		switch (initBlock.getData()[2]) {
+			case 0x06: {
+				if (!ntag21xUltralights) {
+					return -NfcNtagVersion.TYPE_NTAG210; // aka ultralight
+				}
+				return NfcNtagVersion.TYPE_NTAG210;
+			}
+			case 0x10: {
+				return NfcNtagVersion.TYPE_NTAG212;
+			}
+			case 0x12: {
+				if (!ntag21xUltralights) {
+					return -NfcNtagVersion.TYPE_NTAG213; // aka ultralight c
+				}
+				return NfcNtagVersion.TYPE_NTAG213;
+			}
+			case 0x3E: {
+				return NfcNtagVersion.TYPE_NTAG215;
+			}
+			case 0x6D: {
+				return NfcNtagVersion.TYPE_NTAG216;
+			}
+			case 0x6F: {
+				return NfcNtagVersion.TYPE_NTAG216F;
+			}
+			default: {
+				return 0;
+			}
+		}
+	}
 
 	public static NfcNtagVersion fromGetVersion(byte[] getVersionBytes) {
 		NfcNtagVersion nfcNtagVersion = new NfcNtagVersion(getVersionBytes);
