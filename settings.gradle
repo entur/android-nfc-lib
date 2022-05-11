@@ -1,4 +1,4 @@
-include ":nfc:core", ":nfc:external", ':nfc:external-acs'
+include ":nfc:core", ":nfc:external", ":utilities:tcp-server", ":nfc:external-acs", ":nfc:external-minova"
 
 // automatically set jacoco report paths in folders with a build file, excluding root
 def findJacocoReports(parentProject, reports) { 
