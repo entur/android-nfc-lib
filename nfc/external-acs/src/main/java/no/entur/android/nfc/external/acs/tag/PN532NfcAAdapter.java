@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.acs.tag;
 
+import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 

@@ -3,6 +3,7 @@ package no.entur.android.nfc.external.acs.tag;
 import android.os.RemoteException;
 import android.util.Log;
 
+import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.external.tag.DefaultTechnology;
