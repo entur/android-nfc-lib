@@ -15,7 +15,8 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
-import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class TagUtility {
 
@@ -161,7 +162,7 @@ public class TagUtility {
 		return TagType.identifyTagType(historicalBytes);
 	}
 
-	public static byte[] getPcscUid(ACSIsoDepWrapper wrapper) {
+	public static byte[] getPcscUid(AbstractReaderIsoDepWrapper wrapper) {
 		try {
 			byte[] response = wrapper.transceive(GET_TAG_ID);
 			if (ACRCommands.isSuccessControl(response)) {

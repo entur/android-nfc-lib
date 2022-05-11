@@ -3,15 +3,16 @@ package no.entur.android.nfc.external.acs.tag;
 import android.os.RemoteException;
 import android.util.Log;
 
-import java.io.IOException;
+import com.acs.smartcard.ReaderException;
 
 import org.nfctools.mf.block.DataBlock;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
 
-import com.acs.smartcard.ReaderException;
+import java.io.IOException;
 
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
+import no.entur.android.nfc.external.tag.DefaultTechnology;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 

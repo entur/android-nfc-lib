@@ -42,15 +42,6 @@ allprojects {
     // skip checking test configurations (like lint) or test libraries for vulnerabilities
     apply plugin: 'org.owasp.dependencycheck'
 
-    configurations {
-        // add more on demand
-        androidTestImplementation
-        api
-        implementation
-        testImplementation
-        annotationProcessor
-    }
-
     buildscript {
         repositories repos
     }
@@ -303,8 +294,12 @@ configure(libraryProjects()) {
             sign publishing.publications.release
         }
     }
-
 }
+
+configure(utilityProjects()) {
+    apply plugin: 'java-library'
+}
+
 
 group = 'no.entur.android.nfc'
 
