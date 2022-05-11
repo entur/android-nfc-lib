@@ -51,8 +51,9 @@ public class ExampleInstrumentedTest {
 
     @Test
     public void convertHexAndGetTagTypeFromByteArray() {
-        byte[] ats = new byte[] { (byte) 0x06, (byte) 0x75, (byte) 0x77, (byte) 0x81, (byte) 0x02, (byte) 0x80};
+        String atsString = "067577810280";
 
+        byte[] ats = hexStringToByteArray(atsString);
         byte[] atr = getAtr(ats);
 
         TagType type = TagType.identifyTagType(atr);

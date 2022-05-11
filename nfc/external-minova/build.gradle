@@ -26,9 +26,9 @@ android {
 }
 
 dependencies {
-    api project(":utilities:tcp-server")
-    api project(":nfc:external-acs")
     api project(":nfc:external")
+    api project(":nfc:external-acs")
+    api project(":utilities:tcp-server")
 
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'

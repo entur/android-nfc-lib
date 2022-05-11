@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.minova.service;
 
+import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToByteArray;
+
 import org.nfctools.api.TagType;
 
 import java.io.IOException;
@@ -10,25 +12,29 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.entur.android.nfc.external.acs.service.AbstractService;
+import no.entur.android.nfc.external.minova.reader.MinovaIsoDepWrapper;
 import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
-import no.entur.android.nfc.tcpserver.CommandInputOutputThreadListenerWrapper;
 import no.entur.android.nfc.tcpserver.CommandOutput;
 import no.entur.android.nfc.tcpserver.CommandServer;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
-public class MinovaService implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String> {
+public class MinovaService extends AbstractService implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String> {
 
-    public static void main(String[] args) {
-        MinovaService service = new MinovaService(23);
-        service.start();
-    }
+    // No port below 1025 can be used in the linux system.
+    private final int port = 1025;
+
+    private String uid;
 
     private CommandServer server;
     private List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
-    public MinovaService(int port) {
+    @Override
+    public void onCreate() {
+        super.onCreate();
         server = new CommandServer(this, port);
+        server.start();
     }
 
     @Override
@@ -74,41 +80,46 @@ public class MinovaService implements CommandServer.Listener, CommandInputOutput
     @Override
     public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) {
         System.out.println("On reader command " + reader + " " + input);
+        String readerIdWithComma = input.substring(0, input.indexOf(",") + 1);
 
-        if(input.contains("UID")) {
+        if (input.contains("UID")) {
+            System.out.println("Contains UID!");
             try {
-                String result = reader.outputInput("MCR04G-8E71, GETTYPE");
+                uid = input.substring(input.lastIndexOf("=") + 1);
+                /*String result = reader.outputInput(readerIdWithComma + "GETTYPE");
                 System.out.println(result);
-            } catch(Exception e) {
+                getTag(result.substring((result.lastIndexOf(';')+1)), uid);*/
+                reader.write(readerIdWithComma + ", GETTYPE");
+            } catch (Exception e) {
                 System.out.print(e.getLocalizedMessage());
             }
         }
 
-        if(input.contains("CARDTYPE")) {
-            String atsString = input.substring((input.lastIndexOf(';')+1));
-            hexStringToByteArray(atsString);
-            byte[] ats = hexStringToByteArray(atsString);
-            byte[] atr = getAtr(ats);
-            TagType tag = TagType.identifyTagType(atr);
-            System.out.println("TagType: " + tag.getName());
+        if (input.contains("CARDTYPE")) {
+            String atsString = input.substring((input.lastIndexOf(";") + 1));
+            getTag(atsString, uid);
         }
 
     }
 
     @Override
     public void onReaderClosed(CommandInputOutputThread<String, String> reader, Exception e) {
-        System.out.println("On reader disconnected " + reader+ ": " + e);
+        System.out.println("On reader disconnected " + reader + ": " + e);
         synchronized (clients) {
             clients.remove(reader);
         }
     }
 
-    public void start()  {
-        server.start();
-    }
+    private void getTag(String atsString, String uid) {
+        byte[] ats = hexStringToByteArray(atsString);
+        byte[] atr = getAtr(ats);
 
-    public void stop() throws IOException {
-        server.stop();
+        TagType tag = TagType.identifyTagType(atr);
+
+        if (tag == TagType.DESFIRE_EV1) {
+            MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(clients.get(0));
+            mifareDesfireTagServiceSupport.desfire(0, atr, wrapper, hexStringToByteArray(uid));
+        }
     }
 
     private static byte[] getAtr(byte[] ats) {
@@ -121,21 +132,21 @@ public class MinovaService implements CommandServer.Listener, CommandInputOutput
         // ATS for DESFire starts with 0x75, saying that the next 3 bytes are interface bytes. The rest are historical bytes.
         int numOfHistoricalBytes = (length - 1) - 4;
         byte[] historicalBytes = new byte[numOfHistoricalBytes];
-        System.arraycopy(ats, length-numOfHistoricalBytes, historicalBytes, 0, numOfHistoricalBytes);
+        System.arraycopy(ats, length - numOfHistoricalBytes, historicalBytes, 0, numOfHistoricalBytes);
 
         // The second byte's second nibble is number of historical bytes.
-        atrString+=numOfHistoricalBytes;
+        atrString += numOfHistoricalBytes;
 
         // Third and fourth byte should be 0x80 0x01.
-        atrString+="8001";
+        atrString += "8001";
 
         // Next we add the actual historical bytes.
-        atrString+= ByteArrayHexStringConverter.toHexString(historicalBytes);
+        atrString += ByteArrayHexStringConverter.toHexString(historicalBytes);
 
         byte[] atrWithoutChecksum = hexStringToByteArray(atrString);
 
         // Create checksum..
-        byte[] checkSumBytes = new byte[atrWithoutChecksum.length-1];
+        byte[] checkSumBytes = new byte[atrWithoutChecksum.length - 1];
         System.arraycopy(atrWithoutChecksum, 1, checkSumBytes, 0, checkSumBytes.length);
 
         // Last byte of ATR is a checksum based on second through last byte before the checksum.
@@ -147,24 +158,15 @@ public class MinovaService implements CommandServer.Listener, CommandInputOutput
         return hexStringToByteArray(atrString);
     }
 
-    private static byte[] hexStringToByteArray(CharSequence s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
-        }
-
-        return data;
-    }
     private static String createXorChecksum(byte[] bytes) {
         int checkSum = bytes[0];
         System.out.println(ByteArrayHexStringConverter.toHexString(bytes));
 
-        for(int i = 1; i<bytes.length; i++) {
+        for (int i = 1; i < bytes.length; i++) {
             checkSum ^= bytes[i];
         }
         String chk = Integer.toHexString(checkSum);
-        chk = chk.substring(chk.lastIndexOf('f')+1);
+        chk = chk.substring(chk.lastIndexOf('f') + 1);
 
         return chk;
     }
