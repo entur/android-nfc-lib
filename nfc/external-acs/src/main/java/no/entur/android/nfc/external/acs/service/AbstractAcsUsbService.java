@@ -170,27 +170,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 		}
 	}
 
-	protected void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
-		Log.d(TAG, "Handle tag in regular mode");
-		AcsTag acsTag = new AcsTag(tagType, atr, reader, slotNumber);
-		ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, slotNumber);
+	protected abstract void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType);
 
-		if (tagType == TagType.MIFARE_ULTRALIGHT || tagType == TagType.MIFARE_ULTRALIGHT_C) {
-			mifareUltralight(slotNumber, atr, tagType, acsTag, wrapper, reader.getReaderName());
-		} else if (tagType == TagType.DESFIRE_EV1) {
-			desfire(slotNumber, atr, wrapper);
-		} else if (tagType == TagType.ISO_14443_TYPE_B_NO_HISTORICAL_BYTES || tagType == TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES
-				|| tagType == TagType.ISO_14443_TYPE_A) {
-			hce(slotNumber, atr, wrapper);
-		} else {
-			TagUtility.sendTechBroadcast(AbstractAcsUsbService.this);
-		}
-	}
-
-	protected abstract void hce(int slotNumber, byte[] atr, ACSIsoDepWrapper wrapper);
-
-	protected abstract void desfire(int slotNumber, byte[] atr, ACSIsoDepWrapper wrapper);
-
-	protected abstract void mifareUltralight(int slotNumber, byte[] atr, TagType tagType, AcsTag acsTag, ACSIsoDepWrapper wrapper, String readerName);
 
 }

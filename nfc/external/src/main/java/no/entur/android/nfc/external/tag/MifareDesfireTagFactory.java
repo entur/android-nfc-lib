@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagFactory;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
@@ -36,13 +37,6 @@ public class MifareDesfireTagFactory extends TagFactory {
 	protected static final byte[] EXTRA_ATQA_VALUE = new byte[] { 0x44, 0x03 };
 	protected static final short EXTRA_SAK_VALUE = 0x20;
 
-	/*
-	 * private int serviceHandle; private int type; private byte[] id; private int maxNdefSize; private NdefMessage message; private Boolean writable;
-	 * 
-	 * public MifareUltralightTagFactory(int serviceHandle, int type, byte[] id, int maxNdefSize, NdefMessage message, Boolean writable) { this.serviceHandle =
-	 * serviceHandle; this.type = type; this.id = id; this.maxNdefSize = maxNdefSize; this.message = message; this.writable = writable; }
-	 */
-
 	public Intent getTag(int serviceHandle, int slotNumber, byte[] atr, byte[] hiLayer, byte[] id, boolean hce, byte[] historicalBytes, INfcTag tagService) {
 
 		/*
@@ -66,7 +60,7 @@ public class MifareDesfireTagFactory extends TagFactory {
 		bundles.add(desfire);
 		tech.add(TagTechnology.ISO_DEP);
 
-		final Intent intent = new Intent(ExternalNfcReaderCallback.ACTION_TAG_DISCOVERED);
+		final Intent intent = new Intent(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
 
 		int[] techArray = new int[tech.size()];
 		for (int i = 0; i < techArray.length; i++) {

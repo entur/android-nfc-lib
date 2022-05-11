@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.wrapper.INfcTag;
@@ -38,7 +39,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
         } catch (Exception e) {
             Log.d(TAG, "Problem reading from tag", e);
 
-            broadcast(ExternalNfcReaderCallback.ACTION_TECH_DISCOVERED);
+            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
     }
 
@@ -58,7 +59,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
         } catch (Exception e) {
             Log.d(TAG, "Problem reading from tag", e);
 
-            broadcast(ExternalNfcReaderCallback.ACTION_TECH_DISCOVERED);
+            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
     }
 
