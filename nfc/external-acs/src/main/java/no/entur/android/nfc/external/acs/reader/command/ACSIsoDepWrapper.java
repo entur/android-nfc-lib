@@ -3,17 +3,17 @@ package no.entur.android.nfc.external.acs.reader.command;
 import com.acs.smartcard.ReaderException;
 
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
+import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 
-public class ACSIsoDepWrapper {
+public class ACSIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 
 	private static final String TAG = ACSIsoDepWrapper.class.getName();
 
 	private ReaderWrapper isoDep;
-	private int slotNum;
 
 	public ACSIsoDepWrapper(ReaderWrapper isoDep, int slotNum) {
+		super(slotNum);
 		this.isoDep = isoDep;
-		this.slotNum = slotNum;
 	}
 
 	public byte[] transceive(byte[] data) throws ReaderException {
@@ -36,7 +36,7 @@ public class ACSIsoDepWrapper {
 		return response;
 	}
 
-	public byte[] transmitPassThrough(byte[] req) throws ReaderException {
+	public byte[] transceiveRaw(byte[] req) throws Exception {
 		throw new ReaderException();
 	}
 }
