@@ -4,118 +4,33 @@ import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToB
 
 import org.nfctools.api.TagType;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
 import no.entur.android.nfc.external.acs.service.AbstractService;
-import no.entur.android.nfc.external.minova.reader.MinovaIsoDepWrapper;
-import no.entur.android.nfc.external.tag.MifareDesfireTagServiceSupport;
-import no.entur.android.nfc.tcpserver.CommandInput;
+import no.entur.android.nfc.external.minova.reader.MinovaReaderWrapper;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
-import no.entur.android.nfc.tcpserver.CommandOutput;
-import no.entur.android.nfc.tcpserver.CommandServer;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
-public abstract class AbstractMinovaTcpService extends AbstractService implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String> {
+public abstract class AbstractMinovaTcpService extends AbstractService {
 
     // No port below 1025 can be used in the linux system.
     private final int port = 1025;
 
-    protected CommandServer server;
-    protected List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
+    private MinovaReaderWrapper reader = new MinovaReaderWrapper(this::onTagPresent, port);
 
     @Override
     public void onCreate() {
         super.onCreate();
-        server = new CommandServer(this, port);
-        server.start();
+        reader.start();
     }
 
-    @Override
-    public void onServerSocketStart(int port) {
-        System.out.println("On server start " + port);
+    private void onTagPresent(int slot, String uid) {
+        String response = reader.sendCommandForResponse(slot, "GETTYPE");
+        String atsString = response.substring((response.lastIndexOf(";") + 1));
+
+        byte[] atr = getAtr(hexStringToByteArray(atsString));
+        TagType tag = TagType.identifyTagType(atr);
+
+        handleTag(tag, atr, uid, reader.clients.get(slot));
     }
-
-    @Override
-    public void onServerSocketConnection(int port, Socket socket) throws IOException {
-        CommandInput<String> input = new CommaCommandInput(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-        CommandOutput<String> output = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-
-        CommandInputOutputThread thread = new CommandInputOutputThread(this, socket, output, input);
-
-        synchronized (clients) {
-            clients.add(thread);
-        }
-
-        thread.start();
-    }
-
-    @Override
-    public void onServerSocketClosed(int port, Exception e) {
-        System.out.println("On server closed " + port + ": " + e);
-        synchronized (clients) {
-            for (CommandInputOutputThread<String, String> client : clients) {
-                client.close();
-                try {
-                    client.join();
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
-            }
-            clients.clear();
-        }
-    }
-
-    @Override
-    public void onReaderStart(CommandInputOutputThread<String, String> reader) {
-        System.out.println("On reader connect " + reader);
-    }
-
-    @Override
-    public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) {
-        System.out.println("On reader command " + reader + " " + input);
-        String readerIdWithComma = input.substring(0, input.indexOf(",") + 1);
-
-        String uid = null;
-        if (input.contains("UID")) {
-            System.out.println("Contains UID!");
-            try {
-                uid = input.substring(input.lastIndexOf("=") + 1);
-                /*String result = reader.outputInput(readerIdWithComma + "GETTYPE");
-                System.out.println(result);
-                getTag(result.substring((result.lastIndexOf(';')+1)), uid);*/
-                reader.write(readerIdWithComma + ", GETTYPE");
-            } catch (Exception e) {
-                System.out.print(e.getLocalizedMessage());
-            }
-        }
-
-        if (input.contains("CARDTYPE")) {
-            String atsString = input.substring((input.lastIndexOf(";") + 1));
-
-            byte[] ats = hexStringToByteArray(atsString);
-            byte[] atr = getAtr(ats);
-
-            TagType tag = TagType.identifyTagType(atr);
-
-            handleTag(tag, atr, uid, reader);
-        }
-
-    }
-
-    @Override
-    public void onReaderClosed(CommandInputOutputThread<String, String> reader, Exception e) {
-        System.out.println("On reader disconnected " + reader + ": " + e);
-        synchronized (clients) {
-            clients.remove(reader);
-        }
-    }
-
 
     protected abstract void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> reader);
 
