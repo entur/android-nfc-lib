@@ -18,16 +18,16 @@ public class ExternalNfcIntentCallbackSupport {
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcIntentCallback callback;
-	protected final Activity activity;
+	protected final Context context;
 	protected final List<String> actions;
 
-	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Activity activity) {
-		this(DEFAULT_ACTIONS, callback, activity);
+	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Context context) {
+		this(DEFAULT_ACTIONS, callback, context);
 	}
 
-	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Activity activity) {
+	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Context context) {
 		this.callback = callback;
-		this.activity = activity;
+		this.context = context;
 		this.actions = actions;
 	}
 
@@ -68,7 +68,7 @@ public class ExternalNfcIntentCallbackSupport {
 	protected void broadcast(String action) {
 		Intent intent = new Intent();
 		intent.setAction(action);
-		activity.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+		context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
 	}
 
 	private void startReceivingNfcIntentBroadcasts() {
@@ -83,7 +83,7 @@ public class ExternalNfcIntentCallbackSupport {
 				filter.addAction(action);
 			}
 
-			activity.registerReceiver(intentReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			context.registerReceiver(intentReceiver, filter, ANDROID_PERMISSION_NFC, null);
 		}
 	}
 
@@ -93,7 +93,7 @@ public class ExternalNfcIntentCallbackSupport {
 
 			recieveNfcIntentBroadcasts = false;
 
-			activity.unregisterReceiver(intentReceiver);
+			context.unregisterReceiver(intentReceiver);
 		}
 	}
 

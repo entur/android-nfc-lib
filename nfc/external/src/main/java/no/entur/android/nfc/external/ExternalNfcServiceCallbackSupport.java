@@ -1,12 +1,9 @@
 package no.entur.android.nfc.external;
 
-import android.app.Activity;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.util.Log;
 
 public class ExternalNfcServiceCallbackSupport {
@@ -14,32 +11,25 @@ public class ExternalNfcServiceCallbackSupport {
 	private static final String TAG = ExternalNfcServiceCallbackSupport.class.getName();
 
 	protected final ExternalNfcServiceCallback callback;
-	protected final Activity activity;
-	protected final Class<? extends Service> serviceClass;
-	protected final boolean foreground;
+	protected final Context context;
 
 	private boolean recieveServiceBroadcasts = false;
 	private volatile boolean open = false;
 
-	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Activity activity, Class<? extends Service> serviceClass, boolean foreground) {
+	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context) {
 		this.callback = callback;
-		this.activity = activity;
-		this.serviceClass = serviceClass;
-		this.foreground = foreground;
+		this.context = context;
 	}
 
 	private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
 
 		public void onReceive(Context context, Intent intent) {
-
 			String action = intent.getAction();
-
 			if (ExternalNfcServiceCallback.ACTION_SERVICE_STARTED.equals(action)) {
 				if (!open) {
 					open = true;
 
 					Log.d(TAG, "Service started");
-
 					callback.onExternalNfcServiceStarted(intent);
 				}
 			} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
@@ -47,7 +37,6 @@ public class ExternalNfcServiceCallbackSupport {
 					open = false;
 
 					Log.d(TAG, "Service stopped");
-
 					callback.onExternalNfcServiceStopped(intent);
 				}
 			} else {
@@ -65,29 +54,6 @@ public class ExternalNfcServiceCallbackSupport {
 		stopReceivingServiceBroadcasts();
 	}
 
-	protected void broadcast(String action) {
-		Intent intent = new Intent();
-		intent.setAction(action);
-		activity.sendBroadcast(intent, "android.permission.NFC");
-	}
-
-	public void startService() {
-		Intent intent = new Intent();
-		intent.setClass(activity, serviceClass);
-		activity.startService(intent);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && foreground) {
-			activity.startForegroundService(intent);
-		} else {
-			activity.startService(intent);
-		}
-	}
-
-	public void stopService() {
-		Intent intent = new Intent();
-		intent.setClass(activity, serviceClass);
-		activity.stopService(intent);
-	}
-
 	private void startReceivingServiceBroadcasts() {
 		if (!recieveServiceBroadcasts) {
 			Log.d(TAG, "Start receiving service broadcasts");
@@ -99,7 +65,7 @@ public class ExternalNfcServiceCallbackSupport {
 			filter.addAction(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
 			filter.addAction(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
 
-			activity.registerReceiver(serviceReceiver, filter, "android.permission.NFC", null);
+			context.registerReceiver(serviceReceiver, filter, "android.permission.NFC", null);
 		}
 	}
 
@@ -109,7 +75,7 @@ public class ExternalNfcServiceCallbackSupport {
 
 			recieveServiceBroadcasts = false;
 
-			activity.unregisterReceiver(serviceReceiver);
+			context.unregisterReceiver(serviceReceiver);
 		}
 	}
 }
