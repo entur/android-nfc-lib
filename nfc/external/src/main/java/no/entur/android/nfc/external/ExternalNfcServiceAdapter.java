@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 
 public class ExternalNfcServiceAdapter {
 
@@ -19,10 +20,12 @@ public class ExternalNfcServiceAdapter {
 		this.foreground = foreground;
 	}
 
-	public void startService() {
+	public void startService(Bundle extras) {
 		Intent intent = new Intent();
+		if(extras != null) {
+			intent.putExtras(extras);
+		}
 		intent.setClass(context, serviceClass);
-		context.startService(intent);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && foreground) {
 			context.startForegroundService(intent);
 		} else {
