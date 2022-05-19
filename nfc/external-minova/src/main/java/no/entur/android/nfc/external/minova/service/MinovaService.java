@@ -20,10 +20,10 @@ public class MinovaService extends AbstractMinovaTcpService {
     }
 
     @Override
-    protected void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread io) {
+    protected void handleTag(int slot, TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> io) {
         if (tag == TagType.DESFIRE_EV1) {
-            MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(io);
-            mifareDesfireTagServiceSupport.desfire(0, atr, wrapper, hexStringToByteArray(uid));
+            MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(io, slot);
+            mifareDesfireTagServiceSupport.desfire(slot, atr, wrapper, hexStringToByteArray(uid));
         }
     }
 

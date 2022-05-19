@@ -29,10 +29,10 @@ public abstract class AbstractMinovaTcpService extends AbstractService {
         byte[] atr = getAtr(hexStringToByteArray(atsString));
         TagType tag = TagType.identifyTagType(atr);
 
-        handleTag(tag, atr, uid, reader.clients.get(slot));
+        handleTag(slot, tag, atr, uid, reader.clients.get(slot));
     }
 
-    protected abstract void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> reader);
+    protected abstract void handleTag(int slot, TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> reader);
 
     private static byte[] getAtr(byte[] ats) {
         // First byte of Smart cards ATR start with 3B or 3F, we use 3B. Next number should be 8.

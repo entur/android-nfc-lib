@@ -14,6 +14,7 @@ import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 import no.entur.android.nfc.tcpserver.CommandOutput;
 import no.entur.android.nfc.tcpserver.CommandServer;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class MinovaReaderWrapper implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String>  {
 
@@ -25,10 +26,6 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
     public MinovaReaderWrapper(ReaderListener listener, int port) {
         this.listener = listener;
         server = new CommandServer(this, port);
-    }
-
-    public void transmit(byte[] data) {
-
     }
 
     public void start() {

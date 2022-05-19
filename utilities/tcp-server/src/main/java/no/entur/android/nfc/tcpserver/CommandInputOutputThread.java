@@ -46,6 +46,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         }
     }
 
+    //private String readerId;
     private final CommandInputOutputThreadListenerWrapper<T, S> listener;
     private final Socket clientSocket;
     private final CommandOutput<S> out;
@@ -78,6 +79,10 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
                     pending = pendigInputConsumer;
                 }
                 if(pending == null) {
+                    /*if(next instanceof String && ((String) next).contains("UID")) {
+                        readerId = ((String) next).substring(0, ((String) next).indexOf(";"));
+                        System.out.println(readerId);
+                    }*/
                     listener.onReaderCommand(this, next);
                 } else {
                     pending.close(next);
@@ -146,4 +151,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         }
     }
 
+/*    public String getReaderId() {
+        return readerId;
+    }*/
 }
