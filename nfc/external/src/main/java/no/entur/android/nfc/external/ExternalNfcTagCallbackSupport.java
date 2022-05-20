@@ -34,8 +34,6 @@ public class ExternalNfcTagCallbackSupport {
 				Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
 				callback.onExternalTagDiscovered(tag);
-			} else if (action.equals(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD)) {
-				callback.onExternalTagLost();
 			} else {
 				Log.d(TAG, "Ignore action " + intent.getAction());
 			}
@@ -81,7 +79,6 @@ public class ExternalNfcTagCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
-			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
 
 			activity.registerReceiver(tagReceiver, filter, ANDROID_PERMISSION_NFC, null);
 		}
