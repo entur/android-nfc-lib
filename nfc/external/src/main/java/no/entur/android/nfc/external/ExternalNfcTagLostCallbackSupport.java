@@ -5,36 +5,29 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.NfcAdapter;
 import android.util.Log;
 
-import no.entur.android.nfc.wrapper.Tag;
+public class ExternalNfcTagLostCallbackSupport {
 
-public class ExternalNfcTagCallbackSupport {
-
-	private static final String TAG = ExternalNfcTagCallbackSupport.class.getName();
+	private static final String TAG = ExternalNfcTagLostCallbackSupport.class.getName();
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
-	protected final ExternalNfcTagCallback callback;
+	protected final ExternalNfcTagLostCallback callback;
 	protected final Activity activity;
 
-	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Activity activity) {
+	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity) {
 		this.callback = callback;
 		this.activity = activity;
 	}
 
-	private boolean recieveTagBroadcasts = false;
+	private boolean recieveTagLostBroadcasts = false;
 
 	protected boolean enabled = false;
 
 	private final BroadcastReceiver tagReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
-			if (action.equals(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED)) {
-				Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-
-				callback.onExternalTagDiscovered(tag);
-			} else if (action.equals(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD)) {
+			if (action.equals(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD)) {
 				callback.onExternalTagLost();
 			} else {
 				Log.d(TAG, "Ignore action " + intent.getAction());
@@ -44,54 +37,47 @@ public class ExternalNfcTagCallbackSupport {
 
 	public void onResume() {
 		if (enabled) {
-			startReceivingTagBroadcasts();
+			startReceivingTagLostBroadcasts();
 		}
 	}
 
 	public void onPause() {
 		if (enabled) {
-			stopReceivingTagBroadcasts();
+			stopReceivingTagLostBroadcasts();
 		}
 	}
 
 	public void setEnabled(boolean enabled) {
 		if (!this.enabled && enabled) {
 			// disabled -> enabled
-			startReceivingTagBroadcasts();
+			startReceivingTagLostBroadcasts();
 		} else if (this.enabled && !enabled) {
 
 			// enabled -> disabled
-			stopReceivingTagBroadcasts();
+			stopReceivingTagLostBroadcasts();
 		}
 		this.enabled = enabled;
 	}
 
-	protected void broadcast(String action) {
-		Intent intent = new Intent();
-		intent.setAction(action);
-		activity.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
-	}
+	private void startReceivingTagLostBroadcasts() {
+		if (!recieveTagLostBroadcasts) {
+			Log.d(TAG, "Start receiving tag lost broadcasts");
 
-	private void startReceivingTagBroadcasts() {
-		if (!recieveTagBroadcasts) {
-			Log.d(TAG, "Start receiving tag broadcasts");
-
-			recieveTagBroadcasts = true;
+			recieveTagLostBroadcasts = true;
 
 			// register receiver
 			IntentFilter filter = new IntentFilter();
-			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
 
 			activity.registerReceiver(tagReceiver, filter, ANDROID_PERMISSION_NFC, null);
 		}
 	}
 
-	private void stopReceivingTagBroadcasts() {
-		if (recieveTagBroadcasts) {
-			Log.d(TAG, "Stop receiving tag broadcasts");
+	private void stopReceivingTagLostBroadcasts() {
+		if (recieveTagLostBroadcasts) {
+			Log.d(TAG, "Stop receiving tag lost broadcasts");
 
-			recieveTagBroadcasts = false;
+			recieveTagLostBroadcasts = false;
 
 			activity.unregisterReceiver(tagReceiver);
 		}

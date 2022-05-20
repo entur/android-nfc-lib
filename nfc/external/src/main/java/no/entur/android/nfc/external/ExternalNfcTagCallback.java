@@ -22,4 +22,6 @@ public interface ExternalNfcTagCallback extends ReaderCallback {
 		onTagDiscovered(tag);
 	}
 
+	void onExternalTagLost();
+
 }
