@@ -11,11 +11,11 @@ buildscript {
 }
 
 plugins {
-    id 'com.diffplug.spotless' version '6.2.0' apply false
+    id 'com.diffplug.spotless'
     id "com.github.spotbugs" version '5.0.5' apply false
-    id 'org.owasp.dependencycheck' version '6.5.3' apply false
-    id 'com.github.ben-manes.versions' version '0.42.0' apply false
-    id('io.github.gradle-nexus.publish-plugin') version '1.1.0'
+    id 'org.owasp.dependencycheck'
+    id 'com.github.ben-manes.versions'
+    // id('io.github.gradle-nexus.publish-plugin')
 }
 
 def buildProjects() {
@@ -302,11 +302,11 @@ configure(utilityProjects()) {
 
 
 group = 'no.entur.android.nfc'
-
+/*
 nexusPublishing {
     repositories {
         sonatype()
     }
 }
-
+ */
 

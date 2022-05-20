@@ -9,9 +9,9 @@ android {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
+    implementation libs.appcompat
 
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
+    implementation libs.desugar
 }
 
 

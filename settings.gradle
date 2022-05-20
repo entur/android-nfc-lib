@@ -1,3 +1,14 @@
+pluginManagement {
+    plugins {
+        id("com.diffplug.spotless") version "6.2.0" apply false
+        id("org.owasp.dependencycheck") version "6.5.3" apply false
+        id ("com.github.ben-manes.versions") version "0.42.0" apply false
+        id("io.github.gradle-nexus.publish-plugin") version "1.1.0" apply false
+    }
+}
+
+enableFeaturePreview('VERSION_CATALOGS')
+
 include ":nfc:wrapper", ":nfc:core", ":nfc:external", ":utilities:tcp-server", ":nfc:external-acs", ":nfc:external-minova"
 
 // automatically set jacoco report paths in folders with a build file, excluding root
@@ -22,5 +33,20 @@ buildCache {
     local {
         directory = new File(rootDir, 'build-cache')
         removeUnusedEntriesAfterDays = 1
+    }
+}
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            version("appcompat", "1.4.1")
+            version("desugar-jdk-libs", "1.1.5")
+            version("jupiter", "5.8.2")
+
+            alias("appcompat").to("androidx.appcompat", "appcompat").versionRef("appcompat")
+            alias("desugar").to("com.android.tools", "desugar_jdk_libs").versionRef("desugar-jdk-libs")
+            alias("jupiter-api").to("org.junit.jupiter", "junit-jupiter-api").versionRef("jupiter")
+            alias("jupiter-engine").to("org.junit.jupiter", "junit-jupiter-engine").versionRef("jupiter")
+        }
     }
 }

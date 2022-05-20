@@ -1,4 +1,5 @@
 android {
+    compileSdkVersion 31
     defaultConfig {
         minSdkVersion 23
     }
@@ -8,7 +9,7 @@ android {
 dependencies {
     api project(":nfc:core")
 
-    implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
+    implementation libs.appcompat
 }
 
 
