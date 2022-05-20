@@ -16,7 +16,7 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
     @Override
     public byte[] transceive(byte[] data) throws Exception {
         String dataAsString = ByteArrayHexStringConverter.toHexString(data);
-        String command = "MCR04G-8E71, CAPDU;" + dataAsString;
+        String command = reader.getReaderId() + ", CAPDU;" + dataAsString;
         String response;
 
         response = reader.outputInput(command);
@@ -27,7 +27,7 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
     @Override
     public byte[] transceiveRaw(byte[] data) throws Exception {
         String dataAsString = ByteArrayHexStringConverter.toHexString(data);
-        String command = "MCR04G-8E71, CAPDU;" + dataAsString;
+        String command = reader.getReaderId() + ", CAPDU;" + dataAsString;
         String response;
 
         response = reader.outputInput(command);

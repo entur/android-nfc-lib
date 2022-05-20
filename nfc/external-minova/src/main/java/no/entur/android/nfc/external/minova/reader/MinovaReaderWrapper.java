@@ -18,10 +18,10 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class MinovaReaderWrapper implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String>  {
 
-    public List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
+    public final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
-    private CommandServer server;
-    private ReaderListener listener;
+    private final CommandServer server;
+    private final ReaderListener listener;
 
     public MinovaReaderWrapper(ReaderListener listener, int port) {
         this.listener = listener;
@@ -35,7 +35,7 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
     public String sendCommandForResponse(int slot, String command) {
         String result = null;
         try {
-            result = clients.get(slot).outputInput("MCR04G-8E71, " + command);
+            result = clients.get(slot).outputInput(clients.get(slot).getReaderId() + ", " + command);
         } catch (Exception e) {
             System.out.println("Oh no!");
         }
@@ -52,7 +52,7 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
         CommandInput<String> input = new CommaCommandInput(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         CommandOutput<String> output = new CommaCommandOutput(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 
-        CommandInputOutputThread thread = new CommandInputOutputThread(this, socket, output, input);
+        CommandInputOutputThread<String, String> thread = new CommandInputOutputThread<>(this, socket, output, input);
 
         synchronized (clients) {
             clients.add(thread);
@@ -78,13 +78,13 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
     }
 
     @Override
-    public void onReaderStart(CommandInputOutputThread reader) {
+    public void onReaderStart(CommandInputOutputThread<String, String> reader) {
         System.out.println("Reader connected!");
 
     }
 
     @Override
-    public void onReaderCommand(CommandInputOutputThread reader, String input) {
+    public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) {
         System.out.println("On reader command " + reader + " " + input);
 
         if (input.contains("UID")) {
@@ -97,7 +97,7 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
     }
 
     @Override
-    public void onReaderClosed(CommandInputOutputThread reader, Exception e) {
+    public void onReaderClosed(CommandInputOutputThread<String, String> reader, Exception e) {
 
     }
 
