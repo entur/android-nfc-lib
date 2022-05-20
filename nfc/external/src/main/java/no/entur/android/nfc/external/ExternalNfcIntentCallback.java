@@ -8,6 +8,4 @@ import no.entur.android.nfc.wrapper.Tag;
 public interface ExternalNfcIntentCallback {
 
 	void onNfcIntent(Intent intent);
-
-	void onExternalTagLost();
 }
