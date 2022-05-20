@@ -31,62 +31,14 @@ import no.entur.android.nfc.external.tag.AbstractTagServiceSupport;
 import no.entur.android.nfc.external.tag.TechnologyType;
 import no.entur.android.nfc.wrapper.INfcTag;
 
-public class MifareUltralightTagServiceSupport extends AbstractTagServiceSupport {
+public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightTagServiceSupport {
 
     private static final String TAG = MifareUltralightTagServiceSupport.class.getName();
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
-    protected final boolean ntag21xUltralights;
-
     public MifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
-        super(context, tagService, store);
-        this.ntag21xUltralights = ntag21xUltralights;
-    }
-
-    protected int getVersion(MfBlock initBlock) {
-
-        switch (initBlock.getData()[2]) {
-            case 0x06: {
-                if (!ntag21xUltralights) {
-                    return -NfcNtagVersion.TYPE_NTAG210; // aka ultralight
-                }
-                return NfcNtagVersion.TYPE_NTAG210;
-            }
-            case 0x10: {
-                return NfcNtagVersion.TYPE_NTAG212;
-            }
-            case 0x12: {
-                if (!ntag21xUltralights) {
-                    return -NfcNtagVersion.TYPE_NTAG213; // aka ultralight c
-                }
-                return NfcNtagVersion.TYPE_NTAG213;
-            }
-            case 0x3E: {
-                return NfcNtagVersion.TYPE_NTAG215;
-            }
-            case 0x6D: {
-                return NfcNtagVersion.TYPE_NTAG216;
-            }
-            case 0x6F: {
-                return NfcNtagVersion.TYPE_NTAG216F;
-            }
-            default: {
-                return 0;
-            }
-        }
-    }
-
-    private boolean isLocked(MfUlReaderWriter readerWriter, MemoryLayout memoryLayout) throws IOException, ReaderException {
-        for (LockPage lockPage : memoryLayout.getLockPages()) {
-            MfBlock[] block = readerWriter.readBlock(lockPage.getPage(), 1);
-            for (int lockByte : lockPage.getLockBytes()) {
-                if (block[0].getData()[lockByte] != 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        super(context, tagService, store, ntag21xUltralights);
     }
 
     @SuppressWarnings("java:S3776")
@@ -212,7 +164,7 @@ public class MifareUltralightTagServiceSupport extends AbstractTagServiceSupport
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
         } catch (Exception e) {
             Log.d(TAG, "Problem reading from tag", e);
-            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+            TagUtility.sendTechBroadcast(context);
         }
     }
 
