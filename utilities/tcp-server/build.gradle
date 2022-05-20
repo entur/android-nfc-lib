@@ -1,10 +1,11 @@
 
-repositories repos
+// repositories repos
+
 
 ext {
     junitJupiterVersion = '5.8.2'
 }
-
+/*
 dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
@@ -13,3 +14,4 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+ */
