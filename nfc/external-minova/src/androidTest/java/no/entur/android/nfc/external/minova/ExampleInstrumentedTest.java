@@ -18,6 +18,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import no.entur.android.nfc.external.minova.reader.MinovaCommands;
 import no.entur.android.nfc.external.minova.service.CommaCommandInput;
 import no.entur.android.nfc.external.minova.service.CommaCommandOutput;
 import no.entur.android.nfc.external.minova.service.MinovaService;
@@ -59,6 +60,17 @@ public class ExampleInstrumentedTest {
         TagType type = TagType.identifyTagType(atr);
 
         Log.d("Test", "TagType is: " + type.getName() + ". " + ByteArrayHexStringConverter.toHexString(atr));
+    }
+
+    @Test
+    public void commandsTest() {
+        /*MinovaCommands commands = new MinovaCommands();
+
+        commands.buzz();
+        commands.buzz(300, 1);
+
+        commands.displayText(0, 0, 1, "Hello world!");
+        commands.displayTextWithDuration(0, 0, 1, "Hello world!", 2000);*/
     }
 
     private static byte[] getAtr(byte[] ats) {
