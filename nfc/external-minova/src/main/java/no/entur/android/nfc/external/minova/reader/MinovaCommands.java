@@ -20,36 +20,28 @@ public class MinovaCommands {
     private static final String LCDUNLOCK = "LCDUNLOCK";
     private static final String DELAY = "DELAY";
 
-    public void buzz(int durationInMillis, int times) {
+    public void buzz(int durationInMillis, int times) throws Exception {
         String commandSet = command("MCR04G-8E71") +
                 command(BUZZER, durationInMillis, times);
 
         System.out.println(commandSet);
-       try{
-            reader.write(commandSet);
-        } catch (Exception e) {
-            //TODO
-        }
+        reader.write(commandSet);
     }
 
-    public void buzz() {
+    public void buzz() throws Exception {
         buzz(40, 1);
     }
 
-    public void displayText(int xAxis, int yAxis, int font, String text) {
+    public void displayText(int xAxis, int yAxis, int font, String text) throws Exception {
         String commandSet = command(reader.getReaderId()) +
                 command(LCDCLR) +
                 command(LCDSET, xAxis, yAxis, font, text);
 
         System.out.println(commandSet);
-        try{
-            reader.write(commandSet);
-        } catch (Exception e) {
-            //TODO
-        }
+        reader.write(commandSet);
     }
 
-    public void displayTextWithDuration(int xAxis, int yAxis, int font, String text, int durationInMillis ) {
+    public void displayTextWithDuration(int xAxis, int yAxis, int font, String text, int durationInMillis) throws Exception {
         String commandSet = command(reader.getReaderId()) +
                 command(LCDCLR) +
                 command(LCDSET, xAxis, yAxis, font, text) +
@@ -58,11 +50,7 @@ public class MinovaCommands {
                 command(LCDUNLOCK);
 
         System.out.println(commandSet);
-        try{
-            reader.write(commandSet);
-        } catch (Exception e) {
-            //TODO
-        }
+        reader.write(commandSet);
     }
 
     private static <T> String command(String command, T... arguments) {
