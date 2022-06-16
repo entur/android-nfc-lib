@@ -14,9 +14,8 @@ import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 import no.entur.android.nfc.tcpserver.CommandOutput;
 import no.entur.android.nfc.tcpserver.CommandServer;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
-public class MinovaReaderWrapper implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String>  {
+public class MinovaReaderWrapper implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String> {
 
     public final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
@@ -89,7 +88,7 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
 
         if (input.contains("UID")) {
             try {
-                listener.onTagPresent(clients.indexOf(reader) ,input.substring(input.lastIndexOf("=") + 1));
+                listener.onTagPresent(clients.indexOf(reader), input.substring(input.lastIndexOf("=") + 1));
             } catch (Exception e) {
                 System.out.print(e.getLocalizedMessage());
             }
