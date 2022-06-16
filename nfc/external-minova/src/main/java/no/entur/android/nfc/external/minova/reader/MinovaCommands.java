@@ -28,10 +28,6 @@ public class MinovaCommands {
         reader.write(commandSet);
     }
 
-    public void buzz() throws Exception {
-        buzz(40, 1);
-    }
-
     public void displayText(int xAxis, int yAxis, int font, String text) throws Exception {
         String commandSet = command(reader.getReaderId()) +
                 command(LCDCLR) +
