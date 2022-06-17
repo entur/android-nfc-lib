@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.NfcReaderCallbackSupport;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -54,8 +55,8 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 	protected int transceiveTimeout;
 
 	public AbstractNfcReaderCallbackHceSupport(Activity activity, Listener listener, Bundle readerModeExtras, byte[] applicationIdentifier,
-                                               List<CommandApduProtocol> protocols, ReaderCallback delegate, int transceiveTimeout) {
-		super(activity, delegate, readerModeExtras);
+											   List<CommandApduProtocol> protocols, ReaderCallback delegate, int transceiveTimeout, Executor executor) {
+		super(activity, delegate, readerModeExtras, executor);
 		this.listener = listener;
 		this.applicationIdentifier = applicationIdentifier;
 		this.protocols = protocols;

@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.util.Log;
 
+import java.util.concurrent.Executor;
+
 import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcTagCallbackSupport {
@@ -18,26 +20,39 @@ public class ExternalNfcTagCallbackSupport {
 	protected final ExternalNfcTagCallback callback;
 	protected final Activity activity;
 
-	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Activity activity) {
-		this.callback = callback;
-		this.activity = activity;
-	}
-
 	private boolean recieveTagBroadcasts = false;
 
 	protected boolean enabled = false;
+	protected Executor executor; // non-final for testing
 
 	private final BroadcastReceiver tagReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
 		if (intent.getAction().equals(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED)) {
 			Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
-			callback.onExternalTagDiscovered(tag);
+			if(executor != null) {
+				executor.execute(() -> {
+					callback.onExternalTagDiscovered(tag);
+				});
+			} else {
+				callback.onExternalTagDiscovered(tag);
+			}
+
 		} else {
 			Log.d(TAG, "Ignore action " + intent.getAction());
 		}
 		}
 	};
+
+	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Activity activity, Executor executor) {
+		this.callback = callback;
+		this.activity = activity;
+		this.executor = executor;
+	}
+
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
+	}
 
 	public void onResume() {
 		if (enabled) {

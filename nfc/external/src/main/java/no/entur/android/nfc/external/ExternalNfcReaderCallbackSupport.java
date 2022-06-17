@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.util.Log;
 
+import java.util.concurrent.Executor;
+
 import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcReaderCallbackSupport {
@@ -18,11 +20,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 	protected final ExternalNfcReaderCallback callback;
 	protected final Activity activity;
-
-	public ExternalNfcReaderCallbackSupport(ExternalNfcReaderCallback callback, Activity activity) {
-		this.callback = callback;
-		this.activity = activity;
-	}
+	protected Executor executor; // non-final for testing
 
 	private boolean recieveReaderBroadcasts = false;
 
@@ -34,30 +32,52 @@ public class ExternalNfcReaderCallbackSupport {
 
 		public void onReceive(Context context, Intent intent) {
 
-			String action = intent.getAction();
+		String action = intent.getAction();
 
-			if (ExternalNfcReaderCallback.ACTION_READER_OPENED.equals(action)) {
-				if (!open) {
-					open = true;
+		if (ExternalNfcReaderCallback.ACTION_READER_OPENED.equals(action)) {
+			if (!open) {
+				open = true;
 
-					Log.d(TAG, "Reader opened");
+				Log.d(TAG, "Reader opened");
 
+				if(executor != null) {
+					executor.execute(() -> {
+						callback.onExternalNfcReaderOpened(intent);
+					});
+				} else {
 					callback.onExternalNfcReaderOpened(intent);
 				}
-			} else if (ExternalNfcReaderCallback.ACTION_READER_CLOSED.equals(action)) {
-				if (open) {
-					open = false;
+			}
+		} else if (ExternalNfcReaderCallback.ACTION_READER_CLOSED.equals(action)) {
+			if (open) {
+				open = false;
 
-					Log.d(TAG, "Reader closed");
+				Log.d(TAG, "Reader closed");
 
+				if(executor != null) {
+					executor.execute(() -> {
+						callback.onExternalNfcReaderClosed(intent);
+					});
+				} else {
 					callback.onExternalNfcReaderClosed(intent);
 				}
-			} else {
-				throw new IllegalArgumentException("Unexpected action " + action);
 			}
+		} else {
+			throw new IllegalArgumentException("Unexpected action " + action);
+		}
 		}
 
 	};
+
+	public ExternalNfcReaderCallbackSupport(ExternalNfcReaderCallback callback, Activity activity, Executor executor) {
+		this.callback = callback;
+		this.activity = activity;
+		this.executor = executor;
+	}
+
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
+	}
 
 	public void onResume() {
 		if (enabled) {

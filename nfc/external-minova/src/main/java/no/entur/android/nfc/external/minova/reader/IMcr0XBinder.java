@@ -65,6 +65,6 @@ public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 
 	@Override
 	public byte[] displayTextWithDuration(int xAxis, int yAxis, int font, String text, int durationInMillis) throws RemoteException {
-		return displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
+		return wrapper.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
 	}
 }
