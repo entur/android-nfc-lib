@@ -1,5 +1,8 @@
 package no.entur.android.nfc.external.minova.reader;
 
+import android.content.Context;
+import android.content.Intent;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -8,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.minova.service.CommaCommandInput;
 import no.entur.android.nfc.external.minova.service.CommaCommandOutput;
 import no.entur.android.nfc.tcpserver.CommandInput;
@@ -21,10 +25,12 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
 
     private final CommandServer server;
     private final ReaderListener listener;
+    private final Context context;
 
-    public MinovaReaderWrapper(ReaderListener listener, int port) {
+    public MinovaReaderWrapper(ReaderListener listener, int port, Context context) {
+        this.server = new CommandServer(this, port);
         this.listener = listener;
-        server = new CommandServer(this, port);
+        this.context = context;
     }
 
     public void start() {
@@ -80,6 +86,23 @@ public class MinovaReaderWrapper implements CommandServer.Listener, CommandInput
     public void onReaderStart(CommandInputOutputThread<String, String> reader) {
         System.out.println("Reader connected!");
 
+        if (reader != null) {
+            System.out.println("reader is not null ^^");
+            MinovaCommands commands = new MinovaCommands(reader);
+            IMcr0XBinder mcrBinder = new IMcr0XBinder();
+            mcrBinder.setCommands(commands);
+
+            McrReader mcrReader = new McrReader("MCR04G ", mcrBinder);
+            System.out.println("Made McrReader");
+
+            Intent intent = new Intent();
+            intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+            intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, mcrReader);
+
+            //intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_STATUS_CODE, status);
+
+            context.sendBroadcast(intent);
+        }
     }
 
     @Override

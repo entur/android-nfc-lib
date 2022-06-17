@@ -55,16 +55,16 @@ public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 
 	@Override
 	public byte[] buzz(int durationInMillis, int times) throws RemoteException {
-		return new byte[0];
+		return wrapper.buzz(durationInMillis, times);
 	}
 
 	@Override
 	public byte[] displayText(int xAxis, int yAxis, int font, String text) throws RemoteException {
-		return new byte[0];
+		return wrapper.displayText(xAxis, yAxis, font, text);
 	}
 
 	@Override
 	public byte[] displayTextWithDuration(int xAxis, int yAxis, int font, String text, int durationInMillis) throws RemoteException {
-		return new byte[0];
+		return displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
 	}
 }

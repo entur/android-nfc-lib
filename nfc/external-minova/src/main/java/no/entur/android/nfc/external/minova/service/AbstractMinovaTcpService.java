@@ -14,7 +14,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService {
     // No port below 1025 can be used in the linux system.
     private final int port = 1025;
 
-    private MinovaReaderWrapper reader = new MinovaReaderWrapper(this::onTagPresent, port);
+    private final MinovaReaderWrapper reader = new MinovaReaderWrapper(this::onTagPresent, port, this);
 
     @Override
     public void onCreate() {

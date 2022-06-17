@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.minova.reader;
 
+import java.io.IOException;
+
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
 public class MinovaCommands {
@@ -25,7 +27,15 @@ public class MinovaCommands {
                 command(BUZZER, durationInMillis, times);
 
         System.out.println(commandSet);
-        reader.write(commandSet);
+
+        Thread thread = new Thread(() -> {
+            try {
+                reader.write(commandSet);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
     }
 
     public void displayText(int xAxis, int yAxis, int font, String text) throws Exception {

@@ -6,7 +6,7 @@ public class IMcr0XCommandWrapper extends CommandWrapper {
 
     private static final String TAG = IMcr0XCommandWrapper.class.getName();
 
-    private MinovaCommands commands;
+    private final MinovaCommands commands;
 
     public IMcr0XCommandWrapper(MinovaCommands commands) {
         this.commands = commands;
