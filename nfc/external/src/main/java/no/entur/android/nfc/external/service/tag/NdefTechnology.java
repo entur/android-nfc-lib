@@ -9,4 +9,6 @@ public interface NdefTechnology extends TagTechnology {
     NdefMessage ndefRead();
 
     int ndefWrite(NdefMessage msg);
+
+    boolean isWritable();
 }
