@@ -6,6 +6,13 @@ import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
 public class MinovaCommands {
 
+    public static final int EXTRA_SMALL = 0;
+    public static final int SMALL = 1;
+    public static final int MEDIUM = 2;
+    public static final int LARGE = 3;
+    public static final int EXTRA_LARGE = 4;
+    public static final int EXTRA_EXTRA_LARGE = 5;
+
     CommandInputOutputThread<String, String> reader;
 
     public MinovaCommands(CommandInputOutputThread<String, String> reader) {
@@ -27,15 +34,7 @@ public class MinovaCommands {
                 command(BUZZER, durationInMillis, times);
 
         System.out.println(commandSet);
-
-        Thread thread = new Thread(() -> {
-            try {
-                reader.write(commandSet);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        thread.start();
+        reader.write(commandSet);
     }
 
     public void displayText(int xAxis, int yAxis, int font, String text) throws Exception {
