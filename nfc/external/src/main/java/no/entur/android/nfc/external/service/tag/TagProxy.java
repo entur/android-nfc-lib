@@ -101,7 +101,7 @@ public class TagProxy {
 
 	public boolean isNdef() {
 		for(TagTechnology t : technologies) {
-			if(t instanceof Ndef) {
+			if(t instanceof NdefTechnology) {
 				return true;
 			}
 		}
@@ -110,8 +110,8 @@ public class TagProxy {
 
 	public boolean ndefIsWritable() {
 		for(TagTechnology t : technologies) {
-			if(t instanceof Ndef) {
-				Ndef ndef = (Ndef)t;
+			if(t instanceof NdefTechnology) {
+				NdefTechnology ndef = (NdefTechnology)t;
 				return ndef.isWritable();
 			}
 		}

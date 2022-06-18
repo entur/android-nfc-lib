@@ -78,12 +78,6 @@ public class ExternalNfcTagCallbackSupport {
 		this.enabled = enabled;
 	}
 
-	protected void broadcast(String action) {
-		Intent intent = new Intent();
-		intent.setAction(action);
-		activity.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
-	}
-
 	private void startReceivingTagBroadcasts() {
 		if (!recieveTagBroadcasts) {
 			Log.d(TAG, "Start receiving tag broadcasts");
