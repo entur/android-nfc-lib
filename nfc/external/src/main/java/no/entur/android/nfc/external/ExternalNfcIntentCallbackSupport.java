@@ -37,7 +37,7 @@ public class ExternalNfcIntentCallbackSupport {
 
 	private final BroadcastReceiver intentReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
-			callback.onNfcIntent(intent);
+		callback.onNfcIntent(intent);
 		}
 	};
 
