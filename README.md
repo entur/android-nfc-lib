@@ -7,6 +7,7 @@ This project hosts tools for working with NFC on Android. Modules:
    * abstract reader activities and Host Card Emulation services
  * [external](nfc/external) - basic support for external NFC readers
  * [external-acs](nfc/external-acs) - support for ACS readers external NFC readers
+ * [external-minova](nfc/external-minova) - support for Minova MCR external NFC readers (over network)
 
 # License
 [European Union Public Licence v1.2](https://eupl.eu/).
