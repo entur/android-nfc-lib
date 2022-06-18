@@ -15,8 +15,8 @@ public class IsoDepAdapter extends DefaultTechnology implements CommandTechnolog
 	private DESFireAdapter adapter;
 	private boolean hostCardEmulation;
 
-	public IsoDepAdapter(int slotNumber, AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation) {
-		super(TagTechnology.ISO_DEP, slotNumber);
+	public IsoDepAdapter(AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation) {
+		super(TagTechnology.ISO_DEP);
 		this.adapter = new DESFireAdapter(isoDep, false);
 		this.hostCardEmulation = hostCardEmulation;
 	}

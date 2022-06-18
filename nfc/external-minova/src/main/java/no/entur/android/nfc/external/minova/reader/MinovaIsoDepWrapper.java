@@ -6,32 +6,20 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 
-    CommandInputOutputThread<String, String> reader;
+    private final MinovaCommands commands;
 
-    public MinovaIsoDepWrapper(CommandInputOutputThread<String, String> reader, int slotNum) {
-        super(slotNum);
-        this.reader = reader;
+    public MinovaIsoDepWrapper(CommandInputOutputThread<String, String> reader) {
+        super(-1);
+        this.commands = new MinovaCommands(reader);
     }
 
     @Override
     public byte[] transceive(byte[] data) throws Exception {
-        String dataAsString = ByteArrayHexStringConverter.toHexString(data);
-        String command = reader.getReaderId() + ", CAPDU;" + dataAsString;
-        String response;
-
-        response = reader.outputInput(command);
-
-        return ByteArrayHexStringConverter.hexStringToByteArray(response.substring(response.indexOf("=") + 1));
+        return commands.sendAdpu(data);
     }
 
     @Override
     public byte[] transceiveRaw(byte[] data) throws Exception {
-        String dataAsString = ByteArrayHexStringConverter.toHexString(data);
-        String command = reader.getReaderId() + ", CAPDU;" + dataAsString;
-        String response;
-
-        response = reader.outputInput(command);
-
-        return ByteArrayHexStringConverter.hexStringToByteArray(response.substring(response.indexOf("=") + 1));
+        return commands.sendAdpu(data);
     }
 }

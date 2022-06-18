@@ -3,8 +3,9 @@ package no.entur.android.nfc.external.acs.reader.command.remote;
 import android.util.Log;
 
 import no.entur.android.nfc.external.acs.reader.command.ACR122Commands;
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-public class IAcr122UCommandWrapper extends CommandWrapper {
+public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 
 	private static final String TAG = IAcr122UCommandWrapper.class.getName();
 

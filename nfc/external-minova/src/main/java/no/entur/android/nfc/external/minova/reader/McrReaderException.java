@@ -1,6 +1,8 @@
 package no.entur.android.nfc.external.minova.reader;
 
-public class McrReaderException extends RuntimeException {
+import no.entur.android.nfc.external.remote.RemoteCommandException;
+
+public class McrReaderException extends RemoteCommandException {
 
 	private static final long serialVersionUID = 1L;
 

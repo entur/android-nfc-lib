@@ -7,20 +7,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 
 import no.entur.android.nfc.external.minova.IMcr0XReaderControl;
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 
 	private static final String TAG = IMcr0XBinder.class.getName();
 
-	private IMcr0XCommandWrapper wrapper;
+	private IMcr0XRemoteCommandWriter wrapper;
 
 	public IMcr0XBinder() {
 		attachInterface(this, IMcr0XBinder.class.getName());
 	}
 
 	public void setCommands(MinovaCommands reader) {
-		wrapper = new IMcr0XCommandWrapper(reader);
+		wrapper = new IMcr0XRemoteCommandWriter(reader);
 	}
 
 	public void clearReader() {
@@ -39,8 +40,8 @@ public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			DataOutputStream dout = new DataOutputStream(out);
 
-			dout.writeInt(MinovaReader.VERSION);
-			dout.writeInt(MinovaReader.STATUS_EXCEPTION);
+			dout.writeInt(RemoteCommandWriter.VERSION);
+			dout.writeInt(RemoteCommandWriter.STATUS_EXCEPTION);
 			dout.writeUTF("Reader not connected");
 
 			byte[] response = out.toByteArray();

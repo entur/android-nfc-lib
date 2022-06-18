@@ -5,6 +5,7 @@ import android.os.Parcel;
 import android.os.RemoteException;
 
 import no.entur.android.nfc.external.minova.IMcr0XReaderControl;
+import no.entur.android.nfc.external.remote.RemoteCommandException;
 
 public class McrReader extends MinovaReader {
 
@@ -13,6 +14,7 @@ public class McrReader extends MinovaReader {
     protected IMcr0XReaderControl readerControl;
 
     public McrReader(String name, IMcr0XReaderControl readerControl) {
+        this.name = name;
         this.readerControl = readerControl;
     }
 
@@ -49,7 +51,6 @@ public class McrReader extends MinovaReader {
             IMcr0XReaderControl iin = IMcr0XReaderControl.Stub.asInterface(binder);
 
             return new McrReader(name, iin);
-
         }
 
         @Override
@@ -63,7 +64,7 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.buzz(duration, times);
         } catch (RemoteException e) {
-            throw new McrReaderException(e);
+            throw new RemoteCommandException(e);
         }
 
         readVoid(response);
@@ -74,7 +75,7 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.displayText(xAxis, yAxis, font, text);
         } catch (RemoteException e) {
-            throw new McrReaderException(e);
+            throw new RemoteCommandException(e);
         }
 
         readVoid(response);
@@ -85,10 +86,17 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
         } catch (RemoteException e) {
-            throw new McrReaderException(e);
+            throw new RemoteCommandException(e);
         }
 
         readVoid(response);
     }
 
+    protected RemoteCommandException createRemoteCommandException(Exception e) {
+        return new McrReaderException(e);
+    }
+
+    protected RemoteCommandException createRemoteCommandException(String string) {
+        return new McrReaderException(string);
+    }
 }

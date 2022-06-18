@@ -2,13 +2,15 @@ package no.entur.android.nfc.external.minova.reader;
 
 import android.util.Log;
 
-public class IMcr0XCommandWrapper extends CommandWrapper {
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-    private static final String TAG = IMcr0XCommandWrapper.class.getName();
+public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
+
+    private static final String TAG = IMcr0XRemoteCommandWriter.class.getName();
 
     private final MinovaCommands commands;
 
-    public IMcr0XCommandWrapper(MinovaCommands commands) {
+    public IMcr0XRemoteCommandWriter(MinovaCommands commands) {
         this.commands = commands;
     }
 

@@ -1,6 +1,8 @@
 package no.entur.android.nfc.external.acs.reader;
 
-public class AcrReaderException extends RuntimeException {
+import no.entur.android.nfc.external.remote.RemoteCommandException;
+
+public class AcrReaderException extends RemoteCommandException {
 
 	private static final long serialVersionUID = 1L;
 

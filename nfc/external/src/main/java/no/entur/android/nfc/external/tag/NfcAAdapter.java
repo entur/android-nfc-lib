@@ -18,8 +18,8 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 	private AbstractReaderIsoDepWrapper wrapper;
 	private boolean print;
 
-	public NfcAAdapter(int slotNumber, AbstractReaderIsoDepWrapper wrapper, boolean print) {
-		super(TagTechnology.NFC_A, slotNumber);
+	public NfcAAdapter(AbstractReaderIsoDepWrapper wrapper, boolean print) {
+		super(TagTechnology.NFC_A);
 		this.wrapper = wrapper;
 		this.print = print;
 	}

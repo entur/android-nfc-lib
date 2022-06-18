@@ -16,7 +16,9 @@ public class CharCommandOutput implements CommandOutput<String> {
     @Override
     public void write(String command) throws IOException {
         writer.write(command);
-        writer.write(terminatorCharacter);
+        if(command.charAt(command.length() - 1) != terminatorCharacter) {
+            writer.write(terminatorCharacter);
+        }
         writer.flush();
     }
 

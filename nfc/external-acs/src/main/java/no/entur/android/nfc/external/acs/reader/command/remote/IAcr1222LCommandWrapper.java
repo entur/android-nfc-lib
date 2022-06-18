@@ -4,8 +4,9 @@ import android.util.Log;
 
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.acs.reader.command.ACR1222Commands;
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-public class IAcr1222LCommandWrapper extends CommandWrapper {
+public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 
 	private static final String TAG = IAcr1222LCommandWrapper.class.getName();
 
