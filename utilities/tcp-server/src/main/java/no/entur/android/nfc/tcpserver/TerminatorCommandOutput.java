@@ -3,22 +3,20 @@ package no.entur.android.nfc.tcpserver;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-public class CharCommandOutput implements CommandOutput<String> {
+public class TerminatorCommandOutput implements CommandOutput<String> {
 
     private final OutputStreamWriter writer;
-    private final char terminatorCharacter;
+    private final char[] terminator;
 
-    public CharCommandOutput(char terminatorCharacter, OutputStreamWriter writer) {
-        this.terminatorCharacter = terminatorCharacter;
+    public TerminatorCommandOutput(String terminator, OutputStreamWriter writer) {
+        this.terminator = terminator.toCharArray();
         this.writer = writer;
     }
 
     @Override
     public void write(String command) throws IOException {
         writer.write(command);
-        if(command.charAt(command.length() - 1) != terminatorCharacter) {
-            writer.write(terminatorCharacter);
-        }
+        writer.write(terminator);
         writer.flush();
     }
 

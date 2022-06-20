@@ -9,7 +9,8 @@ public class McrCommandSetBuilder {
     // or
     // MCR02-8AC64C,BUZZER;500;1,LCDCLR,LCDSET;0;0;0;Test1,LCDCLR,LCDSET;0;10;0;Hello World!,RELAY1=500
 
-    public static final char COMMAND_SET_SEPERATOR = '\n';
+    // Termination is newline CRLF or 0x0D 0x0A in hex.
+    public static final String COMMAND_SET_SEPERATOR = "\r\n";
     public static final char COMMAND_SEPERATOR = ',';
     public static final char ARGUMENT_SEPERATOR = ';';
 
@@ -17,7 +18,7 @@ public class McrCommandSetBuilder {
         return new McrCommandSetBuilder().command(readerId);
     }
 
-    private StringBuilder argumentsBuilder = new StringBuilder(128);
+    private StringBuilder argumentsBuilder = new StringBuilder(256);
 
     public McrCommandSetBuilder command(String command, Object... arguments) {
         argumentsBuilder.append(command);

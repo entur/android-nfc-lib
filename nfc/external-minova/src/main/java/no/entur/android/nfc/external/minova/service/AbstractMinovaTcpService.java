@@ -23,8 +23,8 @@ import no.entur.android.nfc.external.minova.reader.McrCommandSetBuilder;
 import no.entur.android.nfc.external.minova.reader.IMcr0XBinder;
 import no.entur.android.nfc.external.minova.reader.McrReader;
 import no.entur.android.nfc.external.minova.reader.MinovaCommands;
-import no.entur.android.nfc.tcpserver.CharCommandInput;
-import no.entur.android.nfc.tcpserver.CharCommandOutput;
+import no.entur.android.nfc.tcpserver.TerminatorCommandInput;
+import no.entur.android.nfc.tcpserver.TerminatorCommandOutput;
 import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 import no.entur.android.nfc.tcpserver.CommandOutput;
@@ -111,8 +111,8 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     public void onServerSocketConnection(int port, Socket socket) throws IOException {
         Log.d(LOG_TAG, "Connection from " + port);
 
-        CommandInput<String> input = new CharCommandInput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-        CommandOutput<String> output = new CharCommandOutput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        CommandInput<String> input = new TerminatorCommandInput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        CommandOutput<String> output = new TerminatorCommandOutput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 
         CommandInputOutputThread<String, String> thread = new CommandInputOutputThread<>(this, socket, output, input);
 
