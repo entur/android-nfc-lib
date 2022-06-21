@@ -5,6 +5,8 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.util.concurrent.Executor;
+
 import no.entur.android.nfc.wrapper.ReaderCallback;
 
 public class NfcReaderCallbackSupportBuilder {
@@ -14,6 +16,12 @@ public class NfcReaderCallbackSupportBuilder {
 	protected Activity activity;
 	protected ReaderCallback callback;
 	protected Integer presenceCheckDelay;
+	protected Executor executor; // optional
+
+	public NfcReaderCallbackSupportBuilder withExecutor(Executor executor) {
+		this.executor = executor;
+		return this;
+	}
 
 	public NfcReaderCallbackSupportBuilder withActivity(Activity activity) {
 		this.activity = activity;
@@ -45,7 +53,7 @@ public class NfcReaderCallbackSupportBuilder {
 			options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, presenceCheckDelay);
 		}
 
-		return new NfcReaderCallbackSupport(activity, callback, options);
+		return new NfcReaderCallbackSupport(activity, callback, options, executor);
 	}
 
 }

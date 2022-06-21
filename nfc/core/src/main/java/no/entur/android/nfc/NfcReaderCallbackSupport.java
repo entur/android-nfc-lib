@@ -5,6 +5,8 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.util.concurrent.Executor;
+
 import no.entur.android.nfc.wrapper.ReaderCallback;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.TagWrapper;
@@ -24,20 +26,32 @@ public class NfcReaderCallbackSupport extends AbstractActivitySupport implements
 	protected Activity activity;
 	protected ReaderCallback delegate;
 	protected Bundle extras;
+	protected Executor executor; // non-final for testing
 
-	public NfcReaderCallbackSupport(Activity activity, ReaderCallback delegate, Bundle extras) {
+	public NfcReaderCallbackSupport(Activity activity, ReaderCallback delegate, Bundle extras, Executor executor) {
 		this.activity = activity;
 		this.delegate = delegate;
 		this.extras = extras;
 		this.nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
+		this.executor = executor;
 	}
 
 	public void onTagDiscovered(android.nfc.Tag androidNfcTag) {
 		onTagDiscovered(new TagWrapper(androidNfcTag));
 	}
 
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
+	}
+
 	public void onTagDiscovered(Tag tag) {
-		delegate.onTagDiscovered(tag);
+		if(executor != null) {
+			executor.execute(() -> {
+				delegate.onTagDiscovered(tag);
+			});
+		} else {
+			delegate.onTagDiscovered(tag);
+		}
 	}
 
 	public boolean isNfcEnabled() {

@@ -27,8 +27,8 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 	private MfUlReaderWriter readerWriter;
 
-	public MifareUltralightAdapter(int slotNumber, MfUlReaderWriter readerWriter) {
-		super(TagTechnology.MIFARE_ULTRALIGHT, slotNumber);
+	public MifareUltralightAdapter(MfUlReaderWriter readerWriter) {
+		super(TagTechnology.MIFARE_ULTRALIGHT);
 		this.readerWriter = readerWriter;
 	}
 
