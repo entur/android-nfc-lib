@@ -147,11 +147,11 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
             }
 
             if (canReadBlocks) {
-                technologies.add(new MifareUltralightAdapter(readerWriter));
+                technologies.add(new MifareUltralightAdapter(slotNumber, readerWriter));
             }
 
             if (TechnologyType.isNFCA(atr)) {
-                technologies.add(new PN532NfcAAdapter(wrapper, false));
+                technologies.add(new PN532NfcAAdapter(slotNumber, wrapper, false));
                 // technologies.add(new NfcAAdapter(slotNumber, reader, false));
             }
 

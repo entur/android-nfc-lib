@@ -9,7 +9,6 @@ import android.util.Log;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 public class ExternalNfcIntentCallbackSupport {
 
@@ -21,7 +20,16 @@ public class ExternalNfcIntentCallbackSupport {
 	protected final ExternalNfcIntentCallback callback;
 	protected final Context context;
 	protected final List<String> actions;
-	protected Executor executor; // non-final for testing
+
+	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Context context) {
+		this(DEFAULT_ACTIONS, callback, context);
+	}
+
+	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Context context) {
+		this.callback = callback;
+		this.context = context;
+		this.actions = actions;
+	}
 
 	private boolean recieveNfcIntentBroadcasts = false;
 
@@ -29,30 +37,9 @@ public class ExternalNfcIntentCallbackSupport {
 
 	private final BroadcastReceiver intentReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
-			if(executor != null) {
-				executor.execute(() -> {
-					callback.onNfcIntent(intent);
-				});
-			} else {
-				callback.onNfcIntent(intent);
-			}
+		callback.onNfcIntent(intent);
 		}
 	};
-
-	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Context context, Executor executor) {
-		this(DEFAULT_ACTIONS, callback, context, executor);
-	}
-
-	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Context context, Executor executor) {
-		this.callback = callback;
-		this.context = context;
-		this.actions = actions;
-		this.executor = executor;
-	}
-
-	public void setExecutor(Executor executor) {
-		this.executor = executor;
-	}
 
 	public void onResume() {
 		if (enabled) {

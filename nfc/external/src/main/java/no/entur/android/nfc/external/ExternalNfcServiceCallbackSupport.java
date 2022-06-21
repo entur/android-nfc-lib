@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
-import java.util.concurrent.Executor;
-
 public class ExternalNfcServiceCallbackSupport {
 
 	private static final String TAG = ExternalNfcServiceCallbackSupport.class.getName();
@@ -17,56 +15,33 @@ public class ExternalNfcServiceCallbackSupport {
 
 	private boolean recieveServiceBroadcasts = false;
 	private volatile boolean open = false;
-	protected Executor executor; // non-final for testing
 
-	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor) {
+	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context) {
 		this.callback = callback;
 		this.context = context;
-		this.executor = executor;
-	}
-
-	public void setExecutor(Executor executor) {
-		this.executor = executor;
 	}
 
 	private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
 
 		public void onReceive(Context context, Intent intent) {
-		String action = intent.getAction();
-		if (ExternalNfcServiceCallback.ACTION_SERVICE_STARTED.equals(action)) {
-			if (!open) {
-				open = true;
+			String action = intent.getAction();
+			if (ExternalNfcServiceCallback.ACTION_SERVICE_STARTED.equals(action)) {
+				if (!open) {
+					open = true;
 
-				Log.d(TAG, "Service started");
-				callback.onExternalNfcServiceStarted(intent);
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcServiceStarted(intent);
-					});
-				} else {
+					Log.d(TAG, "Service started");
 					callback.onExternalNfcServiceStarted(intent);
 				}
+			} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
+				if (open) {
+					open = false;
 
-			}
-		} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
-			if (open) {
-				open = false;
-
-				Log.d(TAG, "Service stopped");
-				callback.onExternalNfcServiceStopped(intent);
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcServiceStopped(intent);
-					});
-				} else {
+					Log.d(TAG, "Service stopped");
 					callback.onExternalNfcServiceStopped(intent);
 				}
+			} else {
+				throw new IllegalArgumentException("Unexpected action " + action);
 			}
-		} else {
-			throw new IllegalArgumentException("Unexpected action " + action);
-		}
 		}
 
 	};

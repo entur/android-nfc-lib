@@ -5,9 +5,11 @@ import no.entur.android.nfc.external.service.tag.TagTechnology;
 public abstract class DefaultTechnology implements TagTechnology {
 
 	protected final int tagTechnology;
+	protected int slotNumber;
 
-	public DefaultTechnology(int tagTechnology) {
+	public DefaultTechnology(int tagTechnology, int slotNumber) {
 		this.tagTechnology = tagTechnology;
+		this.slotNumber = slotNumber;
 	}
 
 	@Override
@@ -15,5 +17,7 @@ public abstract class DefaultTechnology implements TagTechnology {
 		return tagTechnology;
 	}
 
-
+	public int getSlotNumber() {
+		return slotNumber;
+	}
 }
