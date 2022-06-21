@@ -17,8 +17,8 @@ public class PN532DefaultTechnology extends DefaultTechnology implements Command
 	protected AbstractReaderIsoDepWrapper reader;
 	private boolean print;
 
-	public PN532DefaultTechnology(int tagTechnology, int slotNumber, AbstractReaderIsoDepWrapper reader, boolean print) {
-		super(tagTechnology, slotNumber);
+	public PN532DefaultTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print) {
+		super(tagTechnology);
 
 		this.reader = reader;
 		this.print = print;

@@ -26,12 +26,12 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
     public void hce(int slotNumber, byte[] atr, AbstractReaderIsoDepWrapper wrapper, byte[] uid) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
-            technologies.add(new NfcAAdapter(slotNumber, wrapper, true));
-            technologies.add(new IsoDepAdapter(slotNumber, wrapper, true));
+            technologies.add(new NfcAAdapter(wrapper, true));
+            technologies.add(new IsoDepAdapter(wrapper, true));
 
             int serviceHandle = store.add(slotNumber, technologies);
 
-            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, slotNumber, atr, null, uid, true, TechnologyType.getHistoricalBytes(atr), tagService);
+            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, true, TechnologyType.getHistoricalBytes(atr), tagService);
 
             Log.d(TAG, "Broadcast hce");
 
@@ -46,12 +46,12 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
     public void desfire(int slotNumber, byte[] atr, AbstractReaderIsoDepWrapper wrapper, byte[] uid) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
-            technologies.add(new NfcAAdapter(slotNumber, wrapper, false));
-            technologies.add(new IsoDepAdapter(slotNumber, wrapper, false));
+            technologies.add(new NfcAAdapter(wrapper, false));
+            technologies.add(new IsoDepAdapter(wrapper, false));
 
             int serviceHandle = store.add(slotNumber, technologies);
 
-            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, slotNumber, atr, null, uid, false, TechnologyType.getHistoricalBytes(atr), tagService);
+            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, false, TechnologyType.getHistoricalBytes(atr), tagService);
 
             Log.d(TAG, "Broadcast desfire");
 
