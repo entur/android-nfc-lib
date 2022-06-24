@@ -34,7 +34,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             commands.buzz(durationInMillis, times);
         } catch (Exception e) {
-            Log.d(TAG, "Problem buzzing", e);
+            Log.d(TAG, "Problem buzzing.", e);
 
             exception = e;
         }
@@ -47,7 +47,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             commands.displayText(xAxis, yAxis, font, text);
         } catch (Exception e) {
-            Log.d(TAG, "Problem buzzing", e);
+            Log.d(TAG, "Problem displaying text.", e);
 
             exception = e;
         }
@@ -60,7 +60,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             commands.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
         } catch (Exception e) {
-            Log.d(TAG, "Problem buzzing", e);
+            Log.d(TAG, "Problem displaying text with duration.", e);
 
             exception = e;
         }
