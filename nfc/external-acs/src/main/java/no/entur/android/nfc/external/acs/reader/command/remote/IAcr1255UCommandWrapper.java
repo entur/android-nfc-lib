@@ -6,8 +6,9 @@ import java.util.List;
 
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
 import no.entur.android.nfc.external.acs.reader.command.ACR1255Commands;
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-public class IAcr1255UCommandWrapper extends CommandWrapper {
+public class IAcr1255UCommandWrapper extends AcrRemoteCommandWriter {
 
 	private static final String TAG = IAcr1255UCommandWrapper.class.getName();
 

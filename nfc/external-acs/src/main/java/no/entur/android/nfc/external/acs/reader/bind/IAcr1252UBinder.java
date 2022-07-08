@@ -6,6 +6,7 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.external.acs.reader.command.ACR1252Commands;
@@ -42,8 +43,8 @@ public class IAcr1252UBinder extends IAcr1252UReaderControl.Stub {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			DataOutputStream dout = new DataOutputStream(out);
 
-			dout.writeInt(AcrReader.VERSION);
-			dout.writeInt(AcrReader.STATUS_EXCEPTION);
+			dout.writeInt(RemoteCommandWriter.VERSION);
+			dout.writeInt(RemoteCommandWriter.STATUS_EXCEPTION);
 			dout.writeUTF("Reader not connected");
 
 			byte[] response = out.toByteArray();

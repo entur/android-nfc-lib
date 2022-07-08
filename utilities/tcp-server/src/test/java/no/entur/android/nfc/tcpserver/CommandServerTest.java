@@ -12,11 +12,11 @@ public class CommandServerTest {
     @Test
     public void testListener() throws IOException, InterruptedException {
 
-        CharService service = new CharService('\n', 8080);
+        CharService service = new CharService("\r\n", 8082);
         try {
             service.start();
 
-            CharClient externalNfcReader = new CharClient('\n', "127.0.0.1", 8080);
+            TerminatorClient externalNfcReader = new TerminatorClient("\r\n", "127.0.0.1", 8082);
 
             Thread.sleep(100);
 

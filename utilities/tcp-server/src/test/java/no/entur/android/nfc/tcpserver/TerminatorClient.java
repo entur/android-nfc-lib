@@ -7,21 +7,21 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-public class CharClient implements Closeable {
+public class TerminatorClient implements Closeable {
 
     private final String host;
     private final int port;
 
-    private final char terminatorCharacter;
+    private final String terminatorCharacters;
 
     private Socket socket;
-    private CharCommandInput in;
-    private CharCommandOutput out;
+    private TerminatorCommandInput in;
+    private TerminatorCommandOutput out;
 
     private boolean closed = false;
 
-    public CharClient(char terminatorCharacter, String host, int port) {
-        this.terminatorCharacter = terminatorCharacter;
+    public TerminatorClient(String terminatorCharacters, String host, int port) {
+        this.terminatorCharacters = terminatorCharacters;
         this.host = host;
         this.port = port;
     }
@@ -29,8 +29,8 @@ public class CharClient implements Closeable {
     public void connect() throws IOException {
         socket = new Socket(host, port);
 
-        in = new CharCommandInput(terminatorCharacter, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-        out = new CharCommandOutput(terminatorCharacter, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        in = new TerminatorCommandInput(terminatorCharacters, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        out = new TerminatorCommandOutput(terminatorCharacters, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
     }
 
     public void write(String command) throws IOException {

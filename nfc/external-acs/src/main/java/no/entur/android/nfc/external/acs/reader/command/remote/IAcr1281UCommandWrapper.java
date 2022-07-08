@@ -9,8 +9,9 @@ import no.entur.android.nfc.external.acs.reader.command.ACR1281Commands;
 import no.entur.android.nfc.external.acs.reader.command.acr1281.ExclusiveModeConfiguration;
 import no.entur.android.nfc.external.acs.reader.command.acr1281.ExclusiveModeConfiguration.ExclusiveMode;
 import no.entur.android.nfc.external.acs.reader.command.acr1281.PICCOperatingParameter;
+import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-public class IAcr1281UCommandWrapper extends CommandWrapper {
+public class IAcr1281UCommandWrapper extends AcrRemoteCommandWriter {
 
 	private static final String TAG = IAcr1281UCommandWrapper.class.getName();
 

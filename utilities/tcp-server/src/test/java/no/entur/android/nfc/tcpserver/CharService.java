@@ -11,13 +11,13 @@ import java.util.List;
 public class CharService implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String> {
 
     private CommandServer server;
-    private char terminatorCharacter;
+    private String terminatorCharacters;
     private List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
     private List<String> commandHistory = new ArrayList<>(); // for testing
 
-    public CharService(char terminatorCharacter, int port) {
-        this.terminatorCharacter = terminatorCharacter;
+    public CharService(String terminatorCharacters, int port) {
+        this.terminatorCharacters = terminatorCharacters;
         this.server = new CommandServer(this, port);
     }
 
@@ -28,8 +28,8 @@ public class CharService implements CommandServer.Listener, CommandInputOutputTh
 
     @Override
     public void onServerSocketConnection(int port, Socket socket) throws IOException {
-        CommandInput<String> input = new CharCommandInput(terminatorCharacter, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-        CommandOutput<String> output = new CharCommandOutput(terminatorCharacter, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        CommandInput<String> input = new TerminatorCommandInput(terminatorCharacters, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        CommandOutput<String> output = new TerminatorCommandOutput(terminatorCharacters, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
         CommandInputOutputThread thread = new CommandInputOutputThread(this, socket, output, input);
 
         synchronized (clients) {
@@ -42,6 +42,9 @@ public class CharService implements CommandServer.Listener, CommandInputOutputTh
     @Override
     public void onServerSocketClosed(int port, Exception e) {
         System.out.println(Thread.currentThread().getName() + ": On server closed " + port + ": " + e);
+        if(e != null) {
+            e.printStackTrace();
+        }
         synchronized (clients) {
             for (CommandInputOutputThread<String, String> client : clients) {
                 client.close();

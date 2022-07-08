@@ -17,7 +17,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
 
         private T in;
         private boolean closed;
-        private Object ioLock;
+        private final Object ioLock;
 
         public PendingInputConsumer(Object ioLock) {
             this.ioLock = ioLock;
@@ -51,11 +51,12 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     private final CommandOutput<S> out;
     private final CommandInput<T> in;
     private boolean closed;
+    private String readerId;
 
-    private Object pendingInputLock = new Object();
+    private final Object pendingInputLock = new Object();
 
     // only one in-flight message at a time (one-shot output or output/input).
-    private Object readWriteLock = new Object();
+    private final Object readWriteLock = new Object();
 
     private PendingInputConsumer<T> pendigInputConsumer;
 
@@ -78,6 +79,10 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
                     pending = pendigInputConsumer;
                 }
                 if(pending == null) {
+                    if(next instanceof String && readerId == null) {
+                        String r = (String) next;
+                        readerId = r.substring(0, r.indexOf(","));
+                    }
                     listener.onReaderCommand(this, next);
                 } else {
                     pending.close(next);
@@ -146,4 +151,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         }
     }
 
+    public String getReaderId() {
+        return readerId;
+    }
 }

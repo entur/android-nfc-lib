@@ -34,7 +34,7 @@ def libraryProjects() {
     androidProjects().findAll { !appProjects().contains(it)}
 }
 
-def utilityProjects() {
+def javaLibraryProjects() {
     buildProjects().findAll { !androidProjects().contains(it) }
 }
 
@@ -296,9 +296,85 @@ configure(libraryProjects()) {
     }
 }
 
-configure(utilityProjects()) {
+
+configure(javaLibraryProjects()) {
+
     apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+
+    repositories repos
+
+    ext {
+        junitJupiterVersion = '5.8.2'
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+    }
+
+    afterEvaluate {
+        publishing {
+            publications {
+                // Creates a Maven publication called "release".
+                release(MavenPublication) {
+                    // Applies the component for the release build variant.
+                    from components.java
+
+                    groupId 'no.entur.android.nfc'
+                    artifactId "$project.name"
+                    version = "$version"
+
+                    pom {
+                        name = "$project.name"
+                        description = 'NFC libraries for Android'
+                        url = 'https://github.com/entur/android-nfc-lib'
+                        packaging = 'aar'
+                        inceptionYear = '2022'
+                        licenses {
+                            license {
+                                name = 'European Union Public Licence v1.2'
+                                url = 'https://www.eupl.eu/'
+                                distribution = 'repo'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id = "skjolber"
+                                name = "Thomas Skjølberg"
+                                email = "thomas.rorvik.skjolberg@entur.org"
+                            }
+                        }
+                        scm {
+                            url = 'https://github.com/entur/android-nfc-lib'
+                            connection = 'git@github.com:entur/android-nfc-lib.git'
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    test {
+        useJUnitPlatform {
+            includeEngines 'junit-jupiter', 'junit-vintage'
+        }
+
+        reports {
+            junitXml.enabled = false
+            html.enabled = true
+        }
+    }
+
+
 }
+
 
 
 group = 'no.entur.android.nfc'
