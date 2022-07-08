@@ -301,6 +301,7 @@ configure(javaLibraryProjects()) {
 
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
+    apply plugin: 'signing'
 
     repositories repos
 
@@ -358,7 +359,19 @@ configure(javaLibraryProjects()) {
                 }
             }
 
+            signing {
+                useGpgCmd()
+
+                // set
+                // signing.gnupg.keyName=xxx
+                // signing.gnupg.passphrase=yyy
+                // via command line
+
+                sign publishing.publications.release
+            }
+
         }
+
     }
 
     test {
