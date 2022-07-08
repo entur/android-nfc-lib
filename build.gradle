@@ -155,7 +155,7 @@ configure(libraryProjects()) {
             // set minSdkVersion per subproject
             targetSdkVersion 31
             // versions are copied here from the properties to improve build time. See the version.gradle script.
-            versionCode 2
+            versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         }
@@ -327,7 +327,7 @@ configure(javaLibraryProjects()) {
                     from components.java
 
                     groupId 'no.entur.android.nfc'
-                    artifactId "$project.name"
+                    artifactId "$project.ext.artifactId"
                     version = "$version"
 
                     pom {
@@ -374,8 +374,6 @@ configure(javaLibraryProjects()) {
 
 
 }
-
-
 
 group = 'no.entur.android.nfc'
 
