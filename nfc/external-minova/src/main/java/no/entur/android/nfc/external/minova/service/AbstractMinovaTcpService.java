@@ -197,4 +197,17 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
         sendBroadcast(intent);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if(server != null) {
+            try {
+                server.stop();
+            } catch (IOException e) {
+                Log.d(LOG_TAG, "Problem stopping server", e);
+            }
+        }
+    }
+
 }
