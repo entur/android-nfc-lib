@@ -336,7 +336,7 @@ configure(javaLibraryProjects()) {
                         name = "$project.name"
                         description = 'NFC libraries for Android'
                         url = 'https://github.com/entur/android-nfc-lib'
-                        packaging = 'aar'
+                        packaging = 'jar'
                         inceptionYear = '2022'
                         licenses {
                             license {
