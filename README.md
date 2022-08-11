@@ -25,6 +25,11 @@ This project includes some code from the following projects:
  as well as drivers from ACS.
  
 # Publish
+For local development (.m2)
+
+> ./gradlew clean build publishToMavenLocal --info
+
+For Maven central also add siging info.
 
 > ./gradlew build publishToSonatype --info --stacktrace -Psigning.gnupg.passphrase=xxx -Psigning.gnupg.keyName=yyy
 

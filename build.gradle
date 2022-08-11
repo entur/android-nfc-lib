@@ -282,16 +282,17 @@ configure(libraryProjects()) {
                 }
             }
         }
+        if(project.hasProperty("signing.gnupg.keyName")) {
+            signing {
+                useGpgCmd()
 
-        signing {
-            useGpgCmd()
+                // set
+                // signing.gnupg.keyName=xxx
+                // signing.gnupg.passphrase=yyy
+                // via command line
 
-            // set
-            // signing.gnupg.keyName=xxx
-            // signing.gnupg.passphrase=yyy
-            // via command line
-            
-            sign publishing.publications.release
+                sign publishing.publications.release
+            }
         }
     }
 }
@@ -358,18 +359,18 @@ configure(javaLibraryProjects()) {
                     }
                 }
             }
+            if(project.hasProperty("signing.gnupg.keyName")) {
+                signing {
+                    useGpgCmd()
 
-            signing {
-                useGpgCmd()
+                    // set
+                    // signing.gnupg.keyName=xxx
+                    // signing.gnupg.passphrase=yyy
+                    // via command line
 
-                // set
-                // signing.gnupg.keyName=xxx
-                // signing.gnupg.passphrase=yyy
-                // via command line
-
-                sign publishing.publications.release
+                    sign publishing.publications.release
+                }
             }
-
         }
 
     }
