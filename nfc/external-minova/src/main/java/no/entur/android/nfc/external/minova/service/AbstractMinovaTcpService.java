@@ -46,13 +46,14 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     public AbstractMinovaTcpService(int port, int readers) {
         this.server = new CommandServer(this, port);
         this.executor = Executors.newScheduledThreadPool(readers);
-        this.binder.setReaderTechnology(new MinovaReaderTechnology());
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         server.start();
+
+        this.binder.setReaderTechnology(new MinovaReaderTechnology());
     }
 
     protected abstract void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> reader);
