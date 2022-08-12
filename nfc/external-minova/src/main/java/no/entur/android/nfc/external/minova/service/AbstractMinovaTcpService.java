@@ -23,6 +23,7 @@ import no.entur.android.nfc.external.minova.reader.McrCommandSetBuilder;
 import no.entur.android.nfc.external.minova.reader.IMcr0XBinder;
 import no.entur.android.nfc.external.minova.reader.McrReader;
 import no.entur.android.nfc.external.minova.reader.MinovaCommands;
+import no.entur.android.nfc.external.minova.reader.MinovaReaderTechnology;
 import no.entur.android.nfc.tcpserver.TerminatorCommandInput;
 import no.entur.android.nfc.tcpserver.TerminatorCommandOutput;
 import no.entur.android.nfc.tcpserver.CommandInput;
@@ -45,6 +46,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     public AbstractMinovaTcpService(int port, int readers) {
         this.server = new CommandServer(this, port);
         this.executor = Executors.newScheduledThreadPool(readers);
+        this.binder.setReaderTechnology(new MinovaReaderTechnology());
     }
 
     @Override
