@@ -10,6 +10,8 @@ import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
 public class MinovaService extends AbstractMinovaTcpService {
 
+    public static final String EXTRA_IP = MinovaService.class.getName() + ".extra.IP";
+
     protected MifareDesfireTagServiceSupport mifareDesfireTagServiceSupport;
 
     public MinovaService(int port, int readers) {
@@ -27,7 +29,7 @@ public class MinovaService extends AbstractMinovaTcpService {
     protected void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> io) {
         if (tag == TagType.DESFIRE_EV1) {
             MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(io);
-            mifareDesfireTagServiceSupport.desfire(-1, atr, wrapper, hexStringToByteArray(uid));
+            mifareDesfireTagServiceSupport.desfire(-1, atr, wrapper, hexStringToByteArray(uid), new MinovaIntentEnricher(EXTRA_IP));
         }
     }
 

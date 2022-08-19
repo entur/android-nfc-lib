@@ -7,8 +7,6 @@ import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.entur.android.nfc.external.ExternalNfcReaderCallback;
-import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagFactory;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
@@ -38,7 +36,7 @@ public class MifareDesfireTagFactory extends TagFactory {
 	protected static final short EXTRA_SAK_VALUE = 0x20;
 
 
-	public Intent getTag(int serviceHandle, byte[] atr, byte[] hiLayer, byte[] id, boolean hce, byte[] historicalBytes, INfcTag tagService) {
+	public Intent getTag(int serviceHandle, byte[] atr, byte[] hiLayer, byte[] id, boolean hce, byte[] historicalBytes, INfcTag tagService, IntentEnricher extras) {
 
 		/*
 		 * if (id != null && id[0] != NXP_MANUFACTURER_ID) { throw new IllegalArgumentException("Non-NXP tag id"); }
@@ -61,7 +59,7 @@ public class MifareDesfireTagFactory extends TagFactory {
 			intent.putExtra(NfcAdapter.EXTRA_ID, id);
 		}
 
-		return intent;
+		return extras.enrich(intent);
 
 	}
 

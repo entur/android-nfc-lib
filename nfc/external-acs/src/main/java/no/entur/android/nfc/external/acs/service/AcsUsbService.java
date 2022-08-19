@@ -8,6 +8,7 @@ import org.nfctools.spi.acs.AcsTag;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.acs.tag.MifareUltralightTagServiceSupport;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
+import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.MifareDesfireTagServiceSupport;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
@@ -42,7 +43,7 @@ public class AcsUsbService extends AbstractAcsUsbService {
 				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
-			mifareDesfireTagServiceSupport.desfire(slotNumber, atr, wrapper, uid);
+			mifareDesfireTagServiceSupport.desfire(slotNumber, atr, wrapper, uid, IntentEnricher.identity());
 		} else if (tagType == TagType.ISO_14443_TYPE_B_NO_HISTORICAL_BYTES || tagType == TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES
 				|| tagType == TagType.ISO_14443_TYPE_A) {
 			byte[] uid = TagUtility.getPcscUid(wrapper);
@@ -50,7 +51,7 @@ public class AcsUsbService extends AbstractAcsUsbService {
 				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
-			mifareDesfireTagServiceSupport.hce(slotNumber, atr, wrapper, uid);
+			mifareDesfireTagServiceSupport.hce(slotNumber, atr, wrapper, uid, IntentEnricher.identity());
 		} else {
 			TagUtility.sendTechBroadcast(AcsUsbService.this);
 		}

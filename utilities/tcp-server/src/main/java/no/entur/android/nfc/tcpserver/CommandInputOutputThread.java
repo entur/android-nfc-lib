@@ -52,6 +52,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     private final CommandInput<T> in;
     private boolean closed;
     private String readerId;
+    private String ip;
 
     private final Object pendingInputLock = new Object();
 
@@ -66,6 +67,8 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         this.clientSocket = clientSocket;
         this.out = out;
         this.in = in;
+
+        this.ip = clientSocket.getRemoteSocketAddress().toString();
     }
 
     public void run() {
@@ -153,5 +156,9 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
 
     public String getReaderId() {
         return readerId;
+    }
+
+    public String getIp() {
+        return ip;
     }
 }
