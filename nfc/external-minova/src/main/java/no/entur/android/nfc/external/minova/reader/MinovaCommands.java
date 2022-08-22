@@ -50,8 +50,8 @@ public class MinovaCommands {
                 .build();
 
         String response = reader.outputInput(minovaCommand);
-        if (response.contains("NAK")) {
-            throw new McrReaderException("Minova reader responded with NAK");
+        if (response.endsWith(",NAK")) {
+            throw new McrReaderException("Minova reader responded with NAK.");
         }
 
         return ByteArrayHexStringConverter.hexStringToByteArray(response.substring(response.indexOf("=") + 1));
