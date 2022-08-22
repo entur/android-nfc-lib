@@ -38,17 +38,21 @@ public class MinovaCommands {
     }
 
     public String getType() throws IOException, InterruptedException {
-        return reader.outputInput(McrCommandSetBuilder.newInstance(reader.getReaderId())
+        String getType = McrCommandSetBuilder.newInstance(reader.getReaderId())
                 .command(GET_TYPE)
-                .build()
-        );
+                .build();
+        return reader.outputInput(getType);
     }
 
     public byte[] sendAdpu(byte[] command) throws IOException, InterruptedException {
-        String response = reader.outputInput(McrCommandSetBuilder.newInstance(reader.getReaderId())
-            .command(CAPDU)
-            .build()
-        );
+        String minovaCommand = McrCommandSetBuilder.newInstance(reader.getReaderId())
+                .command(CAPDU, ByteArrayHexStringConverter.byteArrayToHexString(command))
+                .build();
+
+        String response = reader.outputInput(minovaCommand);
+        if (response.endsWith(",NAK")) {
+            throw new McrReaderException("Minova reader responded with NAK.");
+        }
 
         return ByteArrayHexStringConverter.hexStringToByteArray(response.substring(response.indexOf("=") + 1));
     }
@@ -61,7 +65,7 @@ public class MinovaCommands {
         );
     }
 
-    public void displayTextWithDuration(int xAxis, int yAxis, int font, String text, int durationInMillis) throws IOException, InterruptedException {
+    public void displayTextWithDuration(int xAxis, int yAxis, int font, String text, int durationInMillis) throws IOException {
         reader.write(McrCommandSetBuilder.newInstance(reader.getReaderId())
                 .command(LCDCLR)
                 .command(LCDSET, xAxis, yAxis, font, text)

@@ -57,6 +57,10 @@ public class ByteArrayHexStringConverter {
 		return s;
 	}
 
+	public static String byteArrayToHexString(byte[] data) {
+		return toHexString(data, "%02X");
+	}
+
 	public static byte[] hexStringToByteArray(CharSequence s) {
 		int len = s.length();
 		byte[] data = new byte[len / 2];
