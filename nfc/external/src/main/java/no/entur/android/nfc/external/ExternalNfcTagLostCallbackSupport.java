@@ -28,7 +28,7 @@ public class ExternalNfcTagLostCallbackSupport {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			if (action.equals(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD)) {
-				callback.onExternalTagLost();
+				callback.onExternalTagLost(intent);
 			} else {
 				Log.d(TAG, "Ignore action " + intent.getAction());
 			}

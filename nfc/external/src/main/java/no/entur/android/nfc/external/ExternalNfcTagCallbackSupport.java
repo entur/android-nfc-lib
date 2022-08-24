@@ -32,10 +32,10 @@ public class ExternalNfcTagCallbackSupport {
 
 			if(executor != null) {
 				executor.execute(() -> {
-					callback.onExternalTagDiscovered(tag);
+					callback.onExternalTagDiscovered(tag, intent);
 				});
 			} else {
-				callback.onExternalTagDiscovered(tag);
+				callback.onExternalTagDiscovered(tag, intent);
 			}
 
 		} else {
