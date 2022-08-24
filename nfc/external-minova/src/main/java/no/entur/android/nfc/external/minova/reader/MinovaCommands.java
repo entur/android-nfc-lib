@@ -29,6 +29,10 @@ public class MinovaCommands {
         this.reader = reader;
     }
 
+    public String getIp() {
+        return reader.getIp();
+    }
+
     public void buzz(int durationInMillis, int times) throws Exception {
 
         reader.write(McrCommandSetBuilder.newInstance(reader.getReaderId())

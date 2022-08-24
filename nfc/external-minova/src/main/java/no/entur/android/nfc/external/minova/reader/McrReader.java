@@ -59,6 +59,17 @@ public class McrReader extends MinovaReader {
         }
     };
 
+    public String getIp() {
+        byte[] response;
+        try {
+            response = readerControl.getIp();
+        } catch(RemoteException e) {
+            throw new RemoteCommandException(e);
+        }
+
+        return readString(response);
+    }
+
     public void buzz(int duration, int times) {
         byte[] response;
         try {
