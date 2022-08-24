@@ -29,7 +29,7 @@ public class MinovaService extends AbstractMinovaTcpService {
     protected void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> io) {
         if (tag == TagType.DESFIRE_EV1) {
             MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(io);
-            mifareDesfireTagServiceSupport.desfire(-1, atr, wrapper, hexStringToByteArray(uid), new MinovaIntentEnricher(EXTRA_IP));
+            mifareDesfireTagServiceSupport.desfire(-1, atr, wrapper, hexStringToByteArray(uid), new MinovaIntentEnricher(io.getIp()));
         }
     }
 
