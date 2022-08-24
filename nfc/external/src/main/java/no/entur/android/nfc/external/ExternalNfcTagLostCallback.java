@@ -1,10 +1,9 @@
 package no.entur.android.nfc.external;
 
-import no.entur.android.nfc.wrapper.ReaderCallback;
-import no.entur.android.nfc.wrapper.Tag;
+import android.content.Intent;
 
 public interface ExternalNfcTagLostCallback {
 
-	void onExternalTagLost();
+	void onExternalTagLost(Intent intent);
 
 }

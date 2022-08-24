@@ -47,7 +47,6 @@ public class ExternalNfcServiceCallbackSupport {
 				} else {
 					callback.onExternalNfcServiceStarted(intent);
 				}
-
 			}
 		} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
 			if (open) {

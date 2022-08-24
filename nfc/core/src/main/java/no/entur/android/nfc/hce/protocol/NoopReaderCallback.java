@@ -1,5 +1,6 @@
 package no.entur.android.nfc.hce.protocol;
 
+import android.content.Intent;
 import android.util.Log;
 
 import no.entur.android.nfc.wrapper.ReaderCallback;
@@ -16,7 +17,7 @@ public class NoopReaderCallback implements ReaderCallback {
 	private static final String TAG = NoopReaderCallback.class.getName();
 
 	@Override
-	public void onTagDiscovered(Tag tag) {
+	public void onTagDiscovered(Tag tag, Intent intent) {
 		Log.d(TAG, "Ignoring tag");
 	}
 }

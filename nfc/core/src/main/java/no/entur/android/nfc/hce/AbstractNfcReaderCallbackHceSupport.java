@@ -1,6 +1,7 @@
 package no.entur.android.nfc.hce;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -91,7 +92,7 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 		return false;
 	}
 
-	public void onTagDiscovered(Tag tag) {
+	public void onTagDiscovered(Tag tag, Intent intent) {
 		IsoDep isoDep = IsoDep.get(tag);
 		if (isoDep != null) {
 			if (canHandle(isoDep)) {
@@ -101,7 +102,7 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 			}
 		}
 		if (delegate != null) {
-			delegate.onTagDiscovered(tag);
+			delegate.onTagDiscovered(tag, intent);
 		} else {
 			listener.onUnexpectedTag(tag);
 		}

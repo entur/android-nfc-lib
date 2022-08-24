@@ -1,6 +1,7 @@
 package no.entur.android.nfc;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,20 +38,20 @@ public class NfcReaderCallbackSupport extends AbstractActivitySupport implements
 	}
 
 	public void onTagDiscovered(android.nfc.Tag androidNfcTag) {
-		onTagDiscovered(new TagWrapper(androidNfcTag));
+		onTagDiscovered(new TagWrapper(androidNfcTag), null);
 	}
 
 	public void setExecutor(Executor executor) {
 		this.executor = executor;
 	}
 
-	public void onTagDiscovered(Tag tag) {
+	public void onTagDiscovered(Tag tag, Intent intent) {
 		if(executor != null) {
 			executor.execute(() -> {
-				delegate.onTagDiscovered(tag);
+				delegate.onTagDiscovered(tag, intent);
 			});
 		} else {
-			delegate.onTagDiscovered(tag);
+			delegate.onTagDiscovered(tag, intent);
 		}
 	}
 
