@@ -55,6 +55,11 @@ public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 	}
 
 	@Override
+	public byte[] getIp() throws RemoteException {
+		return wrapper.getIp();
+	}
+
+	@Override
 	public byte[] buzz(int durationInMillis, int times) throws RemoteException {
 		return wrapper.buzz(durationInMillis, times);
 	}

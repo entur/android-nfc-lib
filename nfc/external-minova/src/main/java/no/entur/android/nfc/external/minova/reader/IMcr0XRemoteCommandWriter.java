@@ -29,6 +29,19 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
 		return returnValue(firmware, exception);
 	}*/
 
+    public byte[] getIp() {
+        String ip = null;
+        Exception exception = null;
+        try {
+            ip = commands.getIp();
+        } catch (Exception e) {
+            Log.d(TAG, "Problem getting IP-address.", e);
+
+            exception = e;
+        }
+        return returnValue(ip, exception);
+    }
+
     public byte[] buzz(int durationInMillis, int times) {
         Exception exception = null;
         try {

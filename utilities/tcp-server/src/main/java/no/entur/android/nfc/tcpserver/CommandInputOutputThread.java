@@ -68,7 +68,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
         this.out = out;
         this.in = in;
 
-        this.ip = clientSocket.getInetAddress().toString();
+        this.ip = clientSocket.getInetAddress().toString().split("/")[1];
     }
 
     public void run() {
