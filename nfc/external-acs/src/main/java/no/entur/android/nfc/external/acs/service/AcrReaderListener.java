@@ -17,6 +17,7 @@ import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.remote.RemoteCommandException;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
 
 public class AcrReaderListener implements ExternalUsbNfcServiceSupport.Listener<AcrReader> {
@@ -114,7 +115,9 @@ public class AcrReaderListener implements ExternalUsbNfcServiceSupport.Listener<
 			}
 		} catch (AcrReaderException e) {
 			Log.d(TAG, "Problem accessing reader", e);
-		}
+		} catch (RemoteCommandException e) {
+            Log.d(TAG, "Problem communicating with reader", e);
+        }
 
 		Intent intent = new Intent();
 
