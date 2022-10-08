@@ -271,4 +271,5 @@ public class Acr1222LReader extends AcrReader {
 
 		return readBoolean(response);
 	}
+
 }

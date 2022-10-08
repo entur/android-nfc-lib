@@ -1,6 +1,6 @@
 package no.entur.android.nfc.external.remote;
 
-public class RemoteCommandException extends RuntimeException {
+public abstract class RemoteCommandException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
