@@ -64,7 +64,7 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.getIp();
         } catch(RemoteException e) {
-            throw new RemoteCommandException(e);
+            throw createRemoteCommandException(e);
         }
 
         return readString(response);
@@ -75,7 +75,7 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.buzz(duration, times);
         } catch (RemoteException e) {
-            throw new RemoteCommandException(e);
+            throw createRemoteCommandException(e);
         }
 
         readVoid(response);
@@ -86,7 +86,7 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.displayText(xAxis, yAxis, font, text);
         } catch (RemoteException e) {
-            throw new RemoteCommandException(e);
+            throw createRemoteCommandException(e);
         }
 
         readVoid(response);
@@ -97,7 +97,7 @@ public class McrReader extends MinovaReader {
         try {
             response = readerControl.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
         } catch (RemoteException e) {
-            throw new RemoteCommandException(e);
+            throw createRemoteCommandException(e);
         }
 
         readVoid(response);

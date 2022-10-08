@@ -51,13 +51,9 @@ public abstract class RemoteCommandReader implements Parcelable {
         }
     }
 
-    protected RemoteCommandException createRemoteCommandException(Exception e) {
-        return new RemoteCommandException(e);
-    }
+    protected abstract RemoteCommandException createRemoteCommandException(Exception e);
     
-    protected RemoteCommandException createRemoteCommandException(String string) {
-        return new RemoteCommandException(string);
-    }
+    protected abstract RemoteCommandException createRemoteCommandException(String string);
 
     protected boolean readBoolean(byte[] response) {
         try {
