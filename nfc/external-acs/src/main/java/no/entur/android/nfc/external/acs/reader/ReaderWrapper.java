@@ -14,7 +14,7 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class ReaderWrapper {
 
-	public static final boolean LOG = true;
+	public static final boolean LOG = false;
 
 	private String TAG = ReaderWrapper.class.getName();
 

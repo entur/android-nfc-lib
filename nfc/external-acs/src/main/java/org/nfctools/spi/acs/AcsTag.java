@@ -86,11 +86,11 @@ public class AcsTag extends Tag implements ApduTag {
 
 	@Override
 	public byte[] transmit(byte[] request) {
-		Log.d(TAG, "Raw request: " + ByteArrayHexStringConverter.toHexString(request));
+		//Log.d(TAG, "Raw request: " + ByteArrayHexStringConverter.toHexString(request));
 		try {
 			byte[] response = reader.transmit(slot, request);
 
-			Log.d(TAG, "Raw response: " + ByteArrayHexStringConverter.toHexString(response));
+			//Log.d(TAG, "Raw response: " + ByteArrayHexStringConverter.toHexString(response));
 
 			return response;
 		} catch (Exception e) {
