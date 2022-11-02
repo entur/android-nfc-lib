@@ -85,7 +85,7 @@ public enum TagType {
 	private static final String TAG = TagType.class.getName();
 
 	public static TagType identifyTagType(byte[] historicalBytes) {
-		TagType tagType = TagType.UNKNOWN;
+		TagType tagType = TagType.ISO_DEP;
 		if (historicalBytes.length >= 11) {
 			// Log.d(TAG,ByteArrayHexStringConverter.toHexString(historicalBytes));
 

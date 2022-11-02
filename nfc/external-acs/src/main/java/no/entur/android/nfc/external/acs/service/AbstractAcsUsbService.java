@@ -136,7 +136,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 				}
 				final TagType tagType = TagUtility.identifyTagType(reader.getReaderName(), atr);
 
-				Log.d(TAG, "Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
+				Log.d(TAG, "" + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
 
 				handleTagInit(slotNumber, atr, tagType);
 			} catch (RemovedCardException e) {
