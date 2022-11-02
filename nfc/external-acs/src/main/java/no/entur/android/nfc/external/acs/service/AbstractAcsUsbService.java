@@ -47,7 +47,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 		reader = new ReaderWrapper(manager);
 
 		acrReaderAdapter = new AcrReaderAdapter(reader, binder);
-		acrReaderListener = new AcrReaderListener(this);
+
 		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrReaderAdapter);
 
 		support.onCreate();

@@ -35,7 +35,7 @@ public class ExternalNfcReaderStatusSupport {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 
-			Log.d(TAG, "Broadcast reader status " + action);
+			Log.d(TAG, "Reader status intent received");
 
 			readerStatusListener.onReaderStatusIntent(intent);
 		}
