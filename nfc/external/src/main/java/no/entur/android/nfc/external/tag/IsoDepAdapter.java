@@ -4,13 +4,16 @@ import android.nfc.tech.IsoDep;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
 public class IsoDepAdapter extends DefaultTechnology implements CommandTechnology {
 
-	protected static final String TAG = IsoDepAdapter.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(IsoDepAdapter.class);
 
 	private DESFireAdapter adapter;
 	private boolean hostCardEmulation;
@@ -38,7 +41,7 @@ public class IsoDepAdapter extends DefaultTechnology implements CommandTechnolog
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem sending command", e);
+			LOGGER.debug("Problem sending command", e);
 
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 		}

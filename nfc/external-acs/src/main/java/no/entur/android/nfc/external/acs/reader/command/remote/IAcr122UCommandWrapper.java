@@ -2,12 +2,15 @@ package no.entur.android.nfc.external.acs.reader.command.remote;
 
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.acs.reader.command.ACR122Commands;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
 public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 
-	private static final String TAG = IAcr122UCommandWrapper.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr122UCommandWrapper.class);
 
 	private ACR122Commands commands;
 
@@ -22,7 +25,7 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			firmware = commands.getFirmware(0);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading firmware", e);
+			LOGGER.debug("Problem reading firmware", e);
 
 			exception = e;
 		}
@@ -36,7 +39,7 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			picc = commands.getPICC(0);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading PICC", e);
+			LOGGER.debug("Problem reading PICC", e);
 
 			exception = e;
 		}
@@ -51,7 +54,7 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			result = commands.setPICC(0, picc);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting PICC", e);
+			LOGGER.debug("Problem setting PICC", e);
 
 			exception = e;
 		}
@@ -66,7 +69,7 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			picc = commands.setBuzzerForCardDetection(0, enable);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting buzzer", e);
+			LOGGER.debug("Problem setting buzzer", e);
 
 			exception = e;
 		}
@@ -81,7 +84,7 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.control(slotNum, controlCode, command);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem control", e);
+			LOGGER.debug("Problem control", e);
 
 			exception = e;
 		}
@@ -95,7 +98,7 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.transmit(slotNum, command);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem transmit", e);
+			LOGGER.debug("Problem transmit", e);
 
 			exception = e;
 		}

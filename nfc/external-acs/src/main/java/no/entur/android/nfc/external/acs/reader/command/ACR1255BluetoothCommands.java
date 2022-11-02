@@ -16,6 +16,9 @@ import com.acs.bluetooth.BluetoothReader;
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
 import no.entur.android.nfc.external.acs.reader.AcrLED;
@@ -25,7 +28,7 @@ import no.entur.android.nfc.CommandAPDU;
 public class ACR1255BluetoothCommands
 		implements ACR1255Commands, BluetoothReader.OnResponseApduAvailableListener, BluetoothReader.OnEscapeResponseAvailableListener {
 
-	private static final String TAG = ACR1255BluetoothCommands.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1255BluetoothCommands.class);
 
 	private volatile CountDownLatch latch;
 	private volatile byte[] in;
@@ -78,11 +81,11 @@ public class ACR1255BluetoothCommands
 		final int operation = response.getData()[0] & 0x1F; // 5 bit
 
 		if (operation != picc) {
-			Log.w(TAG, "Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
+			LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
+			LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
 
 			return Boolean.TRUE;
 		}
@@ -99,7 +102,7 @@ public class ACR1255BluetoothCommands
 
 		final int operation = response.getData()[0] & 0x1F; // 5 bit
 
-		Log.d(TAG, "Read PICC " + Integer.toHexString(operation));
+		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
 		return operation;
 	}
@@ -115,7 +118,7 @@ public class ACR1255BluetoothCommands
 
 		String firmware = new String(response.getData(), Charset.forName("ASCII"));
 
-		Log.d(TAG, "Read firmware " + firmware);
+		LOGGER.debug("Read firmware " + firmware);
 
 		return firmware;
 	}
@@ -131,7 +134,7 @@ public class ACR1255BluetoothCommands
 
 		String firmware = new String(response.getData(), Charset.forName("ASCII"));
 
-		Log.d(TAG, "Read serial number " + firmware);
+		LOGGER.debug("Read serial number " + firmware);
 
 		return firmware;
 	}
@@ -154,7 +157,7 @@ public class ACR1255BluetoothCommands
 			throw new IllegalArgumentException();
 		}
 
-		Log.d(TAG, "Set LED state to " + (0xFF & response.getData()[0]));
+		LOGGER.debug("Set LED state to " + (0xFF & response.getData()[0]));
 
 		return true;
 	}
@@ -162,7 +165,7 @@ public class ACR1255BluetoothCommands
 	public List<Set<AcrLED>> getLED(int slot) throws ReaderException {
 		int operation = getLED2(slot);
 
-		Log.d(TAG, "Read LED state " + Integer.toHexString(operation));
+		LOGGER.debug("Read LED state " + Integer.toHexString(operation));
 
 		Set<AcrLED> first = new HashSet<AcrLED>();
 		Set<AcrLED> second = new HashSet<AcrLED>();
@@ -232,7 +235,7 @@ public class ACR1255BluetoothCommands
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Set default LED and buzzer behaviour " + Integer.toHexString(operation) + " (" + picc + ")");
+		LOGGER.debug("Set default LED and buzzer behaviour " + Integer.toHexString(operation) + " (" + picc + ")");
 
 		return operation;
 	}
@@ -248,7 +251,7 @@ public class ACR1255BluetoothCommands
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Read default LED and buzzer behaviour " + Integer.toHexString(operation));
+		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
 		return operation;
 	}
@@ -264,7 +267,7 @@ public class ACR1255BluetoothCommands
 
 		byte data = response.getData()[0];
 
-		Log.d(TAG, "Read antenna field status " + Integer.toHexString(data & 0xFF));
+		LOGGER.debug("Read antenna field status " + Integer.toHexString(data & 0xFF));
 
 		return data;
 	}
@@ -283,11 +286,11 @@ public class ACR1255BluetoothCommands
 		boolean result = response.getData()[0] == 0x01;
 
 		if (result == on) {
-			Log.w(TAG, "Unable to properly update antenna field: Expected " + on + " got " + result);
+			LOGGER.warn("Unable to properly update antenna field: Expected " + on + " got " + result);
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Updated antenna field to " + result);
+			LOGGER.debug("Updated antenna field to " + result);
 
 			return Boolean.TRUE;
 		}
@@ -304,7 +307,7 @@ public class ACR1255BluetoothCommands
 
 		byte b = response.getData()[0];
 
-		Log.d(TAG, "Read bluetooth tx power " + Integer.toHexString(b & 0xFF));
+		LOGGER.debug("Read bluetooth tx power " + Integer.toHexString(b & 0xFF));
 
 		return b;
 	}
@@ -319,12 +322,12 @@ public class ACR1255BluetoothCommands
 		}
 
 		if (response.getData()[0] == power) {
-			Log.w(TAG, "Unable to update bluetoth transmission power: Expected " + Integer.toHexString(power & 0xFF) + " got "
+			LOGGER.warn("Unable to update bluetoth transmission power: Expected " + Integer.toHexString(power & 0xFF) + " got "
 					+ Integer.toHexString(response.getData()[0] & 0xFF));
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Updated bluetoth transmission power to " + Integer.toHexString(response.getData()[0] & 0xFF));
+			LOGGER.debug("Updated bluetoth transmission power to " + Integer.toHexString(response.getData()[0] & 0xFF));
 
 			return Boolean.TRUE;
 		}
@@ -339,7 +342,7 @@ public class ACR1255BluetoothCommands
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		Log.d(TAG, "Updated auto PPS " + ByteArrayHexStringConverter.toHexString(response.getData()));
+		LOGGER.debug("Updated auto PPS " + ByteArrayHexStringConverter.toHexString(response.getData()));
 
 		return response.getData();
 	}
@@ -353,7 +356,7 @@ public class ACR1255BluetoothCommands
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		Log.d(TAG, "Read auto PPS " + ByteArrayHexStringConverter.toHexString(response.getData()));
+		LOGGER.debug("Read auto PPS " + ByteArrayHexStringConverter.toHexString(response.getData()));
 
 		return response.getData();
 	}
@@ -371,12 +374,12 @@ public class ACR1255BluetoothCommands
 		}
 
 		if (response.getData()[0] == option) {
-			Log.w(TAG, "Unable to set sleep mode option: Expected " + Integer.toHexString(option & 0xFF) + " got "
+			LOGGER.warn("Unable to set sleep mode option: Expected " + Integer.toHexString(option & 0xFF) + " got "
 					+ Integer.toHexString(response.getData()[0] & 0xFF));
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Set sleep mode option " + Integer.toHexString(response.getData()[0] & 0xFF));
+			LOGGER.debug("Set sleep mode option " + Integer.toHexString(response.getData()[0] & 0xFF));
 
 			return Boolean.TRUE;
 		}
@@ -388,7 +391,7 @@ public class ACR1255BluetoothCommands
 
 	@Override
 	public byte[] control(int slotNum, int controlCode, byte[] request) throws ReaderException {
-		Log.d(TAG, "Raw control request: " + ByteArrayHexStringConverter.toHexString(request));
+		LOGGER.debug("Raw control request: " + ByteArrayHexStringConverter.toHexString(request));
 		try {
 
 			long time = System.currentTimeMillis();
@@ -408,7 +411,7 @@ public class ACR1255BluetoothCommands
 				throw new ReaderException("Problem waiting for response", e);
 			}
 
-			Log.d(TAG, "Raw control response: " + ByteArrayHexStringConverter.toHexString(in) + " in " + (System.currentTimeMillis() - time) + " millis");
+			LOGGER.debug("Raw control response: " + ByteArrayHexStringConverter.toHexString(in) + " in " + (System.currentTimeMillis() - time) + " millis");
 
 			return in;
 		} catch (Exception e) {
@@ -422,7 +425,7 @@ public class ACR1255BluetoothCommands
 	}
 
 	public byte[] transmit(byte[] request) {
-		Log.d(TAG, "Raw transmit request: " + ByteArrayHexStringConverter.toHexString(request));
+		LOGGER.debug("Raw transmit request: " + ByteArrayHexStringConverter.toHexString(request));
 		try {
 
 			in = null;
@@ -441,7 +444,7 @@ public class ACR1255BluetoothCommands
 				throw new ReaderException("Problem waiting for response", e);
 			}
 
-			Log.d(TAG, "Raw transmit response: " + ByteArrayHexStringConverter.toHexString(in));
+			LOGGER.debug("Raw transmit response: " + ByteArrayHexStringConverter.toHexString(in));
 
 			return in;
 		} catch (Exception e) {
@@ -451,7 +454,7 @@ public class ACR1255BluetoothCommands
 
 	@Override
 	public void onResponseApduAvailable(BluetoothReader bluetoothReader, byte[] apdu, int errorCode) {
-		Log.d(TAG, "onResponseApduAvailable: " + getResponseString(apdu, errorCode));
+		LOGGER.debug("onResponseApduAvailable: " + getResponseString(apdu, errorCode));
 
 		if (errorCode == BluetoothReader.ERROR_SUCCESS) {
 			this.in = apdu;
@@ -462,7 +465,7 @@ public class ACR1255BluetoothCommands
 
 	@Override
 	public void onEscapeResponseAvailable(BluetoothReader bluetoothReader, byte[] bytes, int errorCode) {
-		Log.d(TAG, "onEscapeResponseAvailable: " + getResponseString(bytes, errorCode));
+		LOGGER.debug("onEscapeResponseAvailable: " + getResponseString(bytes, errorCode));
 
 		if (errorCode == BluetoothReader.ERROR_SUCCESS) {
 			this.in = bytes;
@@ -490,11 +493,11 @@ public class ACR1255BluetoothCommands
 		boolean result = response[4] == 0x01;
 
 		if (result != on) {
-			Log.w(TAG, "Unable to properly enable/disable automatic polling: Expected " + on + " got " + result);
+			LOGGER.warn("Unable to properly enable/disable automatic polling: Expected " + on + " got " + result);
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Updated automatic polling to " + result);
+			LOGGER.debug("Updated automatic polling to " + result);
 
 			return Boolean.TRUE;
 		}
@@ -514,7 +517,7 @@ public class ACR1255BluetoothCommands
 		if (data.length > 0) {
 			return data[0] & 0xFF;
 		}
-		Log.d(TAG, "Unable to read battery level");
+		LOGGER.debug("Unable to read battery level");
 
 		return -1;
 	}

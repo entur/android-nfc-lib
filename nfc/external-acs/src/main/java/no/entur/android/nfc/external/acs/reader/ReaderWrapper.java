@@ -8,15 +8,19 @@ import com.acs.smartcard.Reader;
 import com.acs.smartcard.Reader.OnStateChangeListener;
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.CommandAPDU;
 import no.entur.android.nfc.ResponseAPDU;
+import no.entur.android.nfc.hce.protocol.ResponseAdpuProtocolIsoDep;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class ReaderWrapper {
 
 	public static final boolean LOG = false;
 
-	private String TAG = ReaderWrapper.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ReaderWrapper.class);
 
 	private Reader reader;
 
@@ -321,7 +325,7 @@ public class ReaderWrapper {
 	}
 
 	private void log(String string) {
-		Log.d(TAG, string);
+		LOGGER.debug(string);
 	}
 
 }

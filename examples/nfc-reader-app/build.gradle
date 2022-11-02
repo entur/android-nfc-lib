@@ -36,6 +36,8 @@ dependencies {
 
     implementation project(":nfc:external-acs")
 
+    implementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
+
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

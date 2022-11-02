@@ -3,6 +3,9 @@ package no.entur.android.nfc.external.acs.reader.bind;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 
@@ -14,7 +17,7 @@ import no.entur.android.nfc.external.acs.reader.command.remote.IAcr122UCommandWr
 
 public class IAcr122UBinder extends IAcr122UReaderControl.Stub {
 
-	private static final String TAG = IAcr122UBinder.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr122UBinder.class);
 
 	private IAcr122UCommandWrapper iAcr122UCommandWrapper;
 
@@ -49,7 +52,7 @@ public class IAcr122UBinder extends IAcr122UReaderControl.Stub {
 
 			byte[] response = out.toByteArray();
 
-			Log.d(TAG, "Send exception response length " + response.length + ":" + ByteArrayHexStringConverter.toHexString(response));
+			LOGGER.debug("Send exception response length " + response.length + ":" + ByteArrayHexStringConverter.toHexString(response));
 
 			return response;
 		} catch (Exception e) {

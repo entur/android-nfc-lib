@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 public class ExternalNfcServiceCallbackSupport {
 
-	private static final String TAG = ExternalNfcServiceCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcServiceCallbackSupport.class);
 
 	protected final ExternalNfcServiceCallback callback;
 	protected final Context context;
@@ -37,7 +40,7 @@ public class ExternalNfcServiceCallbackSupport {
 			if (!open) {
 				open = true;
 
-				Log.d(TAG, "Service started");
+				LOGGER.debug("Service started");
 				callback.onExternalNfcServiceStarted(intent);
 
 				if(executor != null) {
@@ -52,7 +55,7 @@ public class ExternalNfcServiceCallbackSupport {
 			if (open) {
 				open = false;
 
-				Log.d(TAG, "Service stopped");
+				LOGGER.debug("Service stopped");
 				callback.onExternalNfcServiceStopped(intent);
 
 				if(executor != null) {
@@ -80,7 +83,7 @@ public class ExternalNfcServiceCallbackSupport {
 
 	private void startReceivingServiceBroadcasts() {
 		if (!recieveServiceBroadcasts) {
-			Log.d(TAG, "Start receiving service broadcasts");
+			LOGGER.debug("Start receiving service broadcasts");
 
 			recieveServiceBroadcasts = true;
 
@@ -95,7 +98,7 @@ public class ExternalNfcServiceCallbackSupport {
 
 	private void stopReceivingServiceBroadcasts() {
 		if (recieveServiceBroadcasts) {
-			Log.d(TAG, "Stop receiving broadcasts");
+			LOGGER.debug("Stop receiving broadcasts");
 
 			recieveServiceBroadcasts = false;
 

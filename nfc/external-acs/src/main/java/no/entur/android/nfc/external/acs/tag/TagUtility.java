@@ -10,6 +10,8 @@ import org.nfctools.api.TagType;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
 import org.nfctools.spi.acs.AcrMfUlReaderWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -20,7 +22,7 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class TagUtility {
 
-	private static final String TAG = TagUtility.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(TagUtility.class);
 
 	// https://stackoverflow.com/questions/9514684/what-apdu-command-gets-card-id
 	private static final byte[] GET_TAG_ID = new byte[] { (byte) 0xFF, (byte) 0xCA, 0x00, 0x00, 0x00 };
@@ -53,7 +55,7 @@ public class TagUtility {
 			System.arraycopy(initBlocks[0].getData(), 0, uid, 0, 3);
 			System.arraycopy(initBlocks[1].getData(), 0, uid, 3, 4);
 		} catch (Exception e) {
-			Log.w(TAG, "Problem reading tag UID", e);
+			LOGGER.warn("Problem reading tag UID", e);
 			uid = new byte[] { MifareUltralightTagFactory.NXP_MANUFACTURER_ID };
 		}
 
@@ -66,7 +68,7 @@ public class TagUtility {
 		try {
 			uid = getPcscUid(wrapper);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem getting manufacturer data", e);
+			LOGGER.debug("Problem getting manufacturer data", e);
 
 			uid = null;
 		}
@@ -96,7 +98,7 @@ public class TagUtility {
 		if (name != null) {
 			if (name.contains("1252") || name.contains("1255")) {
 				if (historicalBytes.length >= 11) {
-					Log.d(TAG, ByteArrayHexStringConverter.toHexString(historicalBytes));
+					LOGGER.debug(ByteArrayHexStringConverter.toHexString(historicalBytes));
 					int tagId = (historicalBytes[13] & 0xff) << 8 | (historicalBytes[14] & 0xff);
 					byte standard = historicalBytes[12];
 					if (standard == 0x11) {
@@ -107,7 +109,7 @@ public class TagUtility {
 						case 0xF012:
 							return TagType.FELICA_424K;
 						default: {
-							Log.w(TAG, "Unknown tag id " + ByteArrayHexStringConverter.toHexString(new byte[] { historicalBytes[13], historicalBytes[14] })
+							LOGGER.warn("Unknown tag id " + ByteArrayHexStringConverter.toHexString(new byte[] { historicalBytes[13], historicalBytes[14] })
 									+ " (" + Integer.toHexString(tagId) + ")");
 						}
 						}
@@ -140,14 +142,14 @@ public class TagUtility {
 						default: {
 
 							if ((historicalBytes[13] & 0xFF) == 0xFF) {
-								Log.i(TAG,
+								LOGGER.info(
 										"Assume android device for "
 												+ ByteArrayHexStringConverter.toHexString(new byte[] { historicalBytes[13], historicalBytes[14] }) + " ("
 												+ Integer.toHexString(tagId) + ")");
 
 								return TagType.ISO_14443_TYPE_A;
 							} else {
-								Log.w(TAG, "Unknown tag id " + ByteArrayHexStringConverter.toHexString(new byte[] { historicalBytes[13], historicalBytes[14] })
+								LOGGER.warn("Unknown tag id " + ByteArrayHexStringConverter.toHexString(new byte[] { historicalBytes[13], historicalBytes[14] })
 										+ " (" + Integer.toHexString(tagId) + ")");
 							}
 						}
@@ -171,7 +173,7 @@ public class TagUtility {
 				return uid;
 			}
 		} catch (Exception e) {
-			Log.d(TAG, "Problem getting tag uid", e);
+			LOGGER.debug("Problem getting tag uid", e);
 		}
 		return null;
 	}

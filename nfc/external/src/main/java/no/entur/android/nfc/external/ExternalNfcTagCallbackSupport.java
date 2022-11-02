@@ -8,13 +8,17 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcTagCallbackSupport {
 
-	private static final String TAG = ExternalNfcTagCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcTagCallbackSupport.class);
+
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcTagCallback callback;
@@ -39,7 +43,7 @@ public class ExternalNfcTagCallbackSupport {
 			}
 
 		} else {
-			Log.d(TAG, "Ignore action " + intent.getAction());
+			LOGGER.debug("Ignore action " + intent.getAction());
 		}
 		}
 	};
@@ -80,7 +84,7 @@ public class ExternalNfcTagCallbackSupport {
 
 	private void startReceivingTagBroadcasts() {
 		if (!recieveTagBroadcasts) {
-			Log.d(TAG, "Start receiving tag broadcasts");
+			LOGGER.debug("Start receiving tag broadcasts");
 
 			recieveTagBroadcasts = true;
 
@@ -94,7 +98,7 @@ public class ExternalNfcTagCallbackSupport {
 
 	private void stopReceivingTagBroadcasts() {
 		if (recieveTagBroadcasts) {
-			Log.d(TAG, "Stop receiving tag broadcasts");
+			LOGGER.debug("Stop receiving tag broadcasts");
 
 			recieveTagBroadcasts = false;
 

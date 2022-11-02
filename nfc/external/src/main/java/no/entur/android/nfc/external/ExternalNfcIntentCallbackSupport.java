@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -15,7 +18,8 @@ public class ExternalNfcIntentCallbackSupport {
 
 	private static final List<String> DEFAULT_ACTIONS = Arrays.asList(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED, ExternalNfcTagCallback.ACTION_TECH_DISCOVERED, ExternalNfcTagCallback.ACTION_NDEF_DISCOVERED);
 
-	private static final String TAG = ExternalNfcIntentCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcIntentCallbackSupport.class);
+
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcIntentCallback callback;
@@ -86,7 +90,7 @@ public class ExternalNfcIntentCallbackSupport {
 
 	private void startReceivingNfcIntentBroadcasts() {
 		if (!recieveNfcIntentBroadcasts) {
-			Log.d(TAG, "Start receiving nfc intent broadcasts");
+			LOGGER.debug("Start receiving nfc intent broadcasts");
 
 			recieveNfcIntentBroadcasts = true;
 
@@ -102,7 +106,7 @@ public class ExternalNfcIntentCallbackSupport {
 
 	private void stopReceivingNfcIntentBroadcasts() {
 		if (recieveNfcIntentBroadcasts) {
-			Log.d(TAG, "Stop receiving nfc intent broadcasts");
+			LOGGER.debug("Stop receiving nfc intent broadcasts");
 
 			recieveNfcIntentBroadcasts = false;
 

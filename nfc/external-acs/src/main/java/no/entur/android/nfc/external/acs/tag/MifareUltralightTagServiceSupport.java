@@ -17,6 +17,8 @@ import org.nfctools.mf.ul.MfUlReaderWriter;
 import org.nfctools.mf.ul.ntag.NfcNtag;
 import org.nfctools.mf.ul.ntag.NfcNtagVersion;
 import org.nfctools.spi.acs.AcrMfUlReaderWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ import no.entur.android.nfc.wrapper.INfcTag;
 
 public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightTagServiceSupport {
 
-    private static final String TAG = MifareUltralightTagServiceSupport.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(MifareUltralightTagServiceSupport.class);
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
@@ -62,9 +64,9 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
                         NfcNtagVersion ntagVersion = new NfcNtagVersion(ntag.getVersion());
                         version = ntagVersion.getType();
 
-                        // Log.d(TAG, "Detected version " + version);
+                        // LOGGER.debug("Detected version " + version);
                     } catch (MfException e) {
-                        Log.d(TAG, "No version for Ultralight tag - non NTAG 21x-tag?");
+                        LOGGER.debug("No version for Ultralight tag - non NTAG 21x-tag?");
 
                         broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
                         return;
@@ -74,7 +76,7 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
 
             MfBlock[] capabilityBlock = null;
             if (version == null) {
-                // Log.d(TAG, "Detect tag via capability container");
+                // LOGGER.debug("Detect tag via capability container");
 
                 readerWriter = new AcrMfUlReaderWriter(acsTag);
 
@@ -87,11 +89,11 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
 
                     version = getVersion(capabilityBlock[0]);
 
-                    // Log.d(TAG, "Detected version " + version);
+                    // LOGGER.debug("Detected version " + version);
 
                     canReadBlocks = true;
                 } catch (Exception e) {
-                    Log.w(TAG, "Problem reading tag UID", e);
+                    LOGGER.warn("Problem reading tag UID", e);
 
                     canReadBlocks = false;
                 }
@@ -121,7 +123,7 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
                     }
                     canReadBlocks = true;
                 } catch (Exception e) {
-                    Log.w(TAG, "Problem reading tag UID", e);
+                    LOGGER.warn("Problem reading tag UID", e);
 
                     canReadBlocks = false;
                 }
@@ -159,11 +161,11 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
 
             Intent intent = mifareUltralightTagFactory.getTag(serviceHandle, slotNumber, type, version, uid, atr, tagService);
 
-            Log.d(TAG, "Broadcast mifare ultralight");
+            LOGGER.debug("Broadcast mifare ultralight");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
         } catch (Exception e) {
-            Log.d(TAG, "Problem reading from tag", e);
+            LOGGER.debug("Problem reading from tag", e);
             TagUtility.sendTechBroadcast(context);
         }
     }

@@ -8,13 +8,16 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcReaderCallbackSupport {
 
-	private static final String TAG = ExternalNfcReaderCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcReaderCallbackSupport.class);
 
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
@@ -38,7 +41,7 @@ public class ExternalNfcReaderCallbackSupport {
 			if (!open) {
 				open = true;
 
-				Log.d(TAG, "Reader opened");
+				LOGGER.debug("Reader opened");
 
 				if(executor != null) {
 					executor.execute(() -> {
@@ -52,7 +55,7 @@ public class ExternalNfcReaderCallbackSupport {
 			if (open) {
 				open = false;
 
-				Log.d(TAG, "Reader closed");
+				LOGGER.debug("Reader closed");
 
 				if(executor != null) {
 					executor.execute(() -> {
@@ -83,7 +86,7 @@ public class ExternalNfcReaderCallbackSupport {
 		if (enabled) {
 			startReceivingReaderBroadcasts();
 
-			Log.d(TAG, "Ask for reader status");
+			LOGGER.debug("Ask for reader status");
 
 			broadcast(ExternalNfcReaderCallback.ACTION_READER_STATUS);
 		}
@@ -117,7 +120,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 	private void startReceivingReaderBroadcasts() {
 		if (!recieveReaderBroadcasts) {
-			Log.d(TAG, "Start receiving reader broadcasts");
+			LOGGER.debug("Start receiving reader broadcasts");
 
 			recieveReaderBroadcasts = true;
 
@@ -132,7 +135,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 	private void stopReceivingReaderBroadcasts() {
 		if (recieveReaderBroadcasts) {
-			Log.d(TAG, "Stop receiving broadcasts");
+			LOGGER.debug("Stop receiving broadcasts");
 
 			recieveReaderBroadcasts = false;
 

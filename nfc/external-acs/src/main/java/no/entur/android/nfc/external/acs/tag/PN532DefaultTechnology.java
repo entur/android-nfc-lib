@@ -3,6 +3,9 @@ package no.entur.android.nfc.external.acs.tag;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
@@ -12,7 +15,7 @@ import no.entur.android.nfc.wrapper.TransceiveResult;
 
 public class PN532DefaultTechnology extends DefaultTechnology implements CommandTechnology {
 
-	protected static final String TAG = PN532DefaultTechnology.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(PN532DefaultTechnology.class);
 
 	protected AbstractReaderIsoDepWrapper reader;
 	private boolean print;
@@ -30,28 +33,28 @@ public class PN532DefaultTechnology extends DefaultTechnology implements Command
 			byte[] transceive;
 			if (!raw) {
 				if (print) {
-					Log.d(TAG, "Transceive request " + ByteArrayHexStringConverter.toHexString(data));
+					LOGGER.debug("Transceive request " + ByteArrayHexStringConverter.toHexString(data));
 				}
 				transceive = reader.transceive(data);
 
 				if (print) {
-					Log.d(TAG, "Transceive raw response " + ByteArrayHexStringConverter.toHexString(transceive));
+					LOGGER.debug("Transceive raw response " + ByteArrayHexStringConverter.toHexString(transceive));
 				}
 			} else {
 				if (print) {
-					Log.d(TAG, "Transceive raw request " + ByteArrayHexStringConverter.toHexString(data));
+					LOGGER.debug("Transceive raw request " + ByteArrayHexStringConverter.toHexString(data));
 				}
 
 				transceive = reader.transceiveRaw(data);
 
 				if (print) {
-					Log.d(TAG, "Transceive raw response " + ByteArrayHexStringConverter.toHexString(transceive));
+					LOGGER.debug("Transceive raw response " + ByteArrayHexStringConverter.toHexString(transceive));
 				}
 			}
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem sending command", e);
+			LOGGER.debug("Problem sending command", e);
 
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 		}

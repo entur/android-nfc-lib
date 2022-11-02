@@ -2,6 +2,9 @@ package no.entur.android.nfc;
 
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * Generic service with onResume / onPause with enable / disable.
@@ -10,7 +13,7 @@ import android.util.Log;
 
 public abstract class AbstractActivitySupport {
 
-	private static final String TAG = AbstractActivitySupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractActivitySupport.class);
 
 	protected boolean enabled;
 	protected boolean started = false;
@@ -37,11 +40,11 @@ public abstract class AbstractActivitySupport {
 	protected void stop() {
 		if (started) {
 			started = false;
-			Log.d(TAG, "Stop " + getClass().getName());
+			LOGGER.debug("Stop " + getClass().getName());
 
 			stopImpl();
 		} else {
-			Log.d(TAG, getClass().getName() + " already stopped");
+			LOGGER.debug(getClass().getName() + " already stopped");
 		}
 	}
 
@@ -50,11 +53,11 @@ public abstract class AbstractActivitySupport {
 	protected void start() {
 		if (!started) {
 			started = true;
-			Log.d(TAG, "Start " + getClass().getName());
+			LOGGER.debug("Start " + getClass().getName());
 
 			startImpl();
 		} else {
-			Log.d(TAG, getClass().getName() + " already started");
+			LOGGER.debug(getClass().getName() + " already started");
 		}
 	}
 
@@ -63,12 +66,12 @@ public abstract class AbstractActivitySupport {
 	public void refresh() {
 		synchronized (this) {
 			if (started) {
-				Log.d(TAG, "Refresh " + getClass().getName());
+				LOGGER.debug("Refresh " + getClass().getName());
 
 				// TODO also check canStop() and canStart()?
 				refreshImpl();
 			} else {
-				Log.d(TAG, "Unable to refresh " + getClass().getName() + ", not started.");
+				LOGGER.debug("Unable to refresh " + getClass().getName() + ", not started.");
 			}
 		}
 	}
@@ -81,14 +84,14 @@ public abstract class AbstractActivitySupport {
 	protected void setEnabled(boolean enabled) {
 		synchronized (this) {
 			if (this.enabled && !enabled) {
-				Log.d(TAG, "Disable " + getClass().getName());
+				LOGGER.debug("Disable " + getClass().getName());
 				this.enabled = enabled;
 				if (canStop()) {
 					stop();
 				}
 
 			} else if (!this.enabled && enabled) {
-				Log.d(TAG, "Enable " + getClass().getName());
+				LOGGER.debug("Enable " + getClass().getName());
 				this.enabled = enabled;
 				if (canStart()) {
 					start();
