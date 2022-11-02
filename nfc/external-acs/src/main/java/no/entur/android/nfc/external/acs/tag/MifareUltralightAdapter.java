@@ -8,9 +8,12 @@ import com.acs.smartcard.ReaderException;
 import org.nfctools.mf.block.DataBlock;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import no.entur.android.nfc.external.acs.service.AcsUsbService;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.DefaultTechnology;
 import no.entur.android.nfc.wrapper.TransceiveResult;
@@ -23,7 +26,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 	 */
 	public static final int PAGE_SIZE = 4;
 
-	protected static final String TAG = MifareUltralightAdapter.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(MifareUltralightAdapter.class);
 
 	private MfUlReaderWriter readerWriter;
 
@@ -33,7 +36,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 	}
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
-		// Log.d(TAG, "transceive");
+		// LOGGER.debug("transceive");
 		if (raw) {
 			return getRawTransceiveResult(data);
 		}
@@ -57,10 +60,10 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
 			} catch (IOException e) {
-				Log.d(TAG, "Problem reading blocks " + pageOffset);
+				LOGGER.debug("Problem reading blocks " + pageOffset);
 				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 			} catch (ReaderException e) {
-				Log.d(TAG, "Problem reading blocks " + pageOffset);
+				LOGGER.debug("Problem reading blocks " + pageOffset);
 				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 			}
 		} else if (command == 0xA2) {
@@ -68,7 +71,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 			try {
 				if (data.length != 5) {
-					Log.d(TAG, "Problem writing block " + pageOffset + " - size too big: " + (data.length - 1));
+					LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 1));
 
 					return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 				}
@@ -79,7 +82,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, null);
 			} catch (IOException e) {
-				Log.d(TAG, "Problem writing block " + pageOffset);
+				LOGGER.debug("Problem writing block " + pageOffset);
 
 				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 			}
@@ -94,7 +97,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
 		} catch (ReaderException e) {
-			Log.d(TAG, "Problem sending command", e);
+			LOGGER.debug("Problem sending command", e);
 
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 		}

@@ -28,7 +28,6 @@ import org.nfctools.utils.NfcUtils;
  */
 public class ByteArrayInputStreamReader implements ByteArrayReader {
 
-	private static final String TAG = ByteArrayInputStreamReader.class.getName();
 	private InputStream inputStream;
 
 	public ByteArrayInputStreamReader(InputStream inputStream) {
@@ -43,9 +42,6 @@ public class ByteArrayInputStreamReader implements ByteArrayReader {
 	@Override
 	public int read(byte[] data, int offset, int length) throws IOException {
 		int dataRead = inputStream.read(data, offset, length);
-
-		if (dataRead > 0)
-			Log.d(TAG, "[" + NfcUtils.convertBinToASCII(data, offset, dataRead) + "]");
 
 		return dataRead;
 	}

@@ -5,6 +5,9 @@ import android.util.Log;
 
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
 import no.entur.android.nfc.external.acs.reader.Acr122UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1251UReader;
@@ -35,7 +38,7 @@ import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 
 public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdapter<AcrReader> {
 
-	private static final String TAG = AcrReaderAdapter.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(AcrReaderAdapter.class);
 	private final ReaderWrapper reader;
 
 	private IAcr122UBinder acr122Binder;
@@ -79,7 +82,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 			} else if (name.contains("1255")) {
 				return new ACR1255UsbCommands(name, reader);
 			} else {
-				Log.d(TAG, "No reader control for " + name);
+				LOGGER.debug("No reader control for " + name);
 			}
 		}
 		return new ACRCommands(reader);
@@ -107,7 +110,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		try {
 			binder.setReaderTechnology(new ACRReaderTechnology(reader));
 		} catch (ReaderException e) {
-			Log.d(TAG, "Problem initializing reader", e);
+			LOGGER.debug("Problem initializing reader", e);
 			return null;
 		}
 
@@ -137,7 +140,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 			acr1283Binder.setCommands((ACR1283Commands) reader);
 			return new Acr1283LReader(reader.getName(), acr1283Binder);
 		} else {
-			Log.d(TAG, "Not supporting reader extras for " + reader.getName());
+			LOGGER.debug("Not supporting reader extras for " + reader.getName());
 		}
 		return null;
 	}

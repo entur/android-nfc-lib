@@ -2,13 +2,17 @@ package no.entur.android.nfc.external.acs.reader.command.remote;
 
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.acs.reader.command.ACR1222Commands;
+import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
 public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 
-	private static final String TAG = IAcr1222LCommandWrapper.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr1222LCommandWrapper.class);
 
 	private ACR1222Commands commands;
 
@@ -23,10 +27,10 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			firmware = commands.getFirmware(0);
 
-			Log.d(TAG, "Got firmware " + firmware);
+			LOGGER.debug("Got firmware " + firmware);
 
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading firmware", e);
+			LOGGER.debug("Problem reading firmware", e);
 
 			exception = e;
 		}
@@ -40,7 +44,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			picc = commands.getACR122PICC(0);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading PICC", e);
+			LOGGER.debug("Problem reading PICC", e);
 
 			exception = e;
 		}
@@ -55,7 +59,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			success = commands.setACR122PICC(0, picc);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting PICC", e);
+			LOGGER.debug("Problem setting PICC", e);
 
 			exception = e;
 		}
@@ -70,7 +74,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.getDefaultLEDAndBuzzerBehaviour2(0);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading default led and buzzer behaviour", e);
+			LOGGER.debug("Problem reading default led and buzzer behaviour", e);
 
 			exception = e;
 		}
@@ -84,7 +88,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.setDefaultLEDAndBuzzerBehaviour(0, parameter);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading setting default led and buzzer behaviour", e);
+			LOGGER.debug("Problem reading setting default led and buzzer behaviour", e);
 
 			exception = e;
 		}
@@ -100,7 +104,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 			value = commands.setDefaultLEDAndBuzzerBehaviours(0, piccPollingStatusLED, piccActivationStatusLED, buzzerForCardInsertionOrRemoval,
 					cardOperationBlinkingLED);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting buzzer", e);
+			LOGGER.debug("Problem setting buzzer", e);
 
 			exception = e;
 		}
@@ -114,7 +118,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.lightLED(0, ready, progress, complete, error);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting light", e);
+			LOGGER.debug("Problem setting light", e);
 
 			exception = e;
 		}
@@ -128,7 +132,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			result = commands.setLED(0, leds);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting LEDs", e);
+			LOGGER.debug("Problem setting LEDs", e);
 
 			exception = e;
 		}
@@ -144,7 +148,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.control(slotNum, controlCode, command);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem control", e);
+			LOGGER.debug("Problem control", e);
 
 			exception = e;
 		}
@@ -158,7 +162,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			value = commands.transmit(slotNum, command);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem transmit", e);
+			LOGGER.debug("Problem transmit", e);
 
 			exception = e;
 		}
@@ -172,7 +176,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			result = commands.clearLCD(0);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting LEDs", e);
+			LOGGER.debug("Problem setting LEDs", e);
 
 			exception = e;
 		}
@@ -198,7 +202,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			result = commands.displayText(0, font, styleBold, line, position, message);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting LEDs", e);
+			LOGGER.debug("Problem setting LEDs", e);
 
 			exception = e;
 		}
@@ -212,7 +216,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			result = commands.lightBacklight(0, on);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem setting LEDs", e);
+			LOGGER.debug("Problem setting LEDs", e);
 
 			exception = e;
 		}

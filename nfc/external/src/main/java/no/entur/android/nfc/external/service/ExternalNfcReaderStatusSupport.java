@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 
 /**
@@ -18,7 +21,7 @@ import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 
 public class ExternalNfcReaderStatusSupport {
 
-	private static final String TAG = ExternalNfcReaderStatusSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcReaderStatusSupport.class);
 
 	protected final Context context;
 	protected final ExternalNfcReaderStatusListener readerStatusListener;
@@ -35,7 +38,7 @@ public class ExternalNfcReaderStatusSupport {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 
-			Log.d(TAG, "Reader status intent received");
+			LOGGER.debug("Reader status intent received");
 
 			readerStatusListener.onReaderStatusIntent(intent);
 		}
@@ -52,7 +55,7 @@ public class ExternalNfcReaderStatusSupport {
 	protected void startReceivingStatusBroadcasts() {
 		synchronized (this) {
 			if (!recieveStatusBroadcasts) {
-				Log.d(TAG, "Start receiving status broadcasts");
+				LOGGER.debug("Start receiving status broadcasts");
 
 				recieveStatusBroadcasts = true;
 
@@ -68,7 +71,7 @@ public class ExternalNfcReaderStatusSupport {
 	protected void stopReceivingStatusBroadcasts() {
 		synchronized (this) {
 			if (recieveStatusBroadcasts) {
-				Log.d(TAG, "Stop receiving status broadcasts");
+				LOGGER.debug("Stop receiving status broadcasts");
 
 				recieveStatusBroadcasts = false;
 

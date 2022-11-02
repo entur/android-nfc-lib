@@ -7,6 +7,9 @@ import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.TlvProperties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.CommandAPDU;
 import no.entur.android.nfc.ResponseAPDU;
@@ -14,7 +17,7 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class ACRCommands {
 
-	private static final String TAG = ACRCommands.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACRCommands.class);
 
 	private static final String[] propertyStrings = { "Unknown", "wLcdLayout", "bEntryValidationCondition", "bTimeOut2", "wLcdMaxCharacters", "wLcdMaxLines",
 			"bMinPINSize", "bMaxPINSize", "sFirmwareID", "bPPDUSupport", "dwMaxAPDUDataSize", "wIdVendor", "wIdProduct" };
@@ -79,7 +82,7 @@ public class ACRCommands {
 	}
 
 	public ResponseAPDU control(int slotnum, CommandAPDU command) throws ReaderException {
-		Log.d(TAG, "control " + ByteArrayHexStringConverter.toHexString(command.getBytes()));
+		LOGGER.debug("control " + ByteArrayHexStringConverter.toHexString(command.getBytes()));
 
 		byte[] control = reader.control(slotnum, Reader.IOCTL_CCID_ESCAPE, command.getBytes());
 
@@ -87,7 +90,7 @@ public class ACRCommands {
 	}
 
 	public ResponseAPDU transmit(int slotnum, CommandAPDU command) throws ReaderException {
-		Log.d(TAG, "transmit " + ByteArrayHexStringConverter.toHexString(command.getBytes()));
+		LOGGER.debug("transmit " + ByteArrayHexStringConverter.toHexString(command.getBytes()));
 
 		byte[] control = reader.transmit(slotnum, command.getBytes());
 
@@ -95,13 +98,13 @@ public class ACRCommands {
 	}
 
 	public byte[] control(int slotNum, int controlCode, byte[] command) throws ReaderException {
-		Log.d(TAG, "control " + ByteArrayHexStringConverter.toHexString(command));
+		LOGGER.debug("control " + ByteArrayHexStringConverter.toHexString(command));
 
 		return reader.control(slotNum, controlCode, command);
 	}
 
 	public byte[] transmit(int slotNum, byte[] command) throws ReaderException {
-		Log.d(TAG, "transmit " + ByteArrayHexStringConverter.toHexString(command));
+		LOGGER.debug("transmit " + ByteArrayHexStringConverter.toHexString(command));
 
 		return reader.transmit(slotNum, command);
 	}
@@ -124,7 +127,7 @@ public class ACRCommands {
 		 * for (int i = TlvProperties.PROPERTY_wLcdLayout; i <= TlvProperties.PROPERTY_wIdProduct; i++) {
 		 * 
 		 * Object property = readerProperties.getProperty(i); if(property == null) { continue; } if (property instanceof Integer) { Log.d(TAG,
-		 * propertyStrings[i] + ": " + toHexString((Integer) property)); } else { Log.d(TAG, propertyStrings[i] + ": " + property); } }
+		 * propertyStrings[i] + ": " + toHexString((Integer) property)); } else { LOGGER.debug(propertyStrings[i] + ": " + property); } }
 		 */
 
 		return readerProperties;

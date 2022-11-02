@@ -3,10 +3,14 @@ package no.entur.android.nfc.external.acs.reader.bind;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 
 import no.entur.android.nfc.external.acs.reader.AcrReader;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.command.ACR1222Commands;
 import no.entur.android.nfc.external.acs.reader.command.remote.IAcr1222LCommandWrapper;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
@@ -14,7 +18,7 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class IAcr1222LBinder extends IAcr1222LReaderControl.Stub {
 
-	private static final String TAG = IAcr1222LBinder.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr1222LBinder.class);
 
 	private IAcr1222LCommandWrapper iAcr1222LCommandWrapper;
 
@@ -32,7 +36,7 @@ public class IAcr1222LBinder extends IAcr1222LReaderControl.Stub {
 
 	@Override
 	public byte[] getFirmware() throws RemoteException {
-		Log.d(TAG, "getFirmwareAcr1222L");
+		LOGGER.debug("getFirmwareAcr1222L");
 		if (iAcr1222LCommandWrapper == null) {
 			return noReaderException();
 		}
@@ -79,7 +83,7 @@ public class IAcr1222LBinder extends IAcr1222LReaderControl.Stub {
 
 			byte[] response = out.toByteArray();
 
-			Log.d(TAG, "Send exception response length " + response.length + ":" + ByteArrayHexStringConverter.toHexString(response));
+			LOGGER.debug("Send exception response length " + response.length + ":" + ByteArrayHexStringConverter.toHexString(response));
 
 			return response;
 		} catch (Exception e) {

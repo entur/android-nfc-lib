@@ -3,13 +3,18 @@ package no.entur.android.nfc.external.remote;
 import android.os.Parcelable;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import no.entur.android.nfc.external.service.AbstractService;
+
 public abstract class RemoteCommandReader implements Parcelable {
 
-    private static final String TAG = RemoteCommandReader.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteCommandReader.class);
 
     protected String name;
 
@@ -118,7 +123,7 @@ public abstract class RemoteCommandReader implements Parcelable {
                 throw createUnexpectedVersionIllegalArgumentException(version);
             }
         } catch (IOException e) {
-            Log.d(TAG, "Problem reading string length " + response.length + ": " + toHexString(response));
+            LOGGER.debug("Problem reading string length " + response.length + ": " + toHexString(response));
             throw createRemoteCommandException(e);
         }
     }
@@ -143,7 +148,7 @@ public abstract class RemoteCommandReader implements Parcelable {
                 throw createUnexpectedVersionIllegalArgumentException(version);
             }
         } catch (IOException e) {
-            Log.d(TAG, "Problem reading string length " + response.length + ": " + toHexString(response));
+            LOGGER.debug("Problem reading string length " + response.length + ": " + toHexString(response));
             throw createRemoteCommandException(e);
         }
     }
@@ -165,7 +170,7 @@ public abstract class RemoteCommandReader implements Parcelable {
                 throw createUnexpectedVersionIllegalArgumentException(version);
             }
         } catch (IOException e) {
-            Log.d(TAG, "Problem reading void " + response.length + ": " + toHexString(response));
+            LOGGER.debug("Problem reading void " + response.length + ": " + toHexString(response));
             throw createRemoteCommandException(e);
         }
     }

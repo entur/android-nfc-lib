@@ -4,10 +4,14 @@ import android.nfc.NdefMessage;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.List;
 
+import no.entur.android.nfc.external.tag.DESFireAdapter;
 import no.entur.android.nfc.wrapper.ErrorCodes;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.TagImpl;
@@ -17,7 +21,7 @@ import no.entur.android.nfc.wrapper.tech.NdefFormatable;
 
 public class INFcTagBinder extends INfcTag.Stub {
 
-	private static final String TAG = INFcTagBinder.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(INFcTagBinder.class);
 
 	private static final String NO_READER_MSG = "No reader";
 
@@ -46,13 +50,13 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean canMakeReadOnly(int ndefType) throws RemoteException {
-		// Log.d(TAG, "canMakeReadOnly");
+		// LOGGER.debug("canMakeReadOnly");
 
 		return readerTechnology.canMakeReadOnly(ndefType);
 	}
 
 	public int close(int nativeHandle) throws RemoteException {
-		// Log.d(TAG, "close");
+		// LOGGER.debug("close");
 
 		TagProxy proxy = store.get(nativeHandle);
 
@@ -67,18 +71,18 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int connect(int serviceHandle, int technology) throws RemoteException {
-		// Log.d(TAG, "connect");
+		// LOGGER.debug("connect");
 
 		TagProxy proxy = store.get(serviceHandle);
 
 		if (proxy == null) {
-			Log.d(TAG, "No proxy for " + serviceHandle);
+			LOGGER.debug("No proxy for " + serviceHandle);
 
 			return ErrorCodes.ERROR_CONNECT;
 		}
 
 		if (!proxy.selectTechnology(technology)) {
-			Log.d(TAG, "No technology " + technology + " for " + serviceHandle + ": " + proxy.getTechnologies());
+			LOGGER.debug("No technology " + technology + " for " + serviceHandle + ": " + proxy.getTechnologies());
 
 			return ErrorCodes.ERROR_NOT_SUPPORTED;
 		}
@@ -101,7 +105,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean getExtendedLengthApdusSupported() throws RemoteException {
-		// Log.d(TAG, "getExtendedLengthApdusSupported");
+		// LOGGER.debug("getExtendedLengthApdusSupported");
 
 		if (readerTechnology == null) {
 
@@ -112,7 +116,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int getMaxTransceiveLength(int technology) throws RemoteException {
-		// Log.d(TAG, "getMaxTransceiveLength");
+		// LOGGER.debug("getMaxTransceiveLength");
 
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
@@ -122,7 +126,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int[] getTechList(int nativeHandle) throws RemoteException {
-		// Log.d(TAG, "getTechList");
+		// LOGGER.debug("getTechList");
 
 		TagProxy proxy = store.get(nativeHandle);
 
@@ -142,7 +146,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int getTimeout(int technology) throws RemoteException {
-		// Log.d(TAG, "getTimeout");
+		// LOGGER.debug("getTimeout");
 
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
@@ -162,7 +166,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean isPresent(int nativeHandle) throws RemoteException {
-		// Log.d(TAG, "isPresent");
+		// LOGGER.debug("isPresent");
 		TagProxy proxy = store.get(nativeHandle);
 
 		if (proxy == null) {
@@ -225,7 +229,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int reconnect(int nativehandle) throws RemoteException {
-		// Log.d(TAG, "reconnect");
+		// LOGGER.debug("reconnect");
 
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
@@ -235,7 +239,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public TagImpl rediscover(int nativehandle) throws RemoteException {
-		// Log.d(TAG, "rediscover");
+		// LOGGER.debug("rediscover");
 
 		TagProxy proxy = store.get(nativehandle);
 
@@ -247,7 +251,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public void resetTimeouts() throws RemoteException {
-		// Log.d(TAG, "resetTimeouts");
+		// LOGGER.debug("resetTimeouts");
 
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
@@ -257,7 +261,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public int setTimeout(int technology, int timeout) throws RemoteException {
-		// Log.d(TAG, "setTimeout");
+		// LOGGER.debug("setTimeout");
 
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
@@ -267,7 +271,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public TransceiveResult transceive(int nativeHandle, byte[] data, boolean raw) throws RemoteException {
-		// Log.d(TAG, "transceive");
+		// LOGGER.debug("transceive");
 		TagTechnology adapter = getConnected(nativeHandle);
 		if (adapter != null) {
 			if (adapter instanceof CommandTechnology) {

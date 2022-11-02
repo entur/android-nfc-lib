@@ -3,6 +3,9 @@ package no.entur.android.nfc.external.minova.reader;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 
@@ -12,7 +15,7 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 
-	private static final String TAG = IMcr0XBinder.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(IMcr0XBinder.class);
 
 	private IMcr0XRemoteCommandWriter wrapper;
 
@@ -46,7 +49,7 @@ public class IMcr0XBinder extends IMcr0XReaderControl.Stub {
 
 			byte[] response = out.toByteArray();
 
-			Log.d(TAG, "Send exception response length " + response.length + ":" + ByteArrayHexStringConverter.toHexString(response));
+			LOGGER.debug("Send exception response length " + response.length + ":" + ByteArrayHexStringConverter.toHexString(response));
 
 			return response;
 		} catch (Exception e) {

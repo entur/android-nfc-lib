@@ -8,6 +8,9 @@ import java.util.List;
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
@@ -34,7 +37,7 @@ public class ACR1283Commands extends ACRCommands {
 	private static final int LED_ORANGE = 1 << 2;
 	private static final int LED_RED = 1 << 3;
 
-	private static final String TAG = ACR1283Commands.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1283Commands.class);
 
 	public ACR1283Commands(String name, ReaderWrapper reader) {
 		super(reader);
@@ -80,7 +83,7 @@ public class ACR1283Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Set PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc.getOperation()) + ")");
+		LOGGER.debug("Set PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc.getOperation()) + ")");
 
 		return new PICCOperatingParameter(operation);
 	}
@@ -96,7 +99,7 @@ public class ACR1283Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Read PICC " + Integer.toHexString(operation));
+		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
 		return new PICCOperatingParameter(operation);
 	}
@@ -112,7 +115,7 @@ public class ACR1283Commands extends ACRCommands {
 
 		String firmware = new String(response.getData(), Charset.forName("ASCII"));
 
-		Log.d(TAG, "Read firmware " + firmware);
+		LOGGER.debug("Read firmware " + firmware);
 
 		return firmware;
 	}
@@ -127,7 +130,7 @@ public class ACR1283Commands extends ACRCommands {
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		Log.d(TAG, "Set LED state to " + (0xFF & response.getData()[0]));
+		LOGGER.debug("Set LED state to " + (0xFF & response.getData()[0]));
 
 		return true;
 	}
@@ -197,7 +200,7 @@ public class ACR1283Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Set default LED and buzzer behaviour " + Integer.toHexString(operation) + " (" + picc + ")");
+		LOGGER.debug("Set default LED and buzzer behaviour " + Integer.toHexString(operation) + " (" + picc + ")");
 
 		return operation;
 	}
@@ -237,15 +240,15 @@ public class ACR1283Commands extends ACRCommands {
 			final int operation = response.getData()[0] & 0xFF;
 
 			if (operation != behaviour) {
-				Log.w(TAG, "Unable to properly set LED and buzzer default behaviours for ACR 1283: Expected " + Integer.toHexString(behaviour) + " got "
+				LOGGER.warn( "Unable to properly set LED and buzzer default behaviours for ACR 1283: Expected " + Integer.toHexString(behaviour) + " got "
 						+ Integer.toHexString(operation));
 			} else {
-				Log.d(TAG, "Successfully set LED and buzzer default behaviours");
+				LOGGER.debug("Successfully set LED and buzzer default behaviours");
 			}
 
 			return true;
 		} else {
-			Log.d(TAG, "Failed to set LED and buzzer default behaviours");
+			LOGGER.debug("Failed to set LED and buzzer default behaviours");
 
 			return false;
 		}
@@ -254,7 +257,7 @@ public class ACR1283Commands extends ACRCommands {
 	public List<AcrDefaultLEDAndBuzzerBehaviour> getDefaultLEDAndBuzzerBehaviour(int slot) throws ReaderException {
 		final int operation = getDefaultLEDAndBuzzerBehaviour2(slot);
 
-		Log.d(TAG, "Read default LED and buzzer behaviour " + Integer.toHexString(operation));
+		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
 		return Acr1283LReader.parseBehaviour(operation);
 	}
@@ -270,7 +273,7 @@ public class ACR1283Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Read default LED and buzzer behaviour " + Integer.toHexString(operation));
+		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
 		return operation;
 	}
@@ -297,12 +300,12 @@ public class ACR1283Commands extends ACRCommands {
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (!isSuccessControl(response)) {
-			Log.d(TAG, "Unable to set backlight state");
+			LOGGER.debug("Unable to set backlight state");
 
 			return false;
 		}
 
-		Log.d(TAG, "Set backlight state to " + (on ? "on" : "off"));
+		LOGGER.debug("Set backlight state to " + (on ? "on" : "off"));
 
 		return true;
 	}
@@ -327,12 +330,12 @@ public class ACR1283Commands extends ACRCommands {
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (!isSuccessControl(response)) {
-			Log.d(TAG, "Unable to set backlight contrast");
+			LOGGER.debug("Unable to set backlight contrast");
 
 			return false;
 		}
 
-		Log.d(TAG, "Set backlight contrast to " + Integer.toHexString(contrast));
+		LOGGER.debug("Set backlight contrast to " + Integer.toHexString(contrast));
 
 		return true;
 	}
@@ -352,12 +355,12 @@ public class ACR1283Commands extends ACRCommands {
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (!isSuccessControl(response)) {
-			Log.d(TAG, "Unable to clear LCD");
+			LOGGER.debug("Unable to clear LCD");
 
 			return false;
 		}
 
-		Log.d(TAG, "Cleared LCD");
+		LOGGER.debug("Cleared LCD");
 
 		return true;
 	}
@@ -401,12 +404,12 @@ public class ACR1283Commands extends ACRCommands {
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (!isSuccessControl(response)) {
-			Log.d(TAG, "Unable to set text: " + ByteArrayHexStringConverter.toHexString(in));
+			LOGGER.debug("Unable to set text: " + ByteArrayHexStringConverter.toHexString(in));
 
 			return false;
 		}
 
-		Log.d(TAG, "Set text");
+		LOGGER.debug("Set text");
 
 		return true;
 	}

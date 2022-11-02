@@ -7,6 +7,9 @@ import java.nio.charset.Charset;
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
@@ -22,7 +25,7 @@ public class ACR1251Commands extends ACRCommands {
 	public static final int PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_B = 1 << 1;
 	public static final int PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_A = 1;
 
-	private static final String TAG = ACR1251Commands.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1251Commands.class);
 
 	public ACR1251Commands(String name, ReaderWrapper reader) {
 		super(reader);
@@ -43,14 +46,14 @@ public class ACR1251Commands extends ACRCommands {
 			}
 		}
 		if (!isSuccessControl(in)) {
-			Log.e(TAG, "Unable to read PICC");
+			LOGGER.error("Unable to read PICC");
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
 		final int operation = in[1] & 0xFF;
 
-		Log.d(TAG, "Read PICC " + Integer.toHexString(operation));
+		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
 		return operation;
 	}
@@ -105,7 +108,7 @@ public class ACR1251Commands extends ACRCommands {
 		}
 
 		if (!isSuccessControl(in)) {
-			Log.d(TAG, "Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(in));
+			LOGGER.debug("Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(in));
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
@@ -113,11 +116,11 @@ public class ACR1251Commands extends ACRCommands {
 		final int operation = in[1] & 0xFF;
 
 		if (operation != picc) {
-			Log.w(TAG, "Unable to properly update PICC for ACR 1222: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
+			LOGGER.warn("Unable to properly update PICC for ACR 1222: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
+			LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
 
 			return Boolean.TRUE;
 		}
@@ -137,7 +140,7 @@ public class ACR1251Commands extends ACRCommands {
 
 		String firmware = new String(in, Charset.forName("ASCII"));
 
-		Log.d(TAG, "Read firmware " + firmware);
+		LOGGER.debug("Read firmware " + firmware);
 
 		return firmware;
 	}

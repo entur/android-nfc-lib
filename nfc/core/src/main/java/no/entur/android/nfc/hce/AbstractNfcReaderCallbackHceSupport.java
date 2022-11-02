@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -23,6 +26,8 @@ import no.entur.android.nfc.wrapper.tech.IsoDep;
  */
 
 public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallbackSupport {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNfcReaderCallbackHceSupport.class);
 
 	public interface Listener {
 
@@ -46,8 +51,6 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 
 	}
 
-	private static final String TAG = AbstractNfcReaderCallbackHceSupport.class.getName();
-
 	protected Listener listener;
 	protected byte[] applicationIdentifier;
 	protected List<CommandApduProtocol> protocols;
@@ -69,12 +72,12 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 		IsoDepDeviceHint hint = new IsoDepDeviceHint(isoDep);
 
 		if (hint.isTag()) {
-			Log.d(TAG, "Device hints indicate a Desfire EV1 card");
+			LOGGER.debug("Device hints indicate a Desfire EV1 card");
 		} else {
 			if (hint.isHostCardEmulation()) {
-				Log.d(TAG, "Device hints indicate a Host Card Emulation device");
+				LOGGER.debug("Device hints indicate a Host Card Emulation device");
 			} else {
-				Log.d(TAG, "Device hints unable to indicate a type, historical bytes were '"
+				LOGGER.debug("Device hints unable to indicate a type, historical bytes were '"
 						+ ByteArrayHexStringConverter.toHexString(hint.getHistoricalBytes()) + "'");
 				// might be EMV etc
 
@@ -113,7 +116,7 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 		try {
 			isoDep.connect();
 			if (transceiveTimeout != -1) {
-				Log.d(TAG, "Set timeout " + transceiveTimeout);
+				LOGGER.debug("Set timeout " + transceiveTimeout);
 				isoDep.setTimeout(transceiveTimeout);
 			}
 			// select application
@@ -124,7 +127,7 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 				listener.onUnsupportedProtocols();
 			}
 		} catch (ApplicationIdentifierUnknownException e) {
-			Log.w(TAG, "Unknwon application identifier", e);
+			LOGGER.warn("Unknown application identifier", e);
 			listener.onUnknownApplicationIdentifier();
 		} catch (EmptyTransceiveResponseException ioe) {
 			listener.onException(ioe);

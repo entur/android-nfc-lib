@@ -12,10 +12,13 @@ import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
 import org.nfctools.api.TagType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
+import no.entur.android.nfc.external.acs.reader.command.remote.IAcr1283CommandWrapper;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
 import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;
@@ -26,7 +29,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 	static final String[] STATE_STRINGS = { "Unknown", "Absent", "Present", "Swallowed", "Powered", "Negotiable", "Specific" };
 
-	private static final String TAG = AbstractAcsUsbService.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAcsUsbService.class);
 
 	protected AcrReaderAdapter acrReaderAdapter;
 	protected AcrReaderListener acrReaderListener = new AcrReaderListener(this);
@@ -59,7 +62,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 			@Override
 			public void onStateChange(int slot, int prevState, int currState) {
 
-				// Log.d(TAG, "From state " + prevState + " to " + currState);
+				// LOGGER.debug("From state " + prevState + " to " + currState);
 
 				if (prevState < Reader.CARD_UNKNOWN || prevState > Reader.CARD_SPECIFIC) {
 					prevState = Reader.CARD_UNKNOWN;
@@ -78,7 +81,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 					onTagAbsent(slot);
 				} else {
-					Log.d(TAG, "Not action for state transition from " + STATE_STRINGS[prevState] + " to " + STATE_STRINGS[currState]);
+					LOGGER.debug("Not action for state transition from " + STATE_STRINGS[prevState] + " to " + STATE_STRINGS[currState]);
 				}
 
 			}
@@ -111,7 +114,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 	}
 
 	public void onTagAbsent(int slot) {
-		Log.i(TAG, "onTagAbsent");
+		LOGGER.info("onTagAbsent");
 
 		store.removeItem(slot);
 
@@ -130,26 +133,26 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 			int slotNumber = params[0];
 
 			try {
-				Log.i(TAG, "Init tag at slot " + slotNumber);
+				LOGGER.info("Init tag at slot " + slotNumber);
 
 				// https://en.wikipedia.org/wiki/Answer_to_reset#General_structure
 				// http://smartcard-atr.appspot.com
 
 				byte[] atr = reader.power(slotNumber, Reader.CARD_WARM_RESET);
 				if (atr == null) {
-					Log.d(TAG, "No ATR, ignoring");
+					LOGGER.debug("No ATR, ignoring");
 
 					return null;
 				}
 				final TagType tagType = TagUtility.identifyTagType(reader.getReaderName(), atr);
 
-				Log.d(TAG, "Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
+				LOGGER.debug("Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
 
 				handleTagInit(slotNumber, atr, tagType);
 			} catch (RemovedCardException e) {
-				Log.d(TAG, "Tag removed before it could be powered; ignore.", e);
+				LOGGER.debug("Tag removed before it could be powered; ignore.", e);
 			} catch (Exception e) {
-				Log.w(TAG, "Problem initiating tag", e);
+				LOGGER.warn("Problem initiating tag", e);
 
 				TagUtility.sendTechBroadcast(AbstractAcsUsbService.this);
 

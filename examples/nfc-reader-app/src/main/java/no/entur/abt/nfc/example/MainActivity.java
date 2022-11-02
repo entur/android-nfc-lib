@@ -9,6 +9,9 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -25,7 +28,7 @@ import no.entur.android.nfc.wrapper.Tag;
 
 public class MainActivity extends AppCompatActivity implements ExternalNfcTagCallback, ExternalNfcReaderCallback, ExternalNfcServiceCallback, ExternalNfcTagLostCallback {
 
-    private static final String LOG_TAG = MainActivity.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainActivity.class);
 
     private ExternalNfcTagCallbackSupport externalNfcTagCallbackSupport;
     private ExternalNfcServiceCallbackSupport externalNfcServiceCallbackSupport;
@@ -52,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private void setupNfc() {
         threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> {
-            Log.e(LOG_TAG, "Rejected execution for " + r + " " + executor);
+            LOGGER.error( "Rejected execution for " + r + " " + executor);
         });
 
         externalNfcTagCallbackSupport = new ExternalNfcTagCallbackSupport(this, this, threadPoolExecutor);
@@ -72,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
             AcrReader reader = (AcrReader) intent.getParcelableExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL);
 
-            Log.d(LOG_TAG, "Got reader type " + reader.getClass().getName());
+            LOGGER.info("Got reader type " + reader.getClass().getName());
         }
 
         runOnUiThread(() -> {
@@ -91,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onExternalTagDiscovered(Tag tag, Intent intent) {
-        Log.d(LOG_TAG, "External Tag discovered");
+        LOGGER.info("External Tag discovered");
         runOnUiThread(() -> {
             setTagPresent(true);
         });
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onTagDiscovered(Tag tag, Intent intent) {
-        Log.d(LOG_TAG, "Tag discovered");
+        LOGGER.info("Tag discovered");
         runOnUiThread(() -> {
             setTagPresent(true);
         });
@@ -133,14 +136,14 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     }
 
     public void onExternalNfcServiceStopped(Intent intent) {
-        Log.d(LOG_TAG, "External NFC service stopped");
+        LOGGER.info("External NFC service stopped");
         runOnUiThread(() -> {
             setUsbServiceStarted(false);
         });
     }
 
     public void onExternalNfcServiceStarted(Intent intent) {
-        Log.d(LOG_TAG, "External NFC service started");
+        LOGGER.info("External NFC service started");
         runOnUiThread(() -> {
             setUsbServiceStarted(true);
         });
@@ -212,11 +215,11 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     public void startReaderService(View view) {
 
         if (usbRunning) {
-            Log.d(LOG_TAG, "Stop reader service");
+            LOGGER.info("Stop reader service");
 
             mainApplication.setExternalNfcReader(false);
         } else {
-            Log.d(LOG_TAG, "Start reader service");
+            LOGGER.info("Start reader service");
 
             mainApplication.setExternalNfcReader(true);
         }

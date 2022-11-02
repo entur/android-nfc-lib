@@ -6,12 +6,16 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 
 public abstract class AbstractService extends Service {
 
-	private static final String TAG = AbstractService.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractService.class);
+	
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected TagProxyStore store = new TagProxyStore();
@@ -27,7 +31,7 @@ public abstract class AbstractService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		Log.d(TAG, "Bind for intent " + intent.getAction());
+		LOGGER.debug("Bind for intent " + intent.getAction());
 
 		return new Binder();
 	}
