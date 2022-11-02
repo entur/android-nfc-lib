@@ -83,6 +83,8 @@ public class ExternalNfcReaderCallbackSupport {
 		if (enabled) {
 			startReceivingReaderBroadcasts();
 
+			Log.d(TAG, "Ask for reader status");
+
 			broadcast(ExternalNfcReaderCallback.ACTION_READER_STATUS);
 		}
 	}

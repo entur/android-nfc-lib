@@ -12,13 +12,13 @@ import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
 import org.nfctools.api.TagType;
-import org.nfctools.spi.acs.AcsTag;
 
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
-import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
+import no.entur.android.nfc.external.service.AbstractService;
+import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
@@ -28,8 +28,11 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 	private static final String TAG = AbstractAcsUsbService.class.getName();
 
-	protected AcrExternalUsbNfcServiceSupport acrExternalUsbNfcServiceSupport;
+	protected AcrReaderAdapter acrReaderAdapter;
 	protected AcrReaderListener acrReaderListener = new AcrReaderListener(this);
+
+	protected ExternalNfcReaderStatusSupport externalNfcReaderStatusSupport = new ExternalNfcReaderStatusSupport(this, acrReaderListener);
+
 	protected ExternalUsbNfcServiceSupport support;
 	protected ReaderWrapper reader;
 
@@ -43,11 +46,13 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 		// Initialize reader
 		reader = new ReaderWrapper(manager);
 
-		acrExternalUsbNfcServiceSupport = new AcrExternalUsbNfcServiceSupport(reader, binder);
-		acrReaderListener = new AcrReaderListener(this);
-		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrExternalUsbNfcServiceSupport);
+		acrReaderAdapter = new AcrReaderAdapter(reader, binder);
+
+		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrReaderAdapter);
 
 		support.onCreate();
+
+		externalNfcReaderStatusSupport.onResume();
 
 		reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
 
@@ -95,6 +100,8 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 		super.onDestroy();
 
 		broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
+
+		externalNfcReaderStatusSupport.onPause();
 
 		support.onDestroy();
 	}

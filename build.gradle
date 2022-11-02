@@ -6,7 +6,7 @@ buildscript {
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.1'
+        classpath 'com.android.tools.build:gradle:7.2.2'
     }
 }
 
@@ -389,9 +389,12 @@ configure(javaLibraryProjects()) {
             html.enabled = true
         }
     }
-
-
 }
+
+configure(appProjects()) {
+    apply plugin: 'com.android.application'
+}
+
 
 group = 'no.entur.android.nfc'
 

@@ -32,12 +32,6 @@ public class ExternalUsbNfcServiceSupport {
 
 	private static final String TAG = ExternalUsbNfcServiceSupport.class.getName();
 
-	public interface Listener<T> {
-		void onReaderClosed(int readerStatus, String statusMessage);
-
-		void onReaderOpen(T reader, int readerStatusOk);
-	}
-
 	public interface ReaderAdapter<T> {
 		void closeReader(UsbDevice device);
 
@@ -289,10 +283,10 @@ public class ExternalUsbNfcServiceSupport {
 	private int nfcReaderStatusCode;
 	private String nfcReaderStatusMessage;
 
-	private final Listener listener;
+	private final ExternalNfcReaderStatusListener listener;
 	private final ReaderAdapter readerAdapter;
 
-	public ExternalUsbNfcServiceSupport(Service service, Listener listener, ReaderAdapter readerAdapter) {
+	public ExternalUsbNfcServiceSupport(Service service, ExternalNfcReaderStatusListener listener, ReaderAdapter readerAdapter) {
 		this.service = service;
 		this.listener = listener;
 		this.readerAdapter = readerAdapter;

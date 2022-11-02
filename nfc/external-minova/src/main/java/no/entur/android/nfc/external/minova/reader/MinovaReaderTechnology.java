@@ -2,7 +2,6 @@ package no.entur.android.nfc.external.minova.reader;
 
 import android.os.RemoteException;
 
-import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.service.tag.ReaderTechnology;
 import no.entur.android.nfc.wrapper.ErrorCodes;
 

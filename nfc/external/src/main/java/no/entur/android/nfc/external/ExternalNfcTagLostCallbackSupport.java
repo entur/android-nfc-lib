@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import java.util.concurrent.Executor;
+
 public class ExternalNfcTagLostCallbackSupport {
 
 	private static final String TAG = ExternalNfcTagLostCallbackSupport.class.getName();
@@ -14,10 +16,12 @@ public class ExternalNfcTagLostCallbackSupport {
 
 	protected final ExternalNfcTagLostCallback callback;
 	protected final Activity activity;
+	protected Executor executor; // non-final for testing
 
-	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity) {
+	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity, Executor executor) {
 		this.callback = callback;
 		this.activity = activity;
+		this.executor = executor;
 	}
 
 	private boolean recieveTagLostBroadcasts = false;
@@ -28,7 +32,15 @@ public class ExternalNfcTagLostCallbackSupport {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			if (action.equals(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD)) {
-				callback.onExternalTagLost(intent);
+
+				if(executor != null) {
+					executor.execute(() -> {
+						callback.onExternalTagLost(intent);
+					});
+				} else {
+					callback.onExternalTagLost(intent);
+				}
+
 			} else {
 				Log.d(TAG, "Ignore action " + intent.getAction());
 			}
@@ -81,6 +93,10 @@ public class ExternalNfcTagLostCallbackSupport {
 
 			activity.unregisterReceiver(tagReceiver);
 		}
+	}
+
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
 	}
 
 }

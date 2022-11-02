@@ -1,0 +1,34 @@
+<resources>
+
+    <string name="app_name">External NFC Reader Service</string>
+
+    <string name="mainActivityLabel">External NFC Reader Service</string>
+
+    <string name="introductionTitle">Example</string>
+
+    <string name="modes_description">Service connection type:</string>
+    <string name="startingService">Starting service..</string>
+
+    <string name="startService">Enable USB service</string>
+    <string name="stopService">Disable USB service</string>
+
+    <string name="serviceStatus">Service status</string>
+    <string name="serviceStatusUnknown">Unknown</string>
+    <string name="serviceStatusStarted">Started</string>
+    <string name="serviceStatusStopped">Stopped</string>
+
+    <string name="readerStatus">Reader status</string>
+    <string name="readerStatusUnknown">Unknown</string>
+    <string name="readerStatusClosed">Closed</string>
+    <string name="readerStatusOpen">Opened</string>
+
+    <string name="tagStatus">Tag status</string>
+    <string name="tagStatusNone">Unknown</string>
+    <string name="tagStatusAbsent">Absent</string>
+    <string name="tagStatusPresent">Present</string>
+
+    <string name="tagType">Tag type</string>
+    <string name="tagTypeNone">Unknown</string>
+
+
+</resources>
