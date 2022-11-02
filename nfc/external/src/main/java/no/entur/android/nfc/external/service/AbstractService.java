@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.acs.service;
+package no.entur.android.nfc.external.service;
 
 import android.app.Service;
 import android.content.Intent;
@@ -16,6 +16,7 @@ public abstract class AbstractService extends Service {
 
 	protected TagProxyStore store = new TagProxyStore();
 	protected INFcTagBinder binder;
+
 
 	@Override
 	public void onCreate() {

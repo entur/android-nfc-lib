@@ -17,13 +17,14 @@ import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
-import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
+import no.entur.android.nfc.external.service.ExternalNfcReaderStatusListener;
 
-public class AcrReaderListener implements ExternalUsbNfcServiceSupport.Listener<AcrReader> {
+public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrReader> {
 
 	private static final String TAG = AcrReaderListener.class.getName();
 
 	private final Context context;
+	private Intent lastIntent;
 
 	public AcrReaderListener(Context context) {
 		this.context = context;
@@ -43,6 +44,7 @@ public class AcrReaderListener implements ExternalUsbNfcServiceSupport.Listener<
 		}
 
 		sendBroadcastForNfcPermission(intent);
+		this.lastIntent = intent;
 	}
 
 	@Override
@@ -124,6 +126,15 @@ public class AcrReaderListener implements ExternalUsbNfcServiceSupport.Listener<
 		intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_STATUS_CODE, status);
 
 		sendBroadcastForNfcPermission(intent);
+		this.lastIntent = intent;
+	}
+
+	@Override
+	public void onReaderStatusIntent(Intent intent) {
+		Intent lastIntent = this.lastIntent;
+		if(lastIntent != null) {
+			sendBroadcastForNfcPermission(lastIntent);
+		}
 	}
 
 	private void sendBroadcastForNfcPermission(Intent intent) {

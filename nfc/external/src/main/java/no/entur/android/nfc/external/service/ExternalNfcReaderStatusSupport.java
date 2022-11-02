@@ -12,25 +12,22 @@ import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 /**
  *
  * Utility for listening for reader status.
- *
+ * This means the current status can be requested using a broadcast,
+ * then the service will respond with the latest reader status.
  */
 
 public class ExternalNfcReaderStatusSupport {
 
 	private static final String TAG = ExternalNfcReaderStatusSupport.class.getName();
 
-	protected final Service service;
-	protected final Listener readerStatusListener;
+	protected final Context context;
+	protected final ExternalNfcReaderStatusListener readerStatusListener;
 
 	protected boolean recieveStatusBroadcasts = false;
 
-	public ExternalNfcReaderStatusSupport(Service service, Listener readerStatusListener) {
-		this.service = service;
+	public ExternalNfcReaderStatusSupport(Service context, ExternalNfcReaderStatusListener readerStatusListener) {
+		this.context = context;
 		this.readerStatusListener = readerStatusListener;
-	}
-
-	public static interface Listener {
-		void onReaderStatusIntent(Intent intent);
 	}
 
 	private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
@@ -63,7 +60,7 @@ public class ExternalNfcReaderStatusSupport {
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ExternalNfcReaderCallback.ACTION_READER_STATUS);
 
-				service.registerReceiver(statusReceiver, filter, "android.permission.NFC", null);
+				context.registerReceiver(statusReceiver, filter, "android.permission.NFC", null);
 			}
 		}
 	}
@@ -76,7 +73,7 @@ public class ExternalNfcReaderStatusSupport {
 				recieveStatusBroadcasts = false;
 
 				try {
-					service.unregisterReceiver(statusReceiver);
+					context.unregisterReceiver(statusReceiver);
 				} catch (IllegalArgumentException e) {
 					// ignore
 				}
