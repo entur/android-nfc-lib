@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -39,6 +41,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     private MainApplication mainApplication;
 
+    private ToggleButton readerStatusButton;
+    private ToggleButton tagStatusButton;
+    private ToggleButton serviceStatusButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +54,28 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         setupNfc();
 
         this.mainApplication = (MainApplication) getApplication();
+
+        serviceStatusButton = (ToggleButton) findViewById(R.id.serviceStatusButton);
+        serviceStatusButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                externalNfcServiceCallbackSupport.setEnabled(isChecked);
+            }
+        });
+
+        readerStatusButton = (ToggleButton) findViewById(R.id.readerStatusButton);
+        readerStatusButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                externalNfcReaderCallbackSupport.setEnabled(isChecked);
+            }
+        });
+
+        tagStatusButton = (ToggleButton) findViewById(R.id.tagStatusButton);
+        tagStatusButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                externalNfcTagCallbackSupport.setEnabled(isChecked);
+                externalNfcTagLostCallbackSupport.setEnabled(isChecked);
+            }
+        });
     }
 
 
@@ -61,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         externalNfcTagCallbackSupport.setEnabled(true);
 
         externalNfcServiceCallbackSupport = new ExternalNfcServiceCallbackSupport(this, this, threadPoolExecutor);
+        externalNfcServiceCallbackSupport.setEnabled(true);
 
         externalNfcReaderCallbackSupport = new ExternalNfcReaderCallbackSupport(this, this, threadPoolExecutor);
         externalNfcReaderCallbackSupport.setEnabled(true);
@@ -74,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
             AcrReader reader = (AcrReader) intent.getParcelableExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL);
 
-            LOGGER.info("Got reader type " + reader.getClass().getName());
+            LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
         }
 
         runOnUiThread(() -> {
@@ -93,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onExternalTagDiscovered(Tag tag, Intent intent) {
-        LOGGER.info("External Tag discovered");
+        LOGGER.info("External Tag discovered in activity");
         runOnUiThread(() -> {
             setTagPresent(true);
         });
@@ -101,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onTagDiscovered(Tag tag, Intent intent) {
-        LOGGER.info("Tag discovered");
+        LOGGER.info("Tag discovered in activity");
         runOnUiThread(() -> {
             setTagPresent(true);
         });
@@ -129,9 +158,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         super.onResume();
 
         externalNfcTagCallbackSupport.onResume();
-        externalNfcServiceCallbackSupport.onResume();
         externalNfcReaderCallbackSupport.onResume();
         externalNfcTagLostCallbackSupport.onResume();
+        externalNfcServiceCallbackSupport.onResume();
     }
 
     public void onExternalNfcServiceStopped(Intent intent) {

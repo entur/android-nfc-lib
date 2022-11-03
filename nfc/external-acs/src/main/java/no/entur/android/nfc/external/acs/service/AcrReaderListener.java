@@ -136,10 +136,10 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrRea
 	public void onReaderStatusIntent(Intent requestIntent) {
 		Intent lastIntent = this.lastIntent;
 		if(lastIntent != null) {
-			LOGGER.debug("Broadcast currant status intent");
-			sendBroadcastForNfcPermission(lastIntent);
+			LOGGER.info("Broadcast currant status intent");
+			sendBroadcastForNfcPermission(new Intent(lastIntent));
 		} else {
-			LOGGER.debug("No 	status intent");
+			LOGGER.info("No status intent");
 		}
 	}
 

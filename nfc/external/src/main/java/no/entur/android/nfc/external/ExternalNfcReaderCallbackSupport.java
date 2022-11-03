@@ -27,8 +27,6 @@ public class ExternalNfcReaderCallbackSupport {
 
 	private boolean recieveReaderBroadcasts = false;
 
-	private volatile boolean open = false;
-
 	protected boolean enabled = false;
 
 	private final BroadcastReceiver readerReceiver = new BroadcastReceiver() {
@@ -38,32 +36,24 @@ public class ExternalNfcReaderCallbackSupport {
 		String action = intent.getAction();
 
 		if (ExternalNfcReaderCallback.ACTION_READER_OPENED.equals(action)) {
-			if (!open) {
-				open = true;
+			LOGGER.info("Reader opened");
 
-				LOGGER.debug("Reader opened");
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcReaderOpened(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcReaderOpened(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcReaderOpened(intent);
 			}
 		} else if (ExternalNfcReaderCallback.ACTION_READER_CLOSED.equals(action)) {
-			if (open) {
-				open = false;
+			LOGGER.info("Reader closed");
 
-				LOGGER.debug("Reader closed");
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcReaderClosed(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcReaderClosed(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcReaderClosed(intent);
 			}
 		} else {
 			throw new IllegalArgumentException("Unexpected action " + action);
@@ -135,7 +125,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 	private void stopReceivingReaderBroadcasts() {
 		if (recieveReaderBroadcasts) {
-			LOGGER.debug("Stop receiving broadcasts");
+			LOGGER.debug("Stop receiving reader broadcasts");
 
 			recieveReaderBroadcasts = false;
 
