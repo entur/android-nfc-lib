@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private ExternalNfcTagLostCallbackSupport externalNfcTagLostCallbackSupport;
 
     private ThreadPoolExecutor threadPoolExecutor;
-    private boolean usbRunning = false;
 
     private MainApplication mainApplication;
 
@@ -150,47 +149,27 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     }
 
     public void setUsbServiceStarted(final boolean started) {
-        this.usbRunning = started;
-
         if (started) {
             setTextViewText(R.id.serviceStatus, R.string.serviceStatusStarted);
-
-            setViewVisibility(R.id.readerStatusRow, View.VISIBLE);
         } else {
             setTextViewText(R.id.serviceStatus, R.string.serviceStatusStopped);
-
-            setViewVisibility(R.id.readerStatusRow, View.GONE);
-            setViewVisibility(R.id.tagStatusRow, View.GONE);
         }
 
-        Button start = (Button) findViewById(R.id.startService);
-        if (started) {
-            start.setText(R.string.stopService);
-        } else {
-            start.setText(R.string.startService);
-        }
+        setTextViewText(R.id.readerStatus, R.string.tagStatusNone);
+        setTextViewText(R.id.tagStatus, R.string.tagStatusNone);
     }
 
     public void setReaderOpen(final boolean open) {
         if (open) {
             setTextViewText(R.id.readerStatus, R.string.readerStatusOpen);
-
-            setViewVisibility(R.id.tagStatusRow, View.VISIBLE);
         } else {
             setTextViewText(R.id.readerStatus, R.string.readerStatusClosed);
 
-            setViewVisibility(R.id.tagStatusRow, View.GONE);
+            setTextViewText(R.id.tagStatus, R.string.tagStatusNone);
         }
     }
 
-    private void setViewVisibility(int id, int visibility) {
-        View view = findViewById(id);
-        view.setVisibility(visibility);
-    }
-
     public void setTagPresent(final boolean present) {
-        setViewVisibility(R.id.tagStatusRow, View.VISIBLE);
-
         if (present) {
             setTextViewText(R.id.tagStatus, R.string.tagStatusPresent);
         } else {
@@ -212,17 +191,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         });
     }
 
+    public void stopReaderService(View view) {
+        LOGGER.info("Stop reader service");
+
+        mainApplication.setExternalNfcReader(false);
+    }
+
     public void startReaderService(View view) {
+        LOGGER.info("Start reader service");
 
-        if (usbRunning) {
-            LOGGER.info("Stop reader service");
-
-            mainApplication.setExternalNfcReader(false);
-        } else {
-            LOGGER.info("Start reader service");
-
-            mainApplication.setExternalNfcReader(true);
-        }
+        mainApplication.setExternalNfcReader(true);
     }
 
 }

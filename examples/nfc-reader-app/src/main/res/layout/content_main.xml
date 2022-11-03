@@ -36,6 +36,18 @@
                 android:layout_gravity="center"
                 />
 
+            <Button
+                android:id="@+id/stopService"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:onClick="stopReaderService"
+                android:text="@string/stopService"
+                android:textColor="@color/black"
+                android:layout_gravity="center"
+                />
+
+
         </LinearLayout>
 
         <TableLayout
@@ -64,7 +76,7 @@
                     />
             </TableRow>
 
-            <TableRow android:id="@+id/readerStatusRow" android:visibility="gone">
+            <TableRow android:id="@+id/readerStatusRow">
 
                 <TextView
                     android:layout_column="1"
@@ -84,7 +96,7 @@
                     />
             </TableRow>
 
-            <TableRow android:id="@+id/tagStatusRow" android:visibility="gone">
+            <TableRow android:id="@+id/tagStatusRow">
 
                 <TextView
                     android:layout_column="1"
