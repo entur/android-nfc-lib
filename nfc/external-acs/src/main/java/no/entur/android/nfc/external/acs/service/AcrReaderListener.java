@@ -95,14 +95,11 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrRea
 				acr1281UReader.setAutomaticPICCPolling(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.ACTIVATE_PICC_WHEN_DETECTED,
 						AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4);
 			} else if (reader instanceof Acr1252UReader) {
-
-				/** DEMO: Works with the Motorola Android device */
-
 				Acr1252UReader acr1252UReader = (Acr1252UReader) reader;
 
 				acr1252UReader.setPICC(AcrPICC.POLL_ISO14443_TYPE_A);
 				acr1252UReader.setAutomaticPICCPolling(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.ACTIVATE_PICC_WHEN_DETECTED,
-						AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_1000, AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4);
+						AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_250, AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4);
 			} else if (reader instanceof Acr1255UReader) {
 				Acr1255UReader bluetoothReader = (Acr1255UReader) reader;
 
@@ -111,7 +108,7 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrRea
 				bluetoothReader.setPICC(AcrPICC.POLL_ISO14443_TYPE_A);
 
 				bluetoothReader.setAutomaticPICCPolling(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4,
-						AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_1000);
+						AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_250);
 				bluetoothReader.setAutomaticPolling(true);
 
 				// XXX this seems to put the reader in a sort of bricked state
