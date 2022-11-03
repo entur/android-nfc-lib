@@ -52,12 +52,6 @@ public class MainApplication extends Application {
         super.onCreate();
 
         adapter = new ExternalNfcServiceAdapter(this, AcsUsbService.class, false);
-
-        if(isExternalNfcReader()) {
-            adapter.startService(new Bundle());
-        } else {
-            adapter.stopService();
-        }
     }
 
     public ExternalNfcServiceAdapter getAdapter() {

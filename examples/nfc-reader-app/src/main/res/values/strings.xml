@@ -4,7 +4,8 @@
 
     <string name="mainActivityLabel">External NFC Reader Service</string>
 
-    <string name="introductionTitle">Example</string>
+    <string name="introductionTitle">Service controls</string>
+    <string name="sensorsTitle">Broadcast receivers</string>
 
     <string name="modes_description">Service connection type:</string>
     <string name="startingService">Starting service..</string>

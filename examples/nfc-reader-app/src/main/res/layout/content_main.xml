@@ -50,7 +50,18 @@
 
         </LinearLayout>
 
-        <TableLayout
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sensorsTitle"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        />
+
+
+    <TableLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:shrinkColumns="2"
@@ -74,6 +85,14 @@
                     android:textColor="@color/black"
                     android:textSize="20sp"
                     />
+
+                <ToggleButton
+                    android:id="@+id/serviceStatusButton"
+                    android:textColor="@color/black"
+                    android:layout_gravity="center"
+                    android:checked="true"
+                    />
+
             </TableRow>
 
             <TableRow android:id="@+id/readerStatusRow">
@@ -94,6 +113,14 @@
                     android:textColor="@color/black"
                     android:textSize="20sp"
                     />
+
+                <ToggleButton
+                    android:id="@+id/readerStatusButton"
+                    android:textColor="@color/black"
+                    android:layout_gravity="center"
+                    android:checked="true"
+                    />
+
             </TableRow>
 
             <TableRow android:id="@+id/tagStatusRow">
@@ -114,6 +141,14 @@
                     android:textColor="@color/black"
                     android:textSize="20sp"
                     />
+
+                <ToggleButton
+                    android:id="@+id/tagStatusButton"
+                    android:textColor="@color/black"
+                    android:layout_gravity="center"
+                    android:checked="true"
+                    />
+
             </TableRow>
 
 

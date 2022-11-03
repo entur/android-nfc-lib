@@ -19,8 +19,8 @@ public class ExternalNfcServiceCallbackSupport {
 	protected final Context context;
 
 	private boolean recieveServiceBroadcasts = false;
-	private volatile boolean open = false;
 	protected Executor executor; // non-final for testing
+	protected boolean enabled = false;
 
 	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor) {
 		this.callback = callback;
@@ -37,34 +37,26 @@ public class ExternalNfcServiceCallbackSupport {
 		public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
 		if (ExternalNfcServiceCallback.ACTION_SERVICE_STARTED.equals(action)) {
-			if (!open) {
-				open = true;
+			LOGGER.debug("Service started");
+			callback.onExternalNfcServiceStarted(intent);
 
-				LOGGER.debug("Service started");
-				callback.onExternalNfcServiceStarted(intent);
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcServiceStarted(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcServiceStarted(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcServiceStarted(intent);
 			}
 		} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
-			if (open) {
-				open = false;
+			LOGGER.debug("Service stopped");
+			callback.onExternalNfcServiceStopped(intent);
 
-				LOGGER.debug("Service stopped");
-				callback.onExternalNfcServiceStopped(intent);
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcServiceStopped(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcServiceStopped(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcServiceStopped(intent);
 			}
 		} else {
 			throw new IllegalArgumentException("Unexpected action " + action);
@@ -98,11 +90,23 @@ public class ExternalNfcServiceCallbackSupport {
 
 	private void stopReceivingServiceBroadcasts() {
 		if (recieveServiceBroadcasts) {
-			LOGGER.debug("Stop receiving broadcasts");
+			LOGGER.debug("Stop receiving service broadcasts");
 
 			recieveServiceBroadcasts = false;
 
 			context.unregisterReceiver(serviceReceiver);
 		}
+	}
+
+	public void setEnabled(boolean enabled) {
+		if (!this.enabled && enabled) {
+			// disabled -> enabled
+			startReceivingServiceBroadcasts();
+		} else if (this.enabled && !enabled) {
+
+			// enabled -> disabled
+			stopReceivingServiceBroadcasts();
+		}
+		this.enabled = enabled;
 	}
 }
