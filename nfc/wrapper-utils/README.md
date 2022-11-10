@@ -2,6 +2,10 @@
 Low-level utilities which extend the wrapped NFC tech classes.
 
 ## Transceive Recorder
-Transparently record commands and responses with the IsoDep subclass TagTechnologyInvocationRecorderIsoDep.
+Transparently record tag interaction with the IsoDep subclass TagTechnologyInvocationRecorderIsoDep.
+
+ * connect / close
+ * set timeout
+ * transieve
 
 
