@@ -1,0 +1,19 @@
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+    }
+}
+
+dependencies {
+    api project(":nfc:wrapper")
+
+    implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
+
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
+}
+
+

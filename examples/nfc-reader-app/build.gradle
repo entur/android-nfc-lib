@@ -34,6 +34,7 @@ android {
 dependencies {
     components.all(LifecycleAlignmentRule)
 
+    implementation project(":nfc:wrapper-utils")
     implementation project(":nfc:external-acs")
 
     implementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
