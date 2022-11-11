@@ -2,7 +2,7 @@ package no.entur.android.nfc.wrapper.tech.utils;
 
 public class SetTimeoutInvocation extends AbstractTagTechnologyInvocation {
 
-    private int value;
+    private int completed;
     private boolean returned;
 
     public void setReturned(boolean returned) {
@@ -21,12 +21,12 @@ public class SetTimeoutInvocation extends AbstractTagTechnologyInvocation {
         this.exception = exception;
     }
 
-    public int getValue() {
-        return value;
+    public int getCompleted() {
+        return completed;
     }
 
-    public void setValue(int value) {
-        this.value = value;
+    public void setCompleted(int completed) {
+        this.completed = completed;
     }
 
     @Override

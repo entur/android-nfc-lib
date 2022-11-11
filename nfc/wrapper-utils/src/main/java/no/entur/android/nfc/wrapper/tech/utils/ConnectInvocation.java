@@ -2,15 +2,15 @@ package no.entur.android.nfc.wrapper.tech.utils;
 
 public class ConnectInvocation extends AbstractTagTechnologyInvocation {
 
-    private boolean returned = false;
+    private boolean completed = false;
     private Exception exception;
 
-    public boolean isReturned() {
-        return returned;
+    public boolean isCompleted() {
+        return completed;
     }
 
-    public void setReturned(boolean returned) {
-        this.returned = returned;
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public Exception getException() {
@@ -23,7 +23,7 @@ public class ConnectInvocation extends AbstractTagTechnologyInvocation {
 
     @Override
     public void done(long timestamp) {
-        this.returned = true;
+        this.completed = true;
 
         super.done(timestamp);
     }

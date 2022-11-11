@@ -34,7 +34,7 @@ public class TagTechnologyInvocationRecorder implements TagTechnologyInvocationL
     public SetTimeoutInvocation onSetTimeout(int value) {
         SetTimeoutInvocation invocation = new SetTimeoutInvocation();
         invocation.setTimestamp(System.nanoTime());
-        invocation.setValue(value);
+        invocation.setCompleted(value);
         return invocation;
     }
 
