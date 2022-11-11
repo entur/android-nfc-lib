@@ -57,4 +57,7 @@ public abstract class IsoDep implements BasicTagTechnology {
 	public abstract int getMaxTransceiveLength();
 
 	public abstract boolean isExtendedLengthApduSupported();
+
+	// true if the tag is backed by a native IsoDep instance (i.e. if this instance is from the internal reader).
+	public abstract boolean isNative();
 }

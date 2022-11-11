@@ -5,6 +5,15 @@ public class AbstractTagTechnologyInvocation implements TagTechnologyInvocation 
     protected long timestamp;
     protected long duration;
     protected Exception exception;
+    protected boolean completed;
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
 
     public long getTimestamp() {
         return timestamp;
@@ -22,7 +31,8 @@ public class AbstractTagTechnologyInvocation implements TagTechnologyInvocation 
         this.duration = duration;
     }
 
-    public void done(long timestamp) {
+    public void completed(long timestamp) {
+        this.completed = true;
         this.duration = timestamp - this.timestamp;
     }
 
@@ -33,4 +43,6 @@ public class AbstractTagTechnologyInvocation implements TagTechnologyInvocation 
     public Exception getException() {
         return exception;
     }
+
+
 }

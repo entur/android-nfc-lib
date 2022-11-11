@@ -6,7 +6,7 @@ package no.entur.android.nfc.wrapper.tech.utils;
  *
  */
 
-interface TagTechnologyInvocation {
+public interface TagTechnologyInvocation {
 
     long getTimestamp();
     void setTimestamp(long timestamp);
@@ -14,8 +14,11 @@ interface TagTechnologyInvocation {
     long getDuration();
     void setDuration(long duration);
 
-    void done(long timestamp);
+    void completed(long timestamp);
     void setException(Exception exception);
+
+    boolean isCompleted();
+    void setCompleted(boolean completed);
 
     Exception getException();
 }

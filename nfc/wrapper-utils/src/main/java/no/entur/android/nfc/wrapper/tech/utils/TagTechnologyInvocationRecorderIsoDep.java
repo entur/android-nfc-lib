@@ -49,7 +49,7 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
             transceiveInvocation.setException(e);
             throw e;
         } finally {
-            transceiveInvocation.done(System.nanoTime());
+            transceiveInvocation.completed(System.nanoTime());
         }
     }
 
@@ -79,7 +79,7 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
             invocation.setException(e);
             throw e;
         } finally {
-            invocation.done(System.nanoTime());
+            invocation.completed(System.nanoTime());
         }
     }
 
@@ -91,6 +91,11 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
     @Override
     public boolean isExtendedLengthApduSupported() {
         return delegate.isExtendedLengthApduSupported();
+    }
+
+    @Override
+    public boolean isNative() {
+        return delegate.isNative();
     }
 
     @Override
@@ -107,7 +112,7 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
             invocation.setException(e);
             throw e;
         } finally {
-            invocation.done(System.nanoTime());
+            invocation.completed(System.nanoTime());
         }
 
     }
@@ -121,7 +126,7 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
             invocation.setException(e);
             throw e;
         } finally {
-            invocation.done(System.nanoTime());
+            invocation.completed(System.nanoTime());
         }
     }
 
