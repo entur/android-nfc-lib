@@ -73,6 +73,11 @@ public class ResponseAdpuProtocolIsoDep extends IsoDep {
 	}
 
 	@Override
+	public boolean isNative() {
+		throw new RuntimeException();
+	}
+
+	@Override
 	public Tag getTag() {
 		throw new RuntimeException();
 	}

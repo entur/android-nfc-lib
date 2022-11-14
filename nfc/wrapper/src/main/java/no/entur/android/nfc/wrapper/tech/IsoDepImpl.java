@@ -204,6 +204,11 @@ public class IsoDepImpl extends IsoDep {
 	}
 
 	@Override
+	public boolean isNative() {
+		return false;
+	}
+
+	@Override
 	public Tag getTag() {
 		return delegate.getTag();
 	}
