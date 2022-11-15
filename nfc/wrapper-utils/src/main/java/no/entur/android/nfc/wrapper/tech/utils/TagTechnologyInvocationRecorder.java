@@ -9,15 +9,17 @@ public class TagTechnologyInvocationRecorder implements TagTechnologyInvocationL
 
     @Override
     public ConnectInvocation onConnect() {
-        ConnectInvocation connectInvocation = new ConnectInvocation();
-        connectInvocation.setTimestamp(System.nanoTime());
-        return connectInvocation;
+        ConnectInvocation invocation = new ConnectInvocation();
+        invocation.setTimestamp(System.nanoTime());
+        this.invocations.add(invocation);
+        return invocation;
     }
 
     @Override
     public CloseInvocation onClose() {
         CloseInvocation invocation = new CloseInvocation();
         invocation.setTimestamp(System.nanoTime());
+        this.invocations.add(invocation);
         return invocation;
     }
 
@@ -35,6 +37,7 @@ public class TagTechnologyInvocationRecorder implements TagTechnologyInvocationL
         SetTimeoutInvocation invocation = new SetTimeoutInvocation();
         invocation.setTimestamp(System.nanoTime());
         invocation.setValue(value);
+        this.invocations.add(invocation);
         return invocation;
     }
 
