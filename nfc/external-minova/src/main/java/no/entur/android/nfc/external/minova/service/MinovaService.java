@@ -10,8 +10,6 @@ import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
 public class MinovaService extends AbstractMinovaTcpService {
 
-    public static final String EXTRA_IP = MinovaService.class.getName() + ".extra.IP";
-
     protected MifareDesfireTagServiceSupport mifareDesfireTagServiceSupport;
 
     public MinovaService(int port, int readers) {

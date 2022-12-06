@@ -39,6 +39,8 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMinovaTcpService.class);
 
+    public static final String EXTRA_IP = AbstractMinovaTcpService.class.getName() + ".extra.IP";
+
     private final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
     private final CommandServer server;
@@ -115,7 +117,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     @Override
     public void onServerSocketConnection(int port, Socket socket) throws IOException {
-        LOGGER.debug("Connection from " + port);
+        LOGGER.debug("Connection from " + port + ". IP is " + socket.getInetAddress());
 
         CommandInput<String> input = new TerminatorCommandInput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         CommandOutput<String> output = new TerminatorCommandOutput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
@@ -199,6 +201,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+        intent.putExtra(EXTRA_IP, reader.getIp());
 
         sendBroadcast(intent);
     }
