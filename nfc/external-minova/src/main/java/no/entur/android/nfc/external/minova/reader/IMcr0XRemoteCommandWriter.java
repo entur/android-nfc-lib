@@ -1,9 +1,9 @@
 package no.entur.android.nfc.external.minova.reader;
 
-import android.util.Log;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
@@ -77,6 +77,19 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
             commands.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
         } catch (Exception e) {
             LOGGER.debug("Problem displaying text with duration.", e);
+
+            exception = e;
+        }
+
+        return returnValue(exception);
+    }
+
+    public byte[] displayMultilineTextWithDuration(List<MinovaDisplayText> displayTexts, int durationInMillis) {
+        Exception exception = null;
+        try {
+            commands.displayMultilineTextWithDuration(displayTexts, durationInMillis);
+        } catch (Exception e) {
+            LOGGER.debug("Problem displaying multiline text with duration.", e);
 
             exception = e;
         }

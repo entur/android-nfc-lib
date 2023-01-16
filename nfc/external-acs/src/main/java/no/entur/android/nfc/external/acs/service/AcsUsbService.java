@@ -1,7 +1,5 @@
 package no.entur.android.nfc.external.acs.service;
 
-import android.util.Log;
-
 import org.nfctools.api.TagType;
 import org.nfctools.spi.acs.AcsTag;
 import org.slf4j.Logger;

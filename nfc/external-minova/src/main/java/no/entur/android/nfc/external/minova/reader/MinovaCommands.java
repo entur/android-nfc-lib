@@ -1,6 +1,7 @@
 package no.entur.android.nfc.external.minova.reader;
 
 import java.io.IOException;
+import java.util.List;
 
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -80,4 +81,20 @@ public class MinovaCommands {
         );
     }
 
+    public void displayMultilineTextWithDuration(List<MinovaDisplayText> displayTexts, int durationInMillis) throws IOException {
+        McrCommandSetBuilder builder = McrCommandSetBuilder.newInstance(reader.getReaderId()).command(LCDCLR);
+        for (MinovaDisplayText displayText : displayTexts) {
+            builder.command(
+                    LCDSET,
+                    displayText.getXAxis(),
+                    displayText.getYAxis(),
+                    displayText.getFont(),
+                    displayText.getText()
+            );
+        }
+        reader.write(builder.command(LCDLOCK)
+                .command(DELAY, durationInMillis)
+                .command(LCDUNLOCK)
+                .build());
+    }
 }
