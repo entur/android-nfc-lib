@@ -47,12 +47,11 @@ public class AcsUsbService extends AbstractAcsUsbService {
 		} else if (tagType == TagType.ISO_DEP) {
 			byte[] uid = TagUtility.getPcscUid(wrapper);
 			if (uid != null) {
-				Log.d(TAG, "Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
+				LOGGER.debug("Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
 			mifareDesfireTagServiceSupport.desfire(slotNumber, atr, wrapper, uid, IntentEnricher.identity());
-		} else if (tagType == TagType.ISO_14443_TYPE_B_NO_HISTORICAL_BYTES || tagType == TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES
-				|| tagType == TagType.ISO_14443_TYPE_A) {
+		} else if (tagType == TagType.ISO_14443_TYPE_A) {
 			byte[] uid = TagUtility.getPcscUid(wrapper);
 			if (uid != null) {
 				LOGGER.debug("Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));

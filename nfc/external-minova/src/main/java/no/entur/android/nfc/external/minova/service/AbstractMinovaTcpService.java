@@ -5,7 +5,9 @@ import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToB
 import android.content.Intent;
 import android.util.Log;
 
+import org.nfctools.api.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
+import org.nfctools.api.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,8 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     private final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
     private final CommandServer server;
+
+    private TagTypeDetector<MinovaCommands> tagTypeDetector = new DefaultTagTypeDetector<>();
 
     private final Executor executor;
 
@@ -183,7 +187,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
                     String atsString = response.substring((response.lastIndexOf(";") + 1));
 
                     byte[] atr = getAtr(hexStringToByteArray(atsString));
-                    TagType tag = TagType.identifyTagType(atr);
+                    TagType tag = tagTypeDetector.parseAtr(commands, atr);
 
                     handleTag(tag, atr, uid, reader);
                 } catch(Exception e) {

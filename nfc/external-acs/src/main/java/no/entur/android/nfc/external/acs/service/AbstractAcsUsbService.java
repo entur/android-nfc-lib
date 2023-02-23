@@ -11,7 +11,9 @@ import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
+import org.nfctools.api.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
+import org.nfctools.api.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 	protected ExternalNfcReaderStatusSupport externalNfcReaderStatusSupport = new ExternalNfcReaderStatusSupport(this, acrReaderListener);
 
+	protected TagTypeDetector<ReaderWrapper> tagTypeDetector = new DefaultTagTypeDetector<>();
 	protected ExternalUsbNfcServiceSupport support;
 	protected ReaderWrapper reader;
 
@@ -144,7 +147,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 					return null;
 				}
-				final TagType tagType = TagUtility.identifyTagType(reader.getReaderName(), atr);
+				final TagType tagType = tagTypeDetector.parseAtr(reader, atr);
 
 				LOGGER.debug("Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
 

@@ -62,6 +62,9 @@ public class ByteArrayHexStringConverter {
 	}
 
 	public static byte[] hexStringToByteArray(CharSequence s) {
+		if(s.length() % 2 != 0) {
+			throw new IllegalArgumentException();
+		}
 		int len = s.length();
 		byte[] data = new byte[len / 2];
 		for (int i = 0; i < len; i += 2) {
