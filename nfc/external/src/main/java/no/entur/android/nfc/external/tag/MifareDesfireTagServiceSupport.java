@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -16,7 +19,7 @@ import no.entur.android.nfc.wrapper.INfcTag;
 
 public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
-    private static final String TAG = MifareDesfireTagServiceSupport.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(MifareDesfireTagServiceSupport.class);
 
     protected MifareDesfireTagFactory mifareDesfireTagFactory = new MifareDesfireTagFactory();
 
@@ -34,11 +37,11 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
             Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, true, TechnologyType.getHistoricalBytes(atr), tagService, extras);
 
-            Log.d(TAG, "Broadcast hce");
+            LOGGER.debug("Broadcast hce");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
         } catch (Exception e) {
-            Log.d(TAG, "Problem reading from tag", e);
+            LOGGER.debug("Problem reading from tag", e);
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
@@ -54,11 +57,11 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
             Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, false, TechnologyType.getHistoricalBytes(atr), tagService, extras);
 
-            Log.d(TAG, "Broadcast desfire");
+            LOGGER.debug("Broadcast desfire");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
         } catch (Exception e) {
-            Log.d(TAG, "Problem reading from tag", e);
+            LOGGER.debug("Problem reading from tag", e);
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }

@@ -17,12 +17,15 @@ package org.nfctools.api;
 
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 
+import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public enum TagType {
-
 	/**
 	 * Unkown tag
 	 */
@@ -71,6 +74,8 @@ public enum TagType {
 	INFINEON_MIFARE_SLE_1K("Infineon Mifare SLE 66R35"),
 
 	;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(TagType.class);
 
 	private final String name;
 
@@ -124,7 +129,7 @@ public enum TagType {
 			 * (byte) 0x80 })) { return TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES;
 			 */
 		} else {
-			Log.d(TAG, ByteArrayHexStringConverter.toHexString(historicalBytes));
+			LOGGER.debug(ByteArrayHexStringConverter.toHexString(historicalBytes));
 		}
 
 		return tagType;

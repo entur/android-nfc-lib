@@ -6,7 +6,7 @@ buildscript {
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.1'
+        classpath 'com.android.tools.build:gradle:7.2.2'
     }
 }
 
@@ -70,6 +70,8 @@ ext {
     // note: see abt alignment rule
     androidxAppcompatVersion = '1.4.1'
 
+    slf4jVersion = '1.7.36'
+
     // note: androidx test lower down
     desugarVersion = '1.1.5'
 
@@ -82,9 +84,15 @@ ext {
 
     mockitoVersion = '4.3.1'
     byteBuddyVersion = '1.12.7'
+
+    logbackAndroidVersion = '2.0.0'
 }
 
 ext.commonDependencies = {
+    api "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    testImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    androidTestImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
 
     testImplementation "junit:junit:${unitVersion}"
     testImplementation "androidx.test:runner:${androidxTestRunnerVersion}"
@@ -389,9 +397,12 @@ configure(javaLibraryProjects()) {
             html.enabled = true
         }
     }
-
-
 }
+
+configure(appProjects()) {
+    apply plugin: 'com.android.application'
+}
+
 
 group = 'no.entur.android.nfc'
 

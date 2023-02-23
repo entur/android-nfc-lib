@@ -1,12 +1,15 @@
 package no.entur.android.nfc.external.minova.reader;
 
-import android.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
 public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
 
-    private static final String TAG = IMcr0XRemoteCommandWriter.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(IMcr0XRemoteCommandWriter.class);
 
     private final MinovaCommands commands;
 
@@ -21,7 +24,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
 		try {
 			firmware = commands.getFirmware(0);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem reading firmware", e);
+			LOGGER.debug("Problem reading firmware", e);
 
 			exception = e;
 		}
@@ -35,7 +38,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             ip = commands.getIp();
         } catch (Exception e) {
-            Log.d(TAG, "Problem getting IP-address.", e);
+            LOGGER.debug("Problem getting IP-address.", e);
 
             exception = e;
         }
@@ -47,7 +50,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             commands.buzz(durationInMillis, times);
         } catch (Exception e) {
-            Log.d(TAG, "Problem buzzing.", e);
+            LOGGER.debug("Problem buzzing.", e);
 
             exception = e;
         }
@@ -60,7 +63,7 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             commands.displayText(xAxis, yAxis, font, text);
         } catch (Exception e) {
-            Log.d(TAG, "Problem displaying text.", e);
+            LOGGER.debug("Problem displaying text.", e);
 
             exception = e;
         }
@@ -73,7 +76,20 @@ public class IMcr0XRemoteCommandWriter extends RemoteCommandWriter {
         try {
             commands.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
         } catch (Exception e) {
-            Log.d(TAG, "Problem displaying text with duration.", e);
+            LOGGER.debug("Problem displaying text with duration.", e);
+
+            exception = e;
+        }
+
+        return returnValue(exception);
+    }
+
+    public byte[] displayMultilineTextWithDuration(List<MinovaDisplayText> displayTexts, int durationInMillis) {
+        Exception exception = null;
+        try {
+            commands.displayMultilineTextWithDuration(displayTexts, durationInMillis);
+        } catch (Exception e) {
+            LOGGER.debug("Problem displaying multiline text with duration.", e);
 
             exception = e;
         }

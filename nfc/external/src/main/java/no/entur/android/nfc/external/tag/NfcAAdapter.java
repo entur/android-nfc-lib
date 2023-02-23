@@ -3,6 +3,10 @@ package no.entur.android.nfc.external.tag;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.nfctools.api.TagType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
@@ -13,7 +17,7 @@ import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
 public class NfcAAdapter extends DefaultTechnology implements CommandTechnology {
 
-	protected static final String TAG = NfcAAdapter.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(NfcAAdapter.class);
 
 	private AbstractReaderIsoDepWrapper wrapper;
 	private boolean print;
@@ -29,28 +33,28 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 			byte[] transceive;
 			if (raw) {
 				if (print) {
-					Log.d(TAG, "Transceive raw request " + ByteArrayHexStringConverter.toHexString(data));
+					LOGGER.debug("Transceive raw request " + ByteArrayHexStringConverter.toHexString(data));
 				}
 
 				transceive = transmitRaw(data);
 
 				if (print) {
-					Log.d(TAG, "Transceive raw response " + ByteArrayHexStringConverter.toHexString(transceive));
+					LOGGER.debug("Transceive raw response " + ByteArrayHexStringConverter.toHexString(transceive));
 				}
 			} else {
 				if (print) {
-					Log.d(TAG, "Transceive request " + ByteArrayHexStringConverter.toHexString(data));
+					LOGGER.debug("Transceive request " + ByteArrayHexStringConverter.toHexString(data));
 				}
 				transceive = transceive(data);
 
 				if (print) {
-					Log.d(TAG, "Transceive response " + ByteArrayHexStringConverter.toHexString(transceive));
+					LOGGER.debug("Transceive response " + ByteArrayHexStringConverter.toHexString(transceive));
 				}
 			}
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
 		} catch (Exception e) {
-			Log.d(TAG, "Problem sending command", e);
+			LOGGER.debug("Problem sending command", e);
 
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 		}
@@ -75,13 +79,13 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 	public byte[] transceive(byte[] command) throws Exception {
 
 		if (print) {
-			Log.d(TAG, "===> " + getHexString(command, true) + " (" + command.length + ")");
+			LOGGER.debug("===> " + getHexString(command, true) + " (" + command.length + ")");
 		}
 
 		byte[] response = wrapper.transceive(command);
 
 		if (print) {
-			Log.d(TAG, "<=== " + getHexString(response, true) + " (" + command.length + ")");
+			LOGGER.debug("<=== " + getHexString(response, true) + " (" + command.length + ")");
 		}
 
 		return response;

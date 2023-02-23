@@ -2,11 +2,14 @@ package no.entur.android.nfc.external.tag;
 
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 
 public class DESFireAdapter {
 
-	private static final String TAG = DESFireAdapter.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(DESFireAdapter.class);
 
 	/* Status codes */
 	public static final byte OPERATION_OK = (byte) 0x00;
@@ -107,13 +110,13 @@ public class DESFireAdapter {
 	public byte[] transceive(byte[] command) throws Exception {
 
 		if (print) {
-			Log.d(TAG, "===> " + getHexString(command, true) + " (" + command.length + ")");
+			LOGGER.debug("===> " + getHexString(command, true) + " (" + command.length + ")");
 		}
 
 		byte[] response = isoDep.transceive(command);
 
 		if (print) {
-			Log.d(TAG, "<=== " + getHexString(response, true) + " (" + command.length + ")");
+			LOGGER.debug("<=== " + getHexString(response, true) + " (" + command.length + ")");
 		}
 
 		return response;

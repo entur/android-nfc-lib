@@ -2,6 +2,9 @@ package no.entur.android.nfc.hce.protocol;
 
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -18,7 +21,7 @@ import no.entur.android.nfc.wrapper.tech.IsoDep;
 
 public class ResponseAdpuProtocolIsoDep extends IsoDep {
 
-	private static final String TAG = ResponseAdpuProtocolIsoDep.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ResponseAdpuProtocolIsoDep.class);
 
 	private final ResponseApduProtocol target;
 	private boolean connected = false;
@@ -50,11 +53,11 @@ public class ResponseAdpuProtocolIsoDep extends IsoDep {
 	@Override
 	public byte[] transceive(byte[] data) throws IOException {
 
-		Log.d(TAG, "-> " + ByteArrayHexStringConverter.toHexString(data));
+		LOGGER.debug("-> " + ByteArrayHexStringConverter.toHexString(data));
 
 		byte[] response = target.handleCommandApdu(new CommandAPDU(data)).getBytes();
 
-		Log.d(TAG, "<- " + ByteArrayHexStringConverter.toHexString(response));
+		LOGGER.debug("<- " + ByteArrayHexStringConverter.toHexString(response));
 
 		return response;
 	}
@@ -66,6 +69,11 @@ public class ResponseAdpuProtocolIsoDep extends IsoDep {
 
 	@Override
 	public boolean isExtendedLengthApduSupported() {
+		throw new RuntimeException();
+	}
+
+	@Override
+	public boolean isNative() {
 		throw new RuntimeException();
 	}
 

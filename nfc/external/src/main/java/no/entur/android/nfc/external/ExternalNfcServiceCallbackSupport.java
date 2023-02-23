@@ -6,18 +6,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 public class ExternalNfcServiceCallbackSupport {
 
-	private static final String TAG = ExternalNfcServiceCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcServiceCallbackSupport.class);
 
 	protected final ExternalNfcServiceCallback callback;
 	protected final Context context;
 
 	private boolean recieveServiceBroadcasts = false;
-	private volatile boolean open = false;
 	protected Executor executor; // non-final for testing
+	protected boolean enabled = false;
 
 	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor) {
 		this.callback = callback;
@@ -34,34 +37,26 @@ public class ExternalNfcServiceCallbackSupport {
 		public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
 		if (ExternalNfcServiceCallback.ACTION_SERVICE_STARTED.equals(action)) {
-			if (!open) {
-				open = true;
+			LOGGER.debug("Service started");
+			callback.onExternalNfcServiceStarted(intent);
 
-				Log.d(TAG, "Service started");
-				callback.onExternalNfcServiceStarted(intent);
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcServiceStarted(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcServiceStarted(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcServiceStarted(intent);
 			}
 		} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
-			if (open) {
-				open = false;
+			LOGGER.debug("Service stopped");
+			callback.onExternalNfcServiceStopped(intent);
 
-				Log.d(TAG, "Service stopped");
-				callback.onExternalNfcServiceStopped(intent);
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcServiceStopped(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcServiceStopped(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcServiceStopped(intent);
 			}
 		} else {
 			throw new IllegalArgumentException("Unexpected action " + action);
@@ -80,7 +75,7 @@ public class ExternalNfcServiceCallbackSupport {
 
 	private void startReceivingServiceBroadcasts() {
 		if (!recieveServiceBroadcasts) {
-			Log.d(TAG, "Start receiving service broadcasts");
+			LOGGER.debug("Start receiving service broadcasts");
 
 			recieveServiceBroadcasts = true;
 
@@ -95,11 +90,23 @@ public class ExternalNfcServiceCallbackSupport {
 
 	private void stopReceivingServiceBroadcasts() {
 		if (recieveServiceBroadcasts) {
-			Log.d(TAG, "Stop receiving broadcasts");
+			LOGGER.debug("Stop receiving service broadcasts");
 
 			recieveServiceBroadcasts = false;
 
 			context.unregisterReceiver(serviceReceiver);
 		}
+	}
+
+	public void setEnabled(boolean enabled) {
+		if (!this.enabled && enabled) {
+			// disabled -> enabled
+			startReceivingServiceBroadcasts();
+		} else if (this.enabled && !enabled) {
+
+			// enabled -> disabled
+			stopReceivingServiceBroadcasts();
+		}
+		this.enabled = enabled;
 	}
 }

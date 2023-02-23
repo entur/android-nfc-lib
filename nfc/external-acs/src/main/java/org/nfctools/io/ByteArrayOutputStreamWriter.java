@@ -28,8 +28,6 @@ import org.nfctools.utils.NfcUtils;
  */
 public class ByteArrayOutputStreamWriter implements ByteArrayWriter {
 
-	private static final String TAG = ByteArrayInputStreamReader.class.getName();
-
 	private OutputStream outputStream;
 
 	public ByteArrayOutputStreamWriter(OutputStream outputStream) {
@@ -38,7 +36,6 @@ public class ByteArrayOutputStreamWriter implements ByteArrayWriter {
 
 	@Override
 	public void write(byte[] data, int offset, int length) throws IOException {
-		Log.d(TAG, NfcUtils.convertBinToASCII(data, offset, length));
 		outputStream.write(data, offset, length);
 	}
 }

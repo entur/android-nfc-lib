@@ -8,13 +8,16 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcReaderCallbackSupport {
 
-	private static final String TAG = ExternalNfcReaderCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcReaderCallbackSupport.class);
 
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
@@ -23,8 +26,6 @@ public class ExternalNfcReaderCallbackSupport {
 	protected Executor executor; // non-final for testing
 
 	private boolean recieveReaderBroadcasts = false;
-
-	private volatile boolean open = false;
 
 	protected boolean enabled = false;
 
@@ -35,32 +36,24 @@ public class ExternalNfcReaderCallbackSupport {
 		String action = intent.getAction();
 
 		if (ExternalNfcReaderCallback.ACTION_READER_OPENED.equals(action)) {
-			if (!open) {
-				open = true;
+			LOGGER.info("Reader opened");
 
-				Log.d(TAG, "Reader opened");
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcReaderOpened(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcReaderOpened(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcReaderOpened(intent);
 			}
 		} else if (ExternalNfcReaderCallback.ACTION_READER_CLOSED.equals(action)) {
-			if (open) {
-				open = false;
+			LOGGER.info("Reader closed");
 
-				Log.d(TAG, "Reader closed");
-
-				if(executor != null) {
-					executor.execute(() -> {
-						callback.onExternalNfcReaderClosed(intent);
-					});
-				} else {
+			if(executor != null) {
+				executor.execute(() -> {
 					callback.onExternalNfcReaderClosed(intent);
-				}
+				});
+			} else {
+				callback.onExternalNfcReaderClosed(intent);
 			}
 		} else {
 			throw new IllegalArgumentException("Unexpected action " + action);
@@ -82,6 +75,8 @@ public class ExternalNfcReaderCallbackSupport {
 	public void onResume() {
 		if (enabled) {
 			startReceivingReaderBroadcasts();
+
+			LOGGER.debug("Ask for reader status");
 
 			broadcast(ExternalNfcReaderCallback.ACTION_READER_STATUS);
 		}
@@ -115,7 +110,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 	private void startReceivingReaderBroadcasts() {
 		if (!recieveReaderBroadcasts) {
-			Log.d(TAG, "Start receiving reader broadcasts");
+			LOGGER.debug("Start receiving reader broadcasts");
 
 			recieveReaderBroadcasts = true;
 
@@ -130,7 +125,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 	private void stopReceivingReaderBroadcasts() {
 		if (recieveReaderBroadcasts) {
-			Log.d(TAG, "Stop receiving broadcasts");
+			LOGGER.debug("Stop receiving reader broadcasts");
 
 			recieveReaderBroadcasts = false;
 

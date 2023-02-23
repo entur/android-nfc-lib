@@ -4,7 +4,8 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
 
-import no.entur.android.nfc.external.minova.IMcr0XReaderControl;
+import java.util.List;
+
 import no.entur.android.nfc.external.remote.RemoteCommandException;
 
 public class McrReader extends MinovaReader {
@@ -96,6 +97,17 @@ public class McrReader extends MinovaReader {
         byte[] response;
         try {
             response = readerControl.displayTextWithDuration(xAxis, yAxis, font, text, durationInMillis);
+        } catch (RemoteException e) {
+            throw createRemoteCommandException(e);
+        }
+
+        readVoid(response);
+    }
+
+    public void displayMultilineTextDelayed(List<MinovaDisplayText> displayTexts, int durationInMillis) {
+        byte[] response;
+        try {
+            response = readerControl.displayMultilineTextWithDuration(displayTexts, durationInMillis);
         } catch (RemoteException e) {
             throw createRemoteCommandException(e);
         }

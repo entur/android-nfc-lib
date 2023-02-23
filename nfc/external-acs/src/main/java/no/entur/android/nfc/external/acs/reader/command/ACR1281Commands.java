@@ -9,6 +9,9 @@ import java.util.List;
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
@@ -24,7 +27,7 @@ public class ACR1281Commands extends ACRCommands {
 	public static final int LED_GREEN = 1 << 1;
 	public static final int LED_RED = 1;
 
-	private static final String TAG = ACR1281Commands.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1281Commands.class);
 
 	public ACR1281Commands(String name, ReaderWrapper reader) {
 		super(reader);
@@ -77,7 +80,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Set PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc.getOperation()) + ")");
+		LOGGER.debug("Set PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc.getOperation()) + ")");
 
 		return new PICCOperatingParameter(operation);
 	}
@@ -93,7 +96,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Read PICC " + Integer.toHexString(operation));
+		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
 		return new PICCOperatingParameter(operation);
 	}
@@ -109,7 +112,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		String firmware = new String(response.getData(), Charset.forName("ASCII"));
 
-		Log.d(TAG, "Read firmware " + firmware);
+		LOGGER.debug("Read firmware " + firmware);
 
 		return firmware;
 	}
@@ -124,7 +127,7 @@ public class ACR1281Commands extends ACRCommands {
 			throw new IllegalArgumentException();
 		}
 
-		Log.d(TAG, "Set LED state to " + (0xFF & response.getData()[0]));
+		LOGGER.debug("Set LED state to " + (0xFF & response.getData()[0]));
 
 		return true;
 	}
@@ -132,7 +135,7 @@ public class ACR1281Commands extends ACRCommands {
 	public List<AcrLED> getLED(int slot) throws ReaderException {
 		int operation = getLED2(slot);
 
-		Log.d(TAG, "Read LED state " + Integer.toHexString(operation));
+		LOGGER.debug("Read LED state " + Integer.toHexString(operation));
 
 		List<AcrLED> leds = new ArrayList<AcrLED>();
 
@@ -196,7 +199,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Set default LED and buzzer behaviour " + Integer.toHexString(operation) + " (" + picc + ")");
+		LOGGER.debug("Set default LED and buzzer behaviour " + Integer.toHexString(operation) + " (" + picc + ")");
 
 		return operation;
 	}
@@ -204,7 +207,7 @@ public class ACR1281Commands extends ACRCommands {
 	public List<AcrDefaultLEDAndBuzzerBehaviour> getDefaultLEDAndBuzzerBehaviour(int slot) throws ReaderException {
 		final int operation = getDefaultLEDAndBuzzerBehaviour2(slot);
 
-		Log.d(TAG, "Read default LED and buzzer behaviour " + Integer.toHexString(operation));
+		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
 		return Acr1281UReader.parseBehaviour(operation);
 	}
@@ -220,7 +223,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		final int operation = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Read default LED and buzzer behaviour " + Integer.toHexString(operation));
+		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
 		return operation;
 	}
@@ -246,7 +249,7 @@ public class ACR1281Commands extends ACRCommands {
 			throw new IllegalArgumentException();
 		}
 
-		Log.d(TAG, "Set cards insertion counters " + counters.getIccCount() + " / " + counters.getPiccCount());
+		LOGGER.debug("Set cards insertion counters " + counters.getIccCount() + " / " + counters.getPiccCount());
 
 		return parseCardInsertionCounters(data);
 	}
@@ -273,7 +276,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		CardInsertionCounters cardsInsertionCounters = parseCardInsertionCounters(response.getData());
 
-		Log.d(TAG, "Set cards insertion counters " + cardsInsertionCounters);
+		LOGGER.debug("Set cards insertion counters " + cardsInsertionCounters);
 
 		return cardsInsertionCounters;
 	}
@@ -289,7 +292,7 @@ public class ACR1281Commands extends ACRCommands {
 
 		int result = response.getData()[0] & 0xFF;
 
-		Log.d(TAG, "Manual PICC Polling " + Integer.toHexString(result));
+		LOGGER.debug("Manual PICC Polling " + Integer.toHexString(result));
 
 		return result == 0x00;
 	}

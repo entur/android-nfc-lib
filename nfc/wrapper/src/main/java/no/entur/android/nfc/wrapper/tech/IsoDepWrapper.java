@@ -71,4 +71,8 @@ public class IsoDepWrapper extends IsoDep {
 		return delegate.isConnected();
 	}
 
+	@Override
+	public boolean isNative() {
+		return true;
+	}
 }

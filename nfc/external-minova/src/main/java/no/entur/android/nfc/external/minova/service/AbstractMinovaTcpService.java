@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.util.Log;
 
 import org.nfctools.api.TagType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,7 +20,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
-import no.entur.android.nfc.external.acs.service.AbstractService;
+import no.entur.android.nfc.external.minova.reader.IMcr0XRemoteCommandWriter;
+import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.minova.reader.McrCommandSetBuilder;
 import no.entur.android.nfc.external.minova.reader.IMcr0XBinder;
 import no.entur.android.nfc.external.minova.reader.McrReader;
@@ -34,7 +37,9 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public abstract class AbstractMinovaTcpService extends AbstractService implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String>  {
 
-    private static final String LOG_TAG = AbstractMinovaTcpService.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMinovaTcpService.class);
+
+    public static final String EXTRA_IP = AbstractMinovaTcpService.class.getName() + ".extra.IP";
 
     private final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
@@ -107,12 +112,12 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     @Override
     public void onServerSocketStart(int port) {
-        Log.d(LOG_TAG, "Started server on port " + port);
+        LOGGER.debug("Started server on port " + port);
     }
 
     @Override
     public void onServerSocketConnection(int port, Socket socket) throws IOException {
-        Log.d(LOG_TAG, "Connection from " + port);
+        LOGGER.debug("Connection from " + port + ". IP is " + socket.getInetAddress());
 
         CommandInput<String> input = new TerminatorCommandInput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         CommandOutput<String> output = new TerminatorCommandOutput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
@@ -128,7 +133,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     @Override
     public void onServerSocketClosed(int port, Exception e) {
-        Log.d(LOG_TAG, "On server closed " + port, e);
+        LOGGER.debug("On server closed " + port, e);
 
         synchronized (clients) {
             for (CommandInputOutputThread<String, String> client : clients) {
@@ -145,7 +150,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     @Override
     public void onReaderStart(CommandInputOutputThread<String, String> reader) {
-        Log.d(LOG_TAG, "Reader " + reader.getReaderId() + " start");
+        LOGGER.debug("Reader " + reader.getReaderId() + " start");
 
         MinovaCommands commands = new MinovaCommands(reader);
         IMcr0XBinder mcrBinder = new IMcr0XBinder();
@@ -162,7 +167,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     @Override
     public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) {
-        Log.d(LOG_TAG, "On reader command " + reader.getReaderId() + " " + input);
+        LOGGER.debug("On reader command " + reader.getReaderId() + " " + input);
 
         if (input.contains("UID=")) { // XXX rather parse commands
 
@@ -182,20 +187,21 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
                     handleTag(tag, atr, uid, reader);
                 } catch(Exception e) {
-                    Log.d(LOG_TAG, "Problem getting tag type");
+                    LOGGER.debug("Problem getting tag type");
                 }
             });
         } else {
-            Log.d(LOG_TAG, "Ignoring reader " + reader.getReaderId() + " command " + input);
+            LOGGER.debug("Ignoring reader " + reader.getReaderId() + " command " + input);
         }
     }
 
     @Override
     public void onReaderClosed(CommandInputOutputThread<String, String> reader, Exception e) {
-        Log.d(LOG_TAG, "Reader " + reader.getReaderId() + " closed");
+        LOGGER.debug("Reader " + reader.getReaderId() + " closed");
 
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+        intent.putExtra(EXTRA_IP, reader.getIp());
 
         sendBroadcast(intent);
     }
@@ -208,7 +214,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
             try {
                 server.stop();
             } catch (IOException e) {
-                Log.d(LOG_TAG, "Problem stopping server", e);
+                LOGGER.debug("Problem stopping server", e);
             }
         }
     }

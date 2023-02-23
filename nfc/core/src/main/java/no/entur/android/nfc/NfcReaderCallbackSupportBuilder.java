@@ -5,13 +5,16 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.wrapper.ReaderCallback;
 
 public class NfcReaderCallbackSupportBuilder {
 
-	private static final String TAG = NfcReaderCallbackSupportBuilder.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(NfcReaderCallbackSupport.class);
 
 	protected Activity activity;
 	protected ReaderCallback callback;
@@ -48,7 +51,7 @@ public class NfcReaderCallbackSupportBuilder {
 
 		Bundle options = null;
 		if (presenceCheckDelay != null) {
-			Log.d(TAG, "Add NFC reader presence check delay " + presenceCheckDelay);
+			LOGGER.debug("Add NFC reader presence check delay " + presenceCheckDelay);
 			options = new Bundle();
 			options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, presenceCheckDelay);
 		}

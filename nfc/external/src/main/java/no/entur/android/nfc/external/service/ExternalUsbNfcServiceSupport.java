@@ -14,11 +14,15 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 
 /**
  *
@@ -30,13 +34,7 @@ import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 
 public class ExternalUsbNfcServiceSupport {
 
-	private static final String TAG = ExternalUsbNfcServiceSupport.class.getName();
-
-	public interface Listener<T> {
-		void onReaderClosed(int readerStatus, String statusMessage);
-
-		void onReaderOpen(T reader, int readerStatusOk);
-	}
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalUsbNfcServiceSupport.class);
 
 	public interface ReaderAdapter<T> {
 		void closeReader(UsbDevice device);
@@ -86,7 +84,6 @@ public class ExternalUsbNfcServiceSupport {
 			ExternalUsbNfcServiceSupport activity = activityReference.get();
 			if (activity != null) {
 				if (activity.detectUSBDevices()) {
-					Log.v(TAG, "Detected USB devices");
 					sendEmptyMessageDelayed(0, USB_RESCAN_INTERVAL_READER_DETECTED);
 
 				} else {
@@ -109,7 +106,7 @@ public class ExternalUsbNfcServiceSupport {
 				if (device != null) {
 					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 
-						Log.d(TAG, "Open reader: " + device.getDeviceName());
+						LOGGER.debug("Open reader: " + device.getDeviceName());
 
 						synchronized (ExternalUsbNfcServiceSupport.this) {
 							openDevices.add(device.getDeviceId());
@@ -117,7 +114,7 @@ public class ExternalUsbNfcServiceSupport {
 
 						new OpenReaderTask().execute(device);
 					} else {
-						Log.d(TAG, "Permission denied for device " + device.getDeviceName() + " / " + device.getDeviceId() + ", resume scanning.");
+						LOGGER.debug("Permission denied for device " + device.getDeviceName() + " / " + device.getDeviceId() + ", resume scanning.");
 
 						synchronized (ExternalUsbNfcServiceSupport.this) {
 							refusedPermissionDevices.add(device.getDeviceId());
@@ -126,7 +123,7 @@ public class ExternalUsbNfcServiceSupport {
 						readerScanner.resume();
 					}
 				} else {
-					Log.d(TAG, "Did not find any device");
+					LOGGER.debug("Did not find any device");
 				}
 
 			}
@@ -141,7 +138,7 @@ public class ExternalUsbNfcServiceSupport {
 
 			if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
 
-				Log.d(TAG, "Usb device detached");
+				LOGGER.debug("Usb device detached");
 
 				UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 
@@ -149,7 +146,7 @@ public class ExternalUsbNfcServiceSupport {
 					synchronized (ExternalUsbNfcServiceSupport.this) {
 						if (openDevices.remove(device.getDeviceId())) {
 							// Close reader
-							Log.d(TAG, "Closing reader " + device.getDeviceId());
+							LOGGER.debug("Closing reader " + device.getDeviceId());
 
 							new CloseTask().execute();
 						}
@@ -174,22 +171,22 @@ public class ExternalUsbNfcServiceSupport {
 
 				String name = params[0].getDeviceName();
 
-				Log.d(TAG, "Opening reader " + name + "...");
+				LOGGER.debug("Opening reader " + name + "...");
 
 				reader = readerAdapter.openReader(params[0]);
 				if (reader != null) {
-					Log.d(TAG, "Opened reader " + name);
+					LOGGER.debug("Opened reader " + name);
 					setNfcReaderStatus(ExternalNfcReaderCallback.READER_STATUS_OK, null);
 				} else {
-					Log.d(TAG, "Unable to open reader " + name);
+					LOGGER.debug("Unable to open reader " + name);
 					setNfcReaderStatus(ExternalNfcReaderCallback.READER_STATUS_ERROR, null);
 				}
 			} catch (Exception e) {
-				Log.w(TAG, "Problem opening reader " + params[0].getDeviceName(), e);
+				LOGGER.warn("Problem opening reader " + params[0].getDeviceName(), e);
 
 				synchronized (ExternalUsbNfcServiceSupport.this) {
 					if (e instanceof IllegalArgumentException && e.getMessage().contains("Cannot claim interface.")) {
-						Log.d(TAG, "Fail USB open, attemp to connect " + params[0].getDeviceId() + " again after a delay");
+						LOGGER.debug("Fail USB open, attemp to connect " + params[0].getDeviceId() + " again after a delay");
 
 						try {
 							ExternalUsbNfcServiceSupport.this.wait(1000);
@@ -289,10 +286,10 @@ public class ExternalUsbNfcServiceSupport {
 	private int nfcReaderStatusCode;
 	private String nfcReaderStatusMessage;
 
-	private final Listener listener;
+	private final ExternalNfcReaderStatusListener listener;
 	private final ReaderAdapter readerAdapter;
 
-	public ExternalUsbNfcServiceSupport(Service service, Listener listener, ReaderAdapter readerAdapter) {
+	public ExternalUsbNfcServiceSupport(Service service, ExternalNfcReaderStatusListener listener, ReaderAdapter readerAdapter) {
 		this.service = service;
 		this.listener = listener;
 		this.readerAdapter = readerAdapter;
@@ -315,7 +312,7 @@ public class ExternalUsbNfcServiceSupport {
 	}
 
 	protected boolean detectUSBDevices() {
-		Log.d(TAG, "Detecing USB devices..");
+		LOGGER.debug("Detecing USB devices..");
 
 		for (UsbDevice device : usbManager.getDeviceList().values()) {
 			if (readerAdapter.isReaderSupported(device)) {
@@ -325,7 +322,7 @@ public class ExternalUsbNfcServiceSupport {
 					return detectUSBDevice(device);
 				}
 			} else {
-				Log.d(TAG, "Reader not supported: " + device.getDeviceName());
+				LOGGER.debug("Reader not supported: " + device.getDeviceName());
 			}
 		}
 
@@ -337,10 +334,10 @@ public class ExternalUsbNfcServiceSupport {
 		Integer deviceId = device.getDeviceId();
 
 		if (openDevices.contains(deviceId)) {
-			Log.d(TAG, "Device " + deviceId + " is already open");
+			LOGGER.debug("Device " + deviceId + " is already open");
 		} else {
 			if (usbManager.hasPermission(device)) {
-				Log.d(TAG, "Already has permission for reader: " + device.getDeviceName());
+				LOGGER.debug("Already has permission for reader: " + device.getDeviceName());
 
 				openDevices.add(deviceId);
 
@@ -353,11 +350,11 @@ public class ExternalUsbNfcServiceSupport {
 
 					usbManager.requestPermission(device, permissionIntent);
 
-					Log.d(TAG, "Detected ACR reader..");
+					LOGGER.debug("Detected ACR reader..");
 
 					return true;
 				} else {
-					Log.d(TAG, "Do not ask for permission for previous device " + device.getDeviceName() + " / " + device.getDeviceId());
+					LOGGER.debug("Do not ask for permission for previous device " + device.getDeviceName() + " / " + device.getDeviceId());
 				}
 			}
 		}
@@ -371,7 +368,7 @@ public class ExternalUsbNfcServiceSupport {
 	private void startReceivingPermissionBroadcasts(boolean delay) {
 		synchronized (this) {
 			if (!scanningForReader) {
-				Log.d(TAG, "Start scanning for reader");
+				LOGGER.debug("Start scanning for reader");
 
 				scanningForReader = true;
 
@@ -392,7 +389,7 @@ public class ExternalUsbNfcServiceSupport {
 	private void stopReceivingPermissionBroadcasts() {
 		synchronized (this) {
 			if (scanningForReader) {
-				Log.d(TAG, "Stop scanning for reader");
+				LOGGER.debug("Stop scanning for reader");
 
 				scanningForReader = false;
 
@@ -420,7 +417,7 @@ public class ExternalUsbNfcServiceSupport {
 	protected void startDetectingReader() {
 		synchronized (this) {
 			if (!detectReader) {
-				Log.d(TAG, "Start / resume detecting readers");
+				LOGGER.debug("Start / resume detecting readers");
 
 				detectReader = true;
 
@@ -432,7 +429,7 @@ public class ExternalUsbNfcServiceSupport {
 	protected void stopDetectingReader() {
 		synchronized (this) {
 			if (detectReader) {
-				Log.d(TAG, "Stop / pause detecting readers");
+				LOGGER.debug("Stop / pause detecting readers");
 
 				detectReader = false;
 
@@ -444,7 +441,7 @@ public class ExternalUsbNfcServiceSupport {
 	private void stopReceivingUsbDeviceDetachBroadcasts() {
 		synchronized (this) {
 			if (recievingDetachBroadcasts) {
-				Log.d(TAG, "Stop recieving USB device detach broadcasts");
+				LOGGER.debug("Stop recieving USB device detach broadcasts");
 
 				recievingDetachBroadcasts = false;
 
@@ -461,7 +458,7 @@ public class ExternalUsbNfcServiceSupport {
 	private void startReceivingUsbDeviceDetachBroadcasts() {
 		synchronized (this) {
 			if (!recievingDetachBroadcasts) {
-				Log.d(TAG, "Start recieving USB device detach broadcasts");
+				LOGGER.debug("Start recieving USB device detach broadcasts");
 
 				recievingDetachBroadcasts = true;
 

@@ -6,6 +6,9 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.wrapper.ReaderCallback;
@@ -20,7 +23,7 @@ import no.entur.android.nfc.wrapper.TagWrapper;
 
 public class NfcReaderCallbackSupport extends AbstractActivitySupport implements NfcAdapter.ReaderCallback, ReaderCallback {
 
-	private static final String TAG = NfcReaderCallbackSupport.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(NfcReaderCallbackSupport.class);
 
 	protected NfcAdapter nfcAdapter;
 
@@ -65,13 +68,13 @@ public class NfcReaderCallbackSupport extends AbstractActivitySupport implements
 
 	@Override
 	protected void stopImpl() {
-		Log.i(TAG, "Stop NFC reader mode");
+		LOGGER.debug("Stop NFC reader mode");
 		nfcAdapter.disableReaderMode(activity);
 	}
 
 	@Override
 	protected void startImpl() {
-		Log.i(TAG, "Start NFC reader mode");
+		LOGGER.debug("Start NFC reader mode");
 		nfcAdapter.enableReaderMode(activity, this,
 				NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK | NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS, extras);
 	}

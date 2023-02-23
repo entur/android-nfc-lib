@@ -7,13 +7,17 @@ import java.nio.charset.Charset;
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import no.entur.android.nfc.external.acs.reader.bind.IAcr1283Binder;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 
 public class ACR122Commands extends ACRCommands {
 
-	private static final String TAG = ACR122Commands.class.getName();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACR122Commands.class);
 
 	public static final int PICC_OPERATING_PARAMETER_AUTO_PICC_POLLING = 1 << 7;
 	public static final int PICC_OPERATING_PARAMETER_AUTO_ATS_GENERATION = 1 << 6;
@@ -43,14 +47,14 @@ public class ACR122Commands extends ACRCommands {
 			}
 		}
 		if (!isSuccessControl(in)) {
-			Log.e(TAG, "Unable to read PICC");
+			LOGGER.error("Unable to read PICC");
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
 		final int operation = in[1] & 0xFF;
 
-		Log.d(TAG, "Read PICC " + Integer.toHexString(operation));
+		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
 		return operation;
 	}
@@ -105,7 +109,7 @@ public class ACR122Commands extends ACRCommands {
 		}
 
 		if (!isSuccessControl(in)) {
-			Log.d(TAG, "Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(in));
+			LOGGER.debug("Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(in));
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
@@ -113,11 +117,11 @@ public class ACR122Commands extends ACRCommands {
 		final int operation = in[1] & 0xFF;
 
 		if (operation != picc) {
-			Log.w(TAG, "Unable to properly update PICC for ACR 1222: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
+			LOGGER.warn("Unable to properly update PICC for ACR 1222: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
 			return Boolean.FALSE;
 		} else {
-			Log.d(TAG, "Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
+			LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
 
 			return Boolean.TRUE;
 		}
@@ -137,11 +141,11 @@ public class ACR122Commands extends ACRCommands {
 		}
 
 		if (isSuccessControl(in)) {
-			Log.d(TAG, "Successfully set buzzer for card detection to " + (enable ? "on" : "off"));
+			LOGGER.debug("Successfully set buzzer for card detection to " + (enable ? "on" : "off"));
 
 			return true;
 		} else {
-			Log.d(TAG, "Failed to set buzzer for card detection");
+			LOGGER.debug("Failed to set buzzer for card detection");
 
 			return false;
 		}
@@ -161,7 +165,7 @@ public class ACR122Commands extends ACRCommands {
 
 		String firmware = new String(in, Charset.forName("ASCII"));
 
-		Log.d(TAG, "Read firmware " + firmware);
+		LOGGER.debug("Read firmware " + firmware);
 
 		return firmware;
 	}
@@ -184,11 +188,11 @@ public class ACR122Commands extends ACRCommands {
 		}
 
 		if (isSuccessControl(in)) {
-			Log.d(TAG, "Successfully set timeout parameter");
+			LOGGER.debug("Successfully set timeout parameter");
 
 			return true;
 		} else {
-			Log.d(TAG, "Failed to set timeout parameter");
+			LOGGER.debug("Failed to set timeout parameter");
 
 			return false;
 		}
@@ -207,45 +211,45 @@ public class ACR122Commands extends ACRCommands {
 			}
 		}
 
-		Log.d(TAG, ByteArrayHexStringConverter.toHexString(in));
+		LOGGER.debug(ByteArrayHexStringConverter.toHexString(in));
 
-		Log.d(TAG, "Error Code: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
+		LOGGER.debug("Error Code: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
 
-		// Log.d(TAG, tmpStr.trim());
+		// LOGGER.debug(tmpStr.trim());
 		if ((in[3] == 0x00)) {
-			Log.d(TAG, "No Tag is in the field: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
+			LOGGER.debug("No Tag is in the field: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
 		} else {
 			// error code
-			Log.d(TAG, "Error Code: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
+			LOGGER.debug("Error Code: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
 
 			// Field indicates if an external RF field is present and detected
 			// (Field=0x01 or not (Field 0x00)
 			if (in[3] == 0x01) {
 
-				Log.d(TAG, "External RF field is Present and detected: " + Integer.toHexString(((Byte) in[3]).intValue() & 0xFF).toUpperCase());
+				LOGGER.debug("External RF field is Present and detected: " + Integer.toHexString(((Byte) in[3]).intValue() & 0xFF).toUpperCase());
 
 			} else {
 
-				Log.d(TAG, "External RF field is NOT Present and NOT detected: " + Integer.toHexString(((Byte) in[3]).intValue() & 0xFF).toUpperCase());
+				LOGGER.debug("External RF field is NOT Present and NOT detected: " + Integer.toHexString(((Byte) in[3]).intValue() & 0xFF).toUpperCase());
 
 			}
 
 			// Number of targets acting as initiator.The default value is 1
-			Log.d(TAG, "Number of Target: " + Integer.toHexString(((Byte) in[4]).intValue() & 0xFF).toUpperCase());
+			LOGGER.debug("Number of Target: " + Integer.toHexString(((Byte) in[4]).intValue() & 0xFF).toUpperCase());
 
 			// Logical number
-			Log.d(TAG, "Number of Target: " + Integer.toHexString(((Byte) in[5]).intValue() & 0xFF).toUpperCase());
+			LOGGER.debug("Number of Target: " + Integer.toHexString(((Byte) in[5]).intValue() & 0xFF).toUpperCase());
 
 			// Bit rate in reception
 			switch (in[6]) {
 			case 0x00:
-				Log.d(TAG, "Bit Rate in Reception: " + Integer.toHexString(((Byte) in[6]).intValue() & 0xFF).toUpperCase() + " (106 kbps)");
+				LOGGER.debug("Bit Rate in Reception: " + Integer.toHexString(((Byte) in[6]).intValue() & 0xFF).toUpperCase() + " (106 kbps)");
 				break;
 			case 0x01:
-				Log.d(TAG, "Bit Rate in Reception: " + Integer.toHexString(((Byte) in[6]).intValue() & 0xFF).toUpperCase() + " (212 kbps)");
+				LOGGER.debug("Bit Rate in Reception: " + Integer.toHexString(((Byte) in[6]).intValue() & 0xFF).toUpperCase() + " (212 kbps)");
 				break;
 			case 0x02:
-				Log.d(TAG, "Bit Rate in Reception: " + Integer.toHexString(((Byte) in[6]).intValue() & 0xFF).toUpperCase() + " (424 kbps)");
+				LOGGER.debug("Bit Rate in Reception: " + Integer.toHexString(((Byte) in[6]).intValue() & 0xFF).toUpperCase() + " (424 kbps)");
 				break;
 			default: {
 				// do nothing
@@ -256,13 +260,13 @@ public class ACR122Commands extends ACRCommands {
 			switch (in[7]) {
 
 			case 0x00:
-				Log.d(TAG, "Bit Rate in Transmission: " + Integer.toHexString(((Byte) in[7]).intValue() & 0xFF).toUpperCase() + " (106 kbps)");
+				LOGGER.debug("Bit Rate in Transmission: " + Integer.toHexString(((Byte) in[7]).intValue() & 0xFF).toUpperCase() + " (106 kbps)");
 				break;
 			case 0x01:
-				Log.d(TAG, "Bit Rate in Transmission: " + Integer.toHexString(((Byte) in[7]).intValue() & 0xFF).toUpperCase() + " (212 kbps)");
+				LOGGER.debug("Bit Rate in Transmission: " + Integer.toHexString(((Byte) in[7]).intValue() & 0xFF).toUpperCase() + " (212 kbps)");
 				break;
 			case 0x02:
-				Log.d(TAG, "Bit Rate in Transmission: " + Integer.toHexString(((Byte) in[7]).intValue() & 0xFF).toUpperCase() + " (424 kbps)");
+				LOGGER.debug("Bit Rate in Transmission: " + Integer.toHexString(((Byte) in[7]).intValue() & 0xFF).toUpperCase() + " (424 kbps)");
 				break;
 			default: {
 				// do nothing
@@ -272,16 +276,16 @@ public class ACR122Commands extends ACRCommands {
 			switch (in[8]) {
 
 			case 0x00:
-				Log.d(TAG, "Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (ISO14443 or Mifare)");
+				LOGGER.debug("Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (ISO14443 or Mifare)");
 				break;
 			case 0x01:
-				Log.d(TAG, "Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (Active mode)");
+				LOGGER.debug("Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (Active mode)");
 				break;
 			case 0x02:
-				Log.d(TAG, "Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (Innovision Jewel tag)");
+				LOGGER.debug("Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (Innovision Jewel tag)");
 				break;
 			case 0x10:
-				Log.d(TAG, "Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (Felica)");
+				LOGGER.debug("Modulation Type: " + Integer.toHexString(((Byte) in[8]).intValue() & 0xFF).toUpperCase() + " (Felica)");
 				break;
 			default: {
 				// do nothing
