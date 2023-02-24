@@ -1,4 +1,6 @@
-package org.nfctools.api;
+package no.entur.android.nfc.external.acs.tag;
+
+import org.nfctools.api.TagType;
 
 /**
  * 'IsoDep first' type of tag type detector.
@@ -8,14 +10,13 @@ package org.nfctools.api;
 
 public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
 
-
     /** Category indicator: historical bytes coded in non-TLV format */
     public static final byte CATEGORY_NON_TLV = (byte)0x00;
     /** Category indicator: historical bytes are a DIR data reference */
     public static final byte CATEGORY_DIR_DATA_REFERENCE = (byte)0x10;
     /** Category indicator: historical bytes coded in COMPACT-TLV */
     public static final byte CATEGORY_COMPACT_TLV = (byte)0x80;
-
+    
     /** Tag for country data */
     public static final byte TAG_COUNTRY = (byte)0x10;
     /** Tag for issuer identification number (IIN) */
@@ -91,49 +92,50 @@ public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
     @Override
     public TagType parseHistoricalBytes(R reader, byte[] historicalBytes) {
         if(historicalBytes[0] == CATEGORY_COMPACT_TLV) {
-        	// The coding of the COMPACT-TLV data objects is deduced from the basic encoding rules af ASN.1 (see ISO/IEC 8825 and annex D) for BER-TLV data objects with tag='4X' and length='0Y'. The coding of such data objects is replaced by 'XY' followed by 'Y' bytes of data. In this clause, 'X' is referred to as the tag number and 'Y' as the length.
-        	// Besides the data objects defined in this clause, the historical bytes may contain data objects defined in part 4 of ISO/IEC 7816. In this case the coding of the tags and length fields defined in part 5 shall be modified as above.
-        	// When COMPACT-TLV data objects defined in this clause appear in the ATR file, they shall be encoded according to the basic encoding rules of ASN.1 (i.e tag='4X', length='0Y').
+            // The coding of the COMPACT-TLV data objects is deduced from the basic encoding rules af ASN.1 (see ISO/IEC 8825 and annex D) for BER-TLV data objects with tag='4X' and length='0Y'. The coding of such data objects is replaced by 'XY' followed by 'Y' bytes of data. In this clause, 'X' is referred to as the tag number and 'Y' as the length.
+            // Besides the data objects defined in this clause, the historical bytes may contain data objects defined in part 4 of ISO/IEC 7816. In this case the coding of the tags and length fields defined in part 5 shall be modified as above.
+            // When COMPACT-TLV data objects defined in this clause appear in the ATR file, they shall be encoded according to the basic encoding rules of ASN.1 (i.e tag='4X', length='0Y').
 
-            // the encoding returned from the reader seems not to correspond with the documentation and code examples for some reason.
+            // the encoding returned from the ACS reader seems not to correspond with
+            // the documentation and code examples for some reason.
 
-        	if(isCompactTlv(historicalBytes, 1, historicalBytes.length - 2)) {
-            	int limit = historicalBytes.length;
+            if(isCompactTlv(historicalBytes, 1, historicalBytes.length - 2)) {
+                int limit = historicalBytes.length;
                 int offset = 1;
-            	while(offset < limit) {
-    	            int tag = historicalBytes[offset] & 0xF0;
-    	            int objLen = historicalBytes[offset] & 0xF;
+                while(offset < limit) {
+                    int tag = historicalBytes[offset] & 0xF0;
+                    int objLen = historicalBytes[offset] & 0xF;
 
-    	            if(tag == TAG_INITIAL_ACCESS_DATA) {
-    	            	TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
-    	            	if(result != null) {
-    	            		return result;
-    	            	}
-    	            }
-    	            offset += 1 + objLen;
-            	}
-        	} else {
-        		// TLV? seems to be the case in
-            	int limit = historicalBytes.length;
+                    if(tag == TAG_INITIAL_ACCESS_DATA) {
+                        TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
+                        if(result != null) {
+                            return result;
+                        }
+                    }
+                    offset += 1 + objLen;
+                }
+            } else {
+                // TLV? seems to be the case in
+                int limit = historicalBytes.length;
                 int offset = 1;
-            	while(offset < limit) {
-    	            int tag = historicalBytes[offset] & 0xF0;
-    	            offset++;
-    	            int objLen = historicalBytes[offset] & 0xF;
+                while(offset < limit) {
+                    int tag = historicalBytes[offset] & 0xF0;
+                    offset++;
+                    int objLen = historicalBytes[offset] & 0xF;
 
-    	            // add sanity check
-    	            if(offset + 1 + objLen > limit) {
-    	            	break;
-    	            }
-    	            if(tag == TAG_INITIAL_ACCESS_DATA) {
-    	            	TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
-    	            	if(result != null) {
-    	            		return result;
-    	            	}
-    	            }
-    	            offset += 1 + objLen;
-            	}
-        	}
+                    // add sanity check
+                    if(offset + 1 + objLen > limit) {
+                        break;
+                    }
+                    if(tag == TAG_INITIAL_ACCESS_DATA) {
+                        TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
+                        if(result != null) {
+                            return result;
+                        }
+                    }
+                    offset += 1 + objLen;
+                }
+            }
         } else {
             // TODO parse more types
 
@@ -144,59 +146,61 @@ public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
 
         return TagType.ISO_DEP;
     }
-    
+
+    // add sanity check
     private boolean isCompactTlv(byte[] historicalBytes, int offset, int limit) {
-    	
-    	while(offset < limit) {
+        while(offset < limit) {
             int objLen = historicalBytes[offset] & 0xF;
 
-            // add sanity check
             if(offset + 1 + objLen > limit) {
-            	return false;
+                return false;
             }
             offset += 1 + objLen;
-    	}
-    	return true;
+        }
+        return true;
     }
-    
-	private TagType parseInitialData(byte[] historicalBytes, int offset, int length) {
-	    int tagId = (historicalBytes[9] & 0xff) << 8 | (historicalBytes[10] & 0xff);
 
-	    switch (tagId) {
-			case 0x0001:
-				return TagType.MIFARE_CLASSIC_1K;
-			case 0x0002:
-				return TagType.MIFARE_CLASSIC_4K;
-			case 0x0003:
-				return TagType.MIFARE_ULTRALIGHT;
-			case 0x0026:
-				return TagType.MIFARE_MINI;
-			case 0x003A:
-				return TagType.MIFARE_ULTRALIGHT_C;
-			case 0x0036:
-				return TagType.MIFARE_PLUS_SL1_2K;
-			case 0x0037:
-				return TagType.MIFARE_PLUS_SL1_4K;
-			case 0x0038:
-				return TagType.MIFARE_PLUS_SL2_2K;
-			case 0x0039:
-				return TagType.MIFARE_PLUS_SL2_4K;
-			case 0x0030:
-				return TagType.TOPAZ_JEWEL;
-			case 0xFF40:
-				return TagType.NFCIP;
-			case 0xFF88:
-				return TagType.INFINEON_MIFARE_SLE_1K;
-	        default: {
-	        	
-	        }
-		}
+    private TagType parseInitialData(byte[] historicalBytes, int offset, int length) {
 
-        if(historicalBytes[9] == (byte)0xFF) {
+        // https://stackoverflow.com/questions/23404314/determine-card-type-from-atr
+
+        int tagId = (historicalBytes[offset + 6] & 0xff) << 8 | (historicalBytes[offset + 7] & 0xff);
+
+        switch (tagId) {
+            case 0x0001:
+                return TagType.MIFARE_CLASSIC_1K;
+            case 0x0002:
+                return TagType.MIFARE_CLASSIC_4K;
+            case 0x0003:
+                return TagType.MIFARE_ULTRALIGHT;
+            case 0x0026:
+                return TagType.MIFARE_MINI;
+            case 0x003A:
+                return TagType.MIFARE_ULTRALIGHT_C;
+            case 0x0036:
+                return TagType.MIFARE_PLUS_SL1_2K;
+            case 0x0037:
+                return TagType.MIFARE_PLUS_SL1_4K;
+            case 0x0038:
+                return TagType.MIFARE_PLUS_SL2_2K;
+            case 0x0039:
+                return TagType.MIFARE_PLUS_SL2_4K;
+            case 0x0030:
+                return TagType.TOPAZ_JEWEL;
+            case 0xFF40:
+                return TagType.NFCIP;
+            case 0xFF88:
+                return TagType.INFINEON_MIFARE_SLE_1K;
+            default: {
+
+            }
+        }
+
+        if(historicalBytes[offset + 6] == (byte)0xFF) {
             // assume android device
             return TagType.ISO_14443_TYPE_A;
         }
 
         return null;
-	}
+    }
 }

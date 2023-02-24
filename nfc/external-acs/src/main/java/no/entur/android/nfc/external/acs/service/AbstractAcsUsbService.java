@@ -5,22 +5,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
-import org.nfctools.api.DefaultTagTypeDetector;
+import no.entur.android.nfc.external.acs.tag.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
-import org.nfctools.api.TagTypeDetector;
+import no.entur.android.nfc.external.acs.tag.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
-import no.entur.android.nfc.external.acs.reader.command.remote.IAcr1283CommandWrapper;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
 import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;

@@ -42,6 +42,26 @@ public class MinovaCommands {
         );
     }
 
+
+    /**
+     * Execute the GETTYPE command. The answer is CARDTYPE=ATQ;SAK;ATS
+     *
+     * ISO4 DESFIRE Card Example
+     * -> MCR04G-50F2,UID=807644D24E2904
+     * <- MCR04G-50F2,GETTYPE
+     * -> MCR04G-50F2,CARDTYPE=0344;20;067577810280
+     *
+     * ISO3 Card Example
+     *
+     * -> MCR04G-50F2,UID=16FE1E24
+     * <- MCR04G-50F2,GETTYPE
+     * -> MCR04G-50F2,CARDTYPE=0004;08;00
+     *
+     * @return result
+     * @throws IOException
+     * @throws InterruptedException
+     */
+
     public String getType() throws IOException, InterruptedException {
         String getType = McrCommandSetBuilder.newInstance(reader.getReaderId())
                 .command(GET_TYPE)

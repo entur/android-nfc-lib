@@ -27,7 +27,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
         super(context, tagService, store);
     }
 
-    public void hce(int slotNumber, byte[] atr, AbstractReaderIsoDepWrapper wrapper, byte[] uid, IntentEnricher extras) {
+    public void hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
             technologies.add(new NfcAAdapter(wrapper, true));
@@ -35,7 +35,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
             int serviceHandle = store.add(slotNumber, technologies);
 
-            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, true, TechnologyType.getHistoricalBytes(atr), tagService, extras);
+            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, null, uid, true, historicalBytes, tagService, extras);
 
             LOGGER.debug("Broadcast hce");
 
@@ -47,7 +47,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
         }
     }
 
-    public void desfire(int slotNumber, byte[] atr, AbstractReaderIsoDepWrapper wrapper, byte[] uid, IntentEnricher extras) {
+    public void desfire(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
             technologies.add(new NfcAAdapter(wrapper, false));
@@ -55,7 +55,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
             int serviceHandle = store.add(slotNumber, technologies);
 
-            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, false, TechnologyType.getHistoricalBytes(atr), tagService, extras);
+            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, null, uid, false, historicalBytes, tagService, extras);
 
             LOGGER.debug("Broadcast desfire");
 

@@ -10,6 +10,8 @@ public enum TagType {
 	 */
 	MIFARE_CLASSIC_1K("Mifare Classic 1K"),
 
+	MIFARE_CLASSIC_2K("Mifare Classic 2K"),
+
 	/**
 	 * Mifare Classic with 4k memory
 	 */

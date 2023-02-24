@@ -1,4 +1,7 @@
-package org.nfctools.api;
+package no.entur.android.nfc.external.acs.tag;
+
+import org.nfctools.api.ATR;
+import org.nfctools.api.TagType;
 
 public interface TagTypeDetector<R> {
 
