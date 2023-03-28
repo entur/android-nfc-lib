@@ -25,7 +25,7 @@ public class MinovaService extends AbstractMinovaTcpService {
 
     @Override
     protected void handleTag(MinovaTagType tag, String uid, CommandInputOutputThread<String, String> io) {
-        if (tag.getTagType() == TagType.DESFIRE_EV1) {
+        if (tag.getTagType() == TagType.ISO_DEP) {
             MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(io);
             mifareDesfireTagServiceSupport.desfire(-1, wrapper, hexStringToByteArray(uid), tag.getHistoricalBytes(), new MinovaIntentEnricher(io.getIp()));
         }
