@@ -5,12 +5,12 @@ import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToB
 import org.nfctools.api.TagType;
 
 import no.entur.android.nfc.external.minova.reader.MinovaIsoDepWrapper;
-import no.entur.android.nfc.external.tag.MifareDesfireTagServiceSupport;
+import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
 public class MinovaService extends AbstractMinovaTcpService {
 
-    protected MifareDesfireTagServiceSupport mifareDesfireTagServiceSupport;
+    protected IsoDepTagServiceSupport isoDepTagServiceSupport;
 
     public MinovaService(int port, int readers) {
         super(port, readers);
@@ -20,14 +20,14 @@ public class MinovaService extends AbstractMinovaTcpService {
     public void onCreate() {
         super.onCreate();
 
-        this.mifareDesfireTagServiceSupport = new MifareDesfireTagServiceSupport(this, binder, store);
+        this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store);
     }
 
     @Override
     protected void handleTag(MinovaTagType tag, String uid, CommandInputOutputThread<String, String> io) {
-        if (tag.getTagType() == TagType.ISO_DEP) {
+        if (tag.getTagType() == TagType.DESFIRE_EV1 || tag.getTagType() == TagType.ISO_DEP) {
             MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(io);
-            mifareDesfireTagServiceSupport.desfire(-1, wrapper, hexStringToByteArray(uid), tag.getHistoricalBytes(), new MinovaIntentEnricher(io.getIp()));
+            isoDepTagServiceSupport.card(-1, wrapper, hexStringToByteArray(uid), tag.getHistoricalBytes(), new MinovaIntentEnricher(io.getIp()));
         }
     }
 

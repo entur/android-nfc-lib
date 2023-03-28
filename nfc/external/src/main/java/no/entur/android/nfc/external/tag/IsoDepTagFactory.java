@@ -16,9 +16,9 @@ import no.entur.android.nfc.wrapper.tech.TagTechnology;
  *
  */
 
-public class MifareDesfireTagFactory extends TagFactory {
+public class IsoDepTagFactory extends TagFactory {
 
-	private static final String TAG = MifareDesfireTagFactory.class.getName();
+	private static final String TAG = IsoDepTagFactory.class.getName();
 
 	/**
 	 * @hide

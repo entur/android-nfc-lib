@@ -2,6 +2,8 @@ package no.entur.android.nfc.external.minova.service;
 
 import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToByteArray;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import org.nfctools.api.TagType;
@@ -32,6 +34,7 @@ public class MinovaTagTypeDetector {
         int lastIndex = response.lastIndexOf(";");
         int firstIndex = response.indexOf(";");
 
+        // NFC Forum Digital Specification 2.0 14.6.2.
         String ats = response.substring(lastIndex + 1);
         String sak = response.substring(firstIndex + 1, lastIndex);
         String atq = response.substring(0, firstIndex);
@@ -95,6 +98,12 @@ public class MinovaTagTypeDetector {
                 result.setTagType(TagType.MIFARE_PLUS_SL1_4K);
                 break;
             }
+            default: {
+                // This "IsoDep first" approach is not accurate, but there is not much to loose at this point
+                result.setTagType(TagType.ISO_DEP);
+                result.setHistoricalBytes(getHistoricalBytes(result.getAts()));
+                break;
+            }
         }
 
         if(!result.hasHistoricalBytes()) {
@@ -108,8 +117,17 @@ public class MinovaTagTypeDetector {
 
     public static byte[] getHistoricalBytes(byte[] ats) {
 
+        // ATS format: See NFC Forum Digital Specification 2.0 14.6.2.
+        // The length byte TL is followed by a variable number of bytes in the following order:
+        // - Format byte T0,
+        // - Interface bytes TA(1), TB(1), TC(1), and
+        // - Historical bytes T1 to Tk.
+        //
         // Number of bytes sent including the one telling number of bytes.
-        int length = ats[0] & 0xf;
+        int length = ats[0] & 0xFF;
+        if(length != ats.length || length <= 5) {
+            return null;
+        }
 
         int numOfHistoricalBytes = (length - 1) - 4;
         byte[] historicalBytes = new byte[numOfHistoricalBytes];
