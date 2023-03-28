@@ -66,7 +66,11 @@ public class MinovaCommands {
         String getType = McrCommandSetBuilder.newInstance(reader.getReaderId())
                 .command(GET_TYPE)
                 .build();
-        return reader.outputInput(getType);
+
+        // MCR04G-4FBB,CARDTYPE=0344;20;067577810280
+        String response = reader.outputInput(getType);
+
+        return response.substring(response.indexOf("=") + 1);
     }
 
     public byte[] sendAdpu(byte[] command) throws IOException, InterruptedException {
