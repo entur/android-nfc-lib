@@ -91,57 +91,59 @@ public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
     
     @Override
     public TagType parseHistoricalBytes(R reader, byte[] historicalBytes) {
-        if(historicalBytes[0] == CATEGORY_COMPACT_TLV) {
-            // The coding of the COMPACT-TLV data objects is deduced from the basic encoding rules af ASN.1 (see ISO/IEC 8825 and annex D) for BER-TLV data objects with tag='4X' and length='0Y'. The coding of such data objects is replaced by 'XY' followed by 'Y' bytes of data. In this clause, 'X' is referred to as the tag number and 'Y' as the length.
-            // Besides the data objects defined in this clause, the historical bytes may contain data objects defined in part 4 of ISO/IEC 7816. In this case the coding of the tags and length fields defined in part 5 shall be modified as above.
-            // When COMPACT-TLV data objects defined in this clause appear in the ATR file, they shall be encoded according to the basic encoding rules of ASN.1 (i.e tag='4X', length='0Y').
+        if(historicalBytes != null && historicalBytes.length > 0) {
+            if (historicalBytes[0] == CATEGORY_COMPACT_TLV) {
+                // The coding of the COMPACT-TLV data objects is deduced from the basic encoding rules af ASN.1 (see ISO/IEC 8825 and annex D) for BER-TLV data objects with tag='4X' and length='0Y'. The coding of such data objects is replaced by 'XY' followed by 'Y' bytes of data. In this clause, 'X' is referred to as the tag number and 'Y' as the length.
+                // Besides the data objects defined in this clause, the historical bytes may contain data objects defined in part 4 of ISO/IEC 7816. In this case the coding of the tags and length fields defined in part 5 shall be modified as above.
+                // When COMPACT-TLV data objects defined in this clause appear in the ATR file, they shall be encoded according to the basic encoding rules of ASN.1 (i.e tag='4X', length='0Y').
 
-            // the encoding returned from the ACS reader seems not to correspond with
-            // the documentation and code examples for some reason.
+                // the encoding returned from the ACS reader seems not to correspond with
+                // the documentation and code examples for some reason.
 
-            if(isCompactTlv(historicalBytes, 1, historicalBytes.length - 2)) {
-                int limit = historicalBytes.length;
-                int offset = 1;
-                while(offset < limit) {
-                    int tag = historicalBytes[offset] & 0xF0;
-                    int objLen = historicalBytes[offset] & 0xF;
+                if (isCompactTlv(historicalBytes, 1, historicalBytes.length - 2)) {
+                    int limit = historicalBytes.length;
+                    int offset = 1;
+                    while (offset < limit) {
+                        int tag = historicalBytes[offset] & 0xF0;
+                        int objLen = historicalBytes[offset] & 0xF;
 
-                    if(tag == TAG_INITIAL_ACCESS_DATA) {
-                        TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
-                        if(result != null) {
-                            return result;
+                        if (tag == TAG_INITIAL_ACCESS_DATA) {
+                            TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
+                            if (result != null) {
+                                return result;
+                            }
                         }
+                        offset += 1 + objLen;
                     }
-                    offset += 1 + objLen;
+                } else {
+                    // TLV? seems to be the case in
+                    int limit = historicalBytes.length;
+                    int offset = 1;
+                    while (offset < limit) {
+                        int tag = historicalBytes[offset] & 0xF0;
+                        offset++;
+                        int objLen = historicalBytes[offset] & 0xF;
+
+                        // add sanity check
+                        if (offset + 1 + objLen > limit) {
+                            break;
+                        }
+                        if (tag == TAG_INITIAL_ACCESS_DATA) {
+                            TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
+                            if (result != null) {
+                                return result;
+                            }
+                        }
+                        offset += 1 + objLen;
+                    }
                 }
             } else {
-                // TLV? seems to be the case in
-                int limit = historicalBytes.length;
-                int offset = 1;
-                while(offset < limit) {
-                    int tag = historicalBytes[offset] & 0xF0;
-                    offset++;
-                    int objLen = historicalBytes[offset] & 0xF;
+                // TODO parse more types
 
-                    // add sanity check
-                    if(offset + 1 + objLen > limit) {
-                        break;
-                    }
-                    if(tag == TAG_INITIAL_ACCESS_DATA) {
-                        TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
-                        if(result != null) {
-                            return result;
-                        }
-                    }
-                    offset += 1 + objLen;
-                }
+                // for ACS:
+                // Use the APDU “FF CA 01 00 00h” to distinguish the ISO 14443A-4 and ISO 14443B-4 PICCs,
+                // and retrieve the full ATS if available. ISO 14443A-3 or ISO 14443B-3/4 PICCs do have ATS returned.
             }
-        } else {
-            // TODO parse more types
-
-            // for ACS:
-            // Use the APDU “FF CA 01 00 00h” to distinguish the ISO 14443A-4 and ISO 14443B-4 PICCs,
-            // and retrieve the full ATS if available. ISO 14443A-3 or ISO 14443B-3/4 PICCs do have ATS returned.
         }
 
         return TagType.ISO_DEP;

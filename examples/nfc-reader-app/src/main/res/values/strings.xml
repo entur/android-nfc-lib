@@ -31,5 +31,11 @@
     <string name="tagType">Tag type</string>
     <string name="tagTypeNone">Unknown</string>
 
+    <string name="intentDetailsTitle">Intent details</string>
+    <string name="intentDetailActionType">Action type</string>
+    <string name="intentDetailUuidType">UID</string>
+
+    <string name="tagDetailsTitle">Tag details</string>
+    <string name="tagDetailTechTypesTitle">Tech types</string>
 
 </resources>
