@@ -52,18 +52,14 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 	}
 
 	protected Listener listener;
-	protected byte[] applicationIdentifier;
-	protected List<CommandApduProtocol> protocols;
 
 	// for HCE only
 	protected int transceiveTimeout;
 
-	public AbstractNfcReaderCallbackHceSupport(Activity activity, Listener listener, Bundle readerModeExtras, byte[] applicationIdentifier,
-											   List<CommandApduProtocol> protocols, ReaderCallback delegate, int transceiveTimeout, Executor executor) {
+	public AbstractNfcReaderCallbackHceSupport(Activity activity, Listener listener, Bundle readerModeExtras,
+											   ReaderCallback delegate, int transceiveTimeout, Executor executor) {
 		super(activity, delegate, readerModeExtras, executor);
 		this.listener = listener;
-		this.applicationIdentifier = applicationIdentifier;
-		this.protocols = protocols;
 		this.transceiveTimeout = transceiveTimeout;
 	}
 
@@ -111,7 +107,7 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 		}
 	}
 
-	public void onTagDiscovered(IsoDep isoDep) {
+	protected void onTagDiscovered(IsoDep isoDep) {
 		boolean close = true;
 		try {
 			isoDep.connect();
