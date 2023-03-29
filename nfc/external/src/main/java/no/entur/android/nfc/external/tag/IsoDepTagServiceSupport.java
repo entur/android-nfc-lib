@@ -2,32 +2,29 @@ package no.entur.android.nfc.external.tag;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
-import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.wrapper.INfcTag;
 
-public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
+public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MifareDesfireTagServiceSupport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IsoDepTagServiceSupport.class);
 
-    protected MifareDesfireTagFactory mifareDesfireTagFactory = new MifareDesfireTagFactory();
+    protected IsoDepTagFactory isoDepTagFactory = new IsoDepTagFactory();
 
-    public MifareDesfireTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store) {
+    public IsoDepTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store) {
         super(context, tagService, store);
     }
 
-    public void hce(int slotNumber, byte[] atr, AbstractReaderIsoDepWrapper wrapper, byte[] uid, IntentEnricher extras) {
+    public void hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
             technologies.add(new NfcAAdapter(wrapper, true));
@@ -35,7 +32,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
             int serviceHandle = store.add(slotNumber, technologies);
 
-            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, true, TechnologyType.getHistoricalBytes(atr), tagService, extras);
+            Intent intent = isoDepTagFactory.getTag(serviceHandle, null, uid, true, historicalBytes, tagService, extras);
 
             LOGGER.debug("Broadcast hce");
 
@@ -47,7 +44,7 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
         }
     }
 
-    public void desfire(int slotNumber, byte[] atr, AbstractReaderIsoDepWrapper wrapper, byte[] uid, IntentEnricher extras) {
+    public void card(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
             technologies.add(new NfcAAdapter(wrapper, false));
@@ -55,9 +52,9 @@ public class MifareDesfireTagServiceSupport extends AbstractTagServiceSupport {
 
             int serviceHandle = store.add(slotNumber, technologies);
 
-            Intent intent = mifareDesfireTagFactory.getTag(serviceHandle, atr, null, uid, false, TechnologyType.getHistoricalBytes(atr), tagService, extras);
+            Intent intent = isoDepTagFactory.getTag(serviceHandle, null, uid, false, historicalBytes, tagService, extras);
 
-            LOGGER.debug("Broadcast desfire");
+            LOGGER.debug("Broadcast IsoDep tag");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
         } catch (Exception e) {

@@ -5,20 +5,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
+import no.entur.android.nfc.external.acs.tag.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
+import no.entur.android.nfc.external.acs.tag.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
-import no.entur.android.nfc.external.acs.reader.command.remote.IAcr1283CommandWrapper;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
 import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;
@@ -36,6 +36,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 	protected ExternalNfcReaderStatusSupport externalNfcReaderStatusSupport = new ExternalNfcReaderStatusSupport(this, acrReaderListener);
 
+	protected TagTypeDetector<ReaderWrapper> tagTypeDetector = new DefaultTagTypeDetector<>();
 	protected ExternalUsbNfcServiceSupport support;
 	protected ReaderWrapper reader;
 
@@ -144,7 +145,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 					return null;
 				}
-				final TagType tagType = TagUtility.identifyTagType(reader.getReaderName(), atr);
+				final TagType tagType = tagTypeDetector.parseAtr(reader, atr);
 
 				LOGGER.debug("Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
 

@@ -151,7 +151,114 @@
 
             </TableRow>
 
-
         </TableLayout>
 
-    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/intentDetailsTitle"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:layout_gravity="center"
+        android:id="@+id/intentDetailsTitle"
+        />
+
+    <TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:shrinkColumns="2"
+        android:stretchColumns="1"
+        android:id="@+id/intentDetailsTable"
+        >
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/intentDetailActionType"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                />
+
+            <TextView
+                android:id="@+id/intentDetailAction"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="@string/serviceStatusUnknown"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                />
+
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/intentDetailUuidType"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                />
+
+            <TextView
+                android:id="@+id/intentDetailUuid"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="@string/readerStatusUnknown"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                />
+
+
+        </TableRow>
+
+    </TableLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tagDetailsTitle"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:layout_gravity="center"
+        android:id="@+id/tagDetailsTitle"
+        />
+
+    <TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:shrinkColumns="2"
+        android:stretchColumns="1"
+        android:id="@+id/tagDetailsTable"
+        >
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/tagDetailTechTypesTitle"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                />
+
+            <TextView
+                android:id="@+id/tagDetailTechTypes"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="@string/serviceStatusUnknown"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                />
+
+        </TableRow>
+
+    </TableLayout>
+
+
+</LinearLayout>

@@ -16,9 +16,9 @@ import no.entur.android.nfc.wrapper.tech.TagTechnology;
  *
  */
 
-public class MifareDesfireTagFactory extends TagFactory {
+public class IsoDepTagFactory extends TagFactory {
 
-	private static final String TAG = MifareDesfireTagFactory.class.getName();
+	private static final String TAG = IsoDepTagFactory.class.getName();
 
 	/**
 	 * @hide
@@ -36,7 +36,7 @@ public class MifareDesfireTagFactory extends TagFactory {
 	protected static final short EXTRA_SAK_VALUE = 0x20;
 
 
-	public Intent getTag(int serviceHandle, byte[] atr, byte[] hiLayer, byte[] id, boolean hce, byte[] historicalBytes, INfcTag tagService, IntentEnricher extras) {
+	public Intent getTag(int serviceHandle, byte[] hiLayer, byte[] id, boolean hce, byte[] historicalBytes, INfcTag tagService, IntentEnricher extras) {
 
 		/*
 		 * if (id != null && id[0] != NXP_MANUFACTURER_ID) { throw new IllegalArgumentException("Non-NXP tag id"); }

@@ -1,29 +1,4 @@
-/**
- * Copyright 2011-2012 Adrian Stabiszewski, as@org.nfctools.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.nfctools.api;
-
-import android.util.Log;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-
-import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public enum TagType {
 	/**
@@ -34,6 +9,8 @@ public enum TagType {
 	 * Mifare Classic with 1k memory
 	 */
 	MIFARE_CLASSIC_1K("Mifare Classic 1K"),
+
+	MIFARE_CLASSIC_2K("Mifare Classic 2K"),
 
 	/**
 	 * Mifare Classic with 4k memory
@@ -65,17 +42,11 @@ public enum TagType {
 
 	ISO_DEP("ISO_DEP"),
 
-	ISO_14443_TYPE_B_NO_HISTORICAL_BYTES("ISO 14443 Type B without historical bytes"),
-
-	ISO_14443_TYPE_A_NO_HISTORICAL_BYTES("RFID - ISO 14443 Type A - NXP DESFire or DESFire EV1"),
-
 	ISO_14443_TYPE_A("RFID - ISO 14443 Type A - Android"),
 
 	INFINEON_MIFARE_SLE_1K("Infineon Mifare SLE 66R35"),
 
 	;
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(TagType.class);
 
 	private final String name;
 
@@ -87,52 +58,5 @@ public enum TagType {
 		return name;
 	}
 
-	private static final String TAG = TagType.class.getName();
-
-	public static TagType identifyTagType(byte[] historicalBytes) {
-		TagType tagType = TagType.UNKNOWN;
-		if (historicalBytes.length >= 11) {
-			// Log.d(TAG,ByteArrayHexStringConverter.toHexString(historicalBytes));
-
-			int tagId = (historicalBytes[13] & 0xff) << 8 | (historicalBytes[14] & 0xff);
-
-			switch (tagId) {
-			case 0x0001:
-				return TagType.MIFARE_CLASSIC_1K;
-			case 0x0002:
-				return TagType.MIFARE_CLASSIC_4K;
-			case 0x0003:
-				return TagType.MIFARE_ULTRALIGHT;
-			case 0x0026:
-				return TagType.MIFARE_MINI;
-			case 0xF004:
-				return TagType.TOPAZ_JEWEL;
-			case 0xF011:
-				return TagType.FELICA_212K;
-			case 0xF012:
-				return TagType.FELICA_424K;
-			case 0xFF40:
-				return TagType.NFCIP;
-			case 0xFF88:
-				return TagType.INFINEON_MIFARE_SLE_1K;
-			default: {
-				Log.w(TAG, "Unknown tag id " + ByteArrayHexStringConverter.toHexString(new byte[] { historicalBytes[13], historicalBytes[14] }) + " ("
-						+ Integer.toHexString(tagId) + ")");
-			}
-			}
-		} else if (Arrays.equals(historicalBytes, new byte[] { 0x3B, (byte) 0x81, (byte) 0x80, 0x01, (byte) 0x80, (byte) 0x80 })) {
-			return TagType.DESFIRE_EV1;
-		} else if (Arrays.equals(historicalBytes, new byte[] { 0x3B, (byte) 0x80, (byte) 0x80, 0x01, 0x01 })) {
-			return TagType.ISO_14443_TYPE_B_NO_HISTORICAL_BYTES;
-			/*
-			 * TODO check up correct bytes for A } else if (Arrays.equals(historicalBytes, new byte[] { 0x3B, (byte) 0x81, (byte) 0x80, 0x01, (byte) 0x80,
-			 * (byte) 0x80 })) { return TagType.ISO_14443_TYPE_A_NO_HISTORICAL_BYTES;
-			 */
-		} else {
-			LOGGER.debug(ByteArrayHexStringConverter.toHexString(historicalBytes));
-		}
-
-		return tagType;
-	}
 
 }

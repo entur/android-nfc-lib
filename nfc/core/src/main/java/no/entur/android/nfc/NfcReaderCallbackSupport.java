@@ -25,6 +25,10 @@ public class NfcReaderCallbackSupport extends AbstractActivitySupport implements
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NfcReaderCallbackSupport.class);
 
+	public static NfcReaderCallbackSupportBuilder newBuilder() {
+		return new NfcReaderCallbackSupportBuilder();
+	}
+
 	protected NfcAdapter nfcAdapter;
 
 	protected Activity activity;

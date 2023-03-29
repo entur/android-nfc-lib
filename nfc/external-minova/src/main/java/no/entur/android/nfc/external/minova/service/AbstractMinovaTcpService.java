@@ -1,11 +1,7 @@
 package no.entur.android.nfc.external.minova.service;
 
-import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToByteArray;
-
 import android.content.Intent;
-import android.util.Log;
 
-import org.nfctools.api.TagType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +16,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
-import no.entur.android.nfc.external.minova.reader.IMcr0XRemoteCommandWriter;
 import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.minova.reader.McrCommandSetBuilder;
 import no.entur.android.nfc.external.minova.reader.IMcr0XBinder;
@@ -33,7 +28,6 @@ import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 import no.entur.android.nfc.tcpserver.CommandOutput;
 import no.entur.android.nfc.tcpserver.CommandServer;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public abstract class AbstractMinovaTcpService extends AbstractService implements CommandServer.Listener, CommandInputOutputThread.Listener<String, String>  {
 
@@ -44,6 +38,8 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     private final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
 
     private final CommandServer server;
+
+    private MinovaTagTypeDetector tagTypeDetector = new MinovaTagTypeDetector();
 
     private final Executor executor;
 
@@ -61,54 +57,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
         this.binder.setReaderTechnology(new MinovaReaderTechnology());
     }
 
-    protected abstract void handleTag(TagType tag, byte[] atr, String uid, CommandInputOutputThread<String, String> reader);
-
-    private static byte[] getAtr(byte[] ats) {
-        // First byte of Smart cards ATR start with 3B or 3F, we use 3B. Next number should be 8.
-        String atrString = "3B8";
-
-        // Number of bytes sent including the one telling number of bytes.
-        int length = ats[0] & 0xf;
-
-        // ATS for DESFire starts with 0x75, saying that the next 3 bytes are interface bytes. The rest are historical bytes.
-        int numOfHistoricalBytes = (length - 1) - 4;
-        byte[] historicalBytes = new byte[numOfHistoricalBytes];
-        System.arraycopy(ats, length - numOfHistoricalBytes, historicalBytes, 0, numOfHistoricalBytes);
-
-        // The second byte's second nibble is number of historical bytes.
-        atrString += numOfHistoricalBytes;
-
-        // Third and fourth byte should be 0x80 0x01.
-        atrString += "8001";
-
-        // Next we add the actual historical bytes.
-        atrString += ByteArrayHexStringConverter.toHexString(historicalBytes);
-
-        byte[] atrWithoutChecksum = hexStringToByteArray(atrString);
-
-        // Create checksum..
-        byte[] checkSumBytes = new byte[atrWithoutChecksum.length - 1];
-        System.arraycopy(atrWithoutChecksum, 1, checkSumBytes, 0, checkSumBytes.length);
-
-        // Last byte of ATR is a checksum based on second through last byte before the checksum.
-        atrString += createXorChecksum(checkSumBytes);
-
-        // 0x3B + 0x8(numOfHistoricalBytes) + 0x80 0x01 + historicalBytes + checksum
-        return hexStringToByteArray(atrString);
-    }
-
-    private static String createXorChecksum(byte[] bytes) {
-        int checkSum = bytes[0];
-
-        for (int i = 1; i < bytes.length; i++) {
-            checkSum ^= bytes[i];
-        }
-        String chk = Integer.toHexString(checkSum);
-        chk = chk.substring(chk.lastIndexOf('f') + 1);
-
-        return chk;
-    }
-
+    protected abstract void handleTag(MinovaTagType tag, String uid, CommandInputOutputThread<String, String> reader);
 
     @Override
     public void onServerSocketStart(int port) {
@@ -178,14 +127,9 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
                     MinovaCommands commands = new MinovaCommands(reader);
 
-                    String response = commands.getType();
+                    MinovaTagType tagType = tagTypeDetector.getTagType(commands);
 
-                    String atsString = response.substring((response.lastIndexOf(";") + 1));
-
-                    byte[] atr = getAtr(hexStringToByteArray(atsString));
-                    TagType tag = TagType.identifyTagType(atr);
-
-                    handleTag(tag, atr, uid, reader);
+                    handleTag(tagType, uid, reader);
                 } catch(Exception e) {
                     LOGGER.debug("Problem getting tag type");
                 }

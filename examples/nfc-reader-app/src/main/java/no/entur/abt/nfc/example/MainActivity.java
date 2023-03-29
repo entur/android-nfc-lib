@@ -1,10 +1,9 @@
 package no.entur.abt.nfc.example;
 
 import android.content.Intent;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -17,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import no.entur.android.nfc.NfcReaderCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcReaderCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
@@ -26,6 +26,7 @@ import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.Tag;
 
 public class MainActivity extends AppCompatActivity implements ExternalNfcTagCallback, ExternalNfcReaderCallback, ExternalNfcServiceCallback, ExternalNfcTagLostCallback {
@@ -37,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private ExternalNfcReaderCallbackSupport externalNfcReaderCallbackSupport;
     private ExternalNfcTagLostCallbackSupport externalNfcTagLostCallbackSupport;
 
+    private NfcReaderCallbackSupport nfcReaderCallbackSupport;
+
     private ThreadPoolExecutor threadPoolExecutor;
 
     private MainApplication mainApplication;
@@ -44,6 +47,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private ToggleButton readerStatusButton;
     private ToggleButton tagStatusButton;
     private ToggleButton serviceStatusButton;
+
+    private View intentDetailsTitle;
+    private View intentDetailsTable;
+    private TextView intentDetailUuid;
+    private TextView intentDetailAction;
+
+    private View tagDetailsTitle;
+    private View tagDetailsTable;
+
+    private TextView tagDetailTechTypes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +89,18 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 externalNfcTagLostCallbackSupport.setEnabled(isChecked);
             }
         });
+
+        intentDetailsTitle = findViewById(R.id.intentDetailsTitle);
+        intentDetailsTable = findViewById(R.id.intentDetailsTable);
+        intentDetailUuid = findViewById(R.id.intentDetailUuid);
+        intentDetailAction = findViewById(R.id.intentDetailAction);
+
+        tagDetailsTitle = findViewById(R.id.tagDetailsTitle);
+        tagDetailsTable = findViewById(R.id.tagDetailsTable);
+        tagDetailTechTypes =  findViewById(R.id.tagDetailTechTypes);
+
+        showIntentDetails(false);
+        showTagDetails(false);
     }
 
 
@@ -96,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         externalNfcTagLostCallbackSupport = new ExternalNfcTagLostCallbackSupport(this, this, threadPoolExecutor);
         externalNfcTagLostCallbackSupport.setEnabled(true);
+
+        nfcReaderCallbackSupport = NfcReaderCallbackSupport.newBuilder().withActivity(this).withExecutor(threadPoolExecutor).withReaderCallbackDelegate(this).withPresenceCheckDelay(100).build();
+        nfcReaderCallbackSupport.setNfcReaderMode(true);
     }
 
     @Override
@@ -125,6 +153,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         LOGGER.info("External Tag discovered in activity");
         runOnUiThread(() -> {
             setTagPresent(true);
+
+            setTagDetails(tag);
+            setIntentDetails(intent);
         });
     }
 
@@ -133,6 +164,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         LOGGER.info("Tag discovered in activity");
         runOnUiThread(() -> {
             setTagPresent(true);
+
+            setTagDetails(tag);
+            setIntentDetails(intent);
         });
     }
 
@@ -140,6 +174,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     public void onExternalTagLost(Intent intent) {
         runOnUiThread(() -> {
             setTagPresent(false);
+
+            showIntentDetails(false);
+            showTagDetails(false);
         });
     }
 
@@ -151,6 +188,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         externalNfcServiceCallbackSupport.onPause();
         externalNfcReaderCallbackSupport.onPause();
         externalNfcTagLostCallbackSupport.onPause();
+
+        nfcReaderCallbackSupport.onPause();
     }
 
     @Override
@@ -161,6 +200,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         externalNfcReaderCallbackSupport.onResume();
         externalNfcTagLostCallbackSupport.onResume();
         externalNfcServiceCallbackSupport.onResume();
+
+        nfcReaderCallbackSupport.onResume();
+
     }
 
     public void onExternalNfcServiceStopped(Intent intent) {
@@ -206,11 +248,80 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         }
     }
 
+    public void setIntentDetails(Intent intent) {
+        if(intent != null) {
+            showIntentDetails(true);
+
+            String action = intent.getAction();
+            if(action != null) {
+                intentDetailAction.setText(action.substring(action.lastIndexOf('.') + 1));
+            } else {
+                intentDetailAction.setText("-");
+            }
+
+            if(intent.hasExtra(NfcAdapter.EXTRA_ID)) {
+                byte[] id = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
+                intentDetailUuid.setText(ByteArrayHexStringConverter.byteArrayToHexString(id));
+            } else {
+                intentDetailUuid.setText("-");
+            }
+
+        } else {
+            showIntentDetails(false);
+        }
+    }
+
+    public void showIntentDetails(final boolean present) {
+        if (present) {
+            intentDetailsTable.setVisibility(View.VISIBLE);
+            intentDetailsTitle.setVisibility(View.VISIBLE);
+        } else {
+            intentDetailsTable.setVisibility(View.GONE);
+            intentDetailsTitle.setVisibility(View.GONE);
+        }
+    }
+
+    public void showTagDetails(final boolean present) {
+        if (present) {
+            tagDetailsTable.setVisibility(View.VISIBLE);
+            tagDetailsTitle.setVisibility(View.VISIBLE);
+        } else {
+            tagDetailsTable.setVisibility(View.GONE);
+            tagDetailsTitle.setVisibility(View.GONE);
+        }
+    }
+
+    public void setTagDetails(Tag tag) {
+        if(tag != null) {
+            showTagDetails(true);
+
+            setTagDetailTechTypes(tag);
+        } else {
+            showTagDetails(false);
+        }
+    }
+
+    public void setTagDetailTechTypes(Tag tag) {
+        StringBuilder builder = new StringBuilder();
+
+        String[] techList = tag.getTechList();
+        for(int i = 0; i < techList.length; i++) {
+            if(i > 0) {
+                builder.append(", ");
+            }
+            String tech = techList[i];
+
+            builder.append(tech.substring(tech.lastIndexOf('.') + 1));
+        }
+
+        setTextViewText(R.id.tagDetailTechTypes, builder);
+    }
+
     public void setTextViewText(final int resource, final int string) {
         setTextViewText(resource, getString(string));
     }
 
-    public void setTextViewText(final int resource, final String string) {
+    public void setTextViewText(final int resource, final CharSequence string) {
         runOnUiThread(new Runnable() {
             public void run() {
                 TextView textView = (TextView) findViewById(resource);
