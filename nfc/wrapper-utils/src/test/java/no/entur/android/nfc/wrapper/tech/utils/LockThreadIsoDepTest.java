@@ -1,5 +1,6 @@
 package no.entur.android.nfc.wrapper.tech.utils;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
@@ -31,8 +32,8 @@ public class LockThreadIsoDepTest {
 
         LockThreadIsoDep isoDep = LockThreadIsoDep.newBuilder().withIsoDep(delegate).build();
 
-        Thread thread = new Thread() {
-            @Override
+        Thread thread = new Thread("myThread") {
+           @Override
             public void run() {
                 try {
                     isoDep.connect();
@@ -50,6 +51,8 @@ public class LockThreadIsoDepTest {
             fail();
         } catch(Exception e) {
             // pass
+
+            assertTrue(e.getMessage().contains("myThread"));
         }
     }
 
