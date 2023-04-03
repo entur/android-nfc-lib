@@ -27,20 +27,23 @@ public class TagProxyStore {
 		this.items = items;
 	}
 
-	public int add(int slotNumber, List<TagTechnology> technologies) {
+	public TagProxy add(int slotNumber, List<TagTechnology> technologies) {
 		int next = nextServiceHandle();
 
-		add(new TagProxy(next, slotNumber, technologies));
+		TagProxy tagProxy = new TagProxy(next, slotNumber, technologies);
 
-		return next;
+		add(tagProxy);
+
+		return tagProxy;
 	}
 
 	public boolean add(TagProxy object) {
 		return items.add(object);
 	}
 
-	public boolean remove(Object object) {
-		return items.remove(object);
+	public boolean remove(TagProxy proxy) {
+		proxy.setPresent(false);
+		return items.remove(proxy);
 	}
 
 	public void removeItem(int slotNumber) {

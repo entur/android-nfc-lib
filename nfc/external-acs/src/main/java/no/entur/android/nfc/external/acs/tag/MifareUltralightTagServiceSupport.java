@@ -27,6 +27,7 @@ import java.util.List;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
+import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagServiceSupport;
@@ -44,7 +45,7 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
     }
 
     @SuppressWarnings("java:S3776")
-    public void mifareUltralight(int slotNumber, byte[] atr, TagType tagType, ApduTag acsTag, ACSIsoDepWrapper wrapper, String readerName) {
+    public TagProxy mifareUltralight(int slotNumber, byte[] atr, TagType tagType, ApduTag acsTag, ACSIsoDepWrapper wrapper, String readerName) {
         List<TagTechnology> technologies = new ArrayList<>();
 
         Boolean canReadBlocks = null;
@@ -69,7 +70,7 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
                         LOGGER.debug("No version for Ultralight tag - non NTAG 21x-tag?");
 
                         broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
-                        return;
+                        return null;
                     }
                 }
             }
@@ -157,17 +158,20 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
                 // technologies.add(new NfcAAdapter(slotNumber, reader, false));
             }
 
-            int serviceHandle = store.add(slotNumber, technologies);
+            TagProxy tagProxy = store.add(slotNumber, technologies);
 
-            Intent intent = mifareUltralightTagFactory.getTag(serviceHandle, slotNumber, type, version, uid, atr, tagService);
+            Intent intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, type, version, uid, atr, tagService);
 
             LOGGER.debug("Broadcast mifare ultralight");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+
+            return tagProxy;
         } catch (Exception e) {
             LOGGER.debug("Problem reading from tag", e);
             TagUtility.sendTechBroadcast(context);
         }
+        return null;
     }
 
 
