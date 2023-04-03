@@ -82,14 +82,14 @@ import no.entur.android.nfc.wrapper.tech.TagTechnology;
  */
 public class TagImpl extends Tag {
 
-	final byte[] mId;
-	final int[] mTechList;
-	final String[] mTechStringList;
-	final Bundle[] mTechExtras;
-	final int mServiceHandle; // for use by NFC service, 0 indicates a mock
-	final INfcTag mTagService; // interface to NFC service, will be null if mock tag
+	protected final byte[] mId;
+	protected final int[] mTechList;
+	protected final String[] mTechStringList;
+	protected final Bundle[] mTechExtras;
+	protected final int mServiceHandle; // for use by NFC service, 0 indicates a mock
+	protected final INfcTag mTagService; // interface to NFC service, will be null if mock tag
 
-	int mConnectedTechnology;
+	protected int mConnectedTechnology;
 
 	/**
 	 * Hidden constructor to be used by NFC service and internal classes.
