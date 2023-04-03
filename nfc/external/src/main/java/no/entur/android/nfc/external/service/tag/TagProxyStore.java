@@ -38,22 +38,28 @@ public class TagProxyStore {
 	}
 
 	public boolean add(TagProxy object) {
-		return items.add(object);
+		synchronized (items) {
+			return items.add(object);
+		}
 	}
 
 	public boolean remove(TagProxy proxy) {
 		proxy.setPresent(false);
-		return items.remove(proxy);
+		synchronized (items) {
+			return items.remove(proxy);
+		}
 	}
 
 	public void removeItem(int slotNumber) {
-		for (TagProxy tagItem : items) {
-			if (tagItem.getSlotNumber() == slotNumber) {
-				tagItem.setPresent(false);
+		synchronized (items) {
+			for (TagProxy tagItem : items) {
+				if (tagItem.getSlotNumber() == slotNumber) {
+					tagItem.setPresent(false);
 
-				items.remove(tagItem);
+					items.remove(tagItem);
 
-				return;
+					return;
+				}
 			}
 		}
 
@@ -61,9 +67,11 @@ public class TagProxyStore {
 
 	public TagProxy get(int serviceHandle) {
 		// Log.d(TAG, "Get service handle " + serviceHandle);
-		for (TagProxy tagItem : items) {
-			if (tagItem.getHandle() == serviceHandle) {
-				return tagItem;
+		synchronized (items) {
+			for (TagProxy tagItem : items) {
+				if (tagItem.getHandle() == serviceHandle) {
+					return tagItem;
+				}
 			}
 		}
 		return null;
