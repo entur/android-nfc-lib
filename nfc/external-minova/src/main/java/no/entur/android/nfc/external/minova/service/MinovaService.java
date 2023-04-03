@@ -35,7 +35,7 @@ public class MinovaService extends AbstractMinovaTcpService {
             MinovaCommandInputOutputThread minovaCommandInputOutputThread = (MinovaCommandInputOutputThread) reader;
             TagProxy currentTagProxy = minovaCommandInputOutputThread.getCurrentTagProxy();
             if(currentTagProxy != null) {
-                isoDepTagServiceSupport.remove(currentTagProxy);
+                store.remove(currentTagProxy);
             }
 
             // might be null

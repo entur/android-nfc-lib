@@ -25,10 +25,6 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
         super(context, tagService, store);
     }
 
-    public void remove(TagProxy proxy) {
-        store.remove(proxy);
-    }
-
     public TagProxy hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
