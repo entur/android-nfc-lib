@@ -27,17 +27,17 @@ public class MinovaService extends AbstractMinovaTcpService {
 
     @Override
     protected void handleTag(MinovaTagType tag, String uid, CommandInputOutputThread<String, String> reader) {
+
+        // enforce that only one tag is present at the same time
+        // there is no "tag lost", so invalidate the previous tag whenever a new tag is detected
+        MinovaCommandInputOutputThread minovaCommandInputOutputThread = (MinovaCommandInputOutputThread) reader;
+        TagProxy currentTagProxy = minovaCommandInputOutputThread.getCurrentTagProxy();
+        if(currentTagProxy != null) {
+            store.remove(currentTagProxy);
+        }
+
         if (tag.getTagType() == TagType.DESFIRE_EV1 || tag.getTagType() == TagType.ISO_DEP) {
             MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(reader);
-
-            // enforce that only one tag is present at the same time
-            // there is no "tag lost", so invalidate the previous tag whenever a new tag is detected
-            MinovaCommandInputOutputThread minovaCommandInputOutputThread = (MinovaCommandInputOutputThread) reader;
-            TagProxy currentTagProxy = minovaCommandInputOutputThread.getCurrentTagProxy();
-            if(currentTagProxy != null) {
-                store.remove(currentTagProxy);
-            }
-
             // might be null
             TagProxy nextTagProxy = isoDepTagServiceSupport.card(-1, wrapper, hexStringToByteArray(uid), tag.getHistoricalBytes(), new MinovaIntentEnricher(reader.getIp()));
             minovaCommandInputOutputThread.setCurrentTagProxy(nextTagProxy);
