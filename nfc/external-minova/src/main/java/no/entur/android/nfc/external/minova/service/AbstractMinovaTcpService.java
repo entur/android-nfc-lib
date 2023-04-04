@@ -16,6 +16,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.minova.reader.MinovaCommandInputOutputThread;
 import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.minova.reader.McrCommandSetBuilder;
 import no.entur.android.nfc.external.minova.reader.IMcr0XBinder;
@@ -35,7 +36,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
 
     public static final String EXTRA_IP = AbstractMinovaTcpService.class.getName() + ".extra.IP";
 
-    private final List<CommandInputOutputThread<String, String>> clients = new ArrayList<>();
+    private final List<MinovaCommandInputOutputThread> clients = new ArrayList<>();
 
     private final CommandServer server;
 
@@ -71,7 +72,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
         CommandInput<String> input = new TerminatorCommandInput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         CommandOutput<String> output = new TerminatorCommandOutput(McrCommandSetBuilder.COMMAND_SET_SEPERATOR, new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 
-        CommandInputOutputThread<String, String> thread = new CommandInputOutputThread<>(this, socket, output, input);
+        MinovaCommandInputOutputThread thread = new MinovaCommandInputOutputThread(this, socket, output, input);
 
         synchronized (clients) {
             clients.add(thread);
@@ -119,7 +120,6 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
         LOGGER.debug("On reader command " + reader.getReaderId() + " " + input);
 
         if (input.contains("UID=")) { // XXX rather parse commands
-
             // run in seperate thread
             executor.execute(() -> {
                 try {

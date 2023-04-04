@@ -136,6 +136,11 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 			try {
 				LOGGER.info("Init tag at slot " + slotNumber);
 
+				// Remove previous card on the same slot, if any.
+				// Normally this is done by a tag lost even, but added here
+				// as a precaution
+				store.removeItem(slotNumber);
+
 				// https://en.wikipedia.org/wiki/Answer_to_reset#General_structure
 				// http://smartcard-atr.appspot.com
 

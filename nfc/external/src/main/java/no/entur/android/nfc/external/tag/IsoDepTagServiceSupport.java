@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
+import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.wrapper.INfcTag;
@@ -24,44 +25,50 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
         super(context, tagService, store);
     }
 
-    public void hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
+    public TagProxy hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
             technologies.add(new NfcAAdapter(wrapper, true));
             technologies.add(new IsoDepAdapter(wrapper, true));
 
-            int serviceHandle = store.add(slotNumber, technologies);
+            TagProxy tagProxy = store.add(slotNumber, technologies);
 
-            Intent intent = isoDepTagFactory.getTag(serviceHandle, null, uid, true, historicalBytes, tagService, extras);
+            Intent intent = isoDepTagFactory.getTag(tagProxy.getHandle(), null, uid, true, historicalBytes, tagService, extras);
 
             LOGGER.debug("Broadcast hce");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+
+            return tagProxy;
         } catch (Exception e) {
             LOGGER.debug("Problem reading from tag", e);
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
+        return null;
     }
 
-    public void card(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
+    public TagProxy card(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
             technologies.add(new NfcAAdapter(wrapper, false));
             technologies.add(new IsoDepAdapter(wrapper, false));
 
-            int serviceHandle = store.add(slotNumber, technologies);
+            TagProxy tagProxy = store.add(slotNumber, technologies);
 
-            Intent intent = isoDepTagFactory.getTag(serviceHandle, null, uid, false, historicalBytes, tagService, extras);
+            Intent intent = isoDepTagFactory.getTag(tagProxy.getHandle(), null, uid, false, historicalBytes, tagService, extras);
 
             LOGGER.debug("Broadcast IsoDep tag");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+
+            return tagProxy;
         } catch (Exception e) {
             LOGGER.debug("Problem reading from tag", e);
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
+        return null;
     }
 
 }
