@@ -2,8 +2,11 @@ package no.entur.android.nfc.external.minova.service;
 
 import static no.entur.android.nfc.util.ByteArrayHexStringConverter.hexStringToByteArray;
 
+import android.content.Intent;
+
 import org.nfctools.api.TagType;
 
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.minova.reader.MinovaCommandInputOutputThread;
 import no.entur.android.nfc.external.minova.reader.MinovaIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.TagProxy;
@@ -12,6 +15,10 @@ import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
 public class MinovaService extends AbstractMinovaTcpService {
+
+    public static final String EXTRA_TAG_LEFT_FIELD_REASON = AbstractMinovaTcpService.class.getName() + ".extra.ACTION_TAG_LEFT_FIELD_REASON";
+    public static final String EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG = "NEW_TAG";
+    public static final String EXTRA_TAG_LEFT_FIELD_REASON_TRANSCEIVE_FAILED = "TRANSCEIVE_FAILED";
 
     protected IsoDepTagServiceSupport isoDepTagServiceSupport;
 
@@ -34,13 +41,19 @@ public class MinovaService extends AbstractMinovaTcpService {
         MinovaCommandInputOutputThread minovaCommandInputOutputThread = (MinovaCommandInputOutputThread) reader;
         TagProxy currentTagProxy = minovaCommandInputOutputThread.getCurrentTagProxy();
         if(currentTagProxy != null) {
-            store.remove(currentTagProxy);
+            currentTagProxy.close();
+
+            Intent intent = new Intent();
+            intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+            intent.putExtra(EXTRA_TAG_LEFT_FIELD_REASON, EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG);
+
+            sendBroadcast(intent, "android.permission.NFC");
 
             minovaCommandInputOutputThread.setCurrentTagProxy(null);
         }
 
         if (tag.getTagType() == TagType.DESFIRE_EV1 || tag.getTagType() == TagType.ISO_DEP) {
-            MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(reader);
+            MinovaIsoDepWrapper wrapper = new MinovaIsoDepWrapper(reader, this);
             // might be null
             TagProxy nextTagProxy = isoDepTagServiceSupport.card(-1, wrapper, hexStringToByteArray(uid), tag.getHistoricalBytes(), new MinovaIntentEnricher(reader.getIp()));
             minovaCommandInputOutputThread.setCurrentTagProxy(nextTagProxy);
