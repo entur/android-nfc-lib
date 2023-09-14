@@ -30,7 +30,7 @@ public class TagProxyStore {
 	public TagProxy add(int slotNumber, List<TagTechnology> technologies) {
 		int next = nextServiceHandle();
 
-		TagProxy tagProxy = new TagProxy(next, slotNumber, technologies);
+		TagProxy tagProxy = new TagProxy(next, slotNumber, technologies, this);
 
 		add(tagProxy);
 
@@ -45,6 +45,7 @@ public class TagProxyStore {
 
 	public boolean remove(TagProxy proxy) {
 		proxy.setPresent(false);
+		proxy.closeTechnology();
 		synchronized (items) {
 			return items.remove(proxy);
 		}
@@ -55,6 +56,7 @@ public class TagProxyStore {
 			for (TagProxy tagItem : items) {
 				if (tagItem.getSlotNumber() == slotNumber) {
 					tagItem.setPresent(false);
+					tagItem.closeTechnology();
 
 					items.remove(tagItem);
 

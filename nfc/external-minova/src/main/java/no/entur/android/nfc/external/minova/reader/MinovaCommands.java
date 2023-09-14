@@ -79,8 +79,8 @@ public class MinovaCommands {
                 .build();
 
         String response = reader.outputInput(minovaCommand);
-        if (response.endsWith(",NAK")) {
-            throw new McrReaderException("Minova reader responded with NAK.");
+        if (!response.startsWith("RAPDU=") || response.endsWith(",NAK")) {
+            throw new McrReaderException("Minova reader responded with '" + response + "'");
         }
 
         return ByteArrayHexStringConverter.hexStringToByteArray(response.substring(response.indexOf("=") + 1));
