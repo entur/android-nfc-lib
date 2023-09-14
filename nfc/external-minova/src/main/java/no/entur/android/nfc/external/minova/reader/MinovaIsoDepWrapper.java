@@ -53,6 +53,7 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
         Intent intent = new Intent();
         intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
         intent.putExtra(MinovaService.EXTRA_TAG_LEFT_FIELD_REASON, MinovaService.EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG);
+        intent.putExtra(MinovaService.EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE, tagProxy.getHandle());
 
         context.sendBroadcast(intent, "android.permission.NFC");
     }
