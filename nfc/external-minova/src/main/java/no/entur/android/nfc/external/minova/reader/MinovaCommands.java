@@ -79,7 +79,8 @@ public class MinovaCommands {
                 .build();
 
         String response = reader.outputInput(minovaCommand);
-        if (!response.startsWith("RAPDU=") || response.endsWith(",NAK")) {
+
+        if (!response.startsWith(reader.getReaderId()+",RAPDU=") || response.endsWith(",NAK")) {
             throw new McrReaderException("Minova reader responded with '" + response + "'");
         }
 
