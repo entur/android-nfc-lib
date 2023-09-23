@@ -1,13 +1,8 @@
 package no.entur.android.nfc.external.service.tag;
 
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-
 import java.util.List;
 
 import no.entur.android.nfc.wrapper.TagImpl;
-import no.entur.android.nfc.wrapper.tech.Ndef;
-import no.entur.android.nfc.wrapper.tech.NdefFormatable;
 
 public class TagProxy {
 
@@ -18,12 +13,15 @@ public class TagProxy {
 
 	private TagTechnology current;
 
+	private TagProxyStore tagProxyStore;
+
 	private boolean present = true;
 
-	public TagProxy(int handle, int slotNumber, List<TagTechnology> technologies) {
+	public TagProxy(int handle, int slotNumber, List<TagTechnology> technologies, TagProxyStore tagProxyStore) {
 		this.handle = handle;
 		this.slotNumber = slotNumber;
 		this.technologies = technologies;
+		this.tagProxyStore = tagProxyStore;
 	}
 
 	public TagTechnology getCurrent() {
@@ -116,5 +114,9 @@ public class TagProxy {
 			}
 		}
 		return false;
+	}
+
+	public void close() {
+		tagProxyStore.remove(this);
 	}
 }
