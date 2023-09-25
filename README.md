@@ -22,8 +22,8 @@ This project includes some code from the following projects:
  * [nfctools](https://github.com/grundid/nfctools) project
  * [smartrac-sdk-java-android-nfc](https://github.com/SMARTRACTECHNOLOGY-PUBLIC/smartrac-sdk-java-android-nfc)
  
- as well as drivers from ACS.
- 
+as well as drivers from ACS.
+
 # Publish
 For local development (.m2)
 
