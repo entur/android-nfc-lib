@@ -75,8 +75,6 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
                 } else {
                     LOGGER.debug("Do not detect ntag version for this reader " + readerName);
                 }
-            } else {
-                LOGGER.debug("Do not detect ntag version");
             }
 
             MfBlock[] capabilityBlock = null;
