@@ -313,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             try {
-                if(intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
+                if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
                     // handle NTAG21x types
                     // the NTAG21x product familiy have replacements for all previous Ultralight tags
                     int type = intent.getIntExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE, 0);
