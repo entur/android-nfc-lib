@@ -1,10 +1,13 @@
 package no.entur.android.nfc.external.acs.service;
 
+import android.content.Intent;
+
 import org.nfctools.api.TagType;
 import org.nfctools.spi.acs.AcsTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.acs.tag.MifareUltralightTagServiceSupport;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
@@ -15,19 +18,33 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class AcsUsbService extends AbstractAcsUsbService {
 
+	/**
+	 *
+	 * Pass this extra to indicate that all mifare ultralight tags are of the NTAG family.
+	 *
+	 */
+	public static final String EXTRA_NTAG_21X_ULTRALIGHTS = ExternalNfcReaderCallback.class.getName() + ".extra.NTAG_21X_ULTRALIGHTS";
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(AcsUsbService.class);
 
 	protected IsoDepTagServiceSupport isoDepTagServiceSupport;
 	protected MifareUltralightTagServiceSupport mifareUltralightTagServiceSupport;
-
-	protected boolean ntag21xUltralights = true;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
 		this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store);
-		this.mifareUltralightTagServiceSupport = new MifareUltralightTagServiceSupport(this, binder, store, ntag21xUltralights);
+		this.mifareUltralightTagServiceSupport = new MifareUltralightTagServiceSupport(this, binder, store, false);
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		boolean ntags = intent.getBooleanExtra(EXTRA_NTAG_21X_ULTRALIGHTS, false);
+
+		mifareUltralightTagServiceSupport.setNtag21xUltralights(ntags);
+
+		return super.onStartCommand(intent, flags, startId);
 	}
 
 	@Override

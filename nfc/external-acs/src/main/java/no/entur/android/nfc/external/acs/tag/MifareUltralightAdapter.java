@@ -37,9 +37,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
 		// LOGGER.debug("transceive");
-		if (raw) {
-			return getRawTransceiveResult(data);
-		}
+
 		int command = data[0] & 0xFF;
 		if (command == 0x30) {
 			int pageOffset = data[1] & 0xFF;

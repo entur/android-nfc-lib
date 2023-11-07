@@ -65,14 +65,18 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
                         NfcNtagVersion ntagVersion = new NfcNtagVersion(ntag.getVersion());
                         version = ntagVersion.getType();
 
-                        // LOGGER.debug("Detected version " + version);
+                        LOGGER.debug("Detected version " + version);
                     } catch (MfException e) {
-                        LOGGER.debug("No version for Ultralight tag - non NTAG 21x-tag?");
+                        LOGGER.debug("No version for Ultralight tag - non NTAG 21x-tag?", e);
 
                         broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
                         return null;
                     }
+                } else {
+                    LOGGER.debug("Do not detect ntag version for this reader " + readerName);
                 }
+            } else {
+                LOGGER.debug("Do not detect ntag version");
             }
 
             MfBlock[] capabilityBlock = null;
