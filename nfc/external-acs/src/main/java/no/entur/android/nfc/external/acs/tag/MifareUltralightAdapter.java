@@ -37,9 +37,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
 		// LOGGER.debug("transceive");
-		if (raw) {
-			return getRawTransceiveResult(data);
-		}
+
 		int command = data[0] & 0xFF;
 		if (command == 0x30) {
 			int pageOffset = data[1] & 0xFF;
@@ -70,13 +68,13 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 			int pageOffset = data[1] & 0xFF;
 
 			try {
-				if (data.length != 5) {
-					LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 1));
+				if (data.length != 6) {
+					LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 2));
 
 					return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 				}
-				byte[] page = new byte[data.length - 1];
-				System.arraycopy(data, 0, page, 0, page.length);
+				byte[] page = new byte[data.length - 2];
+				System.arraycopy(data, 2, page, 0, page.length);
 
 				readerWriter.writeBlock(pageOffset, new DataBlock(page));
 

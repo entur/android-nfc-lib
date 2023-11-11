@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 
+import org.nfctools.mf.ul.ntag.NfcNtag;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,6 +120,9 @@ public class MifareUltralightTagFactory extends TagFactory {
 		addTechBundles(type, id, atr, bundles, tech);
 
 		final Intent intent = getIntent(bundles, tech);
+		if (ntagType != null && ntagType > 0) {
+			intent.putExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE, ntagType);
+		}
 
 		int[] techArray = new int[tech.size()];
 		for (int i = 0; i < techArray.length; i++) {

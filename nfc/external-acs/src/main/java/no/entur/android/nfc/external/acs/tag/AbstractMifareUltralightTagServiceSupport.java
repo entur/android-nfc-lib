@@ -34,10 +34,14 @@ public abstract class AbstractMifareUltralightTagServiceSupport extends Abstract
 
     private static final String TAG = AbstractMifareUltralightTagServiceSupport.class.getName();
 
-    protected final boolean ntag21xUltralights;
+    protected boolean ntag21xUltralights;
 
     public AbstractMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
         super(context, tagService, store);
+        this.ntag21xUltralights = ntag21xUltralights;
+    }
+
+    public void setNtag21xUltralights(boolean ntag21xUltralights) {
         this.ntag21xUltralights = ntag21xUltralights;
     }
 

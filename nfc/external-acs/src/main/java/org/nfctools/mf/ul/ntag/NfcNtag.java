@@ -35,6 +35,7 @@ import no.entur.android.nfc.ResponseAPDU;
 
 public class NfcNtag {
 
+	public static final String EXTRA_ULTRALIGHT_TYPE = NfcNtag.class.getName() + ".extra.ULTRALIGHT_TYPE";
 	private static final String TAG = NfcNtag.class.getName();
 
 	private ACSIsoDepWrapper reader;
@@ -204,15 +205,14 @@ public class NfcNtag {
 		// 0xD4 magic byte
 		// 0x42 InCommunicateThru from PN532
 
+		// see https://stackoverflow.com/questions/44237726/how-to-authenticate-ntag213-with-acr122u
+
 		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x00, 0x00, sub, 0, sub.length);
 
 		byte[] responseBytes = reader.transceive(command.getBytes());
 
 		ResponseAPDU response = new ResponseAPDU(responseBytes);
 
-		NfcNtagVersion version = null;
-
-		MfUlReaderWriter readerWriter;
 		if (!response.isSuccess()) {
 			throw new MfException("Unable to issue command " + ByteArrayHexStringConverter.toHexString(sub) + ", response "
 					+ ByteArrayHexStringConverter.toHexString(responseBytes));
