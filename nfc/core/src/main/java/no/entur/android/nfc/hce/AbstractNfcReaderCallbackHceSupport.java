@@ -134,6 +134,9 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 				try {
 					isoDep.close();
 				} catch (IOException ignored) {
+					// ignore
+				} catch(SecurityException e) {
+					// ignore
 				}
 			}
 		}

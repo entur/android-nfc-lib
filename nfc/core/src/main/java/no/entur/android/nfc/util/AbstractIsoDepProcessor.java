@@ -41,6 +41,10 @@ public abstract class AbstractIsoDepProcessor<T> {
 					isoDep.close();
 				} catch (IOException ignored) {
 					// ignore
+				} catch(SecurityException e) {
+					// due to:
+					// java.lang.SecurityException: Permission Denial: Tag ( ID: 04 65 09 7A 8C 29 80 ) is out of date
+					// ignore
 				}
 			}
 		} else {
