@@ -68,13 +68,13 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 			int pageOffset = data[1] & 0xFF;
 
 			try {
-				if (data.length != 5) {
-					LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 1));
+				if (data.length != 6) {
+					LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 2));
 
 					return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 				}
-				byte[] page = new byte[data.length - 1];
-				System.arraycopy(data, 0, page, 0, page.length);
+				byte[] page = new byte[data.length - 2];
+				System.arraycopy(data, 2, page, 0, page.length);
 
 				readerWriter.writeBlock(pageOffset, new DataBlock(page));
 
