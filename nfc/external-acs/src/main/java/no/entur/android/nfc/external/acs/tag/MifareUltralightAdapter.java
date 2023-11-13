@@ -60,7 +60,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 			} catch (IOException e) {
 				LOGGER.debug("Problem reading blocks " + pageOffset);
 				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-			} catch (ReaderException e) {
+			} catch (Exception e) {
 				LOGGER.debug("Problem reading blocks " + pageOffset);
 				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 			}
@@ -78,8 +78,8 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 				readerWriter.writeBlock(pageOffset, new DataBlock(page));
 
-				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, null);
-			} catch (IOException e) {
+				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, new byte[]{0x0A});
+			} catch (Exception e) {
 				LOGGER.debug("Problem writing block " + pageOffset);
 
 				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
