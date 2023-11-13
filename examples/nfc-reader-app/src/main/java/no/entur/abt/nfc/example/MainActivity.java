@@ -400,12 +400,12 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     int type = mifareUltralight.getType();
                     switch (type) {
                         case MifareUltralight.TYPE_ULTRALIGHT: {
-                            length = 12;
+                            length = 12 + 4;
 
                             break;
                         }
                         case MifareUltralight.TYPE_ULTRALIGHT_C: {
-                            length = 36;
+                            length = 36 + 4;
 
                             break;
                         }
