@@ -78,7 +78,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 				readerWriter.writeBlock(pageOffset, new DataBlock(page));
 
-				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, null);
+				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, new byte[]{0x0A});
 			} catch (Exception e) {
 				LOGGER.debug("Problem writing block " + pageOffset);
 
