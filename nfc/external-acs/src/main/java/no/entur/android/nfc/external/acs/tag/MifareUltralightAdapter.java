@@ -43,7 +43,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 			int pageOffset = data[1] & 0xFF;
 
 			try {
-				MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 4);
+				MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 1);
 
 				byte[] result = new byte[4 * PAGE_SIZE];
 
