@@ -33,8 +33,8 @@ public class NfcMessageReader {
     private NfcMessage getMessage(int type) {
 
         switch (type) {
-            case ReaderConnectMessage.TYPE: return new ReaderConnectMessage();
-            case ReaderConnectedMessage.TYPE: return new ReaderConnectedMessage();
+            case ReaderConnectResponseMessage.TYPE: return new ReaderConnectResponseMessage();
+            case ReaderConnectRequestMessage.TYPE: return new ReaderConnectRequestMessage();
         }
 
         throw new IllegalArgumentException("Unknown type " + type);
