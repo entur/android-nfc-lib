@@ -2,6 +2,7 @@ package no.entur.android.nfc.external.minova.reader;
 
 import java.net.Socket;
 
+import no.entur.android.nfc.external.service.tag.DefaultTagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.tcpserver.CommandInput;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;

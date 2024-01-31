@@ -1,0 +1,17 @@
+
+repositories repos
+
+ext {
+    junitJupiterVersion = '5.8.2'
+}
+
+dependencies {
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.12.0'
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

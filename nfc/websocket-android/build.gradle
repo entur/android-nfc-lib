@@ -1,0 +1,21 @@
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+    }
+
+}
+
+dependencies {
+    api project(":utilities:websocket-messages")
+    api project(":nfc:external")
+
+    api ("com.squareup.okhttp3:okhttp:${okHttp3Version}")
+
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
+}
+
+
