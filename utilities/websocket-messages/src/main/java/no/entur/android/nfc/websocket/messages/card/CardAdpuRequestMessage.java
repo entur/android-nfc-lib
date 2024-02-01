@@ -1,16 +1,26 @@
-package no.entur.android.nfc.websocket.messages;
+package no.entur.android.nfc.websocket.messages.card;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class TagAdpuRequestMessage extends NfcMessage {
+import no.entur.android.nfc.websocket.messages.NfcMessage;
 
-    public static final int TYPE = 10;
+public class CardAdpuRequestMessage extends NfcMessage {
+
+    public static final int TYPE = 103;
     
     private byte[] adpu;
-    
-    public void setAdpu(byte[] adpu) {
+
+	public CardAdpuRequestMessage(byte[] adpu) {
+		this.adpu = adpu;
+	}
+
+	public CardAdpuRequestMessage() {
+	}
+
+
+	public void setAdpu(byte[] adpu) {
 		this.adpu = adpu;
 	}
     

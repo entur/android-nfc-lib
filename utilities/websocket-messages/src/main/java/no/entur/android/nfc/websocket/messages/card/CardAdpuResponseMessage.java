@@ -1,15 +1,25 @@
-package no.entur.android.nfc.websocket.messages;
+package no.entur.android.nfc.websocket.messages.card;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class TagAdpuResponseMessage extends NfcMessage {
+import no.entur.android.nfc.websocket.messages.NfcMessage;
+import no.entur.android.nfc.websocket.messages.NfcStatusResponseMessage;
 
-    public static final int TYPE = 11;
+public class CardAdpuResponseMessage extends NfcStatusResponseMessage {
+
+    public static final int TYPE = 102;
     
     private byte[] adpu;
-    
+
+    public CardAdpuResponseMessage(byte[] adpu) {
+        this.adpu = adpu;
+    }
+
+    public CardAdpuResponseMessage() {
+    }
+
     @Override
     public void write(DataOutputStream dout) throws IOException {
     	super.write(dout);
@@ -26,4 +36,7 @@ public class TagAdpuResponseMessage extends NfcMessage {
     	din.readFully(adpu);
     }
 
+    public byte[] getAdpu() {
+        return adpu;
+    }
 }

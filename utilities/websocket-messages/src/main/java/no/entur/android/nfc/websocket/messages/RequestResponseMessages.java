@@ -5,14 +5,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RequestResponseMessages implements NfcMessageListener {
 	
-	private final NfcMessageListener in;
-	private final NfcMessageListener out;
+	private final NfcMessageListener local;
+	private final NfcMessageListener remote;
 	
 	private Map<Integer, RequestResponseMessageLock> inflight = new ConcurrentHashMap<>();
 
-	public RequestResponseMessages(NfcMessageListener delegate, NfcMessageListener out) {
-		this.in = delegate;
-		this.out = out;
+	public RequestResponseMessages(NfcMessageListener local, NfcMessageListener remote) {
+		this.local = local;
+		this.remote = remote;
+	}
+
+	public void send(NfcMessage message) {
+		remote.onMessage(message);
 	}
 	
 	public NfcMessage sendAndWaitForResponse(NfcMessage message, long duration) {
@@ -20,7 +24,7 @@ public class RequestResponseMessages implements NfcMessageListener {
 		RequestResponseMessageLock lock = new RequestResponseMessageLock(message);
 		inflight.put(message.getId(), lock);
 		
-		out.onMessage(message);
+		remote.onMessage(message);
 		try {
 			return lock.waitForMessage(duration);
 		} finally {
@@ -34,7 +38,7 @@ public class RequestResponseMessages implements NfcMessageListener {
 		if(lock != null) {
 			lock.onMessage(message);
 		} else {
-			in.onMessage(message);
+			local.onMessage(message);
 		}
 	}
 	
