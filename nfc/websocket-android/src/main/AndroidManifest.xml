@@ -10,6 +10,6 @@
 -->
 
     <application>
-        <service android:name="no.entur.android.nfc.websocket.android.WebsocketUsbService" />
+        <service android:name="no.entur.android.nfc.websocket.android.WebSocketNfcService" />
     </application>
 </manifest>

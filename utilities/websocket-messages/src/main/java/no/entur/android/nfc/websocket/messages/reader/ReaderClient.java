@@ -7,7 +7,7 @@ import no.entur.android.nfc.websocket.messages.reader.broadcast.ReaderDisconnect
 
 public class ReaderClient implements NfcMessageListener {
 
-	private interface Listener {
+	public interface Listener {
 
 		void onReaderDisconnected();
 
