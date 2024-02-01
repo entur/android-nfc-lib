@@ -4,52 +4,44 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.websocket.client.WebSocketClient;
+import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
+import no.entur.android.nfc.websocket.client.WebSocketClientListener;
 import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessageListener;
 import no.entur.android.nfc.websocket.messages.RequestResponseMessages;
+import no.entur.android.nfc.websocket.messages.card.CardClient;
+import no.entur.android.nfc.websocket.messages.reader.ReaderClient;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
 
-public class WebSocketNfcService extends Service {
+public class WebSocketNfcService extends Service implements CardClient.Listener, WebSocketClientListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcService.class);
 
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
-
-    private class DefaultWebSocketReader extends WebSocketNfcMessageReader {
-
-        private OkHttpClient client;
-
-        public DefaultWebSocketReader(NfcMessageListener delegate, OkHttpClient client) {
-            super(delegate);
-            this.client = client;
-        }
-
-        @Override
-        public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-            super.onClosed(webSocket, code, reason);
-
-            // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
-            client.dispatcher().executorService().shutdown();
-        }
-    }
 
     protected WebsocketTagProxyStore store = new WebsocketTagProxyStore();
     protected INFcTagBinder infcTagBinder;
 
     //binder given to client
     private final IBinder binder = new LocalBinder();
-    private OkHttpClient client;
-    private WebSocket webSocket;
+
+    private WebSocketClientFactory factory = new WebSocketClientFactory();
+
+    private WebSocketClient client = null;
 
     public class LocalBinder extends Binder {
         public WebSocketNfcService getService() {
@@ -61,26 +53,9 @@ public class WebSocketNfcService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        LOGGER.info("onCreate");
+
         this.infcTagBinder = new INFcTagBinder(store);
-    }
-
-    public void initialize(String url) {
-        OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(0,  TimeUnit.MILLISECONDS)
-                .build();
-
-        CompositeNfcMessageListener local = new CompositeNfcMessageListener();
-
-        WebsocketNfcMessageWriter sender = new WebsocketNfcMessageWriter();
-
-        Request request = new Request.Builder().url(url).build();
-
-        RequestResponseMessages requestResponseMessages = new RequestResponseMessages(local, sender);
-
-        WebSocketNfcMessageReader reader = new WebSocketNfcMessageReader()
-
-        WebSocket webSocket = client.newWebSocket(request, new WebsocketNfcMessageWriter());
-
     }
 
     @Override
@@ -88,36 +63,59 @@ public class WebSocketNfcService extends Service {
         return binder;
     }
 
+    public boolean connect(String uri) {
+        try {
+            client = factory.connect(uri, this);
+        } catch(Exception e) {
+            LOGGER.warn("Problem connecting to " + uri);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean connectReader() {
+        WebSocketClient c = this.client;
+        if(c != null) {
+            return c.getReaderClient().connect();
+        }
+        return false;
+    }
+
+    public boolean disconnectReader() {
+        WebSocketClient c = this.client;
+        if(c != null) {
+            return c.getReaderClient().disconnect();
+        }
+        return false;
+    }
+
+    public void disconnect() throws IOException {
+        WebSocketClient c = this.client;
+        if(c != null) {
+            c.close();
+        }
+
+    }
+
+    @Override
+    public void onClosed() {
+        this.client = null;
+    }
+
+    @Override
+    public void onCardLost() {
+        LOGGER.info("onCardLost");
+    }
+
+    @Override
+    public void onCardPresent(List<String> technologies) {
+        LOGGER.info("onCardPresent: " + technologies);
+    }
+
     public void broadcast(String action) {
         Intent intent = new Intent();
         intent.setAction(action);
         sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
-
-    public void connectService(String url) {
-
-        client = new OkHttpClient.Builder()
-                .readTimeout(0,  TimeUnit.MILLISECONDS)
-                .build();
-
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-        webSocket = client.newWebSocket(request, this);
-    }
-
-    public void disconnectService() {
-
-    }
-
-    public void connectReader() {
-
-    }
-
-    public void disconnect() {
-
-    }
-
-
 
 }

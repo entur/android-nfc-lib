@@ -9,7 +9,7 @@ import no.entur.android.nfc.websocket.messages.card.broadcast.CardPresentMessage
 
 public class CardServer implements NfcMessageListener {
 
-	private interface Listener {
+	public interface Listener {
 
 		byte[] transcieve(byte[] message);
 
@@ -45,7 +45,5 @@ public class CardServer implements NfcMessageListener {
 			sender.onMessage(new CardAdpuResponseMessage(transcieve));
 		}
 	}
-
-
 
 }

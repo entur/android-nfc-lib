@@ -6,4 +6,7 @@ public class ReaderEndPollingRequestMessage extends NfcMessage {
 
     public static final int TYPE = 8;
 
+    public ReaderEndPollingRequestMessage() {
+        super(TYPE);
+    }
 }

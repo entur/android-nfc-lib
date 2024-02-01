@@ -12,6 +12,8 @@ public class NfcMessageWriter {
 
             dout.writeInt(NfcMessageReader.VERSION);
 
+            dout.writeInt(message.getType());
+
             message.write(dout);
 
             byte[] response = out.toByteArray();

@@ -18,7 +18,7 @@ import no.entur.android.nfc.websocket.messages.reader.ReaderEndPollingResponseMe
 
 public class CardClient implements NfcMessageListener {
 
-	private interface Listener {
+	public interface Listener {
 
 		void onCardLost();
 

@@ -88,6 +88,7 @@ ext {
     logbackAndroidVersion = '2.0.0'
 
     okHttp3Version = '4.12.0'
+    javaWebSocketVersion = '1.5.4'
 }
 
 ext.commonDependencies = {

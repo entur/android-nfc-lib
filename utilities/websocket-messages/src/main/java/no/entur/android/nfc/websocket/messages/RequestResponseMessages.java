@@ -1,9 +1,10 @@
 package no.entur.android.nfc.websocket.messages;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RequestResponseMessages implements NfcMessageListener {
+public class RequestResponseMessages implements NfcMessageListener, Closeable {
 	
 	private final NfcMessageListener local;
 	private final NfcMessageListener remote;
@@ -22,13 +23,13 @@ public class RequestResponseMessages implements NfcMessageListener {
 	public NfcMessage sendAndWaitForResponse(NfcMessage message, long duration) {
 		
 		RequestResponseMessageLock lock = new RequestResponseMessageLock(message);
-		inflight.put(message.getId(), lock);
+		inflight.put(message.getType(), lock);
 		
 		remote.onMessage(message);
 		try {
 			return lock.waitForMessage(duration);
 		} finally {
-			inflight.remove(message.getId());
+			inflight.remove(message.getType());
 		}
 	}
 	
@@ -40,6 +41,16 @@ public class RequestResponseMessages implements NfcMessageListener {
 		} else {
 			local.onMessage(message);
 		}
+	}
+
+	public void close() {
+		for (Map.Entry<Integer, RequestResponseMessageLock> entry : inflight.entrySet()) {
+			RequestResponseMessageLock value = entry.getValue();
+			synchronized (value) {
+				value.notifyAll();
+			}
+		}
+
 	}
 	
 }

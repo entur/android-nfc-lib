@@ -11,6 +11,7 @@ android {
 
 dependencies {
     api project(":utilities:websocket-messages")
+    api project(":utilities:websocket-client")
     api project(":nfc:external")
 
     api ("com.squareup.okhttp3:okhttp:${okHttp3Version}")

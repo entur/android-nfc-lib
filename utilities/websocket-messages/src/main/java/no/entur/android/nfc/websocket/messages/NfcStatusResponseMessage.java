@@ -8,6 +8,10 @@ public class NfcStatusResponseMessage extends NfcMessage {
 
 	private int status;
 
+	public NfcStatusResponseMessage(int type) {
+		super(type);
+	}
+
 	public void setStatus(int status) {
 		this.status = status;
 	}

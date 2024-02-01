@@ -70,8 +70,8 @@ public class NfcMessageReader {
             // broadcast
             case CardLostMessage.TYPE: return new CardLostMessage();
             case CardPresentMessage.TYPE: return new CardPresentMessage();
-        }
 
-        throw new IllegalArgumentException("Unknown type " + type);
+            default: throw new IllegalArgumentException("Unknown type " + type);
+        }
     }
 }

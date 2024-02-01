@@ -6,4 +6,8 @@ public class ReaderConnectResponseMessage extends NfcStatusResponseMessage {
 
     public static final int TYPE = 1;
 
+    public ReaderConnectResponseMessage() {
+        super(TYPE);
+    }
+
 }

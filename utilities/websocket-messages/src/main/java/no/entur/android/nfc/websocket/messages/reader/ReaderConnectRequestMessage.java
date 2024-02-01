@@ -6,4 +6,8 @@ public class ReaderConnectRequestMessage extends NfcMessage {
 
     public static final int TYPE = 2;
 
+    public ReaderConnectRequestMessage() {
+        super(TYPE);
+    }
+
 }

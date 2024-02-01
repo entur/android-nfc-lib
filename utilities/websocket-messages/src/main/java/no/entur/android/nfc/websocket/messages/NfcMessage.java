@@ -6,21 +6,19 @@ import java.io.IOException;
 
 public class NfcMessage {
 
-    protected int id;
+    protected final int type;
 
-    public void setId(int id) {
-        this.id = id;
+    public NfcMessage(int type) {
+        this.type = type;
     }
 
-    public int getId() {
-        return id;
+    public int getType() {
+        return type;
     }
 
     public void write(DataOutputStream dout) throws IOException {
-        dout.writeInt(id);
     }
 
     public void read(DataInputStream din) throws IOException {
-        id = din.readInt();
     }
 }

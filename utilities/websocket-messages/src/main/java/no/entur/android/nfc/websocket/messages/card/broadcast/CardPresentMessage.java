@@ -15,10 +15,12 @@ public class CardPresentMessage extends NfcMessage {
     private List<String> technologies;
 
     public CardPresentMessage(List<String> technologies) {
+        super(TYPE);
         this.technologies = technologies;
     }
 
     public CardPresentMessage() {
+        super(TYPE);
     }
 
     @Override
