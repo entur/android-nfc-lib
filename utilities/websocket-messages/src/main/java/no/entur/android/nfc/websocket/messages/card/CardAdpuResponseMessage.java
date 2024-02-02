@@ -13,13 +13,13 @@ public class CardAdpuResponseMessage extends NfcStatusResponseMessage {
     
     private byte[] adpu;
 
-    public CardAdpuResponseMessage(byte[] adpu) {
-        super(TYPE);
+    public CardAdpuResponseMessage(byte[] adpu, int id) {
+        super(TYPE, id);
         this.adpu = adpu;
     }
 
-    public CardAdpuResponseMessage() {
-        super(TYPE);
+    public CardAdpuResponseMessage(int id) {
+        super(TYPE, id);
     }
 
     @Override

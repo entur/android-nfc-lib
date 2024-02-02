@@ -13,12 +13,16 @@ public class CardAdpuRequestMessage extends NfcMessage {
     private byte[] adpu;
 
 	public CardAdpuRequestMessage(byte[] adpu) {
-		super(TYPE);
+		this(nextId());
         this.adpu = adpu;
 	}
 
+	public CardAdpuRequestMessage(int id) {
+		super(TYPE, id);
+	}
+
 	public CardAdpuRequestMessage() {
-        super(TYPE);
+		this(nextId());
     }
 
 

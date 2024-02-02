@@ -7,6 +7,10 @@ public class ReaderBeginPollingRequestMessage extends NfcMessage {
     public static final int TYPE = 6;
 
     public ReaderBeginPollingRequestMessage() {
-        super(TYPE);
+        this(nextId());
+    }
+
+    public ReaderBeginPollingRequestMessage(int id) {
+        super(TYPE, id);
     }
 }

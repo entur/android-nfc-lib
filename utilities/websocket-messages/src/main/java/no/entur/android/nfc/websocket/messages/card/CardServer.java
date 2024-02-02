@@ -1,5 +1,6 @@
 package no.entur.android.nfc.websocket.messages.card;
 
+import java.io.IOException;
 import java.util.List;
 
 import no.entur.android.nfc.websocket.messages.NfcMessage;
@@ -11,7 +12,7 @@ public class CardServer implements NfcMessageListener {
 
 	public interface Listener {
 
-		byte[] transcieve(byte[] message);
+		byte[] transcieve(byte[] message) throws IOException;
 
 	}
 
@@ -40,9 +41,15 @@ public class CardServer implements NfcMessageListener {
 		if(message instanceof CardAdpuRequestMessage) {
 			CardAdpuRequestMessage cardAdpuRequestMessage = (CardAdpuRequestMessage)message;
 
-			byte[] transcieve = listener.transcieve(cardAdpuRequestMessage.getAdpu());
+			try {
+				byte[] transcieve = listener.transcieve(cardAdpuRequestMessage.getAdpu());
 
-			sender.onMessage(new CardAdpuResponseMessage(transcieve));
+				sender.onMessage(new CardAdpuResponseMessage(transcieve, cardAdpuRequestMessage.getId()));
+			} catch (IOException e) {
+				CardAdpuResponseMessage m = new CardAdpuResponseMessage(null, cardAdpuRequestMessage.getId());
+				m.setStatus(CardAdpuResponseMessage.STATUS_CARD_UNABLE_TO_TRANSCIEVE);
+				sender.onMessage(m);
+			}
 		}
 	}
 

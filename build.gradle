@@ -1,7 +1,15 @@
 buildscript {
    ext.repos = {
+        mavenLocal()
+        mavenCentral()
         google()
-        jcenter()
+        maven {
+            url "https://javacard.pro/maven/"
+            content {
+                includeGroup "com.github.martinpaljak"
+            }
+        }
+
     }
 
     repositories repos
@@ -89,6 +97,8 @@ ext {
 
     okHttp3Version = '4.12.0'
     javaWebSocketVersion = '1.5.4'
+
+    adpu4jVersion = '23.03.21'
 }
 
 ext.commonDependencies = {

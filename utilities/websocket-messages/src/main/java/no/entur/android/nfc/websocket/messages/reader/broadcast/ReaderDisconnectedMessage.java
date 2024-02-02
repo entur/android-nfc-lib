@@ -13,6 +13,10 @@ public class ReaderDisconnectedMessage extends NfcMessage {
     public static final int TYPE = 9;
 
     public ReaderDisconnectedMessage() {
-        super(TYPE);
+        super(TYPE, nextId());
+    }
+
+    public ReaderDisconnectedMessage(int id) {
+        super(TYPE, id);
     }
 }

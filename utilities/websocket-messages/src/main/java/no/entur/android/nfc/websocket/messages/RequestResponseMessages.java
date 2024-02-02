@@ -23,22 +23,24 @@ public class RequestResponseMessages implements NfcMessageListener, Closeable {
 	public NfcMessage sendAndWaitForResponse(NfcMessage message, long duration) {
 		
 		RequestResponseMessageLock lock = new RequestResponseMessageLock(message);
-		inflight.put(message.getType(), lock);
+		inflight.put(message.getId(), lock);
 		
 		remote.onMessage(message);
 		try {
 			return lock.waitForMessage(duration);
 		} finally {
-			inflight.remove(message.getType());
+			inflight.remove(message.getId());
 		}
 	}
 	
 	@Override
 	public void onMessage(NfcMessage message) {
-		RequestResponseMessageLock lock = inflight.remove(message);
+		RequestResponseMessageLock lock = inflight.remove(message.getId());
 		if(lock != null) {
+			// i.e. request-response
 			lock.onMessage(message);
 		} else {
+			// i.e. broadcast or very delayed message
 			local.onMessage(message);
 		}
 	}

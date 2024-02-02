@@ -8,6 +8,11 @@ public class CardLostMessage extends NfcMessage {
 
 
     public CardLostMessage() {
-        super(TYPE);
+        super(TYPE, nextId());
     }
+
+    public CardLostMessage(int id) {
+        super(TYPE, id);
+    }
+
 }

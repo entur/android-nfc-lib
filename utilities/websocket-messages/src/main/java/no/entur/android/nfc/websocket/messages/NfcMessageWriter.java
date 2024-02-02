@@ -13,6 +13,7 @@ public class NfcMessageWriter {
             dout.writeInt(NfcMessageReader.VERSION);
 
             dout.writeInt(message.getType());
+            dout.writeInt(message.getId());
 
             message.write(dout);
 

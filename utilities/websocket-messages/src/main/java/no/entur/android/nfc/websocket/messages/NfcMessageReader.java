@@ -30,8 +30,9 @@ public class NfcMessageReader {
             int version = din.readInt();
             if (version == VERSION) {
                 int type = din.readInt();
+                int id = din.readInt();
 
-                NfcMessage message = getMessage(type);
+                NfcMessage message = getMessage(type, id);
 
                 message.read(din);
 
@@ -44,32 +45,32 @@ public class NfcMessageReader {
         }
     }
 
-    private NfcMessage getMessage(int type) {
+    private NfcMessage getMessage(int type, int id) {
 
         switch (type) {
             // reader
-            case ReaderConnectRequestMessage.TYPE: return new ReaderConnectRequestMessage();
-            case ReaderConnectResponseMessage.TYPE: return new ReaderConnectResponseMessage();
+            case ReaderConnectRequestMessage.TYPE: return new ReaderConnectRequestMessage(id);
+            case ReaderConnectResponseMessage.TYPE: return new ReaderConnectResponseMessage(id);
 
-            case ReaderDisconnectRequestMessage.TYPE: return new ReaderDisconnectRequestMessage();
-            case ReaderDisconnectResponseMessage.TYPE: return new ReaderDisconnectResponseMessage();
+            case ReaderDisconnectRequestMessage.TYPE: return new ReaderDisconnectRequestMessage(id);
+            case ReaderDisconnectResponseMessage.TYPE: return new ReaderDisconnectResponseMessage(id);
 
-            case ReaderBeginPollingRequestMessage.TYPE: return new ReaderBeginPollingRequestMessage();
-            case ReaderBeginPollingResponseMessage.TYPE: return new ReaderBeginPollingResponseMessage();
+            case ReaderBeginPollingRequestMessage.TYPE: return new ReaderBeginPollingRequestMessage(id);
+            case ReaderBeginPollingResponseMessage.TYPE: return new ReaderBeginPollingResponseMessage(id);
 
-            case ReaderEndPollingRequestMessage.TYPE: return new ReaderEndPollingRequestMessage();
-            case ReaderEndPollingResponseMessage.TYPE: return new ReaderEndPollingResponseMessage();
+            case ReaderEndPollingRequestMessage.TYPE: return new ReaderEndPollingRequestMessage(id);
+            case ReaderEndPollingResponseMessage.TYPE: return new ReaderEndPollingResponseMessage(id);
 
             // broadcast
-            case ReaderDisconnectedMessage.TYPE: return new ReaderDisconnectedMessage();
+            case ReaderDisconnectedMessage.TYPE: return new ReaderDisconnectedMessage(id);
 
             // card
-            case CardAdpuRequestMessage.TYPE: return new CardAdpuRequestMessage();
-            case CardAdpuResponseMessage.TYPE: return new CardAdpuResponseMessage();
+            case CardAdpuRequestMessage.TYPE: return new CardAdpuRequestMessage(id);
+            case CardAdpuResponseMessage.TYPE: return new CardAdpuResponseMessage(id);
 
             // broadcast
-            case CardLostMessage.TYPE: return new CardLostMessage();
-            case CardPresentMessage.TYPE: return new CardPresentMessage();
+            case CardLostMessage.TYPE: return new CardLostMessage(id);
+            case CardPresentMessage.TYPE: return new CardPresentMessage(id);
 
             default: throw new IllegalArgumentException("Unknown type " + type);
         }

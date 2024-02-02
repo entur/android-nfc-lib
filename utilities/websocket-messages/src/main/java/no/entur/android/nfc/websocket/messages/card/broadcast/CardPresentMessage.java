@@ -15,12 +15,16 @@ public class CardPresentMessage extends NfcMessage {
     private List<String> technologies;
 
     public CardPresentMessage(List<String> technologies) {
-        super(TYPE);
+        this(nextId());
         this.technologies = technologies;
     }
 
+    public CardPresentMessage(int id) {
+        super(TYPE, id);
+    }
+
     public CardPresentMessage() {
-        super(TYPE);
+        super(TYPE, nextId());
     }
 
     @Override

@@ -35,16 +35,16 @@ public class ReaderServer implements NfcMessageListener {
 	public void onMessage(NfcMessage message) {
 		if(message instanceof ReaderDisconnectRequestMessage) {
 			listener.onDisconnect();
-			sender.onMessage(new ReaderDisconnectResponseMessage());
+			sender.onMessage(new ReaderDisconnectResponseMessage(message.getId()));
 		} else if(message instanceof ReaderConnectRequestMessage) {
 			listener.onConnect();
-			sender.onMessage(new ReaderConnectResponseMessage());
+			sender.onMessage(new ReaderConnectResponseMessage(message.getId()));
 		} else if(message instanceof ReaderConnectRequestMessage) {
 			listener.onBeginPolling();
 			sender.onMessage(new ReaderBeginPollingRequestMessage());
 		} else if(message instanceof ReaderEndPollingRequestMessage) {
 			listener.onEndPolling();
-			sender.onMessage(new ReaderEndPollingResponseMessage());
+			sender.onMessage(new ReaderEndPollingResponseMessage(message.getId()));
 		}
 	}
 

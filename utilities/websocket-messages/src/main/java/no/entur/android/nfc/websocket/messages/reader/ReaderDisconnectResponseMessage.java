@@ -6,7 +6,7 @@ public class ReaderDisconnectResponseMessage extends NfcStatusResponseMessage {
 
     public static final int TYPE = 4;
 
-    public ReaderDisconnectResponseMessage() {
-        super(TYPE);
+    public ReaderDisconnectResponseMessage(int id) {
+        super(TYPE, id);
     }
 }

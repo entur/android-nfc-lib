@@ -6,7 +6,8 @@ public class ReaderEndPollingResponseMessage extends NfcStatusResponseMessage {
 
     public static final int TYPE = 7;
 
-    public ReaderEndPollingResponseMessage() {
-        super(TYPE);
+    public ReaderEndPollingResponseMessage(int id) {
+        super(TYPE, id);
     }
+
 }

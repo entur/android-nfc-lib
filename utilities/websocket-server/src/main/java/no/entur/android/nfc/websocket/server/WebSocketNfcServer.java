@@ -1,8 +1,10 @@
 package no.entur.android.nfc.websocket.server;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,6 +15,12 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.smartcardio.Card;
+import javax.smartcardio.CardChannel;
+import javax.smartcardio.CardException;
+import javax.smartcardio.CardTerminals;
+import javax.smartcardio.TerminalFactory;
 
 import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessage;
@@ -25,117 +33,185 @@ import no.entur.android.nfc.websocket.messages.reader.ReaderServer;
  */
 public class WebSocketNfcServer extends WebSocketServer {
 
-  private final static Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcServer.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcServer.class);
 
-  private final NfcMessageReader reader = new NfcMessageReader();
+    private final NfcMessageReader reader = new NfcMessageReader();
 
-  private AtomicInteger counter = new AtomicInteger();
+    private CardTerminalsPollingPool cardTerminalsPollingPool = new CardTerminalsPollingPool();
 
-  private static class Attachment {
+    private CardTerminalsPollingServer cardTerminalsPollingServer;
 
-      private CardServer cardServer;
+    private class Attachment implements CardListener, CardServer.Listener, ReaderServer.Listener {
 
-      private ReaderServer readerServer;
+        private CardServer cardServer;
 
-      private CompositeNfcMessageListener compositeNfcMessageListener;
-  }
+        private ReaderServer readerServer;
 
-  public WebSocketNfcServer(int port) throws UnknownHostException {
-    super(new InetSocketAddress(port));
-  }
+        private CompositeNfcMessageListener compositeNfcMessageListener;
 
-  public WebSocketNfcServer(InetSocketAddress address) {
-    super(address);
-  }
+        private PooledCardTerminal pooledCardTerminal;
 
-  public WebSocketNfcServer(int port, Draft_6455 draft) {
-    super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
-  }
+        private Card card;
+        private CardChannel cardChannel;
 
-  @Override
-  public void onOpen(WebSocket conn, ClientHandshake handshake) {
-    LOGGER.info("onOpen");
+        @Override
+        public void cardConnected(Card card) {
+            this.card = card;
 
-    Attachment attachment = new Attachment();
-    WebSocketNfcMessageWriter writer = new WebSocketNfcMessageWriter(conn);
-    attachment.cardServer = new CardServer(writer);
-    attachment.readerServer = new ReaderServer(writer);
+            this.cardChannel = card.getBasicChannel();
 
-    attachment.compositeNfcMessageListener = new CompositeNfcMessageListener();
-    attachment.compositeNfcMessageListener.add(attachment.cardServer);
-    attachment.compositeNfcMessageListener.add(attachment.readerServer);
+            cardServer.cardPresent(Arrays.asList());
+        }
 
-    CardServer.Listener l = new CardServer.Listener() {
-      @Override
-      public byte[] transcieve(byte[] message) {
-        return new byte[]{0x01, 0x04};
-      }
-    };
-    attachment.cardServer.setListener(l);
+        @Override
+        public void cardDisconnected(Card card) {
+            this.card = null;
+            this.cardChannel = null;
 
-    ReaderServer.Listener ll = new ReaderServer.Listener() {
+            cardServer.cardLost();
+        }
 
-      @Override
-      public boolean onConnect() {
-        LOGGER.info("on connect reader");
-        return true;
-      }
+        public byte[] transcieve(byte[] command) throws IOException {
 
-      @Override
-      public boolean onDisconnect() {
-        LOGGER.info("on disconnect reader");
-        return true;
-      }
+            ByteBuffer outputBuffer = ByteBuffer.allocate(1024);
 
-      @Override
-      public boolean onBeginPolling() {
-        LOGGER.info("on begin polling");
-        return true;
-      }
+            try {
+                int count = cardChannel.transmit(ByteBuffer.wrap(command), outputBuffer);
 
-      @Override
-      public boolean onEndPolling() {
-        LOGGER.info("on end polling");
-        return true;
-      }
-    };
+                byte[] response = new byte[count];
+                System.arraycopy(outputBuffer.array(), 0, response , 0, response .length);
 
-    attachment.readerServer.setListener(ll);
+                return response;
+            } catch (CardException e) {
+                throw new IOException(e);
+            }
+        }
 
-    conn.setAttachment(attachment);
-  }
+        @Override
+        public boolean onConnect() {
+            LOGGER.info("on connect reader");
 
-  @Override
-  public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-    LOGGER.info("onClose");
-  }
+            PooledCardTerminal borrow = cardTerminalsPollingPool.borrow();
+            if(borrow != null) {
+                this.pooledCardTerminal = borrow;
 
-  @Override
-  public void onMessage(WebSocket conn, String message) {
-    LOGGER.info(conn + ": " + message);
-  }
+                return true;
+            } else {
+                return false;
+            }
+        }
 
-  @Override
-  public void onMessage(WebSocket conn, ByteBuffer message) {
-    NfcMessage m = reader.parse(message.array());
-    if(m != null) {
-      Attachment attachment = conn.getAttachment();
+        @Override
+        public boolean onDisconnect() {
+            LOGGER.info("on disconnect reader");
 
-      attachment.compositeNfcMessageListener.onMessage(m);
+            PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
+            if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
+                cardTerminalsPollingPool.unborrow(pooledCardTerminal);
+                this.pooledCardTerminal = null;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean onBeginPolling() {
+            LOGGER.info("on begin polling");
+
+            PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
+            if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
+                pooledCardTerminal.startPolling();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onEndPolling() {
+            LOGGER.info("on end polling");
+            PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
+            if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
+                pooledCardTerminal.stopPolling();
+                return true;
+            }
+            return false;
+        }
     }
 
-  }
+    public WebSocketNfcServer(int port) throws UnknownHostException {
+        super(new InetSocketAddress(port));
 
-  @Override
-  public void onError(WebSocket conn, Exception ex) {
-    LOGGER.error("Error", ex);
-  }
+        //TerminalManager.fixPlatformPaths();
 
-  @Override
-  public void onStart() {
-    LOGGER.info("Server started!");
-    setConnectionLostTimeout(0);
-    setConnectionLostTimeout(100);
-  }
+        //System.setProperty(TerminalManager.LIB_PROP, "/usr/lib64/libpcsclite.so.1.0.0");
+    }
+
+    public WebSocketNfcServer(InetSocketAddress address) {
+        super(address);
+    }
+
+    public WebSocketNfcServer(int port, Draft_6455 draft) {
+        super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
+    }
+
+    @Override
+    public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        LOGGER.info("onOpen");
+
+        Attachment attachment = new Attachment();
+        WebSocketNfcMessageWriter writer = new WebSocketNfcMessageWriter(conn);
+        attachment.cardServer = new CardServer(writer);
+        attachment.readerServer = new ReaderServer(writer);
+
+        attachment.compositeNfcMessageListener = new CompositeNfcMessageListener();
+        attachment.compositeNfcMessageListener.add(attachment.cardServer);
+        attachment.compositeNfcMessageListener.add(attachment.readerServer);
+
+        attachment.cardServer.setListener(attachment);
+
+        attachment.readerServer.setListener(attachment);
+
+        conn.setAttachment(attachment);
+    }
+
+    @Override
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        LOGGER.info("onClose");
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, String message) {
+        LOGGER.info(conn + ": " + message);
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, ByteBuffer message) {
+        NfcMessage m = reader.parse(message.array());
+        if (m != null) {
+            Attachment attachment = conn.getAttachment();
+
+            attachment.compositeNfcMessageListener.onMessage(m);
+        }
+
+    }
+
+    @Override
+    public void onError(WebSocket conn, Exception ex) {
+        LOGGER.error("Error", ex);
+    }
+
+    @Override
+    public void onStart() {
+        LOGGER.info("Server started!");
+        setConnectionLostTimeout(0);
+        setConnectionLostTimeout(100);
+
+        TerminalFactory f = TerminalFactory.getDefault();
+
+        cardTerminalsPollingServer = new CardTerminalsPollingServer(f, cardTerminalsPollingPool);
+        cardTerminalsPollingServer.start();
+    }
+
+
 
 }

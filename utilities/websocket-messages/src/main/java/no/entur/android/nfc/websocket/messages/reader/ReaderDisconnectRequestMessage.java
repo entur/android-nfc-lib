@@ -7,7 +7,11 @@ public class ReaderDisconnectRequestMessage extends NfcMessage {
     public static final int TYPE = 3;
 
     public ReaderDisconnectRequestMessage() {
-        super(TYPE);
+        this(nextId());
+    }
+
+    public ReaderDisconnectRequestMessage(int id) {
+        super(TYPE, id);
     }
 
 }

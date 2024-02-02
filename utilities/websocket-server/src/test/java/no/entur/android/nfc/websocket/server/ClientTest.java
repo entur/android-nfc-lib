@@ -10,7 +10,7 @@ public class ClientTest {
     @Test
     public void testConnect() throws Exception {
 
-        int port = 8891; // 843 flash policy port
+        int port = 8199; // 843 flash policy port
         WebSocketNfcServer s = new WebSocketNfcServer(port);
         s.start();
         try {
@@ -22,7 +22,7 @@ public class ClientTest {
 
                 connect.getReaderClient().connect();
 
-                Thread.sleep(500);
+                Thread.sleep(50000);
 
                 System.out.println("Connected");
             } finally {
