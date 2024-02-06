@@ -11,7 +11,7 @@ public class ClientTest {
     public void testConnect() throws Exception {
 
         int port = 8199; // 843 flash policy port
-        WebSocketNfcServer s = new WebSocketNfcServer(port);
+        WebSocketNfcServer s = new WebSocketNfcServer(port, new NoopCardTerminalsFilter());
         s.start();
         try {
             System.out.println("Begin");

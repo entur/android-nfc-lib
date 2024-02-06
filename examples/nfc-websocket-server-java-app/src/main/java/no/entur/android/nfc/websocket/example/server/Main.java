@@ -13,7 +13,7 @@ import no.entur.android.nfc.websocket.server.WebSocketNfcServer;
 public class Main {
 
     public static final void main(String[] args) throws UnknownHostException {
-        int port = 3000; // 843 flash policy port
+        int port = 3001; // 843 flash policy port
         CardTerminalsFilter filter = new CardTerminalsFilter() {
             @Override
             public boolean accept(CardTerminal cardTerminal) {

@@ -3,9 +3,13 @@ package no.entur.android.nfc.websocket.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.smartcardio.Card;
+import javax.smartcardio.CardChannel;
+import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 import javax.smartcardio.CardTerminals;
 import javax.smartcardio.TerminalFactory;
@@ -96,6 +100,8 @@ public class CardTerminalsPollingServer implements Runnable {
 
                     for (CardTerminal cardTerminal : added) {
                         LOGGER.info("Add new reader " + cardTerminal);
+                        configure(cardTerminal);
+
                         listener.connected(cardTerminal);
                     }
                 }
@@ -125,6 +131,33 @@ public class CardTerminalsPollingServer implements Runnable {
         }
         LOGGER.info("Stop polling for readers");
     }
+
+    private void configure(CardTerminal candidate) throws CardException {
+        /*
+        Card ca = candidate.connect("T=CL");
+
+        // https://stackoverflow.com/questions/35389657/how-to-send-commands-to-smart-card-reader-and-not-to-the-smart-card-while-no-c
+
+        // https://stackoverflow.com/questions/41851527/unkown-error-0x16-on-smartcard-reader-access
+        LOGGER.info("Got " + ca);
+
+        // https://github.com/intarsys/smartcard-io
+
+        CardChannel channel = ca.getBasicChannel();
+
+        byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x48, 0x00, 0x00 };
+
+        byte[] bytes = ca.transmitControlCommand(0, pseudo);
+
+        String firmware = new String(bytes, Charset.forName("ASCII"));
+
+        LOGGER.debug("Read firmware " + firmware);
+
+        System.exit(1);
+        
+         */
+    }
+
 
     public void start() {
         thread = new Thread(this);
