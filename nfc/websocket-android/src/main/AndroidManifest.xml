@@ -9,7 +9,4 @@
         android:label="BluetoothMessageClientService" />
 -->
 
-    <application>
-        <service android:name="no.entur.android.nfc.websocket.android.WebSocketNfcService" />
-    </application>
 </manifest>

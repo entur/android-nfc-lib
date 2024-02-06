@@ -44,9 +44,23 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     private WebSocketClient client = null;
 
     public class LocalBinder extends Binder {
-        public WebSocketNfcService getService() {
-            return WebSocketNfcService.this;
+        public boolean connect(String uri) {
+            return WebSocketNfcService.this.connect(uri);
         }
+
+        public boolean connectReader() {
+            return WebSocketNfcService.this.connectReader();
+        }
+
+        public boolean disconnectReader() {
+            return WebSocketNfcService.this.disconnectReader();
+        }
+
+        public void disconnect() throws IOException {
+            WebSocketNfcService.this.disconnect();
+        }
+
+
     }
 
     @Override
@@ -65,6 +79,7 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
     public boolean connect(String uri) {
         try {
+            LOGGER.warn("Connect to " + uri);
             client = factory.connect(uri, this);
         } catch(Exception e) {
             LOGGER.warn("Problem connecting to " + uri);

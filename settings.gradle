@@ -1,7 +1,8 @@
-include ":nfc:wrapper", ":nfc:wrapper-utils", ":nfc:core", ":nfc:external", ":utilities:tcp-server", ":nfc:external-acs", ":nfc:external-minova"
-include "utilities:websocket-messages", "nfc:websocket-android", "utilities:websocket-server", "utilities:websocket-client"
+include ":nfc:wrapper", ":nfc:wrapper-utils", ":nfc:core", ":nfc:external", ":utilities:tcp-server-java-lib", ":nfc:external-acs", ":nfc:external-minova"
+include "utilities:websocket-messages-java-lib", "nfc:websocket-android", "utilities:websocket-server-java-lib", "utilities:websocket-client-java-lib"
 
-include ":examples:nfc-reader-app"
+include ":examples:nfc-reader-android-app", "examples:nfc-websocket-server-java-app"
+
 // automatically set jacoco report paths in folders with a build file, excluding root
 def findJacocoReports(parentProject, reports) { 
     parentProject.children.each { project ->
