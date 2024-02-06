@@ -114,7 +114,7 @@ public class CardTerminalsPollingServer implements Runnable {
                     }
                 }
 
-                //LOGGER.info("Currently have " + accept.size() + " readers");
+                LOGGER.info("Currently have " + accept.size() + " readers");
 
                 this.current = accept;
                 this.ignored = ignore;
@@ -133,29 +133,46 @@ public class CardTerminalsPollingServer implements Runnable {
     }
 
     private void configure(CardTerminal candidate) throws CardException {
-        /*
-        Card ca = candidate.connect("T=CL");
+        Card ca = candidate.connect("DIRECT");
 
+        // ldd -r /usr/bin/pcsc_scan
+        // https://stackoverflow.com/questions/12376257/accessing-javax-smartcardio-from-linux-64-bits
+        // https://ludovicrousseau.blogspot.com/2021/08/pcsc-lite-configuration-using.html
         // https://stackoverflow.com/questions/35389657/how-to-send-commands-to-smart-card-reader-and-not-to-the-smart-card-while-no-c
-
         // https://stackoverflow.com/questions/41851527/unkown-error-0x16-on-smartcard-reader-access
-        LOGGER.info("Got " + ca);
-
+        // https://stackoverflow.com/questions/31131569/unable-to-claim-usb-interface-device-or-resource-busy
         // https://github.com/intarsys/smartcard-io
 
-        CardChannel channel = ca.getBasicChannel();
+        ca.beginExclusive();
+        try {
+            // https://stackoverflow.com/questions/12265807/javax-smartcardio-transmit-to-nfc-usb-reader-without-card/12346874#12346874
+            int SCARD_CTL_CODE = 0x310000 + 3500 * 4;
 
-        byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x48, 0x00, 0x00 };
+            byte[] pseudo = new byte[]{(byte) 0xFF, 0x00, 0x48, 0x00, 0x00};
 
-        byte[] bytes = ca.transmitControlCommand(0, pseudo);
+            byte[] bytes = ca.transmitControlCommand(SCARD_CTL_CODE, pseudo);
 
-        String firmware = new String(bytes, Charset.forName("ASCII"));
+            String firmware = new String(bytes, Charset.forName("ASCII"));
 
-        LOGGER.debug("Read firmware " + firmware);
+            LOGGER.debug("Read firmware " + firmware);
+        } finally {
+            ca.endExclusive();
+        }
+    }
 
-        System.exit(1);
-        
-         */
+    // XXX seems now all use the same code
+    public static int CONTROL_CODE() {
+
+        String osName = System.getProperty( "os.name" ).toLowerCase();
+        if ( osName.indexOf( "windows" ) > -1 ) {
+            /* Value used by both MS' CCID driver and SpringCard's CCID driver */
+            return (0x31 << 16 | 3500 << 2);
+        }
+        else {
+            /* Value used by PCSC-Lite */
+            return 0x42000000 + 1;
+        }
+
     }
 
 

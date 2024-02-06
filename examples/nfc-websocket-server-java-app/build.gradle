@@ -70,7 +70,9 @@ tasks.named('test') {
 
 task runWebsocketServer(type: JavaExec) {
     List<String> arguments = new ArrayList<>();
-
+    List<String> jvmArguments = new ArrayList<>();
+    jvmArguments.add("-Dsun.security.smartcardio.library=/usr/lib64/libpcsclite.so.1")
+    jvmArgs jvmArguments;
     group = "Execution"
     description = "Run websocket server"
     classpath = sourceSets.main.runtimeClasspath

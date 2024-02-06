@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +23,7 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminals;
 import javax.smartcardio.TerminalFactory;
 
+import jnasmartcardio.Smartcardio;
 import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessage;
 import no.entur.android.nfc.websocket.messages.NfcMessageReader;
@@ -211,11 +213,18 @@ public class WebSocketNfcServer extends WebSocketServer {
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
 
-        TerminalFactory f = TerminalFactory.getDefault();
+        //TerminalFactory f = TerminalFactory.getDefault();
 
-        cardTerminalsPollingServer = new CardTerminalsPollingServer(f, cardTerminalsPollingPool);
-        cardTerminalsPollingServer.setCardTerminalsFilter(cardTerminalsFilter);
-        cardTerminalsPollingServer.start();
+        TerminalFactory f = null;
+        try {
+            f = TerminalFactory.getInstance("PC/SC", null, new Smartcardio());
+            cardTerminalsPollingServer = new CardTerminalsPollingServer(f, cardTerminalsPollingPool);
+            cardTerminalsPollingServer.setCardTerminalsFilter(cardTerminalsFilter);
+            cardTerminalsPollingServer.start();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 

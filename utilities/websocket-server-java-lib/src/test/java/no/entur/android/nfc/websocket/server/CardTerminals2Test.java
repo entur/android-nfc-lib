@@ -21,7 +21,7 @@ public class CardTerminals2Test {
 
         String PROP_NAME = "sun.security.smartcardio.library";
 
-        System.setProperty(PROP_NAME, "/usr/lib64/libpcsclite.so.1.0.0");
+        System.setProperty(PROP_NAME, "/usr/lib64/libpcsclite.so.1");
 
         //Object o = Class.forName("sun.security.smartcardio.SunPCSC").newInstance();
 
@@ -33,17 +33,25 @@ public class CardTerminals2Test {
             Object o = Class.forName("sun.security.smartcardio.SunPCSC").newInstance();
             sun = (Provider)o;
         }
-        TerminalFactory factory = TerminalFactory.getInstance(type, null, sun);
+        //TerminalFactory factory = TerminalFactory.getInstance(type, null, sun);
 
 
         //CardTerminal cardReader = createCardReader(1000);
 
-        System.out.println(factory);
+        //System.out.println(factory);
+
+    }
+
+    @Test
+    public void test2() throws Exception {
+        CardTerminal cardReader = createCardReader(1000);
+
+        System.out.println(cardReader);
 
     }
 
     @SuppressWarnings("restriction")
-    public CardTerminal createCardReader(long timeout) throws CardException {
+    public static CardTerminal createCardReader(long timeout) throws CardException {
         TerminalFactory factory = TerminalFactory.getDefault();
     System.out.println(factory);
 
