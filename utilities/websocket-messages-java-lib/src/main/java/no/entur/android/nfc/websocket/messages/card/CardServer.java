@@ -40,8 +40,8 @@ public class CardServer implements NfcMessageListener {
 		sender.onMessage(new CardLostMessage());
 	}
 
-	public void cardPresent(List<String> technologies) {
-		sender.onMessage(new CardPresentMessage(technologies));
+	public void cardPresent(List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
+		sender.onMessage(new CardPresentMessage(technologies, atr, historicalBytes, uid));
 	}
 
 	@Override

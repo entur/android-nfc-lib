@@ -14,7 +14,7 @@ buildscript {
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:7.4.2'
     }
 }
 
@@ -174,12 +174,13 @@ configure(androidLibraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        compileSdkVersion 31
+        buildToolsVersion "34.0.0"
+        compileSdkVersion 34
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 31
+            targetSdkVersion 34
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')

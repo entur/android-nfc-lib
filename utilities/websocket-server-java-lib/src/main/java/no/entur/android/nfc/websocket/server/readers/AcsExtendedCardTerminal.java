@@ -3,7 +3,13 @@ package no.entur.android.nfc.websocket.server.readers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import javax.smartcardio.ATR;
 import javax.smartcardio.Card;
+import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 import javax.smartcardio.CommandAPDU;
@@ -105,5 +111,27 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
         }
     }
 
+    @Override
+    public List<String> identifyTechnologies(Card card, CardChannel channel) {
+        ATR atr = card.getATR();
 
+        byte[] atrBytes = atr.getBytes();
+
+        LOGGER.info("Got ATR " + ByteArrayHexStringConverter.toHexString(atrBytes));
+
+        if(atrBytes.length == 6) {
+
+            if(atrBytes[0] == (byte)0x3B &&
+                    atrBytes[1] == (byte)0x81 &&
+                    atrBytes[2] == (byte)0x80 &&
+                    atrBytes[3] == (byte)0x01 &&
+                    atrBytes[4] == (byte)0x80 &&
+                    atrBytes[5] == (byte)0x80
+            ) {
+                return Arrays.asList("IsoDep");
+            }
+        }
+
+        return Collections.emptyList();
+    }
 }

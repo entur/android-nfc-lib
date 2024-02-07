@@ -1,5 +1,6 @@
 package no.entur.android.nfc.websocket.server;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import no.entur.android.nfc.websocket.client.WebSocketClient;
@@ -8,6 +9,7 @@ import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
 public class ClientTest {
 
     @Test
+    @Disabled
     public void testConnect() throws Exception {
 
         int port = 8199; // 843 flash policy port

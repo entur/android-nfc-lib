@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 import javax.smartcardio.Card;
 import javax.smartcardio.CardException;

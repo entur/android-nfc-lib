@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.java_websocket.WebSocket;
@@ -17,13 +18,17 @@ import org.java_websocket.server.WebSocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.smartcardio.ATR;
 import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminals;
+import javax.smartcardio.CommandAPDU;
+import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
 
 import jnasmartcardio.Smartcardio;
+import no.entur.android.nfc.websocket.messages.ByteArrayHexStringConverter;
 import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessage;
 import no.entur.android.nfc.websocket.messages.NfcMessageReader;
@@ -34,6 +39,8 @@ import no.entur.android.nfc.websocket.messages.reader.ReaderServer;
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
  */
 public class WebSocketNfcServer extends WebSocketServer {
+
+    private static final byte[] GET_TAG_ID = new byte[] { (byte) 0xFF, (byte) 0xCA, 0x00, 0x00, 0x00 };
 
     private final static Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcServer.class);
 
@@ -58,13 +65,36 @@ public class WebSocketNfcServer extends WebSocketServer {
         private CardChannel cardChannel;
 
         @Override
-        public void cardConnected(Card card) {
+        public void cardConnected(Card card) throws CardException {
             LOGGER.info("Card connected");
             this.card = card;
 
-            this.cardChannel = card.getBasicChannel();
+            ATR atr = card.getATR();
 
-            cardServer.cardPresent(Arrays.asList());
+            this.cardChannel = card.getBasicChannel();
+            ExtendedCardTerminal cardTerminal = pooledCardTerminal.getCardTerminal();
+
+            List<String> technologies = cardTerminal.identifyTechnologies(card, cardChannel);
+
+            LOGGER.info("Got technologies " + technologies);
+
+            byte[] uid = null;
+
+            card.beginExclusive();
+            try {
+                ResponseAPDU response = cardChannel.transmit(new CommandAPDU(GET_TAG_ID));
+                if (isSuccess(response)) {
+                    uid = response.getData();
+
+                    LOGGER.info("Read UID " + ByteArrayHexStringConverter.toHexString(uid));
+                } else {
+                    LOGGER.info("Unable to read UID");
+                }
+            } finally {
+                card.endExclusive();
+            }
+
+            cardServer.cardPresent(technologies, atr.getBytes(), atr.getHistoricalBytes(), uid);
         }
 
         @Override
@@ -74,6 +104,10 @@ public class WebSocketNfcServer extends WebSocketServer {
             this.cardChannel = null;
 
             cardServer.cardLost();
+        }
+
+        public boolean isSuccess(ResponseAPDU in) {
+            return in.getSW1() == 0x90 && in.getSW2() == 0x00;
         }
 
         public byte[] transcieve(byte[] command) throws IOException, CardException {
@@ -144,8 +178,9 @@ public class WebSocketNfcServer extends WebSocketServer {
                 LOGGER.info("Disconnect card");
                 try {
                     card.beginExclusive();
-                    card.disconnect(false);
-                    card.endExclusive();
+                    card.disconnect(true);
+                    // end exclusive not necessary here
+                    //card.endExclusive();
                     LOGGER.info("Disconnected card");
                 } catch(Exception e) {
                     LOGGER.info("Disconnected card", e);

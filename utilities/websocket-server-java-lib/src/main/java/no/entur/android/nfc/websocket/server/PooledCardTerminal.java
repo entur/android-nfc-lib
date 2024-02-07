@@ -18,8 +18,8 @@ public class PooledCardTerminal {
         this.cardPollingServer = new CardPollingServer(cardTerminal);
     }
 
-    public CardTerminal getCardTerminal() {
-        return cardTerminal.getDelegate();
+    public ExtendedCardTerminal getCardTerminal() {
+        return cardTerminal;
     }
 
     public void setListener(CardListener listener) {

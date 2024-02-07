@@ -14,7 +14,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcServiceCallback;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.external.tag.IntentEnricher;
+import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.websocket.client.WebSocketClient;
 import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
@@ -42,6 +47,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
     private WebSocketClientFactory factory = new WebSocketClientFactory();
 
+    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store);
+
     private WebSocketClient client = null;
 
     public class LocalBinder extends Binder {
@@ -60,7 +67,6 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
         public void disconnect() throws IOException {
             WebSocketNfcService.this.disconnect();
         }
-
 
         public boolean beginPolling() {
             return WebSocketNfcService.this.beginPolling();
@@ -91,6 +97,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
         try {
             LOGGER.warn("Connect to " + uri);
             client = factory.connect(uri, this);
+
+            broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
         } catch(Exception e) {
             LOGGER.warn("Problem connecting to " + uri);
             return false;
@@ -101,7 +109,9 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public boolean connectReader() {
         WebSocketClient c = this.client;
         if(c != null) {
-            return c.getReaderClient().connect();
+            if(c.getReaderClient().connect()) {
+                broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+            }
         }
         return false;
     }
@@ -109,7 +119,9 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public boolean disconnectReader() {
         WebSocketClient c = this.client;
         if(c != null) {
-            return c.getReaderClient().disconnect();
+            if(c.getReaderClient().disconnect()) {
+                broadcast(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+            }
         }
         return false;
     }
@@ -119,10 +131,9 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
         if(c != null) {
             c.close();
         }
+        broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
 
     }
-
-
 
     public boolean beginPolling() {
         WebSocketClient c = this.client;
@@ -153,22 +164,12 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     }
 
     @Override
-    public void onCardPresent(List<String> technologies) {
+    public void onCardPresent(CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
         LOGGER.info("onCardPresent: " + technologies);
 
-        byte[] aid = new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0x57 };
+        WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
 
-        byte SELECT_APPLICATION = 0x5A;
-
-        byte[] apdu = new byte[9];
-        apdu[0] = (byte) 0x90;
-        apdu[1] = (byte) SELECT_APPLICATION;
-        apdu[4] = 0x03;
-        System.arraycopy(aid, 0, apdu, 5, 3);
-
-        byte[] transcieve = this.client.getCardClient().transcieve(apdu);
-
-        LOGGER.info(ByteArrayHexStringConverter.toHexString(transcieve));
+        isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
     }
 
     public void broadcast(String action) {

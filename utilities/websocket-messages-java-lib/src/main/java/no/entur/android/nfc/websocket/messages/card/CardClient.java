@@ -22,7 +22,7 @@ public class CardClient implements NfcMessageListener {
 
 		void onCardLost();
 
-		void onCardPresent(List<String> technologies);
+		void onCardPresent(CardClient client, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid);
 	}
 
 	private final RequestResponseMessages messages;
@@ -62,7 +62,7 @@ public class CardClient implements NfcMessageListener {
 			listener.onCardLost();
 		} else if(message instanceof CardPresentMessage) {
 			CardPresentMessage cardPresentMessage = (CardPresentMessage)message;
-			listener.onCardPresent(cardPresentMessage.getTechnologies());
+			listener.onCardPresent(this, cardPresentMessage.getTechnologies(), cardPresentMessage.getAtr(), cardPresentMessage.getHistoricalBytes(), cardPresentMessage.getUid());
 		}
 	}
 

@@ -32,7 +32,7 @@ public class CardTerminalsPollingPool implements CardTerminalsPollingListener {
         synchronized (current) {
             for (int i = 0; i < current.size(); i++) {
                 PooledCardTerminal pooledCardTerminal = current.get(i);
-                if (cardTerminal == pooledCardTerminal.getCardTerminal()) {
+                if (cardTerminal == pooledCardTerminal.getCardTerminal().getDelegate()) {
                     current.remove(i);
 
                     pooledCardTerminal.close();

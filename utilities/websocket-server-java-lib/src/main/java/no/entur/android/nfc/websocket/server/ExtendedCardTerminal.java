@@ -1,5 +1,9 @@
 package no.entur.android.nfc.websocket.server;
 
+import java.util.List;
+
+import javax.smartcardio.Card;
+import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
@@ -19,4 +23,6 @@ public abstract class ExtendedCardTerminal extends CardTerminal {
     public CardTerminal getDelegate() {
         return delegate;
     }
+
+    public abstract List<String> identifyTechnologies(Card card, CardChannel channel);
 }
