@@ -59,6 +59,7 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         @Override
         public void cardConnected(Card card) {
+            LOGGER.info("Card connected");
             this.card = card;
 
             this.cardChannel = card.getBasicChannel();
@@ -68,16 +69,18 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         @Override
         public void cardDisconnected(Card card) {
+            LOGGER.info("Card disconnected");
             this.card = null;
             this.cardChannel = null;
 
             cardServer.cardLost();
         }
 
-        public byte[] transcieve(byte[] command) throws IOException {
+        public byte[] transcieve(byte[] command) throws IOException, CardException {
 
             ByteBuffer outputBuffer = ByteBuffer.allocate(1024);
 
+            card.beginExclusive();
             try {
                 int count = cardChannel.transmit(ByteBuffer.wrap(command), outputBuffer);
 
@@ -87,21 +90,23 @@ public class WebSocketNfcServer extends WebSocketServer {
                 return response;
             } catch (CardException e) {
                 throw new IOException(e);
+            } finally {
+                card.endExclusive();
             }
         }
 
         @Override
         public boolean onConnect() {
-            LOGGER.info("on connect reader");
-
             PooledCardTerminal borrow = cardTerminalsPollingPool.borrow();
             if(borrow != null) {
+                LOGGER.info("Connected reader " + borrow.getCardTerminal().getName() );
                 this.pooledCardTerminal = borrow;
 
                 return true;
-            } else {
-                return false;
             }
+            LOGGER.info("Unable to connect reader");
+
+            return false;
         }
 
         @Override
@@ -118,25 +123,48 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         @Override
-        public boolean onBeginPolling() {
-            LOGGER.info("on begin polling");
-
+        public boolean onBeginPolling() throws CardException {
             PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
             if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
+                LOGGER.info("Begin polling " + pooledCardTerminal.getCardTerminal().getName());
+                pooledCardTerminal.setListener(this);
                 pooledCardTerminal.startPolling();
                 return true;
             }
+            LOGGER.info("Cannot begin polling, no reader");
+
             return false;
         }
 
         @Override
-        public boolean onEndPolling() {
-            LOGGER.info("on end polling");
+        public boolean onEndPolling() throws CardException {
+
+            Card card = this.card;
+            if(card != null) {
+                LOGGER.info("Disconnect card");
+                try {
+                    card.beginExclusive();
+                    card.disconnect(false);
+                    card.endExclusive();
+                    LOGGER.info("Disconnected card");
+                } catch(Exception e) {
+                    LOGGER.info("Disconnected card", e);
+                } finally {
+                    this.card = null;
+                }
+            }
+
             PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
             if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
+                LOGGER.info("End polling for " + pooledCardTerminal.getCardTerminal().getName());
                 pooledCardTerminal.stopPolling();
+                pooledCardTerminal.setListener(null);
+
+                LOGGER.info("Ended polling for " + pooledCardTerminal.getCardTerminal().getName());
+
                 return true;
             }
+            LOGGER.info("Cannot end polling, no reader or closed");
             return false;
         }
     }
@@ -145,10 +173,6 @@ public class WebSocketNfcServer extends WebSocketServer {
         super(new InetSocketAddress(port));
 
         this.cardTerminalsFilter = cardTerminalsFilter;
-
-        //TerminalManager.fixPlatformPaths();
-
-        //System.setProperty(TerminalManager.LIB_PROP, "/usr/lib64/libpcsclite.so.1.0.0");
     }
 
     public WebSocketNfcServer(InetSocketAddress address, CardTerminalsFilter cardTerminalsFilter) {
@@ -184,6 +208,17 @@ public class WebSocketNfcServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         LOGGER.info("onClose");
+
+        Attachment attachment = conn.getAttachment();
+        if(attachment != null) {
+
+            try {
+                attachment.onEndPolling();
+            } catch (CardException e) {
+                LOGGER.info("Problem ending polling", e);
+            }
+            attachment.onDisconnect();
+        }
     }
 
     @Override

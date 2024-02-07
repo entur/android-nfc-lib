@@ -66,7 +66,7 @@ public class CardTerminalsPollingServer implements Runnable {
                 for(CardTerminal candidate : ignore) {
                     for(int i = 0; i < ignored.size(); i++) {
                         CardTerminal c = ignored.get(i);
-                        if(candidate == c) {
+                        if(candidate == c || candidate.getName().equals(c.getName())) {
                             continue ignored;
                         }
                     }
@@ -77,7 +77,7 @@ public class CardTerminalsPollingServer implements Runnable {
                 for(CardTerminal candidate : accept) {
                     for(int i = 0; i < current.size(); i++) {
                         CardTerminal c = current.get(i);
-                        if(candidate == c) {
+                        if(candidate == c || candidate.getName().equals(c.getName())) {
                             continue added;
                         }
                     }
@@ -88,7 +88,7 @@ public class CardTerminalsPollingServer implements Runnable {
                 for(int i = 0; i < current.size(); i++) {
                     CardTerminal c = current.get(i);
                     for(CardTerminal candidate : accept) {
-                        if(candidate == c) {
+                        if(candidate == c || candidate.getName().equals(c.getName())) {
                             continue removed;
                         }
                     }
@@ -98,11 +98,21 @@ public class CardTerminalsPollingServer implements Runnable {
                 if(!added.isEmpty()) {
                     LOGGER.info("Detected " + added.size() + " new readers");
 
-                    for (CardTerminal cardTerminal : added) {
-                        LOGGER.info("Add new reader " + cardTerminal);
-                        configure(cardTerminal);
+                    for(int i = 0; i < added.size(); i++) {
+                        CardTerminal cardTerminal = added.get(i);
 
-                        listener.connected(cardTerminal);
+                        LOGGER.info("Add new reader " + cardTerminal);
+
+                        try {
+                            listener.connected(cardTerminal);
+                        } catch(CardException e) {
+                            LOGGER.info("Unable to connect " + cardTerminal.getName() +", adding to ignore", e);
+
+                            ignore.add(cardTerminal);
+
+                            added.remove(i);
+                            i--;
+                        }
                     }
                 }
 
@@ -130,34 +140,6 @@ public class CardTerminalsPollingServer implements Runnable {
             }
         }
         LOGGER.info("Stop polling for readers");
-    }
-
-    private void configure(CardTerminal candidate) throws CardException {
-        Card ca = candidate.connect("DIRECT");
-
-        // ldd -r /usr/bin/pcsc_scan
-        // https://stackoverflow.com/questions/12376257/accessing-javax-smartcardio-from-linux-64-bits
-        // https://ludovicrousseau.blogspot.com/2021/08/pcsc-lite-configuration-using.html
-        // https://stackoverflow.com/questions/35389657/how-to-send-commands-to-smart-card-reader-and-not-to-the-smart-card-while-no-c
-        // https://stackoverflow.com/questions/41851527/unkown-error-0x16-on-smartcard-reader-access
-        // https://stackoverflow.com/questions/31131569/unable-to-claim-usb-interface-device-or-resource-busy
-        // https://github.com/intarsys/smartcard-io
-
-        ca.beginExclusive();
-        try {
-            // https://stackoverflow.com/questions/12265807/javax-smartcardio-transmit-to-nfc-usb-reader-without-card/12346874#12346874
-            int SCARD_CTL_CODE = 0x310000 + 3500 * 4;
-
-            byte[] pseudo = new byte[]{(byte) 0xFF, 0x00, 0x48, 0x00, 0x00};
-
-            byte[] bytes = ca.transmitControlCommand(SCARD_CTL_CODE, pseudo);
-
-            String firmware = new String(bytes, Charset.forName("ASCII"));
-
-            LOGGER.debug("Read firmware " + firmware);
-        } finally {
-            ca.endExclusive();
-        }
     }
 
     // XXX seems now all use the same code

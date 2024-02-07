@@ -2,8 +2,12 @@
 repositories repos
 
 dependencies {
-    implementation ("com.squareup.okhttp3:okhttp:${okHttp3Version}")
-
+    api ("com.squareup.okhttp3:okhttp:${okHttp3Version}")
+    api ("org.slf4j:slf4j-api") {
+        version {
+            strictly "${slf4jVersion}"
+        }
+    }
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
 }

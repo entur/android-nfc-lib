@@ -13,4 +13,5 @@ public class ReaderBeginPollingRequestMessage extends NfcMessage {
     public ReaderBeginPollingRequestMessage(int id) {
         super(TYPE, id);
     }
+
 }

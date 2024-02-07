@@ -29,32 +29,56 @@ public class CardPollingServer implements Runnable {
     @Override
     public void run() {
         LOGGER.info("Start polling for card");
+
+        main:
         while(!closed) {
             try {
-                if(cardTerminal.waitForCardPresent(0)) {
+                if(cardTerminal.waitForCardPresent(100)) {
                     Card card = cardTerminal.connect("*");
 
                     CardListener listener = this.listener; // defensive copy
                     listener.cardConnected(card);
-                    try {
-                        cardTerminal.waitForCardAbsent(0);
-                    } finally {
-                        listener.cardDisconnected(card);
+
+                    while(!closed) {
+                        try {
+                            Thread.sleep(100);
+                            if(!cardTerminal.isCardPresent()) {
+                                listener.cardDisconnected(card);
+                            }
+                        } catch (InterruptedException e) {
+                            Thread.interrupted();
+                            if(!cardTerminal.isCardPresent()) {
+                                listener.cardDisconnected(card);
+                            }
+                            break main;
+                        }
                     }
+                    break;
                 }
             } catch (Exception e) {
                 LOGGER.error("Problem running", e);
+
+                break;
             }
+            LOGGER.info("Polling for card");
+
+            Thread.yield();
         }
         LOGGER.info("Stop polling for card");
     }
 
     public void start() {
+        closed = false;
+
+        LOGGER.info("Start background thread");
+
         thread = new Thread(this);
         thread.start();
     }
 
     public void stop() {
+        LOGGER.info("Stop background thread");
+
         closed = true;
 
         if(thread != null) {

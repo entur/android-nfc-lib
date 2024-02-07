@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.websocket.client.WebSocketClient;
 import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
 import no.entur.android.nfc.websocket.client.WebSocketClientListener;
@@ -58,6 +59,15 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
         public void disconnect() throws IOException {
             WebSocketNfcService.this.disconnect();
+        }
+
+
+        public boolean beginPolling() {
+            return WebSocketNfcService.this.beginPolling();
+        }
+
+        public void endPolling() throws IOException {
+            WebSocketNfcService.this.endPolling();
         }
 
 
@@ -112,6 +122,26 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
     }
 
+
+
+    public boolean beginPolling() {
+        WebSocketClient c = this.client;
+        if(c != null) {
+            c.getCardClient().setListener(this);
+
+            return c.getReaderClient().beginPolling();
+        }
+        return false;
+    }
+
+    public void endPolling() throws IOException {
+        WebSocketClient c = this.client;
+        if(c != null) {
+            c.getReaderClient().endPolling();
+            c.getCardClient().setListener(null);
+        }
+    }
+
     @Override
     public void onClosed() {
         this.client = null;
@@ -125,6 +155,20 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     @Override
     public void onCardPresent(List<String> technologies) {
         LOGGER.info("onCardPresent: " + technologies);
+
+        byte[] aid = new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0x57 };
+
+        byte SELECT_APPLICATION = 0x5A;
+
+        byte[] apdu = new byte[9];
+        apdu[0] = (byte) 0x90;
+        apdu[1] = (byte) SELECT_APPLICATION;
+        apdu[4] = 0x03;
+        System.arraycopy(aid, 0, apdu, 5, 3);
+
+        byte[] transcieve = this.client.getCardClient().transcieve(apdu);
+
+        LOGGER.info(ByteArrayHexStringConverter.toHexString(transcieve));
     }
 
     public void broadcast(String action) {

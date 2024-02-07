@@ -10,4 +10,10 @@ public class ReaderBeginPollingResponseMessage extends NfcStatusResponseMessage 
         super(TYPE, id);
     }
 
+    public ReaderBeginPollingResponseMessage(int id, int status) {
+        super(TYPE, id);
+        this.status = status;
+    }
+
+
 }

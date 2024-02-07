@@ -1,10 +1,11 @@
 package no.entur.android.nfc.websocket.server;
 
+import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
 public class PooledCardTerminal {
 
-    private final CardTerminal cardTerminal;
+    private final ExtendedCardTerminal cardTerminal;
 
     private volatile boolean borrowed = false;
 
@@ -12,25 +13,27 @@ public class PooledCardTerminal {
 
     private boolean closed;
 
-    public PooledCardTerminal(CardTerminal cardTerminal) {
+    public PooledCardTerminal(ExtendedCardTerminal cardTerminal) {
         this.cardTerminal = cardTerminal;
         this.cardPollingServer = new CardPollingServer(cardTerminal);
     }
 
     public CardTerminal getCardTerminal() {
-        return cardTerminal;
+        return cardTerminal.getDelegate();
     }
 
     public void setListener(CardListener listener) {
         this.cardPollingServer.setListener(listener);
     }
 
-    public void startPolling() {
+    public void startPolling() throws CardException {
+        cardTerminal.startPolling();
         cardPollingServer.start();
     }
 
-    public void stopPolling() {
+    public void stopPolling() throws CardException {
         cardPollingServer.stop();
+        cardTerminal.stopPolling();
     }
 
     public boolean isBorrowed() {

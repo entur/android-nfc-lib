@@ -1,5 +1,7 @@
 package no.entur.android.nfc.websocket.messages.reader;
 
+import javax.smartcardio.CardException;
+
 import no.entur.android.nfc.websocket.messages.NfcMessage;
 import no.entur.android.nfc.websocket.messages.NfcMessageListener;
 import no.entur.android.nfc.websocket.messages.RequestResponseMessages;
@@ -14,8 +16,8 @@ public class ReaderServer implements NfcMessageListener {
 
 		boolean onDisconnect();
 
-		boolean onBeginPolling();
-		boolean onEndPolling();
+		boolean onBeginPolling() throws CardException;
+		boolean onEndPolling() throws CardException;
 
 	}
 
@@ -39,12 +41,23 @@ public class ReaderServer implements NfcMessageListener {
 		} else if(message instanceof ReaderConnectRequestMessage) {
 			listener.onConnect();
 			sender.onMessage(new ReaderConnectResponseMessage(message.getId()));
-		} else if(message instanceof ReaderConnectRequestMessage) {
-			listener.onBeginPolling();
-			sender.onMessage(new ReaderBeginPollingRequestMessage());
+		} else if(message instanceof ReaderBeginPollingRequestMessage) {
+			try {
+				listener.onBeginPolling();
+
+				sender.onMessage(new ReaderBeginPollingRequestMessage());
+			} catch (CardException e) {
+				sender.onMessage(new ReaderBeginPollingResponseMessage(message.getId(), -1));
+			}
 		} else if(message instanceof ReaderEndPollingRequestMessage) {
-			listener.onEndPolling();
-			sender.onMessage(new ReaderEndPollingResponseMessage(message.getId()));
+			try {
+				listener.onEndPolling();
+				
+				sender.onMessage(new ReaderEndPollingResponseMessage(message.getId()));
+			} catch (CardException e) {
+				sender.onMessage(new ReaderEndPollingResponseMessage(message.getId(), -1));
+
+			}
 		}
 	}
 

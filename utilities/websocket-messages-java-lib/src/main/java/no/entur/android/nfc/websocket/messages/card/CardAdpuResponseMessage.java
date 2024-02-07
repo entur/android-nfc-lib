@@ -25,8 +25,12 @@ public class CardAdpuResponseMessage extends NfcStatusResponseMessage {
     @Override
     public void write(DataOutputStream dout) throws IOException {
     	super.write(dout);
-    	dout.writeInt(adpu.length);
-    	dout.write(adpu);
+        if(adpu != null) {
+            dout.writeInt(adpu.length);
+            dout.write(adpu);
+        } else {
+            dout.writeInt(0);
+        }
     }
     
     @Override

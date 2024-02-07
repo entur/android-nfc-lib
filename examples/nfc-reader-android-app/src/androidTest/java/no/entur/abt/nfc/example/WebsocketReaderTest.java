@@ -90,6 +90,14 @@ public class WebsocketReaderTest {
 					if(mService.connect("ws://10.0.2.2:3001")) {
 						mService.connectReader();
 
+						mService.beginPolling();
+
+						System.out.println("Begin waiting for card..");
+						Thread.sleep(10000);
+
+						System.out.println("End waiting for card");
+						mService.endPolling();
+
 						mService.disconnectReader();
 
 						mService.disconnect();

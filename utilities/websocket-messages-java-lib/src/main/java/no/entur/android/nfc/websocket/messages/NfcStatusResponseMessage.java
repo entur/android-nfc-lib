@@ -12,7 +12,7 @@ public class NfcStatusResponseMessage extends NfcMessage {
 
 	public static final int STATUS_CARD_UNABLE_TO_TRANSCIEVE = 2000;
 
-	private int status = STATUS_OK;
+	protected int status = STATUS_OK;
 
 	public NfcStatusResponseMessage(int type, int id) {
 		super(type, id);

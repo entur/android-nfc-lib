@@ -10,4 +10,9 @@ public class ReaderEndPollingResponseMessage extends NfcStatusResponseMessage {
         super(TYPE, id);
     }
 
+    public ReaderEndPollingResponseMessage(int id, int status) {
+        super(TYPE, id);
+        this.status = status;
+    }
+
 }
