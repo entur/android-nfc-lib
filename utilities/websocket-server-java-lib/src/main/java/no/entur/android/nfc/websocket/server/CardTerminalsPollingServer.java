@@ -124,7 +124,7 @@ public class CardTerminalsPollingServer implements Runnable {
                     }
                 }
 
-                LOGGER.info("Currently have " + accept.size() + " readers");
+                // LOGGER.info("Currently have " + accept.size() + " readers");
 
                 this.current = accept;
                 this.ignored = ignore;
