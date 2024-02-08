@@ -104,6 +104,8 @@ ext {
     adpu4jVersion = '23.03.21'
 
     junitJupiterVersion = '5.8.2'
+    jnasmartcardioVersion = '0.2.7'
+    logbackVersion = '1.2.13'
 }
 
 ext.commonDependencies = {

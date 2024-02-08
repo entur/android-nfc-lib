@@ -10,8 +10,9 @@ This project hosts tools for working with NFC on Android. Modules:
  * [external-minova](nfc/external-minova) - support for Minova MCR external NFC readers (over network)
  * [external-websocket](nfc/external-websocket) - support for interacting with a pool of external readers over websocket
    * add NFC support to devices without NFC chips (i.e. emulator / Android TV / certain tablets), and/or 
-   * interact with multiple cards/readers during testing
-     * fine-grained controls
+   * programmatically interact with multiple cards/readers during testing, using fine-grained controls:
+     * connect/disconnect reader
+     * start/stop polling
 
 # License
 [European Union Public Licence v1.2](https://eupl.eu/).

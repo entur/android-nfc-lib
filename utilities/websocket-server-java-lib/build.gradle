@@ -40,10 +40,7 @@ dependencies {
         }
     }
 
-    //api "com.github.martinpaljak:apdu4j:${adpu4jVersion}"
-    //api "com.github.martinpaljak:apdu4j-pcsc:21.05.06"
-    //api 'com.github.martinpaljak:apdu4j-core:2020r3'
-    api 'io.github.jnasmartcardio:jnasmartcardio:0.2.7'
+    api "io.github.jnasmartcardio:jnasmartcardio:${jnasmartcardioVersion}"
 
     api project(":utilities:websocket-client-java-lib")
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"

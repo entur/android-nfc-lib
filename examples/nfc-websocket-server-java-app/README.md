@@ -6,3 +6,15 @@ Run command
 
 > ./gradlew runWebsocketServer
 
+for a service on port 3001.
+
+# Troubleshooting
+## Port not released.
+Run 
+
+> ./gradlew --stop
+
+and wait a few seconds.
+
+## No reader found
+Adjust the `sun.security.smartcardio.library` in `build.gradle` for this module.

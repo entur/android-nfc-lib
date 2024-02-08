@@ -50,13 +50,8 @@ dependencies {
             strictly "${slf4jVersion}"
         }
     }
-    implementation ("ch.qos.logback:logback-classic:1.2.13")
-
-    //api "com.github.martinpaljak:apdu4j:${adpu4jVersion}"
-    //api "com.github.martinpaljak:apdu4j-pcsc:21.05.06"
-    //api 'com.github.martinpaljak:apdu4j-core:2020r3'
-    implementation 'io.github.jnasmartcardio:jnasmartcardio:0.2.7'
-
+    implementation ("ch.qos.logback:logback-classic:${logbackVersion}")
+    implementation "io.github.jnasmartcardio:jnasmartcardio:${jnasmartcardioVersion}"
 
     implementation project(":utilities:websocket-client-java-lib")
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
