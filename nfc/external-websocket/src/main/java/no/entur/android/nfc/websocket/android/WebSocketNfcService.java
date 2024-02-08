@@ -4,15 +4,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
@@ -20,18 +17,10 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.websocket.client.WebSocketClient;
 import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
 import no.entur.android.nfc.websocket.client.WebSocketClientListener;
-import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
-import no.entur.android.nfc.websocket.messages.NfcMessageListener;
-import no.entur.android.nfc.websocket.messages.RequestResponseMessages;
 import no.entur.android.nfc.websocket.messages.card.CardClient;
-import no.entur.android.nfc.websocket.messages.reader.ReaderClient;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
 
 public class WebSocketNfcService extends Service implements CardClient.Listener, WebSocketClientListener {
 
@@ -45,7 +34,7 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     //binder given to client
     private final IBinder binder = new LocalBinder();
 
-    private WebSocketClientFactory factory = new WebSocketClientFactory();
+    private WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
 
     private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store);
 
@@ -56,8 +45,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
             return WebSocketNfcService.this.connect(uri);
         }
 
-        public boolean connectReader() {
-            return WebSocketNfcService.this.connectReader();
+        public boolean connectReader(String[] tags) {
+            return WebSocketNfcService.this.connectReader(tags);
         }
 
         public boolean disconnectReader() {
@@ -106,11 +95,13 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
         return true;
     }
 
-    public boolean connectReader() {
+    public boolean connectReader(String[] tags) {
         WebSocketClient c = this.client;
         if(c != null) {
-            if(c.getReaderClient().connect()) {
+            if(c.getReaderClient().connect(tags)) {
                 broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+            } else {
+                LOGGER.warn("Unable to connect reader");
             }
         }
         return false;
@@ -121,6 +112,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
         if(c != null) {
             if(c.getReaderClient().disconnect()) {
                 broadcast(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+            } else {
+                LOGGER.warn("Unable to disconnect reader");
             }
         }
         return false;
@@ -175,6 +168,7 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     }
 
     public void broadcast(String action) {
+        LOGGER.info("Broadcast " + action);
         Intent intent = new Intent();
         intent.setAction(action);
         sendBroadcast(intent, ANDROID_PERMISSION_NFC);

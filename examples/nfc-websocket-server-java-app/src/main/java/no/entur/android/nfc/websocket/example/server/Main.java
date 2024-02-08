@@ -1,14 +1,10 @@
 package no.entur.android.nfc.websocket.example.server;
 
-import java.net.UnknownHostException;
-
 import javax.smartcardio.CardTerminal;
-import javax.smartcardio.TerminalFactory;
 
-import jnasmartcardio.Smartcardio;
 import no.entur.android.nfc.websocket.server.CardTerminalsFilter;
-import no.entur.android.nfc.websocket.server.CardTerminalsPollingPool;
-import no.entur.android.nfc.websocket.server.CardTerminalsPollingServer;
+import no.entur.android.nfc.websocket.server.DefaultCardTerminalMetadataEnricher;
+import no.entur.android.nfc.websocket.server.ExtendedCardTerminalFactory;
 import no.entur.android.nfc.websocket.server.WebSocketNfcServer;
 
 public class Main {
@@ -21,7 +17,11 @@ public class Main {
                 return !cardTerminal.getName().contains(" SAM");
             }
         };
-        WebSocketNfcServer s = new WebSocketNfcServer(port, filter);
+
+        ExtendedCardTerminalFactory extendedCardTerminalFactory = new ExtendedCardTerminalFactory(new DefaultCardTerminalMetadataEnricher());
+
+
+        WebSocketNfcServer s = new WebSocketNfcServer(port, filter, extendedCardTerminalFactory);
         s.start();
     }
 }

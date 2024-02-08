@@ -1,5 +1,7 @@
 package no.entur.android.nfc.websocket.messages.reader;
 
+import java.util.List;
+
 import javax.smartcardio.CardException;
 
 import no.entur.android.nfc.websocket.messages.NfcMessage;
@@ -12,7 +14,7 @@ public class ReaderServer implements NfcMessageListener {
 
 	public interface Listener {
 
-		boolean onConnect();
+		boolean onConnect(List<String> tags);
 
 		boolean onDisconnect();
 
@@ -39,13 +41,14 @@ public class ReaderServer implements NfcMessageListener {
 			listener.onDisconnect();
 			sender.onMessage(new ReaderDisconnectResponseMessage(message.getId()));
 		} else if(message instanceof ReaderConnectRequestMessage) {
-			listener.onConnect();
+			ReaderConnectRequestMessage m = (ReaderConnectRequestMessage)message;
+			listener.onConnect(m.getTags());
 			sender.onMessage(new ReaderConnectResponseMessage(message.getId()));
 		} else if(message instanceof ReaderBeginPollingRequestMessage) {
 			try {
 				listener.onBeginPolling();
 
-				sender.onMessage(new ReaderBeginPollingRequestMessage());
+				sender.onMessage(new ReaderBeginPollingResponseMessage(message.getId()));
 			} catch (CardException e) {
 				sender.onMessage(new ReaderBeginPollingResponseMessage(message.getId(), -1));
 			}

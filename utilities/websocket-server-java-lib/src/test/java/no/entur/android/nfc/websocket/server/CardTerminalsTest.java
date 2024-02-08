@@ -12,9 +12,11 @@ public class CardTerminalsTest {
     @Disabled
     public void test() throws InterruptedException {
         TerminalFactory f = TerminalFactory.getDefault();
-        CardTerminals terminals = f.terminals();
 
-        CardTerminalsPollingServer cardTerminalsPollingServer = new CardTerminalsPollingServer(f, new CardTerminalsPollingPool());
+        ExtendedCardTerminalFactory extendedCardTerminalFactory = new ExtendedCardTerminalFactory(new DefaultCardTerminalMetadataEnricher());
+
+
+        CardTerminalsPollingServer cardTerminalsPollingServer = new CardTerminalsPollingServer(f, new CardTerminalsPollingPool(extendedCardTerminalFactory));
         cardTerminalsPollingServer.start();
         Thread.sleep(1000);
         cardTerminalsPollingServer.stop();

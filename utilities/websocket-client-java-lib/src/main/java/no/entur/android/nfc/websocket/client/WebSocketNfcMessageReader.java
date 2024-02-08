@@ -36,10 +36,9 @@ public class WebSocketNfcMessageReader extends WebSocketListener {
 
     @Override
     public void onMessage(WebSocket webSocket, ByteString bytes) {
-        LOGGER.info("onMessage");
-
         NfcMessage m = reader.parse(bytes.toByteArray());
         if(m != null) {
+            LOGGER.info("onMessage " + m.getClass().getName() + "#" + m.getId());
             delegate.onMessage(m);
         } else {
             LOGGER.warn("Unable to parse message");

@@ -10,11 +10,19 @@ import javax.smartcardio.CardTerminal;
 public abstract class ExtendedCardTerminal extends CardTerminal {
 
     protected final CardTerminal delegate;
+    protected List<String> tags;
 
     public ExtendedCardTerminal(CardTerminal delegate) {
         this.delegate = delegate;
     }
 
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
 
     public abstract void startPolling() throws CardException;
 

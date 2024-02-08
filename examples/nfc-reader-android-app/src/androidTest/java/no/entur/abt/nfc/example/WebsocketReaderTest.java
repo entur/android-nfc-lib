@@ -1,32 +1,20 @@
 package no.entur.abt.nfc.example;
 
-import static androidx.test.espresso.Espresso.pressBack;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.By;
-import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject2;
-import androidx.test.uiautomator.UiSelector;
 
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 import no.entur.android.nfc.websocket.android.WebSocketNfcService;
 
@@ -48,20 +36,13 @@ public class WebsocketReaderTest {
 	/**
 	 * Class for interacting with the main interface of the service.
 	 */
-	private ServiceConnection mConnection = new ServiceConnection() {
+	private ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
-			// This is called when the connection with the service has been
-			// established, giving us the object we can use to
-			// interact with the service.  We are communicating with the
-			// service using a Messenger, so here we get a client-side
-			// representation of that from the raw IBinder object.
 			mService = (WebSocketNfcService.LocalBinder)service;
 			bound = true;
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
-			// This is called when the connection with the service has been
-			// unexpectedly disconnected&mdash;that is, its process crashed.
 			mService = null;
 			bound = false;
 		}
@@ -80,7 +61,7 @@ public class WebsocketReaderTest {
 		applicationContext.startService(new Intent(applicationContext, WebSocketNfcService.class));
 
 		try {
-			applicationContext.bindService(new Intent(applicationContext, WebSocketNfcService.class), mConnection,
+			applicationContext.bindService(new Intent(applicationContext, WebSocketNfcService.class), connection,
 					Context.BIND_AUTO_CREATE);
 			Thread.sleep(1000);
 
@@ -88,7 +69,7 @@ public class WebsocketReaderTest {
 				LOGGER.info("Service bound");
 				try {
 					if(mService.connect("ws://10.0.2.2:3001")) {
-						mService.connectReader();
+						mService.connectReader(new String[]{});
 
 						mService.beginPolling();
 
@@ -112,8 +93,8 @@ public class WebsocketReaderTest {
 			}
 
 		} finally {
-			if(mConnection != null) {
-				applicationContext.unbindService(mConnection);
+			if(connection != null) {
+				applicationContext.unbindService(connection);
 			}
 		}
 

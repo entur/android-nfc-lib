@@ -50,7 +50,6 @@ public class CardServer implements NfcMessageListener {
 			CardAdpuRequestMessage cardAdpuRequestMessage = (CardAdpuRequestMessage)message;
 
 			try {
-
 				LOGGER.info("-> " + ByteArrayHexStringConverter.toHexString(cardAdpuRequestMessage.getAdpu()));
 				byte[] transcieve = listener.transcieve(cardAdpuRequestMessage.getAdpu());
 				LOGGER.info("<- " + ByteArrayHexStringConverter.toHexString(transcieve));

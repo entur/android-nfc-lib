@@ -25,7 +25,7 @@ public class RequestResponseMessageLock {
 	public NfcMessage waitForMessage(long duration) {
 		try {
 			synchronized(this) {
-				if(response != null) {
+				if(response == null) {
 					wait(duration);
 				}
 			}

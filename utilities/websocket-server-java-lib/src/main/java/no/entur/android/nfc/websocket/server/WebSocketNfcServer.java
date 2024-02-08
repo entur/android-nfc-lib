@@ -47,7 +47,7 @@ public class WebSocketNfcServer extends WebSocketServer {
     private final NfcMessageReader reader = new NfcMessageReader();
     private final CardTerminalsFilter cardTerminalsFilter;
 
-    private CardTerminalsPollingPool cardTerminalsPollingPool = new CardTerminalsPollingPool();
+    private CardTerminalsPollingPool cardTerminalsPollingPool;
 
     private CardTerminalsPollingServer cardTerminalsPollingServer;
 
@@ -130,8 +130,8 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         @Override
-        public boolean onConnect() {
-            PooledCardTerminal borrow = cardTerminalsPollingPool.borrow();
+        public boolean onConnect(List<String> tags) {
+            PooledCardTerminal borrow = cardTerminalsPollingPool.borrow(tags);
             if(borrow != null) {
                 LOGGER.info("Connected reader " + borrow.getCardTerminal().getName() );
                 this.pooledCardTerminal = borrow;
@@ -204,20 +204,23 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
     }
 
-    public WebSocketNfcServer(int port, CardTerminalsFilter cardTerminalsFilter) throws UnknownHostException {
+    public WebSocketNfcServer(int port, CardTerminalsFilter cardTerminalsFilter, ExtendedCardTerminalFactory extendedCardTerminalFactory) {
         super(new InetSocketAddress(port));
 
         this.cardTerminalsFilter = cardTerminalsFilter;
+        this.cardTerminalsPollingPool = new CardTerminalsPollingPool(extendedCardTerminalFactory);
     }
 
-    public WebSocketNfcServer(InetSocketAddress address, CardTerminalsFilter cardTerminalsFilter) {
+    public WebSocketNfcServer(InetSocketAddress address, CardTerminalsFilter cardTerminalsFilter, ExtendedCardTerminalFactory extendedCardTerminalFactory) {
         super(address);
         this.cardTerminalsFilter = cardTerminalsFilter;
+        this.cardTerminalsPollingPool = new CardTerminalsPollingPool(extendedCardTerminalFactory);
     }
 
-    public WebSocketNfcServer(int port, Draft_6455 draft, CardTerminalsFilter cardTerminalsFilter) {
+    public WebSocketNfcServer(int port, Draft_6455 draft, CardTerminalsFilter cardTerminalsFilter, ExtendedCardTerminalFactory extendedCardTerminalFactory) {
         super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
         this.cardTerminalsFilter = cardTerminalsFilter;
+        this.cardTerminalsPollingPool = new CardTerminalsPollingPool(extendedCardTerminalFactory);
     }
 
     @Override
@@ -282,8 +285,6 @@ public class WebSocketNfcServer extends WebSocketServer {
         LOGGER.info("Server started!");
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
-
-        //TerminalFactory f = TerminalFactory.getDefault();
 
         TerminalFactory f = null;
         try {

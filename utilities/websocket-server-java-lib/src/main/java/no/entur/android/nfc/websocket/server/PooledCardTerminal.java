@@ -1,5 +1,7 @@
 package no.entur.android.nfc.websocket.server;
 
+import java.util.List;
+
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
@@ -56,5 +58,9 @@ public class PooledCardTerminal {
 
     public boolean isClosed() {
         return closed;
+    }
+
+    public boolean matches(List<String> tags) {
+        return cardTerminal.getTags().containsAll(tags);
     }
 }

@@ -15,7 +15,11 @@ public class CardTerminalsPollingPool implements CardTerminalsPollingListener {
 
     private List<PooledCardTerminal> current = new ArrayList<>();
 
-    private static final ExtendedCardTerminalFactory extendedCardTerminalFactory = new ExtendedCardTerminalFactory();
+    private final ExtendedCardTerminalFactory extendedCardTerminalFactory;
+
+    public CardTerminalsPollingPool(ExtendedCardTerminalFactory extendedCardTerminalFactory) {
+        this.extendedCardTerminalFactory = extendedCardTerminalFactory;
+    }
 
     @Override
     public void connected(CardTerminal cardTerminal) throws CardException {
@@ -42,16 +46,16 @@ public class CardTerminalsPollingPool implements CardTerminalsPollingListener {
         }
     }
 
-    public PooledCardTerminal borrow() {
+    public PooledCardTerminal borrow(List<String> tags) {
         synchronized (current) {
             for(PooledCardTerminal terminal : current) {
-                if(!terminal.isBorrowed()) {
-                    LOGGER.info("Borrowing reader from pool of " + current.size());
+                if(!terminal.isBorrowed() && terminal.matches(tags)) {
+                    LOGGER.info("Borrowing reader from pool of " + current.size() + " for " + tags);
                     terminal.borrow();
                     return terminal;
                 }
             }
-            LOGGER.info("Unable to borrow reader from pool of " + current.size());
+            LOGGER.info("Unable to borrow reader from pool of " + current.size() + " for " + tags);
         }
 
         return null;

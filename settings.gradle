@@ -1,5 +1,5 @@
 include ":nfc:wrapper", ":nfc:wrapper-utils", ":nfc:core", ":nfc:external", ":utilities:tcp-server-java-lib", ":nfc:external-acs", ":nfc:external-minova"
-include "utilities:websocket-messages-java-lib", "nfc:websocket-android", "utilities:websocket-server-java-lib", "utilities:websocket-client-java-lib"
+include "utilities:websocket-messages-java-lib", "nfc:external-websocket", "utilities:websocket-server-java-lib", "utilities:websocket-client-java-lib"
 
 include ":examples:nfc-reader-android-app", "examples:nfc-websocket-server-java-app"
 

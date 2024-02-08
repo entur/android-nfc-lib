@@ -58,8 +58,8 @@ public class Acr1252CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICC(0b10010001);
-        setAutomaticPICCPolling(0xFF);
+        setPICC(0b00000011);
+        setAutomaticPICCPolling(0b11000001);
     }
 
     @Override
