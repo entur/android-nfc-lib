@@ -5,7 +5,6 @@ import org.java_websocket.WebSocket;
 import no.entur.android.nfc.websocket.messages.NfcMessage;
 import no.entur.android.nfc.websocket.messages.NfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessageWriter;
-import okio.ByteString;
 
 public class WebSocketNfcMessageWriter implements NfcMessageListener {
 

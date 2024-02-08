@@ -12,7 +12,7 @@ public class CardPollingServer implements Runnable {
 
     private Thread thread;
 
-    private boolean closed = false;
+    private boolean closed = true;
 
     private final CardTerminal cardTerminal;
 
@@ -30,10 +30,15 @@ public class CardPollingServer implements Runnable {
     public void run() {
         LOGGER.info("Start polling for card");
 
+        long timestamp = System.currentTimeMillis();
+
+        long counter = 0;
+
         main:
         while(!closed) {
             try {
-                if(cardTerminal.waitForCardPresent(100)) {
+                if(cardTerminal.isCardPresent()) {
+                    LOGGER.info("Card is present");
                     Card card = cardTerminal.connect("*");
 
                     CardListener listener = this.listener; // defensive copy
@@ -44,36 +49,48 @@ public class CardPollingServer implements Runnable {
                             Thread.sleep(100);
                             if(!cardTerminal.isCardPresent()) {
                                 listener.cardDisconnected(card);
+
+                                break;
                             }
                         } catch (InterruptedException e) {
                             Thread.interrupted();
                             if(!cardTerminal.isCardPresent()) {
                                 listener.cardDisconnected(card);
+
+                                break;
                             }
                             break main;
                         }
                     }
-                    break;
                 }
+                Thread.sleep(10);
+
+                long duration = (System.currentTimeMillis() - timestamp) / 1000;
+                if(duration > counter) {
+                    LOGGER.info("Polling for card: " + duration + "s");
+                    counter = duration;
+                }
+
             } catch (Exception e) {
                 LOGGER.error("Problem running", e);
 
                 break;
             }
-            LOGGER.info("Polling for card");
-
-            Thread.yield();
         }
         LOGGER.info("Stop polling for card");
     }
 
     public void start() {
-        closed = false;
+        if(closed) {
+            closed = false;
 
-        LOGGER.info("Start background thread");
+            LOGGER.info("Start background thread");
 
-        thread = new Thread(this);
-        thread.start();
+            thread = new Thread(this);
+            thread.start();
+        } else {
+            LOGGER.info("Background thread already started");
+        }
     }
 
     public void stop() {

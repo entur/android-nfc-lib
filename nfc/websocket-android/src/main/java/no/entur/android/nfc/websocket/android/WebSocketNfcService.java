@@ -161,6 +161,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     @Override
     public void onCardLost() {
         LOGGER.info("onCardLost");
+
+        broadcast(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
     }
 
     @Override

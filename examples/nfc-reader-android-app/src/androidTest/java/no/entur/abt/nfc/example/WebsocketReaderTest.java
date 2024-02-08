@@ -93,7 +93,7 @@ public class WebsocketReaderTest {
 						mService.beginPolling();
 
 						System.out.println("Begin waiting for card..");
-						Thread.sleep(10000);
+						Thread.sleep(60000);
 
 						System.out.println("End waiting for card");
 						mService.endPolling();

@@ -6,6 +6,7 @@ import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.RequestResponseMessages;
 import no.entur.android.nfc.websocket.messages.card.CardClient;
 import no.entur.android.nfc.websocket.messages.reader.ReaderClient;
+import okhttp3.CacheControl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
