@@ -12,18 +12,17 @@ import org.nfctools.mf.ul.ntag.NfcNtagVersion;
 
 import java.io.IOException;
 
-import no.entur.android.nfc.external.service.tag.DefaultTagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.tag.AbstractTagServiceSupport;
 import no.entur.android.nfc.wrapper.INfcTag;
 
-public abstract class AbstractMifareUltralightTagServiceSupport extends AbstractTagServiceSupport {
+public abstract class AbstractAcsMifareUltralightTagServiceSupport extends AbstractTagServiceSupport {
 
-    private static final String TAG = AbstractMifareUltralightTagServiceSupport.class.getName();
+    private static final String TAG = AbstractAcsMifareUltralightTagServiceSupport.class.getName();
 
     protected boolean ntag21xUltralights;
 
-    public AbstractMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
+    public AbstractAcsMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
         super(context, tagService, store);
         this.ntag21xUltralights = ntag21xUltralights;
     }

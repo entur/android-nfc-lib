@@ -28,8 +28,8 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
     public TagProxy hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
-            technologies.add(new NfcAAdapter(wrapper, true));
-            technologies.add(new IsoDepAdapter(wrapper, true));
+            technologies.add(new WrapNfcACommandTechnology(wrapper, true));
+            technologies.add(new IsoDepCommandTechnology(wrapper, true));
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 
@@ -51,8 +51,8 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
     public TagProxy card(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
-            technologies.add(new NfcAAdapter(wrapper, false));
-            technologies.add(new IsoDepAdapter(wrapper, false));
+            technologies.add(new WrapNfcACommandTechnology(wrapper, false));
+            technologies.add(new IsoDepCommandTechnology(wrapper, false));
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 

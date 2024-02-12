@@ -3,10 +3,8 @@ package no.entur.android.nfc.external.acs.tag;
 import android.content.Context;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
-import android.util.Log;
 
 import org.nfctools.api.ApduTag;
-import org.nfctools.api.TagType;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
 import org.nfctools.spi.acs.AcrMfUlReaderWriter;
@@ -14,11 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.android.nfc.external.tag.MifareUltralightTagFactory;
 import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class TagUtility {
 

@@ -23,16 +23,18 @@ import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
+import no.entur.android.nfc.external.tag.MifareUltralightTagFactory;
+import no.entur.android.nfc.external.tag.NfcADefaultCommandTechnology;
 import no.entur.android.nfc.external.tag.TechnologyType;
 import no.entur.android.nfc.wrapper.INfcTag;
 
-public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightTagServiceSupport {
+public class AcsAcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltralightTagServiceSupport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MifareUltralightTagServiceSupport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AcsAcsMifareUltralightTagServiceSupport.class);
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
-    public MifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
+    public AcsAcsMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
         super(context, tagService, store, ntag21xUltralights);
     }
 
@@ -144,17 +146,23 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
             }
 
             if (canReadBlocks) {
-                technologies.add(new MifareUltralightAdapter(readerWriter));
+                technologies.add(new AcsMifareUltralightCommandTechnology(readerWriter));
             }
 
             if (TechnologyType.isNFCA(atr)) {
-                technologies.add(new PN532NfcAAdapter(wrapper, false));
+                technologies.add(new NfcADefaultCommandTechnology(wrapper, false));
                 // technologies.add(new NfcAAdapter(slotNumber, reader, false));
             }
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 
-            Intent intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, type, version, uid, atr, tagService);
+            Integer ntagVersion = version;
+            Intent intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, type, uid, atr, tagService, (i) -> {
+                if (ntagVersion != null && ntagVersion > 0) {
+                    i.putExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE, ntagVersion);
+                }
+                return i;
+            });
 
             LOGGER.debug("Broadcast mifare ultralight");
 

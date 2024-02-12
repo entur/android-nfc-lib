@@ -1,26 +1,20 @@
-package no.entur.android.nfc.external.acs.tag;
-
-import android.os.RemoteException;
-import android.util.Log;
+package no.entur.android.nfc.external.tag;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
-import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
-import no.entur.android.nfc.external.tag.DefaultTechnology;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
-public class PN532DefaultTechnology extends DefaultTechnology implements CommandTechnology {
+public class DefaultCommandTechnology extends AbstractTagTechnology implements CommandTechnology {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PN532DefaultTechnology.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCommandTechnology.class);
 
 	protected AbstractReaderIsoDepWrapper reader;
 	private boolean print;
 
-	public PN532DefaultTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print) {
+	public DefaultCommandTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print) {
 		super(tagTechnology);
 
 		this.reader = reader;

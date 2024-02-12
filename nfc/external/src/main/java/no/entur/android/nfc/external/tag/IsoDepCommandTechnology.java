@@ -2,7 +2,6 @@ package no.entur.android.nfc.external.tag;
 
 import android.nfc.tech.IsoDep;
 import android.os.RemoteException;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,14 +10,14 @@ import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
-public class IsoDepAdapter extends DefaultTechnology implements CommandTechnology {
+public class IsoDepCommandTechnology extends AbstractTagTechnology implements CommandTechnology {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IsoDepAdapter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(IsoDepCommandTechnology.class);
 
 	private DESFireAdapter adapter;
 	private boolean hostCardEmulation;
 
-	public IsoDepAdapter(AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation) {
+	public IsoDepCommandTechnology(AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation) {
 		super(TagTechnology.ISO_DEP);
 		this.adapter = new DESFireAdapter(isoDep, false);
 		this.hostCardEmulation = hostCardEmulation;

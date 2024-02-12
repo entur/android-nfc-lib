@@ -1,6 +1,7 @@
 package no.entur.android.nfc.websocket.android;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -37,6 +38,7 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     private WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
 
     private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store);
+    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, new INFcTagBinder(store), store);
 
     private WebSocketClient client = null;
 
@@ -162,9 +164,18 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public void onCardPresent(CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
         LOGGER.info("onCardPresent: " + technologies);
 
-        WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
+        if(technologies.contains("IsoDep")) {
+            WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
 
-        isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
+            isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
+        } else if(technologies.contains("MifareUltralight")) {
+            WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
+
+            mifareUltralightTagServiceSupport.mifareUltralight(-1, wrapper, atr, uid, historicalBytes, IntentEnricher.identity());
+        } else {
+
+            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+        }
     }
 
     public void broadcast(String action) {

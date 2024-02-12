@@ -1,9 +1,7 @@
 package no.entur.android.nfc.external.tag;
 
 import android.os.RemoteException;
-import android.util.Log;
 
-import org.nfctools.api.TagType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,14 +13,22 @@ import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.NfcA;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
-public class NfcAAdapter extends DefaultTechnology implements CommandTechnology {
+/**
+ *
+ * NFC A which wraps raw commands into adpus
+ *
+ * TODO can this be replaced by DefaultCommandTechnology?
+ *
+ */
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(NfcAAdapter.class);
+public class WrapNfcACommandTechnology extends AbstractTagTechnology implements CommandTechnology {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(WrapNfcACommandTechnology.class);
 
 	private AbstractReaderIsoDepWrapper wrapper;
 	private boolean print;
 
-	public NfcAAdapter(AbstractReaderIsoDepWrapper wrapper, boolean print) {
+	public WrapNfcACommandTechnology(AbstractReaderIsoDepWrapper wrapper, boolean print) {
 		super(TagTechnology.NFC_A);
 		this.wrapper = wrapper;
 		this.print = print;
@@ -79,29 +85,17 @@ public class NfcAAdapter extends DefaultTechnology implements CommandTechnology 
 	public byte[] transceive(byte[] command) throws Exception {
 
 		if (print) {
-			LOGGER.debug("===> " + getHexString(command, true) + " (" + command.length + ")");
+			LOGGER.debug("===> " + ByteArrayHexStringConverter.toHexString(command) + " (" + command.length + ")");
 		}
 
 		byte[] response = wrapper.transceive(command);
 
 		if (print) {
-			LOGGER.debug("<=== " + getHexString(response, true) + " (" + command.length + ")");
+			LOGGER.debug("<=== " + ByteArrayHexStringConverter.toHexString(response) + " (" + command.length + ")");
 		}
 
 		return response;
 	}
-
-	public static String getHexString(byte[] a, boolean space) {
-		StringBuilder sb = new StringBuilder();
-		for (byte b : a) {
-			sb.append(String.format("%02x", b & 0xff));
-			if (space) {
-				sb.append(' ');
-			}
-		}
-		return sb.toString().trim().toUpperCase();
-	}
-
 	@Override
 	public String toString() {
 		return NfcA.class.getSimpleName();

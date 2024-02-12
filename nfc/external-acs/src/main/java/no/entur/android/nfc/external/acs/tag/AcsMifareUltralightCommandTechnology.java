@@ -1,7 +1,6 @@
 package no.entur.android.nfc.external.acs.tag;
 
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.acs.smartcard.ReaderException;
 
@@ -13,24 +12,23 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import no.entur.android.nfc.external.acs.service.AcsUsbService;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
-import no.entur.android.nfc.external.tag.DefaultTechnology;
+import no.entur.android.nfc.external.tag.AbstractTagTechnology;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
-public class MifareUltralightAdapter extends DefaultTechnology implements CommandTechnology {
+public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology implements CommandTechnology {
 
 	/**
 	 * Size of a MIFARE Ultralight page in bytes
 	 */
 	public static final int PAGE_SIZE = 4;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MifareUltralightAdapter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AcsMifareUltralightCommandTechnology.class);
 
 	private MfUlReaderWriter readerWriter;
 
-	public MifareUltralightAdapter(MfUlReaderWriter readerWriter) {
+	public AcsMifareUltralightCommandTechnology(MfUlReaderWriter readerWriter) {
 		super(TagTechnology.MIFARE_ULTRALIGHT);
 		this.readerWriter = readerWriter;
 	}

@@ -1,10 +1,8 @@
-package no.entur.android.nfc.external.acs.tag;
+package no.entur.android.nfc.external.tag;
 
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-
-import org.nfctools.mf.ul.ntag.NfcNtag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +104,7 @@ public class MifareUltralightTagFactory extends TagFactory {
 	 */
 	public static final int TYPE_ICODE_SLI = 102;
 
-	public Intent getTag(int serviceHandle, int slotNumber, int type, Integer ntagType, byte[] id, byte[] atr, INfcTag tagService) {
+	public Intent getTag(int serviceHandle, int slotNumber, int type, byte[] id, byte[] atr, INfcTag tagService, IntentEnricher extras) {
 
 		if (id != null) {
 			if (id[0] != NXP_MANUFACTURER_ID) {
@@ -120,9 +118,6 @@ public class MifareUltralightTagFactory extends TagFactory {
 		addTechBundles(type, id, atr, bundles, tech);
 
 		final Intent intent = getIntent(bundles, tech);
-		if (ntagType != null && ntagType > 0) {
-			intent.putExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE, ntagType);
-		}
 
 		int[] techArray = new int[tech.size()];
 		for (int i = 0; i < techArray.length; i++) {
@@ -131,7 +126,7 @@ public class MifareUltralightTagFactory extends TagFactory {
 
 		intent.putExtra(NfcAdapter.EXTRA_TAG, createTag(id, techArray, bundles.toArray(new Bundle[bundles.size()]), serviceHandle, tagService));
 
-		return intent;
+		return extras.enrich(intent);
 	}
 
 	protected void addTechBundles(int type, byte[] id, byte[] atr, List<Bundle> bundles, List<Integer> tech) {
