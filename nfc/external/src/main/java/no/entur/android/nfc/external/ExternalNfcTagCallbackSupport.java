@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,7 @@ public class ExternalNfcTagCallbackSupport {
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcTagCallback callback;
-	protected final Activity activity;
+	protected final Context context;
 
 	private boolean recieveTagBroadcasts = false;
 
@@ -48,9 +47,9 @@ public class ExternalNfcTagCallbackSupport {
 		}
 	};
 
-	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Activity activity, Executor executor) {
+	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Context context, Executor executor) {
 		this.callback = callback;
-		this.activity = activity;
+		this.context = context;
 		this.executor = executor;
 	}
 
@@ -92,7 +91,7 @@ public class ExternalNfcTagCallbackSupport {
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
 
-			activity.registerReceiver(tagReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			context.registerReceiver(tagReceiver, filter, ANDROID_PERMISSION_NFC, null);
 		}
 	}
 
@@ -102,7 +101,7 @@ public class ExternalNfcTagCallbackSupport {
 
 			recieveTagBroadcasts = false;
 
-			activity.unregisterReceiver(tagReceiver);
+			context.unregisterReceiver(tagReceiver);
 		}
 	}
 
