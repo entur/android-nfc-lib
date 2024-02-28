@@ -1,19 +1,14 @@
 package no.entur.android.nfc.external;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.NfcAdapter;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executor;
-
-import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcReaderCallbackSupport {
 
@@ -22,7 +17,7 @@ public class ExternalNfcReaderCallbackSupport {
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
 	protected final ExternalNfcReaderCallback callback;
-	protected final Activity activity;
+	protected final Context context;
 	protected Executor executor; // non-final for testing
 
 	private boolean recieveReaderBroadcasts = false;
@@ -62,9 +57,9 @@ public class ExternalNfcReaderCallbackSupport {
 
 	};
 
-	public ExternalNfcReaderCallbackSupport(ExternalNfcReaderCallback callback, Activity activity, Executor executor) {
+	public ExternalNfcReaderCallbackSupport(ExternalNfcReaderCallback callback, Context context, Executor executor) {
 		this.callback = callback;
-		this.activity = activity;
+		this.context = context;
 		this.executor = executor;
 	}
 
@@ -105,7 +100,7 @@ public class ExternalNfcReaderCallbackSupport {
 	protected void broadcast(String action) {
 		Intent intent = new Intent();
 		intent.setAction(action);
-		activity.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+		context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
 	}
 
 	private void startReceivingReaderBroadcasts() {
@@ -119,7 +114,7 @@ public class ExternalNfcReaderCallbackSupport {
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
 
-			activity.registerReceiver(readerReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			context.registerReceiver(readerReceiver, filter, ANDROID_PERMISSION_NFC, null);
 		}
 	}
 
@@ -129,7 +124,7 @@ public class ExternalNfcReaderCallbackSupport {
 
 			recieveReaderBroadcasts = false;
 
-			activity.unregisterReceiver(readerReceiver);
+			context.unregisterReceiver(readerReceiver);
 		}
 	}
 
