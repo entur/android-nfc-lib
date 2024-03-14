@@ -40,9 +40,10 @@ public class AcsUsbService extends AbstractAcsUsbService {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		boolean ntags = intent.getBooleanExtra(EXTRA_NTAG_21X_ULTRALIGHTS, false);
-
-		mifareUltralightTagServiceSupport.setNtag21xUltralights(ntags);
+		if(intent != null) {
+			boolean ntags = intent.getBooleanExtra(EXTRA_NTAG_21X_ULTRALIGHTS, false);
+			mifareUltralightTagServiceSupport.setNtag21xUltralights(ntags);
+		}
 
 		return super.onStartCommand(intent, flags, startId);
 	}
