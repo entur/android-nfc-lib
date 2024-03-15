@@ -7,7 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import java.util.concurrent.Executor;
+
+import no.entur.android.nfc.util.RegisterReceiverUtils;
 
 public class ExternalNfcTagLostCallbackSupport {
 
@@ -80,8 +84,14 @@ public class ExternalNfcTagLostCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
-
-			activity.registerReceiver(tagReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			RegisterReceiverUtils.registerReceiver(
+					activity,
+					tagReceiver,
+					filter,
+					ANDROID_PERMISSION_NFC,
+					null,
+					ContextCompat.RECEIVER_NOT_EXPORTED
+			);
 		}
 	}
 

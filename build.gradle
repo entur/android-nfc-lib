@@ -156,12 +156,12 @@ configure(libraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        compileSdkVersion 31
+        compileSdkVersion 34
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 31
+            targetSdkVersion 34
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')

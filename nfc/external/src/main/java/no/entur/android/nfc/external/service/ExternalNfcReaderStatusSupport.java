@@ -7,10 +7,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.util.RegisterReceiverUtils;
 
 /**
  *
@@ -62,8 +65,14 @@ public class ExternalNfcReaderStatusSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ExternalNfcReaderCallback.ACTION_READER_STATUS);
-
-				context.registerReceiver(statusReceiver, filter, "android.permission.NFC", null);
+				RegisterReceiverUtils.registerReceiver(
+						context,
+						statusReceiver,
+						filter,
+						"android.permission.NFC",
+						null,
+						ContextCompat.RECEIVER_NOT_EXPORTED
+				);
 			}
 		}
 	}

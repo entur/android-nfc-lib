@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
@@ -14,6 +15,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +26,7 @@ import java.util.Set;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.util.RegisterReceiverUtils;
 
 /**
  *
@@ -302,7 +306,7 @@ public class ExternalUsbNfcServiceSupport {
 		int flag = 0;
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-			flag = PendingIntent.FLAG_MUTABLE;
+			flag = PendingIntent.FLAG_IMMUTABLE;
 		}
 
 		// Register receiver for USB permission
@@ -375,8 +379,12 @@ public class ExternalUsbNfcServiceSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ACTION_USB_PERMISSION);
-				service.registerReceiver(usbDevicePermissionReceiver, filter);
-
+				RegisterReceiverUtils.registerReceiver(
+						service,
+						usbDevicePermissionReceiver,
+						filter,
+						ContextCompat.RECEIVER_NOT_EXPORTED
+				);
 				if (!delay) {
 					readerScanner.resume();
 				} else {
@@ -465,7 +473,7 @@ public class ExternalUsbNfcServiceSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-				service.registerReceiver(usbDeviceDetachedReceiver, filter);
+				RegisterReceiverUtils.registerReceiver(service, usbDeviceDetachedReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
 			}
 		}
 	}

@@ -7,11 +7,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 
+import androidx.core.content.ContextCompat;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executor;
 
+import no.entur.android.nfc.util.RegisterReceiverUtils;
 import no.entur.android.nfc.wrapper.Tag;
 
 public class ExternalNfcTagCallbackSupport {
@@ -90,8 +93,14 @@ public class ExternalNfcTagCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
-
-			context.registerReceiver(tagReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			RegisterReceiverUtils.registerReceiver(
+					context,
+					tagReceiver,
+					filter,
+					ANDROID_PERMISSION_NFC,
+					null,
+					ContextCompat.RECEIVER_NOT_EXPORTED
+			);
 		}
 	}
 

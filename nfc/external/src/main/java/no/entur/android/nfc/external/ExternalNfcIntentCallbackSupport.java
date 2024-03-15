@@ -7,12 +7,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
+
+import no.entur.android.nfc.util.RegisterReceiverUtils;
 
 public class ExternalNfcIntentCallbackSupport {
 
@@ -99,8 +103,14 @@ public class ExternalNfcIntentCallbackSupport {
 			for(String action : actions) {
 				filter.addAction(action);
 			}
-
-			context.registerReceiver(intentReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			RegisterReceiverUtils.registerReceiver(
+					context,
+					intentReceiver,
+					filter,
+					ANDROID_PERMISSION_NFC,
+					null,
+					ContextCompat.RECEIVER_NOT_EXPORTED
+			);
 		}
 	}
 
