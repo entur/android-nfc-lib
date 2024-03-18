@@ -15,8 +15,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import androidx.core.content.ContextCompat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

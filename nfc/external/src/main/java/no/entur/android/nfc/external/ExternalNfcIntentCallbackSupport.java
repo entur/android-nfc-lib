@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
-import androidx.core.content.ContextCompat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

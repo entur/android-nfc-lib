@@ -9,8 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
-import androidx.core.content.ContextCompat;
-
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.util.RegisterReceiverUtils;

@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 
-import androidx.core.content.ContextCompat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

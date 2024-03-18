@@ -6,8 +6,6 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 
-import androidx.core.content.ContextCompat;
-
 public class RegisterReceiverUtils {
 
     private RegisterReceiverUtils() {
