@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import no.entur.android.nfc.util.RegisterReceiverUtils;
+
 public class ExternalNfcIntentCallbackSupport {
 
 	private static final List<String> DEFAULT_ACTIONS = Arrays.asList(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED, ExternalNfcTagCallback.ACTION_TECH_DISCOVERED, ExternalNfcTagCallback.ACTION_NDEF_DISCOVERED);
@@ -99,8 +101,13 @@ public class ExternalNfcIntentCallbackSupport {
 			for(String action : actions) {
 				filter.addAction(action);
 			}
-
-			context.registerReceiver(intentReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			RegisterReceiverUtils.registerReceiverNotExported(
+					context,
+					intentReceiver,
+					filter,
+					ANDROID_PERMISSION_NFC,
+					null
+			);
 		}
 	}
 

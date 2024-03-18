@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executor;
 
+import no.entur.android.nfc.util.RegisterReceiverUtils;
+
 public class ExternalNfcReaderCallbackSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcReaderCallbackSupport.class);
@@ -113,8 +115,12 @@ public class ExternalNfcReaderCallbackSupport {
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
-
-			context.registerReceiver(readerReceiver, filter, ANDROID_PERMISSION_NFC, null);
+			RegisterReceiverUtils.registerReceiverNotExported(
+					context,
+					readerReceiver,
+					filter,
+					ANDROID_PERMISSION_NFC,
+					null);
 		}
 	}
 
