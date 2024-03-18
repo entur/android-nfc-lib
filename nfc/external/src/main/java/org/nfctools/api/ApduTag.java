@@ -22,10 +22,10 @@ public interface ApduTag {
 
 	TagType getTagType();
 
-	Response transmit(Command command);
+	Response transmit(Command command) throws Exception;
 
-	byte[] transmit(byte[] in);
+	byte[] transmit(byte[] in) throws Exception;;
 
-	byte[] transmitPassthrough(byte[] in);
+	byte[] transmitPassthrough(byte[] in) throws Exception;;
 
 }

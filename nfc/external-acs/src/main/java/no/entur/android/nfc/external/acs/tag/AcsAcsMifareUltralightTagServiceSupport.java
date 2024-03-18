@@ -26,6 +26,7 @@ import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.external.tag.MifareUltralightTagFactory;
 import no.entur.android.nfc.external.tag.NfcADefaultCommandTechnology;
 import no.entur.android.nfc.external.tag.TechnologyType;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.INfcTag;
 
 public class AcsAcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltralightTagServiceSupport {
@@ -34,8 +35,12 @@ public class AcsAcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUl
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
-    public AcsAcsMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
+    protected TransceiveResultExceptionMapper exceptionMapper;
+
+    public AcsAcsMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights, TransceiveResultExceptionMapper exceptionMapper) {
         super(context, tagService, store, ntag21xUltralights);
+
+        this.exceptionMapper = exceptionMapper;
     }
 
     @SuppressWarnings("java:S3776")
@@ -146,12 +151,11 @@ public class AcsAcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUl
             }
 
             if (canReadBlocks) {
-                technologies.add(new AcsMifareUltralightCommandTechnology(readerWriter));
+                technologies.add(new AcsMifareUltralightCommandTechnology(readerWriter, exceptionMapper));
             }
 
             if (TechnologyType.isNFCA(atr)) {
-                technologies.add(new NfcADefaultCommandTechnology(wrapper, false));
-                // technologies.add(new NfcAAdapter(slotNumber, reader, false));
+                technologies.add(new NfcADefaultCommandTechnology(wrapper, false, exceptionMapper));
             }
 
             TagProxy tagProxy = store.add(slotNumber, technologies);

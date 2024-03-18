@@ -2,17 +2,13 @@ package no.entur.android.nfc.websocket.android;
 
 import android.content.Context;
 import android.content.Intent;
-import android.nfc.tech.MifareUltralight;
 
-import org.nfctools.api.ApduTag;
-import org.nfctools.api.TagType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
@@ -21,7 +17,7 @@ import no.entur.android.nfc.external.tag.AbstractTagServiceSupport;
 import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.MifareUltralightTagFactory;
 import no.entur.android.nfc.external.tag.NfcADefaultCommandTechnology;
-import no.entur.android.nfc.external.tag.TechnologyType;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.INfcTag;
 
 public class WebsocketMifareUltralightTagServiceSupport extends AbstractTagServiceSupport {
@@ -30,14 +26,18 @@ public class WebsocketMifareUltralightTagServiceSupport extends AbstractTagServi
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
-    public WebsocketMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store) {
+    protected TransceiveResultExceptionMapper exceptionMapper;
+
+    public WebsocketMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, TransceiveResultExceptionMapper exceptionMapper) {
         super(context, tagService, store);
+
+        this.exceptionMapper = exceptionMapper;
     }
 
     public TagProxy mifareUltralight(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] atr, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         List<TagTechnology> technologies = new ArrayList<>();
-        technologies.add(new NfcADefaultCommandTechnology(wrapper, false));
-        technologies.add(new MifareUltralightDefaultCommandTechnology(wrapper, false));
+        technologies.add(new NfcADefaultCommandTechnology(wrapper, false, exceptionMapper));
+        technologies.add(new MifareUltralightDefaultCommandTechnology(wrapper, false, exceptionMapper));
 
         TagProxy tagProxy = store.add(slotNumber, technologies);
 

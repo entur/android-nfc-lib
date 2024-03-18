@@ -32,7 +32,7 @@ public class MinovaService extends AbstractMinovaTcpService {
     public void onCreate() {
         super.onCreate();
 
-        this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store);
+        this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store, new MinovaTransceiveResultExceptionMapper());
     }
 
     @Override

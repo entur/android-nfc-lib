@@ -35,16 +35,16 @@ public class AcrMfUlReaderWriter implements MfUlReaderWriter {
 		this.tag = tag;
 	}
 
-	public byte[] transmit(byte[] data) throws ReaderException {
+	public byte[] transmit(byte[] data) throws Exception {
 		return tag.transmit(data);
 	}
 
-	public Response transmit(Command command) throws ReaderException {
+	public Response transmit(Command command) throws Exception {
 		return tag.transmit(command);
 	}
 
 	@Override
-	public MfBlock[] readBlock(int startPage, int pagesToRead) throws IOException {
+	public MfBlock[] readBlock(int startPage, int pagesToRead) throws Exception {
 		MfBlock[] returnBlocks = new MfBlock[pagesToRead];
 
 		/*
@@ -83,7 +83,7 @@ public class AcrMfUlReaderWriter implements MfUlReaderWriter {
 	}
 
 	@Override
-	public void writeBlock(int startPage, MfBlock... mfBlock) throws IOException {
+	public void writeBlock(int startPage, MfBlock... mfBlock) throws Exception {
 		for (int currentBlock = 0; currentBlock < mfBlock.length; currentBlock++) {
 			int blockNumber = startPage + currentBlock;
 
@@ -102,7 +102,7 @@ public class AcrMfUlReaderWriter implements MfUlReaderWriter {
 	}
 
 	@Override
-	public byte[] transmitPassthrough(byte[] data) {
+	public byte[] transmitPassthrough(byte[] data) throws Exception {
 		return tag.transmitPassthrough(data);
 	}
 }

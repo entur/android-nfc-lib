@@ -16,11 +16,13 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
 
 	private DESFireAdapter adapter;
 	private boolean hostCardEmulation;
+	private TransceiveResultExceptionMapper mapper;
 
-	public IsoDepCommandTechnology(AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation) {
+	public IsoDepCommandTechnology(AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation, TransceiveResultExceptionMapper mapper) {
 		super(TagTechnology.ISO_DEP);
 		this.adapter = new DESFireAdapter(isoDep, false);
 		this.hostCardEmulation = hostCardEmulation;
+		this.mapper = mapper;
 	}
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
@@ -42,7 +44,7 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
-			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+			return mapper.mapException(e);
 		}
 
 	}

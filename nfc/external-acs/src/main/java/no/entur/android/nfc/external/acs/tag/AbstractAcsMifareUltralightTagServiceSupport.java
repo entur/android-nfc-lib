@@ -64,7 +64,7 @@ public abstract class AbstractAcsMifareUltralightTagServiceSupport extends Abstr
         }
     }
 
-    protected boolean isLocked(MfUlReaderWriter readerWriter, MemoryLayout memoryLayout) throws IOException, ReaderException {
+    protected boolean isLocked(MfUlReaderWriter readerWriter, MemoryLayout memoryLayout) throws Exception {
         for (LockPage lockPage : memoryLayout.getLockPages()) {
             MfBlock[] block = readerWriter.readBlock(lockPage.getPage(), 1);
             for (int lockByte : lockPage.getLockBytes()) {

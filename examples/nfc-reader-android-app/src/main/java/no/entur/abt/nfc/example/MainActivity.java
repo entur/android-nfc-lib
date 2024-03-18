@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -31,6 +30,7 @@ import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
 import no.entur.android.nfc.wrapper.tech.NfcA;
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onExternalNfcReaderOpened(Intent intent) {
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
-            AcrReader reader = (AcrReader) intent.getParcelableExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL);
+            AcrReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, AcrReader.class);
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
         }

@@ -6,8 +6,8 @@ public class NfcADefaultCommandTechnology extends DefaultCommandTechnology {
 
 	protected static final String TAG = NfcADefaultCommandTechnology.class.getName();
 
-	public NfcADefaultCommandTechnology(AbstractReaderIsoDepWrapper reader, boolean print) {
-		super(TagTechnology.NFC_A, reader, print);
+	public NfcADefaultCommandTechnology(AbstractReaderIsoDepWrapper reader, boolean print, TransceiveResultExceptionMapper exceptionMapper) {
+		super(TagTechnology.NFC_A, reader, print, exceptionMapper);
 	}
 
 	public String toString() {

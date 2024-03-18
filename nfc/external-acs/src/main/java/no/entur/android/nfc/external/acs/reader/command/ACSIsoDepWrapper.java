@@ -21,12 +21,8 @@ public class ACSIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 		// Log.d(TAG, "Transceive request " + ACRCommands.toHexString(data));
 
 		byte[] buffer = new byte[2048];
-		int read;
-		try {
-			read = isoDep.transmit(slotNum, data, data.length, buffer, buffer.length);
-		} catch (ReaderException e) {
-			throw new ReaderException(e);
-		}
+
+		int read = isoDep.transmit(slotNum, data, data.length, buffer, buffer.length);
 
 		byte[] response = new byte[read];
 		System.arraycopy(buffer, 0, response, 0, read);

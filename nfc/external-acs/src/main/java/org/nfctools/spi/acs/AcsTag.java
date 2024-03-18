@@ -17,6 +17,8 @@ package org.nfctools.spi.acs;
 
 import android.util.Log;
 
+import com.acs.smartcard.ReaderException;
+
 import org.nfctools.NfcException;
 import org.nfctools.api.ApduTag;
 import org.nfctools.api.Tag;
@@ -59,29 +61,25 @@ public class AcsTag extends Tag implements ApduTag {
 	}
 
 	@Override
-	public Response transmit(Command command) {
-		try {
-			CommandAPDU commandAPDU = null;
-			if (command.isDataOnly()) {
-				commandAPDU = new CommandAPDU(0xff, 0, 0, 0, command.getData(), command.getOffset(), command.getLength());
-			} else if (command.hasData()) {
-				commandAPDU = new CommandAPDU(Apdu.CLS_PTS, command.getInstruction(), command.getP1(), command.getP2(), command.getData());
-			} else {
-				commandAPDU = new CommandAPDU(Apdu.CLS_PTS, command.getInstruction(), command.getP1(), command.getP2(), command.getLength());
-			}
-			byte[] out = commandAPDU.getBytes();
-
-			// Log.d(TAG, "Request: " + ByteArrayHexStringConverter.toHexString(out));
-
-			byte[] in = reader.transmit(slot, out);
-
-			// Log.d(TAG, "Response: " + ByteArrayHexStringConverter.toHexString(in));
-
-			ResponseAPDU responseAPDU = new ResponseAPDU(in);
-			return new Response(responseAPDU.getSW1(), responseAPDU.getSW2(), responseAPDU.getData());
-		} catch (Exception e) {
-			throw new NfcException(e);
+	public Response transmit(Command command) throws ReaderException {
+		CommandAPDU commandAPDU = null;
+		if (command.isDataOnly()) {
+			commandAPDU = new CommandAPDU(0xff, 0, 0, 0, command.getData(), command.getOffset(), command.getLength());
+		} else if (command.hasData()) {
+			commandAPDU = new CommandAPDU(Apdu.CLS_PTS, command.getInstruction(), command.getP1(), command.getP2(), command.getData());
+		} else {
+			commandAPDU = new CommandAPDU(Apdu.CLS_PTS, command.getInstruction(), command.getP1(), command.getP2(), command.getLength());
 		}
+		byte[] out = commandAPDU.getBytes();
+
+		// Log.d(TAG, "Request: " + ByteArrayHexStringConverter.toHexString(out));
+
+		byte[] in = reader.transmit(slot, out);
+
+		// Log.d(TAG, "Response: " + ByteArrayHexStringConverter.toHexString(in));
+
+		ResponseAPDU responseAPDU = new ResponseAPDU(in);
+		return new Response(responseAPDU.getSW1(), responseAPDU.getSW2(), responseAPDU.getData());
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.acs.reader.AcsTransceiveResultExceptionMapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.acs.tag.AcsAcsMifareUltralightTagServiceSupport;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
@@ -34,15 +35,18 @@ public class AcsUsbService extends AbstractAcsUsbService {
 	public void onCreate() {
 		super.onCreate();
 
-		this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store);
-		this.acsMifareUltralightTagServiceSupport = new AcsAcsMifareUltralightTagServiceSupport(this, binder, store, false);
+		AcsTransceiveResultExceptionMapper mapper = new AcsTransceiveResultExceptionMapper();
+
+		this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store, mapper);
+		this.acsMifareUltralightTagServiceSupport = new AcsAcsMifareUltralightTagServiceSupport(this, binder, store, false, mapper);
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		boolean ntags = intent.getBooleanExtra(EXTRA_NTAG_21X_ULTRALIGHTS, false);
-
-		acsMifareUltralightTagServiceSupport.setNtag21xUltralights(ntags);
+		if(intent != null) {
+			boolean ntags = intent.getBooleanExtra(EXTRA_NTAG_21X_ULTRALIGHTS, false);
+			acsMifareUltralightTagServiceSupport.setNtag21xUltralights(ntags);
+		}
 
 		return super.onStartCommand(intent, flags, startId);
 	}

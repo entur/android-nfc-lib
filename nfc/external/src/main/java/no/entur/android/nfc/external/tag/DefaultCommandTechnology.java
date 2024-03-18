@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
+import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
@@ -14,11 +16,14 @@ public class DefaultCommandTechnology extends AbstractTagTechnology implements C
 	protected AbstractReaderIsoDepWrapper reader;
 	private boolean print;
 
-	public DefaultCommandTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print) {
+	private TransceiveResultExceptionMapper exceptionMapper;
+
+	public DefaultCommandTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print, TransceiveResultExceptionMapper exceptionMapper) {
 		super(tagTechnology);
 
 		this.reader = reader;
 		this.print = print;
+		this.exceptionMapper = exceptionMapper;
 	}
 
 	@Override
@@ -50,7 +55,7 @@ public class DefaultCommandTechnology extends AbstractTagTechnology implements C
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
-			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+			return exceptionMapper.mapException(e);
 		}
 	}
 }

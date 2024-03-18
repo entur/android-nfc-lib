@@ -14,8 +14,8 @@ public class ExternalNfcServiceAdapter {
 	protected final Class<? extends Service> serviceClass;
 	protected final boolean foreground;
 
-	public ExternalNfcServiceAdapter(Context activity, Class<? extends Service> serviceClass, boolean foreground) {
-		this.context = activity;
+	public ExternalNfcServiceAdapter(Context context, Class<? extends Service> serviceClass, boolean foreground) {
+		this.context = context;
 		this.serviceClass = serviceClass;
 		this.foreground = foreground;
 	}

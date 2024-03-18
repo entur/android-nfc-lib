@@ -26,11 +26,13 @@ public class WrapNfcACommandTechnology extends AbstractTagTechnology implements 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WrapNfcACommandTechnology.class);
 
 	private AbstractReaderIsoDepWrapper wrapper;
+	private TransceiveResultExceptionMapper mapper;
 	private boolean print;
 
-	public WrapNfcACommandTechnology(AbstractReaderIsoDepWrapper wrapper, boolean print) {
+	public WrapNfcACommandTechnology(AbstractReaderIsoDepWrapper wrapper, TransceiveResultExceptionMapper mapper, boolean print) {
 		super(TagTechnology.NFC_A);
 		this.wrapper = wrapper;
+		this.mapper = mapper;
 		this.print = print;
 	}
 
@@ -62,7 +64,7 @@ public class WrapNfcACommandTechnology extends AbstractTagTechnology implements 
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
-			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+			return mapper.mapException(e);
 		}
 
 	}

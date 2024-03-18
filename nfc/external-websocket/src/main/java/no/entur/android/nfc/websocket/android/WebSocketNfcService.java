@@ -37,8 +37,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
     private WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
 
-    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store);
-    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, new INFcTagBinder(store), store);
+    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store, new WebSocketExceptionMapper());
+    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, new INFcTagBinder(store), store, new WebSocketExceptionMapper());
 
     private WebSocketClient client = null;
 
