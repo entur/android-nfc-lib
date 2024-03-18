@@ -1,9 +1,8 @@
 package no.entur.android.nfc.external.acs.tag;
 
 import android.os.RemoteException;
-import android.util.Log;
 
-import com.acs.smartcard.ReaderException;
+import com.acs.smartcard.UnresponsiveCardException;
 
 import org.nfctools.mf.block.DataBlock;
 import org.nfctools.mf.block.MfBlock;
@@ -11,11 +10,9 @@ import org.nfctools.mf.ul.MfUlReaderWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
-import no.entur.android.nfc.external.acs.service.AcsUsbService;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.DefaultTechnology;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
@@ -28,11 +25,13 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MifareUltralightAdapter.class);
 
-	private MfUlReaderWriter readerWriter;
+	private final MfUlReaderWriter readerWriter;
+	private final TransceiveResultExceptionMapper exceptionMapper;
 
-	public MifareUltralightAdapter(MfUlReaderWriter readerWriter) {
+	public MifareUltralightAdapter(MfUlReaderWriter readerWriter, TransceiveResultExceptionMapper exceptionMapper) {
 		super(TagTechnology.MIFARE_ULTRALIGHT);
 		this.readerWriter = readerWriter;
+		this.exceptionMapper = exceptionMapper;
 	}
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
@@ -57,12 +56,9 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 				}
 
 				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
-			} catch (IOException e) {
-				LOGGER.debug("Problem reading blocks " + pageOffset);
-				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 			} catch (Exception e) {
-				LOGGER.debug("Problem reading blocks " + pageOffset);
-				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+				LOGGER.debug("Problem sending command", e);
+				return exceptionMapper.mapException(e);
 			}
 		} else if (command == 0xA2) {
 			int pageOffset = data[1] & 0xFF;
@@ -82,7 +78,7 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 			} catch (Exception e) {
 				LOGGER.debug("Problem writing block " + pageOffset);
 
-				return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+				return exceptionMapper.mapException(e);
 			}
 		} else {
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
@@ -94,10 +90,10 @@ public class MifareUltralightAdapter extends DefaultTechnology implements Comman
 			byte[] result = readerWriter.transmitPassthrough(data);
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
-		} catch (ReaderException e) {
+		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
-			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+			return exceptionMapper.mapException(e);
 		}
 	}
 

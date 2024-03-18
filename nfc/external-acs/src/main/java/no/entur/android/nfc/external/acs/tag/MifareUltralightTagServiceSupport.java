@@ -32,6 +32,7 @@ import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagServiceSupport;
 import no.entur.android.nfc.external.tag.TechnologyType;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.INfcTag;
 
 public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightTagServiceSupport {
@@ -40,8 +41,12 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
-    public MifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights) {
+    protected TransceiveResultExceptionMapper exceptionMapper;
+
+    public MifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights, TransceiveResultExceptionMapper exceptionMapper) {
         super(context, tagService, store, ntag21xUltralights);
+
+        this.exceptionMapper = exceptionMapper;
     }
 
     @SuppressWarnings("java:S3776")
@@ -152,11 +157,11 @@ public class MifareUltralightTagServiceSupport extends AbstractMifareUltralightT
             }
 
             if (canReadBlocks) {
-                technologies.add(new MifareUltralightAdapter(readerWriter));
+                technologies.add(new MifareUltralightAdapter(readerWriter, exceptionMapper));
             }
 
             if (TechnologyType.isNFCA(atr)) {
-                technologies.add(new PN532NfcAAdapter(wrapper, false));
+                technologies.add(new PN532NfcAAdapter(wrapper, false, exceptionMapper));
                 // technologies.add(new NfcAAdapter(slotNumber, reader, false));
             }
 
