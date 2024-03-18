@@ -418,6 +418,33 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                         bout.write(mifareUltralight.readPages(i));
                     }
 
+                    boolean write = true;
+                    boolean transieve = true;
+                    if(write) {
+                        Random random = new Random();
+                        byte[] payload = new byte[4];
+                        for(int i = 0; i < 4; i++) {
+                            int offset = i + length / 2;
+
+                            random.nextBytes(payload);
+                            if(!transieve) {
+                                mifareUltralight.writePage(offset, payload);
+                                LOGGER.info("Wrote " + ByteArrayHexStringConverter.toHexString(payload));
+                            } else {
+
+                                byte[] cmd = new byte[payload.length + 2];
+                                cmd[0] = (byte) 0xA2;
+                                cmd[1] = (byte) offset;
+                                System.arraycopy(payload, 0, cmd, 2, payload.length);
+
+                                byte[] transceive = mifareUltralight.transceive(cmd);
+
+                                LOGGER.info("Wrote " + ByteArrayHexStringConverter.toHexString(payload) + ": " + ByteArrayHexStringConverter.toHexString(transceive));
+
+                            }
+                        }
+                    }
+
                     mifareUltralight.close();
                 }
 
