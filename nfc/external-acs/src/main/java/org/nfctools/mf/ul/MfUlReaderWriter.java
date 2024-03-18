@@ -25,15 +25,15 @@ import com.acs.smartcard.ReaderException;
 
 public interface MfUlReaderWriter {
 
-	byte[] transmit(byte[] data) throws ReaderException;
+	byte[] transmit(byte[] data) throws Exception;
 
-	Response transmit(Command command) throws ReaderException;
+	Response transmit(Command command) throws Exception;
 
-	MfBlock[] readBlock(int startPage, int pagesToRead) throws IOException, ReaderException;
+	MfBlock[] readBlock(int startPage, int pagesToRead) throws Exception;
 
-	void writeBlock(int startPage, MfBlock... mfBlock) throws IOException;
+	void writeBlock(int startPage, MfBlock... mfBlock) throws Exception;
 
 	int getMaxPagesPerRead();
 
-	byte[] transmitPassthrough(byte[] data) throws ReaderException;
+	byte[] transmitPassthrough(byte[] data) throws Exception;
 }

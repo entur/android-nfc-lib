@@ -20,6 +20,9 @@ public class PassthroughCommandException extends RuntimeException {
 		super(throwable);
 
 		this.error = error;
+	}
 
+	public int getError() {
+		return error;
 	}
 }

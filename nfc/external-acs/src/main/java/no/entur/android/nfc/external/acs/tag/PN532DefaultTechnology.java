@@ -3,6 +3,8 @@ package no.entur.android.nfc.external.acs.tag;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.acs.smartcard.UnresponsiveCardException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +12,7 @@ import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.external.tag.DefaultTechnology;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
@@ -20,11 +23,14 @@ public class PN532DefaultTechnology extends DefaultTechnology implements Command
 	protected AbstractReaderIsoDepWrapper reader;
 	private boolean print;
 
-	public PN532DefaultTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print) {
+	private TransceiveResultExceptionMapper exceptionMapper;
+
+	public PN532DefaultTechnology(int tagTechnology, AbstractReaderIsoDepWrapper reader, boolean print, TransceiveResultExceptionMapper exceptionMapper) {
 		super(tagTechnology);
 
 		this.reader = reader;
 		this.print = print;
+		this.exceptionMapper = exceptionMapper;
 	}
 
 	@Override
@@ -56,7 +62,7 @@ public class PN532DefaultTechnology extends DefaultTechnology implements Command
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
-			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+			return exceptionMapper.mapException(e);
 		}
 	}
 }

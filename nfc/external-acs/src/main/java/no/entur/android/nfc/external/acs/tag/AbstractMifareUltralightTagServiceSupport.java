@@ -28,6 +28,7 @@ import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagServiceSupport;
 import no.entur.android.nfc.external.tag.TechnologyType;
+import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.INfcTag;
 
 public abstract class AbstractMifareUltralightTagServiceSupport extends AbstractTagServiceSupport {
@@ -78,7 +79,7 @@ public abstract class AbstractMifareUltralightTagServiceSupport extends Abstract
         }
     }
 
-    protected boolean isLocked(MfUlReaderWriter readerWriter, MemoryLayout memoryLayout) throws IOException, ReaderException {
+    protected boolean isLocked(MfUlReaderWriter readerWriter, MemoryLayout memoryLayout) throws Exception {
         for (LockPage lockPage : memoryLayout.getLockPages()) {
             MfBlock[] block = readerWriter.readBlock(lockPage.getPage(), 1);
             for (int lockByte : lockPage.getLockBytes()) {

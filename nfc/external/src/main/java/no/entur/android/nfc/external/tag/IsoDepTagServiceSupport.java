@@ -20,16 +20,19 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(IsoDepTagServiceSupport.class);
 
     protected IsoDepTagFactory isoDepTagFactory = new IsoDepTagFactory();
+    protected TransceiveResultExceptionMapper transceiveResultExceptionMapper;
 
-    public IsoDepTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store) {
+    public IsoDepTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, TransceiveResultExceptionMapper transceiveResultExceptionMapper) {
         super(context, tagService, store);
+
+        this.transceiveResultExceptionMapper = transceiveResultExceptionMapper;
     }
 
     public TagProxy hce(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
-            technologies.add(new NfcAAdapter(wrapper, true));
-            technologies.add(new IsoDepAdapter(wrapper, true));
+            technologies.add(new NfcAAdapter(wrapper, transceiveResultExceptionMapper,true));
+            technologies.add(new IsoDepAdapter(wrapper, true, transceiveResultExceptionMapper));
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 
@@ -51,8 +54,8 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
     public TagProxy card(int slotNumber, AbstractReaderIsoDepWrapper wrapper, byte[] uid, byte[] historicalBytes, IntentEnricher extras) {
         try {
             List<TagTechnology> technologies = new ArrayList<>();
-            technologies.add(new NfcAAdapter(wrapper, false));
-            technologies.add(new IsoDepAdapter(wrapper, false));
+            technologies.add(new NfcAAdapter(wrapper, transceiveResultExceptionMapper, false));
+            technologies.add(new IsoDepAdapter(wrapper, false, transceiveResultExceptionMapper));
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 
