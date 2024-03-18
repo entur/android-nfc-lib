@@ -87,13 +87,12 @@ public class ExternalNfcServiceCallbackSupport {
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
 			filter.addAction(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
-			RegisterReceiverUtils.registerReceiver(
+			RegisterReceiverUtils.registerReceiverNotExported(
 					context,
 					serviceReceiver,
 					filter,
 					"android.permission.NFC",
-					null,
-					ContextCompat.RECEIVER_NOT_EXPORTED
+					null
 			);
 		}
 	}

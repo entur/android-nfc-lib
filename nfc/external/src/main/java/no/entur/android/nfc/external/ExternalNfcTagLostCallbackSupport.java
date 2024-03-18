@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external;
 
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -84,13 +86,12 @@ public class ExternalNfcTagLostCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
-			RegisterReceiverUtils.registerReceiver(
+			RegisterReceiverUtils.registerReceiverNotExported(
 					activity,
 					tagReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null,
-					ContextCompat.RECEIVER_NOT_EXPORTED
+					null
 			);
 		}
 	}

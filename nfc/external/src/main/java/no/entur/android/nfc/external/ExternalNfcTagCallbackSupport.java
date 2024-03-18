@@ -93,13 +93,12 @@ public class ExternalNfcTagCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
-			RegisterReceiverUtils.registerReceiver(
+			RegisterReceiverUtils.registerReceiverNotExported(
 					context,
 					tagReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null,
-					ContextCompat.RECEIVER_NOT_EXPORTED
+					null
 			);
 		}
 	}

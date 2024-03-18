@@ -117,13 +117,12 @@ public class ExternalNfcReaderCallbackSupport {
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
-			RegisterReceiverUtils.registerReceiver(
+			RegisterReceiverUtils.registerReceiverNotExported(
 					context,
 					readerReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null,
-					ContextCompat.RECEIVER_NOT_EXPORTED);
+					null);
 		}
 	}
 

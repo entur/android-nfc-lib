@@ -65,13 +65,12 @@ public class ExternalNfcReaderStatusSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ExternalNfcReaderCallback.ACTION_READER_STATUS);
-				RegisterReceiverUtils.registerReceiver(
+				RegisterReceiverUtils.registerReceiverNotExported(
 						context,
 						statusReceiver,
 						filter,
 						"android.permission.NFC",
-						null,
-						ContextCompat.RECEIVER_NOT_EXPORTED
+						null
 				);
 			}
 		}

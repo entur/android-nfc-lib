@@ -103,13 +103,12 @@ public class ExternalNfcIntentCallbackSupport {
 			for(String action : actions) {
 				filter.addAction(action);
 			}
-			RegisterReceiverUtils.registerReceiver(
+			RegisterReceiverUtils.registerReceiverNotExported(
 					context,
 					intentReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null,
-					ContextCompat.RECEIVER_NOT_EXPORTED
+					null
 			);
 		}
 	}

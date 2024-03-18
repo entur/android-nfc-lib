@@ -379,11 +379,10 @@ public class ExternalUsbNfcServiceSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ACTION_USB_PERMISSION);
-				RegisterReceiverUtils.registerReceiver(
+				RegisterReceiverUtils.registerReceiverNotExported(
 						service,
 						usbDevicePermissionReceiver,
-						filter,
-						ContextCompat.RECEIVER_NOT_EXPORTED
+						filter
 				);
 				if (!delay) {
 					readerScanner.resume();
@@ -473,7 +472,7 @@ public class ExternalUsbNfcServiceSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-				RegisterReceiverUtils.registerReceiver(service, usbDeviceDetachedReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+				RegisterReceiverUtils.registerReceiverNotExported(service, usbDeviceDetachedReceiver, filter);
 			}
 		}
 	}

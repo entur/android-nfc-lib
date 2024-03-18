@@ -6,26 +6,24 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 
+import androidx.core.content.ContextCompat;
+
 public class RegisterReceiverUtils {
 
     private RegisterReceiverUtils() {
     }
 
-    public static void registerReceiver(Context context, BroadcastReceiver receiver, IntentFilter filter, String broadcastPermission, Handler scheduler, int flags) {
+    public static void registerReceiverNotExported(Context context, BroadcastReceiver receiver, IntentFilter filter, String broadcastPermission, Handler scheduler) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, broadcastPermission, scheduler, flags);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.registerReceiver(receiver, filter, broadcastPermission, scheduler, flags);
+            context.registerReceiver(receiver, filter, broadcastPermission, scheduler, Context.RECEIVER_NOT_EXPORTED);
         } else {
             context.registerReceiver(receiver, filter, broadcastPermission, scheduler);
         }
     }
 
-    public static void registerReceiver(Context context, BroadcastReceiver receiver, IntentFilter filter, int flags) {
+    public static void registerReceiverNotExported(Context context, BroadcastReceiver receiver, IntentFilter filter) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, flags);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.registerReceiver(receiver, filter, flags);
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
             context.registerReceiver(receiver, filter);
         }
