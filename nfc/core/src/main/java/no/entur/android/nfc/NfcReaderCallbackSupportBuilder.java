@@ -20,9 +20,15 @@ public class NfcReaderCallbackSupportBuilder {
 	protected ReaderCallback callback;
 	protected Integer presenceCheckDelay;
 	protected Executor executor; // optional
+	protected boolean receiverExported = false; // default to internal broadcasts only
 
 	public NfcReaderCallbackSupportBuilder withExecutor(Executor executor) {
 		this.executor = executor;
+		return this;
+	}
+
+	public NfcReaderCallbackSupportBuilder withReceiverExported(boolean receiverExported) {
+		this.receiverExported = receiverExported;
 		return this;
 	}
 
@@ -56,7 +62,7 @@ public class NfcReaderCallbackSupportBuilder {
 			options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, presenceCheckDelay);
 		}
 
-		return new NfcReaderCallbackSupport(activity, callback, options, executor);
+		return new NfcReaderCallbackSupport(activity, callback, options, executor, receiverExported);
 	}
 
 }

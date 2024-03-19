@@ -35,11 +35,13 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 	protected AcrReaderAdapter acrReaderAdapter;
 	protected AcrReaderListener acrReaderListener = new AcrReaderListener(this);
 
-	protected ExternalNfcReaderStatusSupport externalNfcReaderStatusSupport = new ExternalNfcReaderStatusSupport(this, acrReaderListener);
+	protected ExternalNfcReaderStatusSupport externalNfcReaderStatusSupport = new ExternalNfcReaderStatusSupport(this, acrReaderListener, false);
 
 	protected TagTypeDetector<ReaderWrapper> tagTypeDetector = new DefaultTagTypeDetector<>();
 	protected ExternalUsbNfcServiceSupport support;
 	protected ReaderWrapper reader;
+
+	protected boolean receiverExported = false;
 
 	@Override
 	public void onCreate() {
@@ -53,7 +55,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 		acrReaderAdapter = new AcrReaderAdapter(reader, binder);
 
-		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrReaderAdapter);
+		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrReaderAdapter, receiverExported);
 
 		support.onCreate();
 

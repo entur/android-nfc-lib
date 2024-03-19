@@ -33,6 +33,8 @@ public class ExternalNfcIntentCallbackSupport {
 
 	protected boolean enabled = false;
 
+	protected boolean receiverExported;
+
 	private final BroadcastReceiver intentReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
 			if(executor != null) {
@@ -45,15 +47,16 @@ public class ExternalNfcIntentCallbackSupport {
 		}
 	};
 
-	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Context context, Executor executor) {
-		this(DEFAULT_ACTIONS, callback, context, executor);
+	public ExternalNfcIntentCallbackSupport(ExternalNfcIntentCallback callback, Context context, Executor executor, boolean receiverExported) {
+		this(DEFAULT_ACTIONS, callback, context, executor, receiverExported);
 	}
 
-	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Context context, Executor executor) {
+	public ExternalNfcIntentCallbackSupport(List<String> actions, ExternalNfcIntentCallback callback, Context context, Executor executor, boolean receiverExported) {
 		this.callback = callback;
 		this.context = context;
 		this.actions = actions;
 		this.executor = executor;
+		this.receiverExported = receiverExported;
 	}
 
 	public void setExecutor(Executor executor) {
@@ -101,12 +104,13 @@ public class ExternalNfcIntentCallbackSupport {
 			for(String action : actions) {
 				filter.addAction(action);
 			}
-			RegisterReceiverUtils.registerReceiverNotExported(
+			RegisterReceiverUtils.registerReceiver(
 					context,
 					intentReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null
+					null,
+					receiverExported
 			);
 		}
 	}

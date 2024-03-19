@@ -24,10 +24,13 @@ public class ExternalNfcServiceCallbackSupport {
 	protected Executor executor; // non-final for testing
 	protected boolean enabled = false;
 
-	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor) {
+	protected boolean receiverExported;
+
+	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor, boolean receiverExported) {
 		this.callback = callback;
 		this.context = context;
 		this.executor = executor;
+		this.receiverExported = receiverExported;
 	}
 
 	public void setExecutor(Executor executor) {
@@ -85,12 +88,13 @@ public class ExternalNfcServiceCallbackSupport {
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
 			filter.addAction(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
-			RegisterReceiverUtils.registerReceiverNotExported(
+			RegisterReceiverUtils.registerReceiver(
 					context,
 					serviceReceiver,
 					filter,
 					"android.permission.NFC",
-					null
+					null,
+					receiverExported
 			);
 		}
 	}

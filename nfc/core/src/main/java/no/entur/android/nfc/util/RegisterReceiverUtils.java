@@ -11,17 +11,17 @@ public class RegisterReceiverUtils {
     private RegisterReceiverUtils() {
     }
 
-    public static void registerReceiverNotExported(Context context, BroadcastReceiver receiver, IntentFilter filter, String broadcastPermission, Handler scheduler) {
+    public static void registerReceiver(Context context, BroadcastReceiver receiver, IntentFilter filter, String broadcastPermission, Handler scheduler, boolean exported) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, broadcastPermission, scheduler, Context.RECEIVER_NOT_EXPORTED);
+            context.registerReceiver(receiver, filter, broadcastPermission, scheduler, exported ? Context.RECEIVER_EXPORTED : Context.RECEIVER_NOT_EXPORTED);
         } else {
             context.registerReceiver(receiver, filter, broadcastPermission, scheduler);
         }
     }
 
-    public static void registerReceiverNotExported(Context context, BroadcastReceiver receiver, IntentFilter filter) {
+    public static void registerReceiver(Context context, BroadcastReceiver receiver, IntentFilter filter, boolean exported) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            context.registerReceiver(receiver, filter, exported ? Context.RECEIVER_EXPORTED : Context.RECEIVER_NOT_EXPORTED);
         } else {
             context.registerReceiver(receiver, filter);
         }
