@@ -5,6 +5,7 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -68,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_main);
 
@@ -416,12 +419,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                             throw new IllegalArgumentException("Unknown mifare ultralight tag " + type);
                     }
 
-                    for(int k = 0; k < 10000; k++) {
-                        // android read 4 and 4 pages of 4 bytes
-                        for (int i = 0; i < length; i += 4) {
-                            Log.d(getClass().getName(), "Read frame");
-                            bout.write(mifareUltralight.readPages(i));
-                        }
+                    // android read 4 and 4 pages of 4 bytes
+                    for (int i = 0; i < length; i += 4) {
+                        Log.d(getClass().getName(), "Read frame " + i + " -> " + (i + 4) + " (exclusive)");
+                        bout.write(mifareUltralight.readPages(i));
                     }
 
                     mifareUltralight.close();

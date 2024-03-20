@@ -26,17 +26,6 @@ public class ExternalNfcServiceCallbackSupport {
 
 	protected boolean receiverExported;
 
-	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor, boolean receiverExported) {
-		this.callback = callback;
-		this.context = context;
-		this.executor = executor;
-		this.receiverExported = receiverExported;
-	}
-
-	public void setExecutor(Executor executor) {
-		this.executor = executor;
-	}
-
 	private final BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
 
 		public void onReceive(Context context, Intent intent) {
@@ -69,6 +58,17 @@ public class ExternalNfcServiceCallbackSupport {
 		}
 
 	};
+
+	public ExternalNfcServiceCallbackSupport(ExternalNfcServiceCallback callback, Context context, Executor executor, boolean receiverExported) {
+		this.callback = callback;
+		this.context = context;
+		this.executor = executor;
+		this.receiverExported = receiverExported;
+	}
+
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
+	}
 
 	public void onResume() {
 		startReceivingServiceBroadcasts();

@@ -24,13 +24,6 @@ public class ExternalNfcTagLostCallbackSupport {
 
 	protected boolean receiverExported;
 
-	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity, Executor executor, boolean receiverExported) {
-		this.callback = callback;
-		this.activity = activity;
-		this.executor = executor;
-		this.receiverExported = receiverExported;
-	}
-
 	private boolean recieveTagLostBroadcasts = false;
 
 	protected boolean enabled = false;
@@ -53,6 +46,14 @@ public class ExternalNfcTagLostCallbackSupport {
 			}
 		}
 	};
+
+
+	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity, Executor executor, boolean receiverExported) {
+		this.callback = callback;
+		this.activity = activity;
+		this.executor = executor;
+		this.receiverExported = receiverExported;
+	}
 
 	public void onResume() {
 		if (enabled) {

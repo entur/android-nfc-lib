@@ -26,6 +26,6 @@ public interface ApduTag {
 
 	byte[] transmit(byte[] in) throws Exception;;
 
-	byte[] transmitPassthrough(byte[] in) throws Exception;;
+	byte[] transmitPassthrough(byte[] in) throws Exception;
 
 }
