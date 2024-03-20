@@ -10,7 +10,7 @@ android {
 }
 
 dependencies {
-    implementation files('libs/acssmc-1.1.5.jar')
+    implementation files('libs/acssmc-1.1.6.jar')
     implementation files('libs/acsbt-1.0.1.ext.jar')
 
     api project(":nfc:core")

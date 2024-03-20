@@ -29,6 +29,8 @@ public class ExternalNfcTagCallbackSupport {
 	protected boolean enabled = false;
 	protected Executor executor; // non-final for testing
 
+	protected boolean receiverExported;
+
 	private final BroadcastReceiver tagReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
 		if (intent.getAction().equals(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED)) {
@@ -48,10 +50,11 @@ public class ExternalNfcTagCallbackSupport {
 		}
 	};
 
-	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Context context, Executor executor) {
+	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Context context, Executor executor, boolean receiverExported) {
 		this.callback = callback;
 		this.context = context;
 		this.executor = executor;
+		this.receiverExported = receiverExported;
 	}
 
 	public void setExecutor(Executor executor) {
@@ -91,12 +94,14 @@ public class ExternalNfcTagCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
-			RegisterReceiverUtils.registerReceiverNotExported(
+			RegisterReceiverUtils.registerReceiver(
 					context,
 					tagReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null
+					null,
+					receiverExported
+
 			);
 		}
 	}

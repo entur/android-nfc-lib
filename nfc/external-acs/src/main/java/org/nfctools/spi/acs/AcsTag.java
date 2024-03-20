@@ -83,26 +83,18 @@ public class AcsTag extends Tag implements ApduTag {
 	}
 
 	@Override
-	public byte[] transmit(byte[] request) {
+	public byte[] transmit(byte[] request) throws ReaderException {
 		//Log.d(TAG, "Raw request: " + ByteArrayHexStringConverter.toHexString(request));
-		try {
-			byte[] response = reader.transmit(slot, request);
+		byte[] response = reader.transmit(slot, request);
 
-			//Log.d(TAG, "Raw response: " + ByteArrayHexStringConverter.toHexString(response));
+		//Log.d(TAG, "Raw response: " + ByteArrayHexStringConverter.toHexString(response));
 
-			return response;
-		} catch (Exception e) {
-			throw new NfcException(e);
-		}
+		return response;
 	}
 
 	@Override
-	public byte[] transmitPassthrough(byte[] in) {
-		try {
-			return reader.transmitPassThrough(slot, in);
-		} catch (Exception e) {
-			throw new NfcException(e);
-		}
+	public byte[] transmitPassthrough(byte[] in) throws ReaderException {
+		return reader.transmitPassThrough(slot, in);
 	}
 
 }

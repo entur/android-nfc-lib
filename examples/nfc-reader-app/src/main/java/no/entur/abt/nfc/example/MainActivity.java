@@ -3,7 +3,9 @@ package no.entur.abt.nfc.example;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -68,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         setContentView(R.layout.activity_main);
 
         setupNfc();
@@ -116,19 +120,21 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             LOGGER.error( "Rejected execution for " + r + " " + executor);
         });
 
-        externalNfcTagCallbackSupport = new ExternalNfcTagCallbackSupport(this, this, threadPoolExecutor);
+        boolean receiverExported = true;
+
+        externalNfcTagCallbackSupport = new ExternalNfcTagCallbackSupport(this, this, threadPoolExecutor, receiverExported);
         externalNfcTagCallbackSupport.setEnabled(true);
 
-        externalNfcServiceCallbackSupport = new ExternalNfcServiceCallbackSupport(this, this, threadPoolExecutor);
+        externalNfcServiceCallbackSupport = new ExternalNfcServiceCallbackSupport(this, this, threadPoolExecutor, receiverExported);
         externalNfcServiceCallbackSupport.setEnabled(true);
 
-        externalNfcReaderCallbackSupport = new ExternalNfcReaderCallbackSupport(this, this, threadPoolExecutor);
+        externalNfcReaderCallbackSupport = new ExternalNfcReaderCallbackSupport(this, this, threadPoolExecutor, receiverExported);
         externalNfcReaderCallbackSupport.setEnabled(true);
 
-        externalNfcTagLostCallbackSupport = new ExternalNfcTagLostCallbackSupport(this, this, threadPoolExecutor);
+        externalNfcTagLostCallbackSupport = new ExternalNfcTagLostCallbackSupport(this, this, threadPoolExecutor, receiverExported);
         externalNfcTagLostCallbackSupport.setEnabled(true);
 
-        nfcReaderCallbackSupport = NfcReaderCallbackSupport.newBuilder().withActivity(this).withExecutor(threadPoolExecutor).withReaderCallbackDelegate(this).withPresenceCheckDelay(100).build();
+        nfcReaderCallbackSupport = NfcReaderCallbackSupport.newBuilder().withActivity(this).withExecutor(threadPoolExecutor).withReaderCallbackDelegate(this).withPresenceCheckDelay(100).withReceiverExported(receiverExported).build();
         nfcReaderCallbackSupport.setNfcReaderMode(true);
     }
 
@@ -415,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
                     // android read 4 and 4 pages of 4 bytes
                     for (int i = 0; i < length; i += 4) {
+                        Log.d(getClass().getName(), "Read frame " + i + " -> " + (i + 4) + " (exclusive)");
                         bout.write(mifareUltralight.readPages(i));
                     }
 
