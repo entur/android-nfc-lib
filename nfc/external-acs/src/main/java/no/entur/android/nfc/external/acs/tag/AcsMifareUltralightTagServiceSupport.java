@@ -29,15 +29,15 @@ import no.entur.android.nfc.external.tag.TechnologyType;
 import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.INfcTag;
 
-public class AcsAcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltralightTagServiceSupport {
+public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltralightTagServiceSupport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AcsAcsMifareUltralightTagServiceSupport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AcsMifareUltralightTagServiceSupport.class);
 
     protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
 
     protected TransceiveResultExceptionMapper exceptionMapper;
 
-    public AcsAcsMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights, TransceiveResultExceptionMapper exceptionMapper) {
+    public AcsMifareUltralightTagServiceSupport(Context context, INfcTag tagService, TagProxyStore store, boolean ntag21xUltralights, TransceiveResultExceptionMapper exceptionMapper) {
         super(context, tagService, store, ntag21xUltralights);
 
         this.exceptionMapper = exceptionMapper;

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.acs.reader.AcsTransceiveResultExceptionMapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
-import no.entur.android.nfc.external.acs.tag.AcsAcsMifareUltralightTagServiceSupport;
+import no.entur.android.nfc.external.acs.tag.AcsMifareUltralightTagServiceSupport;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
 import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
@@ -29,7 +29,7 @@ public class AcsUsbService extends AbstractAcsUsbService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AcsUsbService.class);
 
 	protected IsoDepTagServiceSupport isoDepTagServiceSupport;
-	protected AcsAcsMifareUltralightTagServiceSupport acsMifareUltralightTagServiceSupport;
+	protected AcsMifareUltralightTagServiceSupport acsMifareUltralightTagServiceSupport;
 
 	@Override
 	public void onCreate() {
@@ -38,7 +38,7 @@ public class AcsUsbService extends AbstractAcsUsbService {
 		AcsTransceiveResultExceptionMapper mapper = new AcsTransceiveResultExceptionMapper();
 
 		this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, binder, store, mapper);
-		this.acsMifareUltralightTagServiceSupport = new AcsAcsMifareUltralightTagServiceSupport(this, binder, store, false, mapper);
+		this.acsMifareUltralightTagServiceSupport = new AcsMifareUltralightTagServiceSupport(this, binder, store, false, mapper);
 	}
 
 	@Override
