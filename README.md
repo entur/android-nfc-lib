@@ -13,6 +13,7 @@ This project hosts tools for working with NFC on Android. Modules:
    * programmatically interact with multiple cards/readers during testing, using fine-grained controls:
      * connect/disconnect reader
      * start/stop polling
+       * trigger tag scans even if the card is statically placed on the reader
 
 # License
 [European Union Public Licence v1.2](https://eupl.eu/).

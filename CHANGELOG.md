@@ -1,5 +1,11 @@
 # Release notes
 
+## 2.0.0
+
+ * Networked NFC reader support
+
+Note: Maintenance for 1.1.x series go into the 1.1.x branch. 
+
 ## 1.1.0
  
  * Reduced logging, moved to SLF4J.
