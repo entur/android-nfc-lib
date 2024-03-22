@@ -1,6 +1,14 @@
 # nfc-websocket-server-java-app
 Server which offers up websocket traffic to locally connected external NFC readers.
 
+Supported readers:
+
+ * ACR 1252U
+
+Supported Andorid tag types:
+
+ * `IsoDep`
+
 ## Usage
 Run command
 

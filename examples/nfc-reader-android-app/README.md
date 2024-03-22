@@ -1,4 +1,4 @@
-# nfc-reader-app
+# nfc-reader-android-app
 Example application for testing ACR readers.
 
  * service start / stop
