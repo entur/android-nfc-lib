@@ -35,13 +35,15 @@ public class NfcReaderCallbackSupport extends AbstractActivitySupport implements
 	protected ReaderCallback delegate;
 	protected Bundle extras;
 	protected Executor executor; // non-final for testing
+	protected boolean receiverExported;
 
-	public NfcReaderCallbackSupport(Activity activity, ReaderCallback delegate, Bundle extras, Executor executor) {
+	public NfcReaderCallbackSupport(Activity activity, ReaderCallback delegate, Bundle extras, Executor executor, boolean receiverExported) {
 		this.activity = activity;
 		this.delegate = delegate;
 		this.extras = extras;
 		this.nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
 		this.executor = executor;
+		this.receiverExported = receiverExported;
 	}
 
 	public void onTagDiscovered(android.nfc.Tag androidNfcTag) {

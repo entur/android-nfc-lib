@@ -57,8 +57,8 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 	protected int transceiveTimeout;
 
 	public AbstractNfcReaderCallbackHceSupport(Activity activity, Listener listener, Bundle readerModeExtras,
-											   ReaderCallback delegate, int transceiveTimeout, Executor executor) {
-		super(activity, delegate, readerModeExtras, executor);
+											   ReaderCallback delegate, int transceiveTimeout, Executor executor, boolean receiverExported) {
+		super(activity, delegate, readerModeExtras, executor, receiverExported);
 		this.listener = listener;
 		this.transceiveTimeout = transceiveTimeout;
 	}

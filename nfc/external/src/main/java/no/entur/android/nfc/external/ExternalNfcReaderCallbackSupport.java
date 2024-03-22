@@ -26,6 +26,8 @@ public class ExternalNfcReaderCallbackSupport {
 
 	protected boolean enabled = false;
 
+	protected boolean receiverExported;
+
 	private final BroadcastReceiver readerReceiver = new BroadcastReceiver() {
 
 		public void onReceive(Context context, Intent intent) {
@@ -59,10 +61,11 @@ public class ExternalNfcReaderCallbackSupport {
 
 	};
 
-	public ExternalNfcReaderCallbackSupport(ExternalNfcReaderCallback callback, Context context, Executor executor) {
+	public ExternalNfcReaderCallbackSupport(ExternalNfcReaderCallback callback, Context context, Executor executor, boolean receiverExported) {
 		this.callback = callback;
 		this.context = context;
 		this.executor = executor;
+		this.receiverExported = receiverExported;
 	}
 
 	public void setExecutor(Executor executor) {
@@ -115,12 +118,14 @@ public class ExternalNfcReaderCallbackSupport {
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
 			filter.addAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
-			RegisterReceiverUtils.registerReceiverNotExported(
+			RegisterReceiverUtils.registerReceiver(
 					context,
 					readerReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null);
+					null,
+					receiverExported
+					);
 		}
 	}
 

@@ -29,9 +29,12 @@ public class ExternalNfcReaderStatusSupport {
 
 	protected boolean recieveStatusBroadcasts = false;
 
-	public ExternalNfcReaderStatusSupport(Service context, ExternalNfcReaderStatusListener readerStatusListener) {
+	protected boolean receiverExported;
+
+	public ExternalNfcReaderStatusSupport(Service context, ExternalNfcReaderStatusListener readerStatusListener, boolean receiverExported) {
 		this.context = context;
 		this.readerStatusListener = readerStatusListener;
+		this.receiverExported = receiverExported;
 	}
 
 	private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
@@ -63,12 +66,13 @@ public class ExternalNfcReaderStatusSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ExternalNfcReaderCallback.ACTION_READER_STATUS);
-				RegisterReceiverUtils.registerReceiverNotExported(
+				RegisterReceiverUtils.registerReceiver(
 						context,
 						statusReceiver,
 						filter,
 						"android.permission.NFC",
-						null
+						null,
+						receiverExported
 				);
 			}
 		}

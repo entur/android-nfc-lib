@@ -22,11 +22,7 @@ public class ExternalNfcTagLostCallbackSupport {
 	protected final Activity activity;
 	protected Executor executor; // non-final for testing
 
-	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity, Executor executor) {
-		this.callback = callback;
-		this.activity = activity;
-		this.executor = executor;
-	}
+	protected boolean receiverExported;
 
 	private boolean recieveTagLostBroadcasts = false;
 
@@ -50,6 +46,14 @@ public class ExternalNfcTagLostCallbackSupport {
 			}
 		}
 	};
+
+
+	public ExternalNfcTagLostCallbackSupport(ExternalNfcTagLostCallback callback, Activity activity, Executor executor, boolean receiverExported) {
+		this.callback = callback;
+		this.activity = activity;
+		this.executor = executor;
+		this.receiverExported = receiverExported;
+	}
 
 	public void onResume() {
 		if (enabled) {
@@ -84,12 +88,13 @@ public class ExternalNfcTagLostCallbackSupport {
 			// register receiver
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
-			RegisterReceiverUtils.registerReceiverNotExported(
+			RegisterReceiverUtils.registerReceiver(
 					activity,
 					tagReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
-					null
+					null,
+					receiverExported
 			);
 		}
 	}

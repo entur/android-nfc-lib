@@ -26,6 +26,9 @@ import org.nfctools.scio.Command;
 import org.nfctools.scio.Response;
 
 import com.acs.smartcard.ReaderException;
+import com.acs.smartcard.RemovedCardException;
+
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class AcrMfUlReaderWriter implements MfUlReaderWriter {
 
@@ -74,6 +77,7 @@ public class AcrMfUlReaderWriter implements MfUlReaderWriter {
 			Response readBlockResponse = tag.transmit(readBlock);
 
 			if (readBlockResponse.isFailure()) {
+				// this might be tag lost, but we never seem to get RemovedCardException
 				throw new MfException("Reading block failed. Page: " + pageNumber + ", Response: " + readBlockResponse);
 			}
 

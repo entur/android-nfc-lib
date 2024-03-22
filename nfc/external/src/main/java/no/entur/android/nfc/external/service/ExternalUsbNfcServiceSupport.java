@@ -291,10 +291,13 @@ public class ExternalUsbNfcServiceSupport {
 	private final ExternalNfcReaderStatusListener listener;
 	private final ReaderAdapter readerAdapter;
 
-	public ExternalUsbNfcServiceSupport(Service service, ExternalNfcReaderStatusListener listener, ReaderAdapter readerAdapter) {
+	private final boolean receiverExported;
+
+	public ExternalUsbNfcServiceSupport(Service service, ExternalNfcReaderStatusListener listener, ReaderAdapter readerAdapter, boolean receiverExported) {
 		this.service = service;
 		this.listener = listener;
 		this.readerAdapter = readerAdapter;
+		this.receiverExported = receiverExported;
 	}
 
 	public void onCreate() {
@@ -377,10 +380,11 @@ public class ExternalUsbNfcServiceSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(ACTION_USB_PERMISSION);
-				RegisterReceiverUtils.registerReceiverNotExported(
+				RegisterReceiverUtils.registerReceiver(
 						service,
 						usbDevicePermissionReceiver,
-						filter
+						filter,
+						receiverExported
 				);
 				if (!delay) {
 					readerScanner.resume();
@@ -470,7 +474,7 @@ public class ExternalUsbNfcServiceSupport {
 				// register receiver
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-				RegisterReceiverUtils.registerReceiverNotExported(service, usbDeviceDetachedReceiver, filter);
+				RegisterReceiverUtils.registerReceiver(service, usbDeviceDetachedReceiver, filter, receiverExported);
 			}
 		}
 	}
