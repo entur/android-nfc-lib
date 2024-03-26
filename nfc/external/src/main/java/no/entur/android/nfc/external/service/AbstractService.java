@@ -4,13 +4,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
-import no.entur.android.nfc.external.service.tag.TagProxyStore;
+import no.entur.android.nfc.external.service.tag.DefaultTagProxyStore;
 
 public abstract class AbstractService extends Service {
 
@@ -18,7 +17,7 @@ public abstract class AbstractService extends Service {
 	
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
-	protected TagProxyStore store = new TagProxyStore();
+	protected DefaultTagProxyStore store = new DefaultTagProxyStore();
 	protected INFcTagBinder binder;
 
 

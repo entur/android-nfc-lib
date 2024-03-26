@@ -1,0 +1,76 @@
+
+repositories repos
+
+java {
+    // Sets Java compatibility to Java 8
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// previous declarations
+ext.cmdargs = ""
+ext.javaMainClass = "no.entur.android.nfc.websocket.example.server.Main"
+
+
+application {
+    mainClassName = javaMainClass
+}
+
+
+compileJava {
+    doFirst {
+        // https://stackoverflow.com/questions/58708213/gradle-build-add-module-path
+        options.compilerArgs += [
+                '--add-opens', 'java.smartcardio'
+        ]
+    }
+}
+
+
+compileTestJava {
+    doFirst {
+        // https://stackoverflow.com/questions/58708213/gradle-build-add-module-path
+        options.compilerArgs += [
+                '--add-opens', 'java.smartcardio'
+        ]
+    }
+}
+
+dependencies {
+    implementation project(":utilities:websocket-messages-java-lib")
+    implementation project(":utilities:websocket-server-java-lib")
+
+    implementation "org.java-websocket:Java-WebSocket:${javaWebSocketVersion}"
+    implementation "com.squareup.okhttp3:okhttp:${okHttp3Version}"
+    implementation ("org.slf4j:slf4j-api") {
+        version {
+            strictly "${slf4jVersion}"
+        }
+    }
+    implementation ("ch.qos.logback:logback-classic:${logbackVersion}")
+    implementation "io.github.jnasmartcardio:jnasmartcardio:${jnasmartcardioVersion}"
+
+    implementation project(":utilities:websocket-client-java-lib")
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+
+task runWebsocketServer(type: JavaExec) {
+    List<String> arguments = new ArrayList<>();
+    List<String> jvmArguments = new ArrayList<>();
+    jvmArguments.add("-Dsun.security.smartcardio.library=/usr/lib64/libpcsclite.so.1")
+    jvmArgs jvmArguments;
+    group = "Execution"
+    description = "Run websocket server"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = javaMainClass
+    args arguments
+}

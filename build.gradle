@@ -1,12 +1,20 @@
 buildscript {
    ext.repos = {
+        mavenLocal()
+        mavenCentral()
         google()
-        jcenter()
+        maven {
+            url "https://javacard.pro/maven/"
+            content {
+                includeGroup "com.github.martinpaljak"
+            }
+        }
+
     }
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:7.4.2'
     }
 }
 
@@ -22,21 +30,22 @@ def buildProjects() {
     subprojects.findAll { new File(it.projectDir, 'build.gradle').file }
 }
 
-def androidProjects() {
-    buildProjects().findAll { !it.projectDir.path.substring(rootProject.projectDir.path.length()).contains('utilities') }
+def androidApplicationProjects() {
+    subprojects.findAll { it.name.endsWith("-android-app")}
 }
 
-def appProjects() {
-    androidProjects().findAll { it.name.endsWith("app")}
-}
-
-def libraryProjects() {
-    androidProjects().findAll { !appProjects().contains(it)}
+def javaApplicationProjects() {
+    subprojects.findAll { it.name.endsWith("-java-app")}
 }
 
 def javaLibraryProjects() {
-    buildProjects().findAll { !androidProjects().contains(it) }
+    subprojects.findAll { it.name.endsWith("-java-lib")}
 }
+
+def androidLibraryProjects() {
+    buildProjects().findAll {  !androidApplicationProjects().contains(it) && !javaApplicationProjects().contains(it) && !javaLibraryProjects().contains(it) }
+}
+
 
 allprojects {
     // skip checking test configurations (like lint) or test libraries for vulnerabilities
@@ -69,6 +78,7 @@ allprojects {
 ext {
     // note: see abt alignment rule
     androidxAppcompatVersion = '1.4.1'
+    logbackAndroidVersion = '2.0.1'
 
     slf4jVersion = '1.7.36'
 
@@ -77,15 +87,25 @@ ext {
 
     // test
     unitVersion = '4.13.2'
-
+    androidxTestRulesVersion = '1.5.0'
+    androidxEspressoVersion = '3.5.1'
     androidxTestRunnerVersion = '1.4.0'
     androidxTestExtJunitVersion = '1.1.3'
     googleTruthVersion = '1.1.3'
-
-    mockitoVersion = '4.3.1'
-    byteBuddyVersion = '1.12.7'
+    baristaVersion = '4.3.0'
+    mockitoVersion = '5.6.0'
+    byteBuddyVersion = '1.14.10'
 
     logbackAndroidVersion = '2.0.0'
+
+    okHttp3Version = '4.12.0'
+    javaWebSocketVersion = '1.5.4'
+
+    adpu4jVersion = '23.03.21'
+
+    junitJupiterVersion = '5.8.2'
+    jnasmartcardioVersion = '0.2.7'
+    logbackVersion = '1.2.13'
 }
 
 ext.commonDependencies = {
@@ -152,16 +172,17 @@ configure(buildProjects()) {
 
 
 // build config
-configure(libraryProjects()) {
+configure(androidLibraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        compileSdkVersion 34
+        buildToolsVersion "33.0.2"
+        compileSdkVersion 33
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 34
+            targetSdkVersion 33
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')
@@ -226,7 +247,7 @@ configure(libraryProjects()) {
 
 
 // quality control + release
-configure(libraryProjects()) {
+configure(androidLibraryProjects()) {
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
 
@@ -314,10 +335,6 @@ configure(javaLibraryProjects()) {
 
     repositories repos
 
-    ext {
-        junitJupiterVersion = '5.8.2'
-    }
-
     java {
         // Sets Java compatibility to Java 8
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -399,10 +416,14 @@ configure(javaLibraryProjects()) {
     }
 }
 
-configure(appProjects()) {
+configure(androidApplicationProjects()) {
     apply plugin: 'com.android.application'
 }
 
+configure(javaApplicationProjects()) {
+   apply plugin: 'java'
+   apply plugin: 'application'
+}
 
 group = 'no.entur.android.nfc'
 

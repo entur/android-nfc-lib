@@ -2,7 +2,6 @@ package no.entur.android.nfc.external.service.tag;
 
 import android.nfc.NdefMessage;
 import android.os.RemoteException;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,13 +10,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.List;
 
-import no.entur.android.nfc.external.tag.DESFireAdapter;
 import no.entur.android.nfc.wrapper.ErrorCodes;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
-import no.entur.android.nfc.wrapper.tech.Ndef;
-import no.entur.android.nfc.wrapper.tech.NdefFormatable;
 
 public class INFcTagBinder extends INfcTag.Stub {
 

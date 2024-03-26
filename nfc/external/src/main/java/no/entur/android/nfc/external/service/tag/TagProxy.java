@@ -4,119 +4,32 @@ import java.util.List;
 
 import no.entur.android.nfc.wrapper.TagImpl;
 
-public class TagProxy {
+public interface TagProxy {
+    int getHandle();
 
-	private int handle;
-	private int slotNumber;
+    void closeTechnology();
 
-	private List<TagTechnology> technologies;
+    void setPresent(boolean b);
 
-	private TagTechnology current;
+    int getSlotNumber();
 
-	private TagProxyStore tagProxyStore;
+    TagTechnology getCurrent();
 
-	private boolean present = true;
+    void setCurrent(TagTechnology o);
 
-	public TagProxy(int handle, int slotNumber, List<TagTechnology> technologies, TagProxyStore tagProxyStore) {
-		this.handle = handle;
-		this.slotNumber = slotNumber;
-		this.technologies = technologies;
-		this.tagProxyStore = tagProxyStore;
-	}
+    boolean selectTechnology(int technology);
 
-	public TagTechnology getCurrent() {
-		return current;
-	}
+    List<TagTechnology> getTechnologies();
 
-	public void setCurrent(TagTechnology current) {
-		this.current = current;
-	}
+    boolean isNdef();
 
-	public int getHandle() {
-		return handle;
-	}
+    boolean isPresent();
 
-	public void setHandle(int id) {
-		this.handle = id;
-	}
+    boolean ndefIsWritable();
 
-	public int getSlotNumber() {
-		return slotNumber;
-	}
+    TagImpl rediscover(Object inFcTagBinder);
 
-	public void setSlotNumber(int slotNumber) {
-		this.slotNumber = slotNumber;
-	}
 
-	public List<TagTechnology> getTechnologies() {
-		return technologies;
-	}
+    void close();
 
-	public void setTechnologies(List<TagTechnology> technologies) {
-		this.technologies = technologies;
-	}
-
-	public boolean add(TagTechnology object) {
-		return technologies.add(object);
-	}
-
-	public TagTechnology getTechnology(int technology) {
-		for (TagTechnology tech : technologies) {
-			if (tech.getTagTechnology() == technology) {
-				return tech;
-			}
-		}
-		return null;
-	}
-
-	public boolean selectTechnology(int technology) {
-		for (TagTechnology tech : technologies) {
-			if (tech.getTagTechnology() == technology) {
-				this.current = tech;
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public void closeTechnology() {
-		this.current = null;
-	}
-
-	public TagImpl rediscover(Object callback) {
-		throw new RuntimeException();
-	}
-
-	public boolean isPresent() {
-		return present;
-	}
-
-	public void setPresent(boolean present) {
-		this.present = present;
-	}
-
-	public boolean isNdef() {
-		for(TagTechnology t : technologies) {
-			if(t instanceof NdefTechnology) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean ndefIsWritable() {
-		for(TagTechnology t : technologies) {
-			if(t instanceof NdefTechnology) {
-				NdefTechnology ndef = (NdefTechnology)t;
-				return ndef.isWritable();
-			}
-		}
-		return false;
-	}
-
-	public void close() {
-		tagProxyStore.remove(this);
-	}
 }

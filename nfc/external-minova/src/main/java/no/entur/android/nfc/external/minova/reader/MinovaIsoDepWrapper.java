@@ -5,10 +5,8 @@ import android.content.Intent;
 
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.minova.service.MinovaService;
-import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 

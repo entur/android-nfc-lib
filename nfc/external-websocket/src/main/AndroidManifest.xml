@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="no.entur.android.nfc.external.acs" >
+
+    <uses-permission android:name="android.permission.NFC" />
+
+    <!--
+    <service
+        android:name="no.entur.abt.glass.io.BluetoothMessageClientService"
+        android:label="BluetoothMessageClientService" />
+-->
+
+</manifest>

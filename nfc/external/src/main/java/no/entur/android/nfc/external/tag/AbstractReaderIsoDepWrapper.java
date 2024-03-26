@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.tag;
 
+import no.entur.android.nfc.external.service.tag.DefaultTagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 
 public abstract class AbstractReaderIsoDepWrapper {

@@ -8,6 +8,12 @@ This project hosts tools for working with NFC on Android. Modules:
  * [external](nfc/external) - basic support for external NFC readers
  * [external-acs](nfc/external-acs) - support for ACS readers external NFC readers
  * [external-minova](nfc/external-minova) - support for Minova MCR external NFC readers (over network)
+ * [external-websocket](nfc/external-websocket) - support for interacting with a pool of external readers over websocket
+   * add NFC support to devices without NFC chips (i.e. emulator / Android TV / certain tablets), and/or 
+   * programmatically interact with multiple cards/readers during testing, using fine-grained controls:
+     * connect/disconnect reader
+     * start/stop polling
+       * trigger tag scans even if the card is statically placed on the reader
 
 # License
 [European Union Public Licence v1.2](https://eupl.eu/).
@@ -24,6 +30,10 @@ This project includes some code from the following projects:
  
 as well as drivers from ACS.
 
+# Troubleshooting
+
+ * For [external-websocket](nfc/external-websocket) use a JVM which bundles `smartcardio` packages
+
 # Publish
 For local development (.m2)
 
@@ -33,3 +43,5 @@ For Maven central also add siging info.
 
 > ./gradlew build publishToSonatype --info --stacktrace -Psigning.gnupg.passphrase=xxx -Psigning.gnupg.keyName=yyy
 
+# History
+See [CHANGELOG](CHANGELOG.md).

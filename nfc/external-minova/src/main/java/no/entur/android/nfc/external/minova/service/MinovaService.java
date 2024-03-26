@@ -9,8 +9,8 @@ import org.nfctools.api.TagType;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.minova.reader.MinovaCommandInputOutputThread;
 import no.entur.android.nfc.external.minova.reader.MinovaIsoDepWrapper;
+import no.entur.android.nfc.external.service.tag.DefaultTagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxy;
-import no.entur.android.nfc.external.service.tag.TagTechnology;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.tcpserver.CommandInputOutputThread;
 
