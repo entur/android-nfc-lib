@@ -68,7 +68,7 @@ public class WebsocketReaderTest {
 			if(bound) {
 				LOGGER.info("Service bound");
 				try {
-					if(mService.connect("ws://10.0.2.2:3001")) {
+					if(mService.connect("ws://127.0.0.1:3001")) {
 						mService.connectReader(new String[]{});
 
 						mService.beginPolling();

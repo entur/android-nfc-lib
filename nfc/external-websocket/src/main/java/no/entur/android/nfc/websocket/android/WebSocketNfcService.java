@@ -100,9 +100,13 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public boolean connectReader(String[] tags) {
         WebSocketClient c = this.client;
         if(c != null) {
-            if(c.getReaderClient().connect(tags)) {
-                broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
-            } else {
+            try {
+                if (c.getReaderClient().connect(tags)) {
+                    broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+                } else {
+                    LOGGER.warn("Unable to connect reader");
+                }
+            } catch(Exception e) {
                 LOGGER.warn("Unable to connect reader");
             }
         }

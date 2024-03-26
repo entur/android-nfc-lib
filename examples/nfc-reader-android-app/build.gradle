@@ -4,14 +4,12 @@ plugins {
 
 android {
     namespace 'no.entur.abt.nfc.example'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
-        buildToolsVersion "33.0.2"
-
         applicationId "no.entur.abt.nfc.example"
         minSdk 27
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 

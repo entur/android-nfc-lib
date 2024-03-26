@@ -177,12 +177,12 @@ configure(androidLibraryProjects()) {
 
     android {
         buildToolsVersion "33.0.2"
-        compileSdkVersion 34
+        compileSdkVersion 33
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 34
+            targetSdkVersion 33
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')

@@ -18,9 +18,12 @@ public class FinishActivityBroadcastReceiver extends BroadcastReceiver {
 	private final Activity activity;
 	private final String[] actions;
 
-	public FinishActivityBroadcastReceiver(Activity activity, String... actions) {
+	private boolean exported;
+
+	public FinishActivityBroadcastReceiver(Activity activity, boolean exported, String... actions) {
 		this.activity = activity;
 		this.actions = actions;
+		this.exported = exported;
 	}
 
 	@Override
@@ -38,7 +41,7 @@ public class FinishActivityBroadcastReceiver extends BroadcastReceiver {
 			for (String action : actions) {
 				serviceFilter.addAction(action);
 			}
-			activity.registerReceiver(this, serviceFilter);
+			RegisterReceiverUtils.registerReceiver(activity, this, serviceFilter, exported);
 
 			receiving = true;
 		}

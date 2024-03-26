@@ -30,6 +30,10 @@ This project includes some code from the following projects:
  
 as well as drivers from ACS.
 
+# Troubleshooting
+
+ * For [external-websocket](nfc/external-websocket) use a JVM which bundles `smartcardio` packages
+
 # Publish
 For local development (.m2)
 
@@ -39,3 +43,5 @@ For Maven central also add siging info.
 
 > ./gradlew build publishToSonatype --info --stacktrace -Psigning.gnupg.passphrase=xxx -Psigning.gnupg.keyName=yyy
 
+# History
+See [CHANGELOG](CHANGELOG.md).
