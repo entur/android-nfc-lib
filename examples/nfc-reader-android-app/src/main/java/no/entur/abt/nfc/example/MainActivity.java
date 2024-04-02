@@ -180,6 +180,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
             setTagDetails(tag);
             setIntentDetails(intent);
+        });
+        threadPoolExecutor.submit(() -> {
             setContents(tag, intent);
         });
     }
