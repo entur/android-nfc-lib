@@ -51,6 +51,8 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 	private IAcr1255UBinder acr1255Binder;
 
 	protected INFcTagBinder binder;
+	
+	protected WrappedAcrReader reader;
 
 	protected Context context;
 
@@ -65,6 +67,13 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		this.acr1283Binder = new IAcr1283Binder();
 		this.acr1252Binder = new IAcr1252UBinder();
 		this.acr1255Binder = new IAcr1255UBinder();
+	}
+
+	public void close() {
+		WrappedAcrReader reader = this.reader;
+		if(reader != null) {
+			closeReader(reader.getReaderWrapper().getDevice());
+		}
 	}
 
 	public ACRCommands getReaderCommands(ReaderWrapper reader) {
@@ -101,6 +110,12 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		acr1281Binder.clearReader();
 		acr1283Binder.clearReader();
 
+		WrappedAcrReader reader = this.reader;
+		if(reader != null) {
+			reader.getReaderWrapper().close();
+			this.reader = null;
+		}
+		
 		binder.setReaderTechnology(null);
 	}
 
@@ -127,7 +142,11 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 			return null;
 		}
 
-		return new WrappedAcrReader(readerWrapper, createUsbAcrReader(reader));
+		WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, createUsbAcrReader(reader));
+		
+		this.reader = wrappedAcrReader;
+		
+		return wrappedAcrReader;
 	}
 
 	protected AcrReader createUsbAcrReader(ACRCommands reader) {

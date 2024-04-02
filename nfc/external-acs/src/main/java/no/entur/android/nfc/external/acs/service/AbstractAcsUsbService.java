@@ -41,24 +41,14 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 
 	protected boolean receiverExported = false;
 
-	protected WrappedAcrReader reader;
-
 	public void onReaderClosed(int readerStatus, String statusMessage) {
 		acrReaderListener.onReaderClosed(readerStatus, statusMessage);
-
-		// TODO clean up?
-		WrappedAcrReader reader = this.reader;
-		if(reader != null) {
-			reader.getReaderWrapper().close();
-		}
 	}
 
 	public void onReaderOpen(WrappedAcrReader reader, int readerStatusOk) {
 		acrReaderListener.onReaderOpen(reader, readerStatusOk);
 
 		initialize(reader.getReaderWrapper());
-
-		this.reader = reader;
 	}
 
 	public void onReaderStatusIntent(Intent intent) {
@@ -129,15 +119,11 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 
 		externalNfcReaderStatusSupport.onPause();
 
-		WrappedAcrReader reader = this.reader;
-		if(reader != null) {
-			reader.getReaderWrapper().close();
-		}
-
-
 		if(support != null) {
 			support.onDestroy();
 		}
+
+		acrReaderAdapter.close();
 	}
 
 	public void onTagPresent(ReaderWrapper reader, int slot) {
