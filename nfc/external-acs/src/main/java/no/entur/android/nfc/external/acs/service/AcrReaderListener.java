@@ -22,7 +22,7 @@ import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusListener;
 
-public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrReader> {
+public class AcrReaderListener implements ExternalNfcReaderStatusListener<WrappedAcrReader> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AcrReaderListener.class);
 
@@ -51,7 +51,9 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrRea
 	}
 
 	@Override
-	public void onReaderOpen(AcrReader reader, int status) {
+	public void onReaderOpen(WrappedAcrReader wrappedAcrReader, int status) {
+
+		AcrReader reader = wrappedAcrReader.getAcrReader();
 
 		try {
 			String name = reader.getName();
@@ -131,12 +133,13 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<AcrRea
 
 	@Override
 	public void onReaderStatusIntent(Intent requestIntent) {
+		// replay last intent
 		Intent lastIntent = this.lastIntent;
 		if(lastIntent != null) {
-			LOGGER.info("Broadcast currant status intent");
+			LOGGER.info("Broadcast latest status intent");
 			sendBroadcastForNfcPermission(new Intent(lastIntent));
 		} else {
-			LOGGER.info("No status intent");
+			LOGGER.info("No previous status intent");
 		}
 	}
 

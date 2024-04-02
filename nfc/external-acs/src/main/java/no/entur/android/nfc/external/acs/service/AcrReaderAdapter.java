@@ -1,6 +1,8 @@
 package no.entur.android.nfc.external.acs.service;
 
+import android.content.Context;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.util.Log;
 
 import com.acs.smartcard.ReaderException;
@@ -36,10 +38,9 @@ import no.entur.android.nfc.external.acs.reader.command.ACRReaderTechnology;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 
-public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdapter<AcrReader> {
+public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdapter<WrappedAcrReader> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AcrReaderAdapter.class);
-	private final ReaderWrapper reader;
 
 	private IAcr122UBinder acr122Binder;
 	private IAcr1222LBinder acr1222Binder;
@@ -50,9 +51,13 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 	private IAcr1255UBinder acr1255Binder;
 
 	protected INFcTagBinder binder;
+	
+	protected WrappedAcrReader reader;
 
-	public AcrReaderAdapter(ReaderWrapper reader, INFcTagBinder binder) {
-		this.reader = reader;
+	protected Context context;
+
+	public AcrReaderAdapter(Context context, INFcTagBinder binder) {
+		this.context = context;
 		this.binder = binder;
 
 		this.acr122Binder = new IAcr122UBinder();
@@ -64,7 +69,14 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		this.acr1255Binder = new IAcr1255UBinder();
 	}
 
-	public ACRCommands getReaderCommands() {
+	public void close() {
+		WrappedAcrReader reader = this.reader;
+		if(reader != null) {
+			closeReader(reader.getReaderWrapper().getDevice());
+		}
+	}
+
+	public ACRCommands getReaderCommands(ReaderWrapper reader) {
 		String name = reader.getReaderName();
 		if (name != null) {
 			if (name.contains("1222L")) {
@@ -98,14 +110,30 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		acr1281Binder.clearReader();
 		acr1283Binder.clearReader();
 
+		WrappedAcrReader reader = this.reader;
+		if(reader != null) {
+			reader.getReaderWrapper().close();
+			this.reader = null;
+		}
+		
 		binder.setReaderTechnology(null);
 	}
 
 	@Override
-	public AcrReader openReader(UsbDevice device) {
-		reader.open(device);
+	public WrappedAcrReader openReader(UsbDevice device) {
 
-		ACRCommands reader = getReaderCommands();
+		UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+
+		// Initialize reader
+		ReaderWrapper readerWrapper = new ReaderWrapper(manager);
+
+		if(!readerWrapper.isSupported(device)) {
+			LOGGER.debug("Reader not supported");
+			return null;
+		}
+		readerWrapper.open(device);
+
+		ACRCommands reader = getReaderCommands(readerWrapper);
 
 		try {
 			binder.setReaderTechnology(new ACRReaderTechnology(reader));
@@ -114,7 +142,11 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 			return null;
 		}
 
-		return createUsbAcrReader(reader);
+		WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, createUsbAcrReader(reader));
+		
+		this.reader = wrappedAcrReader;
+		
+		return wrappedAcrReader;
 	}
 
 	protected AcrReader createUsbAcrReader(ACRCommands reader) {
@@ -145,8 +177,4 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		return null;
 	}
 
-	@Override
-	public boolean isReaderSupported(UsbDevice device) {
-		return reader.isSupported(device);
-	}
 }

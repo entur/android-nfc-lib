@@ -43,7 +43,6 @@ public class ExternalUsbNfcServiceSupport {
 
 		T openReader(UsbDevice param);
 
-		boolean isReaderSupported(UsbDevice device);
 	}
 
 	private static class Scanner extends Handler {
@@ -167,10 +166,6 @@ public class ExternalUsbNfcServiceSupport {
 
 			Object reader = null;
 			try {
-				synchronized (ExternalUsbNfcServiceSupport.this) {
-					requestPermissionDevices.remove(params[0].getDeviceId());
-				}
-
 				String name = params[0].getDeviceName();
 
 				LOGGER.debug("Opening reader " + name + "...");
@@ -209,6 +204,10 @@ public class ExternalUsbNfcServiceSupport {
 				}
 
 				setNfcReaderStatus(status, result.toString());
+			} finally {
+				synchronized (ExternalUsbNfcServiceSupport.this) {
+					requestPermissionDevices.remove(params[0].getDeviceId());
+				}
 			}
 
 			if (reader != null) {
@@ -320,14 +319,8 @@ public class ExternalUsbNfcServiceSupport {
 		LOGGER.debug("Detecing USB devices..");
 
 		for (UsbDevice device : usbManager.getDeviceList().values()) {
-			if (readerAdapter.isReaderSupported(device)) {
-				// askingForPermission = true;
-
-				synchronized (this) {
-					return detectUSBDevice(device);
-				}
-			} else {
-				LOGGER.debug("Reader not supported: " + device.getDeviceName());
+			synchronized (this) {
+				return detectUSBDevice(device);
 			}
 		}
 
@@ -356,8 +349,6 @@ public class ExternalUsbNfcServiceSupport {
 					usbManager.requestPermission(device, permissionIntent);
 
 					LOGGER.debug("Detected ACR reader..");
-
-					return true;
 				} else {
 					LOGGER.debug("Do not ask for permission for previous device " + device.getDeviceName() + " / " + device.getDeviceId());
 				}

@@ -1,16 +1,14 @@
 package no.entur.android.nfc.external.acs.service;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
-import no.entur.android.nfc.external.acs.reader.AcsTransceiveResultExceptionMapper;
+import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.external.acs.tag.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
 import no.entur.android.nfc.external.acs.tag.TagTypeDetector;
@@ -22,11 +20,12 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
 import no.entur.android.nfc.external.service.AbstractService;
+import no.entur.android.nfc.external.service.ExternalNfcReaderStatusListener;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
-public abstract class AbstractAcsUsbService extends AbstractService {
+public abstract class AbstractAcsUsbService extends AbstractService implements ExternalNfcReaderStatusListener<WrappedAcrReader> {
 
 	static final String[] STATE_STRINGS = { "Unknown", "Absent", "Present", "Swallowed", "Powered", "Negotiable", "Specific" };
 
@@ -39,27 +38,37 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 	protected TagTypeDetector<ReaderWrapper> tagTypeDetector = new DefaultTagTypeDetector<>();
 	protected ExternalUsbNfcServiceSupport support;
-	protected ReaderWrapper reader;
 
 	protected boolean receiverExported = false;
+
+	public void onReaderClosed(int readerStatus, String statusMessage) {
+		acrReaderListener.onReaderClosed(readerStatus, statusMessage);
+	}
+
+	public void onReaderOpen(WrappedAcrReader reader, int readerStatusOk) {
+		acrReaderListener.onReaderOpen(reader, readerStatusOk);
+
+		initialize(reader.getReaderWrapper());
+	}
+
+	public void onReaderStatusIntent(Intent intent) {
+		acrReaderListener.onReaderStatusIntent(intent);
+	}
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		// Get USB manager
-		UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+		acrReaderAdapter = new AcrReaderAdapter(this, binder);
 
-		// Initialize reader
-		reader = new ReaderWrapper(manager);
-
-		acrReaderAdapter = new AcrReaderAdapter(reader, binder);
-
-		support = new ExternalUsbNfcServiceSupport(this, acrReaderListener, acrReaderAdapter, receiverExported);
-
+		support = new ExternalUsbNfcServiceSupport(this, this, acrReaderAdapter, receiverExported);
 		support.onCreate();
 
 		externalNfcReaderStatusSupport.onResume();
+	}
+
+	private void initialize(ReaderWrapper reader) {
+
 
 		reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
 
@@ -79,7 +88,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 				if (prevState == Reader.CARD_ABSENT && currState == Reader.CARD_PRESENT) {
 					// Log.v(TAG, "Tag present on reader");
 
-					onTagPresent(slot);
+					onTagPresent(reader, slot);
 				} else if (currState == Reader.CARD_ABSENT) {
 					// Log.v(TAG, "Tag absent on reader");
 
@@ -110,11 +119,15 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 		externalNfcReaderStatusSupport.onPause();
 
-		support.onDestroy();
+		if(support != null) {
+			support.onDestroy();
+		}
+
+		acrReaderAdapter.close();
 	}
 
-	public void onTagPresent(int slot) {
-		new InitTagTask().execute(slot);
+	public void onTagPresent(ReaderWrapper reader, int slot) {
+		new InitTagTask(reader).execute(slot);
 	}
 
 	public void onTagAbsent(int slot) {
@@ -128,6 +141,12 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 	}
 
 	private class InitTagTask extends AsyncTask<Integer, Void, Exception> {
+
+		private ReaderWrapper reader;
+
+		private InitTagTask(ReaderWrapper reader) {
+			this.reader = reader;
+		}
 
 		@Override
 		protected Exception doInBackground(Integer... params) {
@@ -157,7 +176,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 
 				LOGGER.debug("Tag inited as " + tagType + " for ATR " + ByteArrayHexStringConverter.toHexString(atr));
 
-				handleTagInit(slotNumber, atr, tagType);
+				handleTagInit(reader, slotNumber, atr, tagType);
 			} catch (RemovedCardException e) {
 				LOGGER.debug("Tag removed before it could be powered; ignore.", e);
 			} catch (Exception e) {
@@ -177,7 +196,7 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 		}
 	}
 
-	public void handleTagInit(int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
+	public void handleTagInit(ReaderWrapper reader, int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
 		int preferredProtocols = Reader.PROTOCOL_T0 | Reader.PROTOCOL_T1;
 		reader.setProtocol(0, preferredProtocols);
 
@@ -185,11 +204,12 @@ public abstract class AbstractAcsUsbService extends AbstractService {
 		if (state != Reader.CARD_SPECIFIC) {
 			TagUtility.sendTechBroadcast(this);
 		} else {
-			handleTagInitRegularMode(slotNumber, atr, tagType);
+			handleTagInitRegularMode(reader, slotNumber, atr, tagType);
 		}
 	}
 
-	protected abstract void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType);
+
+	protected abstract void handleTagInitRegularMode(ReaderWrapper reader, int slotNumber, byte[] atr, TagType tagType);
 
 
 }

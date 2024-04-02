@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.acs.reader.AcsTransceiveResultExceptionMapper;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.acs.tag.AcsMifareUltralightTagServiceSupport;
 import no.entur.android.nfc.external.acs.tag.TagUtility;
@@ -52,7 +53,7 @@ public class AcsUsbService extends AbstractAcsUsbService {
 	}
 
 	@Override
-	protected void handleTagInitRegularMode(int slotNumber, byte[] atr, TagType tagType) {
+	protected void handleTagInitRegularMode(ReaderWrapper reader, int slotNumber, byte[] atr, TagType tagType) {
 		LOGGER.debug("Handle tag in regular mode");
 		AcsTag acsTag = new AcsTag(tagType, atr, reader, slotNumber);
 		ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, slotNumber);
