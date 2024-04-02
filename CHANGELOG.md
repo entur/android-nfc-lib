@@ -1,5 +1,9 @@
 # Release notes
 
+## 2.0.1
+
+ * Fix ACS USB read problem upon reconnect
+ 
 ## 2.0.0
 
  * Networked NFC reader support
