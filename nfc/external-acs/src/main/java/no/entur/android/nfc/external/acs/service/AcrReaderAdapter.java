@@ -3,7 +3,6 @@ package no.entur.android.nfc.external.acs.service;
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.util.Log;
 
 import com.acs.smartcard.ReaderException;
 
@@ -147,6 +146,11 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		this.reader = wrappedAcrReader;
 		
 		return wrappedAcrReader;
+	}
+
+	@Override
+	public boolean isSupportedDevice(UsbDevice device, UsbManager usbManager) {
+		return new ReaderWrapper(usbManager).isSupported(device);
 	}
 
 	protected AcrReader createUsbAcrReader(ACRCommands reader) {

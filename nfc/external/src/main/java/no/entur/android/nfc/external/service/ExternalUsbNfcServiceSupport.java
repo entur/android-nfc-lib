@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
@@ -13,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +21,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
-import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.util.RegisterReceiverUtils;
 
 /**
@@ -43,6 +40,7 @@ public class ExternalUsbNfcServiceSupport {
 
 		T openReader(UsbDevice param);
 
+		boolean isSupportedDevice(UsbDevice device, UsbManager usbManager);
 	}
 
 	private static class Scanner extends Handler {
@@ -320,6 +318,7 @@ public class ExternalUsbNfcServiceSupport {
 
 		for (UsbDevice device : usbManager.getDeviceList().values()) {
 			synchronized (this) {
+				if (!readerAdapter.isSupportedDevice(device, usbManager)) continue;
 				return detectUSBDevice(device);
 			}
 		}
