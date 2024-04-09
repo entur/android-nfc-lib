@@ -52,6 +52,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 	protected INFcTagBinder binder;
 	
 	protected WrappedAcrReader reader;
+	private final int acsVendorId = 1839;
 
 	protected Context context;
 
@@ -150,6 +151,8 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 
 	@Override
 	public boolean isSupportedDevice(UsbDevice device, UsbManager usbManager) {
+		if (device.getVendorId() != acsVendorId) return false;
+
 		return new ReaderWrapper(usbManager).isSupported(device);
 	}
 
