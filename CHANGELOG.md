@@ -1,5 +1,9 @@
 # Release notes
 
+## 2.0.2
+
+ * Fix ACS USB detector problem when multiple USB devices are connect
+
 ## 2.0.1
 
  * Fix ACS USB read problem upon reconnect
