@@ -53,11 +53,15 @@ public class HostCardEmulationActivitySupport extends AbstractActivitySupport {
 
 	@Override
 	protected void stopImpl() {
-		cardEmulation.unsetPreferredService(activity);
+		if(cardEmulation != null) {
+			cardEmulation.unsetPreferredService(activity);
+		}
 	}
 
 	@Override
 	protected void startImpl() {
-		cardEmulation.setPreferredService(activity, service);
+		if(cardEmulation != null) {
+			cardEmulation.setPreferredService(activity, service);
+		}
 	}
 }
