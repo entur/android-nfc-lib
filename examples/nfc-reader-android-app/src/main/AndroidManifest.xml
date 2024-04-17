@@ -35,6 +35,7 @@
             </intent-filter>
 
             <!-- optional config -->
+            <!-- https://emteria.com/blog/remember-android-usb-permissions -->
             <!--
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
@@ -50,10 +51,16 @@
             <meta-data
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
+-->
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+
+
             <meta-data
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/accessory_filter" />
--->
+
         </activity>
 
         <service
