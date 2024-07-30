@@ -1,4 +1,3 @@
-![Build Status](https://github.com/entur/android-nfc-lib/actions/workflows/android.yml/badge.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/no.entur.android.nfc/core.svg)](https://mvnrepository.com/artifact/no.entur.android.nfc)
 
 
