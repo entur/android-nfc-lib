@@ -14,6 +14,7 @@ public class NfcTargetAnalyzeResult {
 
     private SelectApplicationAnalyzeResult selectApplicationAnalyzeResult;
 
+    private TagTechnologies tagTechnologies;
     // TODO: Include command/response history?
 
     public String getId() {
@@ -46,5 +47,13 @@ public class NfcTargetAnalyzeResult {
 
     public void setSelectApplicationAnalyzeResult(SelectApplicationAnalyzeResult selectApplicationAnalyzeResult) {
         this.selectApplicationAnalyzeResult = selectApplicationAnalyzeResult;
+    }
+
+    public void setTagTechnologies(TagTechnologies tagTechnologies) {
+        this.tagTechnologies = tagTechnologies;
+    }
+
+    public TagTechnologies getTagTechnologies() {
+        return tagTechnologies;
     }
 }

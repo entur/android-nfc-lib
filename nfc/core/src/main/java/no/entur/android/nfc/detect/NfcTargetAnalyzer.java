@@ -5,12 +5,14 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import no.entur.android.nfc.detect.app.SelectApplicationAnalyzeResult;
 import no.entur.android.nfc.detect.app.SelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.technology.TechnologyAnalyzeResult;
 import no.entur.android.nfc.detect.technology.TechnologyAnalyzer;
@@ -38,14 +40,6 @@ import no.entur.android.nfc.wrapper.tech.NfcV;
 
 public class NfcTargetAnalyzer {
 
-    private static final String ISO_DEP = "android.nfc.tech.IsoDep";
-    private static final String MIFARE_CLASSIC = "android.nfc.tech.MifareClassic";
-    private static final String MIFARE_ULTRALIGHT = "android.nfc.tech.MifareUltralight";
-    private static final String NFC_A = "android.nfc.tech.NfcA";
-    private static final String NFC_B = "android.nfc.tech.NfcB";
-    private static final String NFC_F = "android.nfc.tech.NfcF";
-    private static final String NFC_V = "android.nfc.tech.NfcV";
-
     private static Builder newBuilder() {
         return new Builder();
     }
@@ -53,6 +47,7 @@ public class NfcTargetAnalyzer {
     public static class Builder {
 
         private List<Target> targets = new ArrayList<>();
+        private TagTechnologiesFactory tagTechnologiesFactory;
 
         public Builder add(Consumer<TargetBuilder> builder) {
             TargetBuilder target = new TargetBuilder();
@@ -61,8 +56,16 @@ public class NfcTargetAnalyzer {
             return this;
         }
 
+        public Builder withTagTechnologiesFactory(TagTechnologiesFactory tagTechnologiesFactory) {
+            this.tagTechnologiesFactory = tagTechnologiesFactory;
+            return this;
+        }
+
         public NfcTargetAnalyzer build() {
-            return new NfcTargetAnalyzer(targets);
+            if(tagTechnologiesFactory == null) {
+                tagTechnologiesFactory = new DefaultTagTechnologiesFactory();
+            }
+            return new NfcTargetAnalyzer(targets, tagTechnologiesFactory);
         }
 
     }
@@ -118,9 +121,7 @@ public class NfcTargetAnalyzer {
         private String id;
 
         private TechnologyAnalyzer technologyAnalyzer;
-
         private UidAnalyzer uidAnalyzer;
-
         private SelectApplicationAnalyzer selectApplicationAnalyzer;
 
     }
@@ -132,6 +133,16 @@ public class NfcTargetAnalyzer {
 
         @Override
         public int compareTo(TargetCandidate o) {
+            int technologyAnalyzeResult = result.getTechnologyAnalyzeResult().compareTo(o.result.getTechnologyAnalyzeResult());
+            if(technologyAnalyzeResult != 0) {
+                return technologyAnalyzeResult;
+            }
+
+            int uidAnalyzeResult = result.getUidAnalyzeResult().compareTo(o.result.getUidAnalyzeResult());
+            if(uidAnalyzeResult != 0) {
+                return uidAnalyzeResult;
+            }
+
             return 0;
         }
     }
@@ -141,10 +152,14 @@ public class NfcTargetAnalyzer {
     // technologies to parse
     private final Set<String> technologies;
 
-    public NfcTargetAnalyzer(List<Target> targets) {
+    private final TagTechnologiesFactory tagTechnologiesFactory;
+
+    public NfcTargetAnalyzer(List<Target> targets, TagTechnologiesFactory tagTechnologiesFactory) {
         this.targets = targets;
 
-        technologies = toTechnologies(targets);
+        this.technologies = toTechnologies(targets);
+
+        this.tagTechnologiesFactory = tagTechnologiesFactory;
     }
 
     private Set<String> toTechnologies(List<Target> targets) {
@@ -159,8 +174,8 @@ public class NfcTargetAnalyzer {
         return set;
     }
 
-    public List<NfcTargetAnalyzeResult> analyze(Tag tag, Intent intent) {
-        TagTechnologies tagTechnologies = getTagTechnologies(tag);
+    public List<NfcTargetAnalyzeResult> analyze(Tag tag, Intent intent) throws IOException {
+        TagTechnologies tagTechnologies = tagTechnologiesFactory.newInstance(tag, intent, technologies);
 
         if(tagTechnologies.isEmpty()) {
             // no point in continuing
@@ -178,6 +193,7 @@ public class NfcTargetAnalyzer {
 
             c.target = target;
             c.result = new NfcTargetAnalyzeResult();
+            c.result.setTagTechnologies(tagTechnologies);
 
             c.result.setId(target.id);
 
@@ -196,22 +212,50 @@ public class NfcTargetAnalyzer {
             return null;
         }
 
-        // sort
+        // sort according to the most promising
         Collections.sort(uidResults);
 
         boolean applicationAnalyzer = isApplicationAnalyzer(uidResults);
         if(!applicationAnalyzer) {
             // ideally this would only be a single result
-            List<NfcTargetAnalyzeResult> output = new ArrayList<>();
-            for (TargetCandidate uidResult : uidResults) {
-                output.add(uidResult.result);
-            }
-            return output;
+            return toResults(uidResults);
         }
 
-        // sort according to the most promising
+        List<TargetCandidate> selectApplicationResults = processSelectApplication(tag, intent, candidates, tagTechnologies);
+        if(selectApplicationResults.isEmpty()) {
+            // no point in continuing
+            return null;
+        }
 
-        return null;
+        // can only be a single result
+        return toResults(selectApplicationResults);
+    }
+
+    private List<TargetCandidate> processSelectApplication(Tag tag, Intent intent, List<TargetCandidate> candidates, TagTechnologies tagTechnologies) throws IOException {
+        List<TargetCandidate> results = new ArrayList<>();
+        for (TargetCandidate technologyTarget : candidates) {
+            SelectApplicationAnalyzer selectApplicationAnalyzer = technologyTarget.target.selectApplicationAnalyzer;
+            if(selectApplicationAnalyzer != null) {
+                SelectApplicationAnalyzeResult result = selectApplicationAnalyzer.processApplication(tagTechnologies, tag, intent);
+
+                if(result.isSuccess()) {
+                    technologyTarget.result.setSelectApplicationAnalyzeResult(result);
+                    results.add(technologyTarget);
+
+                    break;
+                }
+            }
+
+        }
+        return results;
+    }
+
+    private static @NonNull List<NfcTargetAnalyzeResult> toResults(List<TargetCandidate> uidResults) {
+        List<NfcTargetAnalyzeResult> output = new ArrayList<>();
+        for (TargetCandidate uidResult : uidResults) {
+            output.add(uidResult.result);
+        }
+        return output;
     }
 
     private boolean isApplicationAnalyzer(List<TargetCandidate> results) {
@@ -222,7 +266,6 @@ public class NfcTargetAnalyzer {
         }
         return false;
     }
-
 
     @NonNull
     private static List<TargetCandidate> processUid(Tag tag, Intent intent, List<TargetCandidate> candidates, TagTechnologies tagTechnologies) {
@@ -260,47 +303,6 @@ public class NfcTargetAnalyzer {
         return results;
     }
 
-    private TagTechnologies getTagTechnologies(Tag tag) {
-        TagTechnologies tech = new TagTechnologies();
-
-        String[] techList = tag.getTechList();
-
-        for (String s : techList) {
-            if(technologies.contains(s)) {
-                switch(s) {
-                    case ISO_DEP: {
-                        tech.setIsoDep(IsoDep.get(tag));
-                        break;
-                    }
-                    case MIFARE_CLASSIC: {
-                        tech.setMifareClassic(MifareClassic.get(tag));
-                        break;
-                    }
-                    case MIFARE_ULTRALIGHT: {
-                        tech.setMifareUltralight(MifareUltralight.get(tag));
-                        break;
-                    }
-                    case NFC_A: {
-                        tech.setNfcA(NfcA.get(tag));
-                        break;
-                    }
-                    case NFC_B: {
-                        tech.setNfcB(NfcB.get(tag));
-                        break;
-                    }
-                    case NFC_F: {
-                        tech.setNfcF(NfcF.get(tag));
-                        break;
-                    }
-                    case NFC_V: {
-                        tech.setNfcV(NfcV.get(tag));
-                        break;
-                    }
-                }
-            }
-        }
-        return tech;
-    }
 
 
 }
