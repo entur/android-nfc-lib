@@ -2,12 +2,13 @@ package no.entur.android.nfc.detect.uid;
 
 import android.content.Intent;
 
+import no.entur.android.nfc.detect.TagTechnologies;
 import no.entur.android.nfc.wrapper.Tag;
 
 public class HostCardEmulationUidAnalyzer implements UidAnalyzer {
 
     @Override
-    public UidAnalyzeResult processUid(Tag tag, Intent intent) {
+    public UidAnalyzeResult processUid(TagTechnologies tagTechnologies, Tag tag, Intent intent) {
 
         byte[] id = tag.getId();
         if(id != null) {

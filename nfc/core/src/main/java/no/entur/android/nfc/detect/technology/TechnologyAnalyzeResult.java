@@ -31,4 +31,8 @@ public class TechnologyAnalyzeResult implements Comparable<TechnologyAnalyzeResu
 
         return 0;
     }
+
+    public boolean hasType() {
+        return type != null;
+    }
 }

@@ -2,6 +2,7 @@ package no.entur.android.nfc.detect.uid;
 
 import android.content.Intent;
 
+import no.entur.android.nfc.detect.TagTechnologies;
 import no.entur.android.nfc.wrapper.Tag;
 
 /**
@@ -19,6 +20,6 @@ public interface UidAnalyzer {
      * @return result
      *
      */
-    UidAnalyzeResult processUid(Tag tag, Intent intent);
+    UidAnalyzeResult processUid(TagTechnologies tagTechnologies, Tag tag, Intent intent);
 
 }

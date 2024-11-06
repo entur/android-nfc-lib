@@ -2,16 +2,22 @@ package no.entur.android.nfc.detect;
 
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import no.entur.android.nfc.detect.app.SelectApplicationAnalyzer;
+import no.entur.android.nfc.detect.technology.TechnologyAnalyzeResult;
 import no.entur.android.nfc.detect.technology.TechnologyAnalyzer;
+import no.entur.android.nfc.detect.uid.UidAnalyzeResult;
 import no.entur.android.nfc.detect.uid.UidAnalyzer;
+import no.entur.android.nfc.detect.uid.UidManufacturerType;
+import no.entur.android.nfc.detect.uid.UidSequenceType;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
 import no.entur.android.nfc.wrapper.tech.MifareClassic;
@@ -119,6 +125,17 @@ public class NfcTargetAnalyzer {
 
     }
 
+    private static class TargetCandidate implements Comparable<TargetCandidate> {
+
+        private Target target;
+        private NfcTargetAnalyzeResult result;
+
+        @Override
+        public int compareTo(TargetCandidate o) {
+            return 0;
+        }
+    }
+
     private final List<Target> targets;
 
     // technologies to parse
@@ -142,7 +159,7 @@ public class NfcTargetAnalyzer {
         return set;
     }
 
-    public NfcTargetAnalyzeResult analyze(Tag tag, Intent intent) {
+    public List<NfcTargetAnalyzeResult> analyze(Tag tag, Intent intent) {
         TagTechnologies tagTechnologies = getTagTechnologies(tag);
 
         if(tagTechnologies.isEmpty()) {
@@ -154,11 +171,93 @@ public class NfcTargetAnalyzer {
 
         // then sort and check for application identifier
 
+        List<TargetCandidate> candidates = new ArrayList<>();
 
+        for(Target target : targets) {
+            TargetCandidate c = new TargetCandidate();
 
+            c.target = target;
+            c.result = new NfcTargetAnalyzeResult();
 
+            c.result.setId(target.id);
+
+            candidates.add(c);
+        }
+
+        List<TargetCandidate> technologyResults = processTechnology(tag, intent, candidates, tagTechnologies);
+        if(technologyResults.isEmpty()) {
+            // no point in continuing
+            return null;
+        }
+
+        List<TargetCandidate> uidResults = processUid(tag, intent, candidates, tagTechnologies);
+        if(uidResults.isEmpty()) {
+            // no point in continuing
+            return null;
+        }
+
+        // sort
+        Collections.sort(uidResults);
+
+        boolean applicationAnalyzer = isApplicationAnalyzer(uidResults);
+        if(!applicationAnalyzer) {
+            // ideally this would only be a single result
+            List<NfcTargetAnalyzeResult> output = new ArrayList<>();
+            for (TargetCandidate uidResult : uidResults) {
+                output.add(uidResult.result);
+            }
+            return output;
+        }
+
+        // sort according to the most promising
 
         return null;
+    }
+
+    private boolean isApplicationAnalyzer(List<TargetCandidate> results) {
+        for (TargetCandidate result : results) {
+            if(result.target.selectApplicationAnalyzer != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    @NonNull
+    private static List<TargetCandidate> processUid(Tag tag, Intent intent, List<TargetCandidate> candidates, TagTechnologies tagTechnologies) {
+        List<TargetCandidate> results = new ArrayList<>();
+        for (TargetCandidate technologyTarget : candidates) {
+            UidAnalyzer uidAnalyzer = technologyTarget.target.uidAnalyzer;
+            if(uidAnalyzer != null) {
+                UidAnalyzeResult result = uidAnalyzer.processUid(tagTechnologies, tag, intent);
+
+                boolean acceptableSequence = result.getSequenceType() == UidSequenceType.INSIDE || result.getSequenceType() == UidSequenceType.NOT_AVAILABLE;
+                boolean acceptableManufacturer = result.getManufacturerType() == UidManufacturerType.MATCH || result.getManufacturerType() == UidManufacturerType.NOT_AVAILABLE;
+
+                if (result.isLength() && acceptableSequence && acceptableManufacturer) {
+                    technologyTarget.result.setUidAnalyzeResult(result);
+                    results.add(technologyTarget);
+                }
+            }
+
+        }
+        return results;
+    }
+
+    @NonNull
+    private static List<TargetCandidate> processTechnology(Tag tag, Intent intent, List<TargetCandidate> candidates, TagTechnologies tagTechnologies) {
+        List<TargetCandidate> results = new ArrayList<>();
+        for (TargetCandidate technologyTarget : candidates) {
+            TechnologyAnalyzer technologyAnalyzer = technologyTarget.target.technologyAnalyzer;
+            TechnologyAnalyzeResult technologyAnalyzeResult = technologyAnalyzer.processTechnology(tagTechnologies, tag, intent);
+
+            if(technologyAnalyzeResult.hasType()) {
+                technologyTarget.result.setTechnologyAnalyzeResult(technologyAnalyzeResult);
+                results.add(technologyTarget);
+            }
+        }
+        return results;
     }
 
     private TagTechnologies getTagTechnologies(Tag tag) {
