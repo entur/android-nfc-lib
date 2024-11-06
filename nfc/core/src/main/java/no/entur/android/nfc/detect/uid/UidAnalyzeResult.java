@@ -1,4 +1,4 @@
-package no.entur.android.nfc.detect.tag;
+package no.entur.android.nfc.detect.uid;
 
 import java.util.Comparator;
 
@@ -20,9 +20,9 @@ public class UidAnalyzeResult implements Comparable<UidAnalyzeResult> {
             }
 
             // better to have no sequence info than to be outside
-            if(o1 != UidSequenceType.UNKNOWN && o2 == UidSequenceType.UNKNOWN) {
+            if(o1 != UidSequenceType.NOT_AVAILABLE && o2 == UidSequenceType.NOT_AVAILABLE) {
                 return 1;
-            } else if(o1 == UidSequenceType.UNKNOWN && o2 != UidSequenceType.UNKNOWN) {
+            } else if(o1 == UidSequenceType.NOT_AVAILABLE && o2 != UidSequenceType.NOT_AVAILABLE) {
                 return -1;
             }
 
@@ -30,26 +30,52 @@ public class UidAnalyzeResult implements Comparable<UidAnalyzeResult> {
         }
     };
 
+    private static final Comparator<UidManufacturerType> UID_MANUFACTURER_TYPE_COMPARATOR = new Comparator<UidManufacturerType>() {
+        @Override
+        public int compare(UidManufacturerType o1, UidManufacturerType o2) {
+            if(o1 == o2) {
+                return 0;
+            }
+
+            // known is best
+            if(o1 != UidManufacturerType.MATCH && o2 == UidManufacturerType.MATCH) {
+                return 1;
+            } else if(o1 == UidManufacturerType.MATCH && o2 != UidManufacturerType.MATCH) {
+                return -1;
+            }
+
+            // better to have unknown manufacturer than to be outside
+            if(o1 != UidManufacturerType.NOT_AVAILABLE && o2 == UidManufacturerType.NOT_AVAILABLE) {
+                return 1;
+            } else if(o1 == UidManufacturerType.NOT_AVAILABLE && o2 != UidManufacturerType.NOT_AVAILABLE) {
+                return -1;
+            }
+
+            return 0;
+        }
+    };
+
+
     // matches length
     private final boolean length;
 
     // matches known range
     private final UidSequenceType sequenceType;
 
-    private final boolean manufacturer;
+    private final UidManufacturerType manufacturerType;
 
-    public UidAnalyzeResult(boolean length, UidSequenceType sequenceType, boolean manufacturer) {
+    public UidAnalyzeResult(boolean length, UidSequenceType sequenceType, UidManufacturerType manufacturerType) {
         this.length = length;
         this.sequenceType = sequenceType;
-        this.manufacturer = manufacturer;
+        this.manufacturerType = manufacturerType;
     }
 
     public boolean isLength() {
         return length;
     }
 
-    public boolean isManufacturer() {
-        return manufacturer;
+    public UidManufacturerType getManufacturerType() {
+        return manufacturerType;
     }
 
     public UidSequenceType getSequenceType() {
@@ -67,10 +93,9 @@ public class UidAnalyzeResult implements Comparable<UidAnalyzeResult> {
             return -1;
         }
 
-        if(!manufacturer && o.manufacturer) {
-            return 1;
-        } else if(manufacturer && !o.manufacturer) {
-            return -1;
+        int manufacturer = UID_MANUFACTURER_TYPE_COMPARATOR.compare(manufacturerType, o.manufacturerType);
+        if(manufacturer != 0) {
+            return manufacturer;
         }
 
         return SEQUENCE_TYPE_COMPARATOR.compare(sequenceType, o.sequenceType);

@@ -5,8 +5,8 @@ import android.content.Intent;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
 
-public interface IsoDepHandler {
+public interface IsoDepAnalyzeResultHandler {
 
-    void onIsoDepDiscovered(IsoDep isoDep, Tag tag, Intent intent);
+    void onIsoDepDiscovered(IsoDep isoDep, Tag tag, Intent intent, NfcTargetAnalyzeResult result);
 
 }

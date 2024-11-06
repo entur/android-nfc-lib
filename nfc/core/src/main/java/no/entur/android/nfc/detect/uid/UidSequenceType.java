@@ -1,8 +1,8 @@
-package no.entur.android.nfc.detect.tag;
+package no.entur.android.nfc.detect.uid;
 
 public enum UidSequenceType implements Comparable<UidSequenceType>{
 
-    UNKNOWN,
+    NOT_AVAILABLE, // i.e. not available or relevant
     INSIDE,
     OUTSIDE;
 }
