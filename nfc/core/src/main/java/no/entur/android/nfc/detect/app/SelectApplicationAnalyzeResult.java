@@ -3,18 +3,24 @@ package no.entur.android.nfc.detect.app;
 public class SelectApplicationAnalyzeResult {
 
     private final byte[] applicationId;
-    private final byte[] selectApplicationResponseAdpu;
+    private final byte[] response; // response payload, i.e. without status codes
+    private final boolean success;
 
-    public SelectApplicationAnalyzeResult(byte[] applicationId, byte[] selectApplicationResponseAdpu) {
+    public SelectApplicationAnalyzeResult(boolean success, byte[] applicationId, byte[] response) {
         this.applicationId = applicationId;
-        this.selectApplicationResponseAdpu = selectApplicationResponseAdpu;
+        this.response = response;
+        this.success = success;
     }
 
     public byte[] getApplicationId() {
         return applicationId;
     }
 
-    public byte[] getSelectApplicationResponseAdpu() {
-        return selectApplicationResponseAdpu;
+    public byte[] getResponse() {
+        return response;
+    }
+
+    public boolean isSuccess() {
+        return success;
     }
 }

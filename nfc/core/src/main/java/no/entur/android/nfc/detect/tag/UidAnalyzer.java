@@ -4,7 +4,7 @@ import android.content.Intent;
 
 import no.entur.android.nfc.wrapper.Tag;
 
-public interface TagIdAnalyzer {
+public interface UidAnalyzer {
 
     /**
      *
@@ -13,6 +13,6 @@ public interface TagIdAnalyzer {
      * @return null if card is guaranteed to not match
      *
      */
-    TagIdAnalyzeResult processTagId(Tag tag, Intent intent);
+    UidAnalyzeResult processTagId(Tag tag, Intent intent);
 
 }
