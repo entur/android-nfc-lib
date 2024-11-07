@@ -1,5 +1,12 @@
 # Release notes
 
+## 2.0.3
+
+ * Add target type detector:
+   * Technology type
+   * UID (length, manufacturer, series)
+   * Select application
+
 ## 2.0.2
 
  * Fix ACS USB detector problem when multiple USB devices are connect
