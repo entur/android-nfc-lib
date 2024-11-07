@@ -4,35 +4,24 @@ import android.content.Intent;
 
 import java.io.IOException;
 
+import no.entur.android.nfc.CommandAPDU;
 import no.entur.android.nfc.detect.TagTechnologies;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
 
-public class DefaultSelectApplicationAnalyzer implements SelectApplicationAnalyzer {
+public class DesfireNativeSelectApplicationAnalyzer implements SelectApplicationAnalyzer {
+
+    protected static final byte SELECT_APPLICATION = 0x5A;
 
     protected final byte[] applicationIdentifier;
     protected final byte[] commandAdpu;
 
-    public DefaultSelectApplicationAnalyzer(byte[] bytes) {
-        this.applicationIdentifier = bytes;
+    public DesfireNativeSelectApplicationAnalyzer(byte[] applicationIdentifier) {
+        this.applicationIdentifier = applicationIdentifier;
 
-        commandAdpu = buildSelectApplicationCommand(bytes);
-    }
-
-    private byte[] buildSelectApplicationCommand(byte[] bytes) {
-        byte[] command = new byte[6 + bytes.length];
-        command[0] = (byte) 0x00; // CLA
-        command[1] = (byte) 0xA4; // INS
-        command[2] = (byte) 0x04; // P1
-        // 3: 0x00 P2
-        // 4: payload length
-        // 5...n-1 : application id
-        // n: Lc
-        command[4] = (byte) bytes.length;
-
-        System.arraycopy(bytes, 0, command, 5, bytes.length);
-
-        return command;
+        this.commandAdpu = new byte[applicationIdentifier.length + 1];
+        this.commandAdpu[0] = SELECT_APPLICATION;
+        System.arraycopy(applicationIdentifier, 0, commandAdpu, 1, applicationIdentifier.length);
     }
 
     @Override
@@ -54,11 +43,10 @@ public class DefaultSelectApplicationAnalyzer implements SelectApplicationAnalyz
     }
 
     private static boolean isSuccess(byte[] responseAdpu) {
-        if(responseAdpu.length >= 2) {
-            int sw1 = responseAdpu[responseAdpu.length - 2] & 0xFF;
-            int sw2 = responseAdpu[responseAdpu.length - 1] & 0xFF;
+        if(responseAdpu.length >= 1) {
+            int status = responseAdpu[responseAdpu.length - 1] & 0xFF;
 
-            return sw1 == 0x90 && sw2 == 0x00;
+            return status == 0x00;
         }
         return false;
     }

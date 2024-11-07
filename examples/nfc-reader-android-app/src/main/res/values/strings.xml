@@ -38,4 +38,7 @@
     <string name="tagDetailsTitle">Tag details</string>
     <string name="tagDetailTechTypesTitle">Tech types</string>
 
+    <string name="tagDetailIdentifyTitle">Identified as</string>
+    <string name="tagDetailIdentifyUnknown">Unknown</string>
+
 </resources>

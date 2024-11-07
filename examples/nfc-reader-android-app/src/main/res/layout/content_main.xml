@@ -257,8 +257,23 @@
                 />
 
         </TableRow>
-
+        <TableRow>
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/tagDetailIdentifyTitle"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+            />
+            <TextView
+                android:id="@+id/tagDetailIdentifyValue"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="@string/serviceStatusUnknown"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+            />
+        </TableRow>
     </TableLayout>
-
 
 </LinearLayout>

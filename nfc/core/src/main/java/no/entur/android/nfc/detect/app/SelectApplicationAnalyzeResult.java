@@ -6,14 +6,14 @@ public class SelectApplicationAnalyzeResult {
     private final boolean success;
 
     // preserve commands
-    private final byte[] commandAdpu;
-    private final byte[] responseAdpu;
+    private final byte[] command;
+    private final byte[] response;
 
-    public SelectApplicationAnalyzeResult(boolean success, byte[] applicationId, byte[] commandAdpu, byte[] responseAdpu) {
+    public SelectApplicationAnalyzeResult(boolean success, byte[] applicationId, byte[] command, byte[] response) {
         this.applicationId = applicationId;
         this.success = success;
-        this.commandAdpu = commandAdpu;
-        this.responseAdpu = responseAdpu;
+        this.command = command;
+        this.response = response;
     }
 
     public byte[] getApplicationId() {
@@ -24,11 +24,11 @@ public class SelectApplicationAnalyzeResult {
         return success;
     }
 
-    public byte[] getCommandAdpu() {
-        return commandAdpu;
+    public byte[] getCommand() {
+        return command;
     }
 
-    public byte[] getResponseAdpu() {
-        return responseAdpu;
+    public byte[] getResponse() {
+        return response;
     }
 }

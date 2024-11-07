@@ -1,9 +1,13 @@
 package no.entur.android.nfc.detect;
 
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,14 +24,8 @@ import no.entur.android.nfc.detect.uid.UidAnalyzeResult;
 import no.entur.android.nfc.detect.uid.UidAnalyzer;
 import no.entur.android.nfc.detect.uid.UidManufacturerType;
 import no.entur.android.nfc.detect.uid.UidSequenceType;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.Tag;
-import no.entur.android.nfc.wrapper.tech.IsoDep;
-import no.entur.android.nfc.wrapper.tech.MifareClassic;
-import no.entur.android.nfc.wrapper.tech.MifareUltralight;
-import no.entur.android.nfc.wrapper.tech.NfcA;
-import no.entur.android.nfc.wrapper.tech.NfcB;
-import no.entur.android.nfc.wrapper.tech.NfcF;
-import no.entur.android.nfc.wrapper.tech.NfcV;
 
 /**
  *
@@ -40,7 +38,9 @@ import no.entur.android.nfc.wrapper.tech.NfcV;
 
 public class NfcTargetAnalyzer {
 
-    private static Builder newBuilder() {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NfcTargetAnalyzer.class);
+
+    public static Builder newBuilder() {
         return new Builder();
     }
 
@@ -147,12 +147,12 @@ public class NfcTargetAnalyzer {
         }
     }
 
-    private final List<Target> targets;
+    protected final List<Target> targets;
 
     // technologies to parse
-    private final Set<String> technologies;
+    protected final Set<String> technologies;
 
-    private final TagTechnologiesFactory tagTechnologiesFactory;
+    protected final TagTechnologiesFactory tagTechnologiesFactory;
 
     public NfcTargetAnalyzer(List<Target> targets, TagTechnologiesFactory tagTechnologiesFactory) {
         this.targets = targets;
@@ -179,7 +179,7 @@ public class NfcTargetAnalyzer {
 
         if(tagTechnologies.isEmpty()) {
             // no point in continuing
-            return null;
+            return Collections.emptyList();
         }
 
         // check technology and uid and use them to exclude candidates
@@ -203,13 +203,17 @@ public class NfcTargetAnalyzer {
         List<TargetCandidate> technologyResults = processTechnology(tag, intent, candidates, tagTechnologies);
         if(technologyResults.isEmpty()) {
             // no point in continuing
-            return null;
+            LOGGER.info("Tag does not contain the relevant technologies");
+
+            return Collections.emptyList();
         }
 
-        List<TargetCandidate> uidResults = processUid(tag, intent, candidates, tagTechnologies);
+        List<TargetCandidate> uidResults = processUid(tag, intent, technologyResults, tagTechnologies);
         if(uidResults.isEmpty()) {
             // no point in continuing
-            return null;
+            LOGGER.info("Tag does not contain the relevant UIDs");
+
+            return Collections.emptyList();
         }
 
         // sort according to the most promising
@@ -221,10 +225,12 @@ public class NfcTargetAnalyzer {
             return toResults(uidResults);
         }
 
-        List<TargetCandidate> selectApplicationResults = processSelectApplication(tag, intent, candidates, tagTechnologies);
+        List<TargetCandidate> selectApplicationResults = processSelectApplication(tag, intent, uidResults, tagTechnologies);
         if(selectApplicationResults.isEmpty()) {
             // no point in continuing
-            return null;
+            LOGGER.info("Tag does not contain the relevant application(s)");
+
+            return Collections.emptyList();
         }
 
         // can only be a single result
@@ -244,6 +250,7 @@ public class NfcTargetAnalyzer {
 
                     break;
                 }
+
             }
 
         }
@@ -302,7 +309,5 @@ public class NfcTargetAnalyzer {
         }
         return results;
     }
-
-
 
 }

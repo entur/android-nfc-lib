@@ -18,10 +18,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import no.entur.android.nfc.NfcReaderCallbackSupport;
+import no.entur.android.nfc.detect.NfcTargetAnalyzeResult;
+import no.entur.android.nfc.detect.NfcTargetAnalyzer;
+import no.entur.android.nfc.detect.app.DefaultSelectApplicationAnalyzer;
+import no.entur.android.nfc.detect.app.DesfireNativeSelectApplicationAnalyzer;
+import no.entur.android.nfc.detect.app.EmvSelectApplicationAnalyzer;
+import no.entur.android.nfc.detect.technology.DesfireEv1TechnologyAnalyzer;
+import no.entur.android.nfc.detect.technology.IsodepTechnologyAnalyzer;
+import no.entur.android.nfc.detect.technology.MifareUltralightTechnologyAnalyzer;
+import no.entur.android.nfc.detect.uid.AnyLengthUidAnalyzer;
+import no.entur.android.nfc.detect.uid.HostCardEmulationUidAnalyzer;
+import no.entur.android.nfc.detect.uid.SevenByteNxpUidAnalyzer;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcReaderCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
@@ -65,6 +78,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private View tagDetailsTable;
 
     private TextView tagDetailTechTypes;
+    private TextView tagDetailIdentify;
+
+    private NfcTargetAnalyzer nfcTargetAnalyzer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +125,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         tagDetailsTable = findViewById(R.id.tagDetailsTable);
         tagDetailTechTypes =  findViewById(R.id.tagDetailTechTypes);
 
+        tagDetailIdentify =  findViewById(R.id.tagDetailIdentifyValue);
+
         showIntentDetails(false);
         showTagDetails(false);
     }
@@ -136,6 +154,63 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         nfcReaderCallbackSupport = NfcReaderCallbackSupport.newBuilder().withActivity(this).withExecutor(threadPoolExecutor).withReaderCallbackDelegate(this).withPresenceCheckDelay(100).withReceiverExported(receiverExported).build();
         nfcReaderCallbackSupport.setNfcReaderMode(true);
+
+        setupTagAnalyzer();
+    }
+
+    private void setupTagAnalyzer() {
+
+
+        this.nfcTargetAnalyzer = NfcTargetAnalyzer.newBuilder()
+            .add( (c) -> {
+                c
+                    .withId("ultralight")
+                    .withTechnologyAnalyzer(new MifareUltralightTechnologyAnalyzer(MifareUltralight.TYPE_ULTRALIGHT, "ultralight"))
+                    .withUidAnalyzer(new SevenByteNxpUidAnalyzer());
+            })
+            .add( (c) -> {
+                c
+                    .withId("NOD travelcard")
+                    .withTechnologyAnalyzer(new DesfireEv1TechnologyAnalyzer())
+                    .withUidAnalyzer(new SevenByteNxpUidAnalyzer())
+                    .withSelectApplicationAnalyzer(new DesfireNativeSelectApplicationAnalyzer(new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0x57 }))
+                ;
+            })
+            .add( (c) -> {
+                c
+                    .withId("HCE app")
+                    .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                    .withUidAnalyzer(new HostCardEmulationUidAnalyzer())
+                    .withSelectApplicationAnalyzer(new DesfireNativeSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("D2760000850101")));
+                ;
+            })
+            .add( (c) -> {
+                c
+                    .withId("EMV mobile")
+                    .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                    .withUidAnalyzer(new HostCardEmulationUidAnalyzer())
+                    .withSelectApplicationAnalyzer(new EmvSelectApplicationAnalyzer())
+                ;
+            })
+            .add( (c) -> {
+                c
+                    .withId("MTS7")
+                    .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                    .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                    .withSelectApplicationAnalyzer(new DefaultSelectApplicationAnalyzer(new byte[]{(byte) 0xA0, 0x00, 0x00, 0x07, (byte) 0x81}));
+                ;
+            })
+
+            .add( (c) -> {
+                c
+                    .withId("EMV card")
+                    .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                    .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                    .withSelectApplicationAnalyzer(new EmvSelectApplicationAnalyzer())
+                ;
+            })
+                .build();
+
     }
 
     @Override
@@ -166,9 +241,18 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         runOnUiThread(() -> {
             setTagPresent(true);
 
-            setTagDetails(tag);
+            setTagDetails(tag, intent);
             setIntentDetails(intent);
-            setContents(tag, intent);
+        });
+        threadPoolExecutor.submit(() -> {
+            try {
+                if(tag != null) {
+                    setTagDetailsIdentify(tag, intent);
+                    setContents(tag, intent);
+                }
+            } catch(Exception e) {
+                LOGGER.warn("Problem processing tag technology", e);
+            }
         });
     }
 
@@ -178,11 +262,18 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         runOnUiThread(() -> {
             setTagPresent(true);
 
-            setTagDetails(tag);
+            setTagDetails(tag, intent);
             setIntentDetails(intent);
         });
         threadPoolExecutor.submit(() -> {
-            setContents(tag, intent);
+            try {
+                if(tag != null) {
+                    setTagDetailsIdentify(tag, intent);
+                    setContents(tag, intent);
+                }
+            } catch(Exception e) {
+                LOGGER.warn("Problem processing tag technology", e);
+            }
         });
     }
 
@@ -307,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         }
     }
 
-    public void setTagDetails(Tag tag) {
+    public void setTagDetails(Tag tag, Intent intent) {
         if(tag != null) {
             showTagDetails(true);
 
@@ -317,131 +408,153 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         }
     }
 
-    private void setContents(Tag tag, Intent intent) {
+    private void setTagDetailsIdentify(Tag tag, Intent intent) throws IOException {
+        List<NfcTargetAnalyzeResult> results = nfcTargetAnalyzer.analyze(tag, intent);
+
+        if(results.isEmpty()) {
+            LOGGER.info("Empty analyzer result");
+            runOnUiThread(() -> {
+                tagDetailIdentify.setText(R.string.tagDetailIdentifyUnknown);
+            });
+        } else {
+            LOGGER.info("Got " + results.size() + " analyzer results");
+            StringBuilder builder = new StringBuilder();
+            for(int i = 0; i < results.size(); i++) {
+                NfcTargetAnalyzeResult result = results.get(i);
+                if(i > 0) {
+                    builder.append(", ");
+                }
+                builder.append(result.getId());
+            }
+
+            runOnUiThread(() -> {
+                tagDetailIdentify.setText(builder.toString());
+            });
+        }
+
+    }
+
+    private void setContents(Tag tag, Intent intent) throws IOException {
 
         if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            try {
-                if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
-                    // handle NTAG21x types
-                    // the NTAG21x product familiy have replacements for all previous Ultralight tags
-                    int type = intent.getIntExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE, 0);
+            if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
+                // handle NTAG21x types
+                // the NTAG21x product familiy have replacements for all previous Ultralight tags
+                int type = intent.getIntExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE, 0);
 
-                    NfcA nfcA = NfcA.get(tag);
-                    if(nfcA == null) {
-                        throw new IllegalArgumentException("No NTAG");
+                NfcA nfcA = NfcA.get(tag);
+                if(nfcA == null) {
+                    throw new IllegalArgumentException("No NTAG");
+                }
+
+                int size;
+                switch(type) {
+                    case NfcNtagVersion.TYPE_NTAG210: {
+                        size = 48;
+                        break;
                     }
-
-                    int size;
-                    switch(type) {
-                        case NfcNtagVersion.TYPE_NTAG210: {
-                            size = 48;
-                            break;
-                        }
-                        case NfcNtagVersion.TYPE_NTAG212: {
-                            size = 128;
-                            break;
-                        }
-                        case NfcNtagVersion.TYPE_NTAG213: {
-                            size = 144;
-                            break;
-                        }
-                        case NfcNtagVersion.TYPE_NTAG215: {
-                            size = 504;
-                            break;
-                        }
-                        case NfcNtagVersion.TYPE_NTAG216 :
-                        case NfcNtagVersion.TYPE_NTAG216F : {
-                            size = 888;
-                            break;
-                        }
-                        default : {
-                            size = 48;
-                        }
+                    case NfcNtagVersion.TYPE_NTAG212: {
+                        size = 128;
+                        break;
                     }
-                    int pagesToRead = size / 4 + 4;
-
-                    // instead of reading 4 and 4 pages, read more using the FAST READ command
-                    int pagesPerRead;
-                    if(nfcA.getMaxTransceiveLength() > 0) {
-                        pagesPerRead = Math.min(255, nfcA.getMaxTransceiveLength() / 4);
-                    } else {
-                        pagesPerRead = 255;
+                    case NfcNtagVersion.TYPE_NTAG213: {
+                        size = 144;
+                        break;
                     }
-
-                    int reads = pagesToRead / pagesPerRead;
-
-                    if(pagesToRead % pagesPerRead != 0) {
-                        reads++;
+                    case NfcNtagVersion.TYPE_NTAG215: {
+                        size = 504;
+                        break;
                     }
-
-                    try {
-                        nfcA.connect();
-                        int read = 0;
-                        for (int i = 0; i < reads; i++) {
-                            int range = Math.min(pagesPerRead, pagesToRead - read);
-
-                            byte[] fastRead = new byte[]{
-                                    0x3A,
-                                    (byte) (read & 0xFF), // start page
-                                    (byte) ((read + range - 1) & 0xFF), // end page (inclusive)
-                            };
-
-                            bout.write(nfcA.transceive(fastRead));
-
-                            read += range;
-                        }
-                    } finally {
-                        nfcA.close();
+                    case NfcNtagVersion.TYPE_NTAG216 :
+                    case NfcNtagVersion.TYPE_NTAG216F : {
+                        size = 888;
+                        break;
                     }
+                    default : {
+                        size = 48;
+                    }
+                }
+                int pagesToRead = size / 4 + 4;
 
-
+                // instead of reading 4 and 4 pages, read more using the FAST READ command
+                int pagesPerRead;
+                if(nfcA.getMaxTransceiveLength() > 0) {
+                    pagesPerRead = Math.min(255, nfcA.getMaxTransceiveLength() / 4);
                 } else {
-                    MifareUltralight mifareUltralight = MifareUltralight.get(tag);
-                    if(mifareUltralight == null) {
-                        throw new IllegalArgumentException("No Mifare Ultralight");
-                    }
-                    mifareUltralight.connect();
-
-                    int length;
-
-                    int type = mifareUltralight.getType();
-                    switch (type) {
-                        case MifareUltralight.TYPE_ULTRALIGHT: {
-                            length = 12 + 4;
-
-                            break;
-                        }
-                        case MifareUltralight.TYPE_ULTRALIGHT_C: {
-                            length = 36 + 4;
-
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Unknown mifare ultralight tag " + type);
-                    }
-
-                    // android read 4 and 4 pages of 4 bytes
-                    for (int i = 0; i < length; i += 4) {
-                        Log.d(getClass().getName(), "Read frame " + i + " -> " + (i + 4) + " (exclusive)");
-                        bout.write(mifareUltralight.readPages(i));
-                    }
-
-                    mifareUltralight.close();
+                    pagesPerRead = 255;
                 }
 
-                byte[] buffer = bout.toByteArray();
+                int reads = pagesToRead / pagesPerRead;
 
-                StringBuilder builder = new StringBuilder();
-                for(int k = 0; k < buffer.length; k+= 4) {
-                    builder.append( String.format("%02x", (k / 4)) + " " + ByteArrayHexStringConverter.toHexString(buffer, k, 4));
-                    builder.append('\n');
+                if(pagesToRead % pagesPerRead != 0) {
+                    reads++;
                 }
 
-                LOGGER.info(builder.toString());
-            } catch(Exception e) {
-                LOGGER.warn("Problem processing tag technology", e);
+                try {
+                    nfcA.connect();
+                    int read = 0;
+                    for (int i = 0; i < reads; i++) {
+                        int range = Math.min(pagesPerRead, pagesToRead - read);
+
+                        byte[] fastRead = new byte[]{
+                                0x3A,
+                                (byte) (read & 0xFF), // start page
+                                (byte) ((read + range - 1) & 0xFF), // end page (inclusive)
+                        };
+
+                        bout.write(nfcA.transceive(fastRead));
+
+                        read += range;
+                    }
+                } finally {
+                    nfcA.close();
+                }
+
+
+            } else {
+                MifareUltralight mifareUltralight = MifareUltralight.get(tag);
+                if(mifareUltralight == null) {
+                    throw new IllegalArgumentException("No Mifare Ultralight");
+                }
+                mifareUltralight.connect();
+
+                int length;
+
+                int type = mifareUltralight.getType();
+                switch (type) {
+                    case MifareUltralight.TYPE_ULTRALIGHT: {
+                        length = 12 + 4;
+
+                        break;
+                    }
+                    case MifareUltralight.TYPE_ULTRALIGHT_C: {
+                        length = 36 + 4;
+
+                        break;
+                    }
+                    default:
+                        throw new IllegalArgumentException("Unknown mifare ultralight tag " + type);
+                }
+
+                // android read 4 and 4 pages of 4 bytes
+                for (int i = 0; i < length; i += 4) {
+                    Log.d(getClass().getName(), "Read frame " + i + " -> " + (i + 4) + " (exclusive)");
+                    bout.write(mifareUltralight.readPages(i));
+                }
+
+                mifareUltralight.close();
             }
+
+            byte[] buffer = bout.toByteArray();
+
+            StringBuilder builder = new StringBuilder();
+            for(int k = 0; k < buffer.length; k+= 4) {
+                builder.append( String.format("%02x", (k / 4)) + " " + ByteArrayHexStringConverter.toHexString(buffer, k, 4));
+                builder.append('\n');
+            }
+
+            LOGGER.info(builder.toString());
         }
     }
 

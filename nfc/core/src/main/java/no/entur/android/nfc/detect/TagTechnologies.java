@@ -86,4 +86,8 @@ public class TagTechnologies {
     public boolean isEmpty() {
         return isoDep == null && mifareUltralight == null && mifareClassic == null && nfcA == null && nfcB == null && nfcF == null && nfcV == null;
     }
+
+    public boolean hasMifareUltralight() {
+        return mifareUltralight != null;
+    }
 }

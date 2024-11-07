@@ -37,7 +37,7 @@ public class DesfireEv1TechnologyAnalyzer implements TechnologyAnalyzer {
         if (historicalBytes.length != 1) {
             return false;
         }
-        if (historicalBytes[0] != (byte) 0x40) {
+        if (historicalBytes[0] != (byte) 0x80) {
             return false;
         }
         return true;
