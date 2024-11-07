@@ -1,7 +1,6 @@
 package no.entur.android.nfc.detect;
 
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
@@ -24,7 +23,6 @@ import no.entur.android.nfc.detect.uid.UidAnalyzeResult;
 import no.entur.android.nfc.detect.uid.UidAnalyzer;
 import no.entur.android.nfc.detect.uid.UidManufacturerType;
 import no.entur.android.nfc.detect.uid.UidSequenceType;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.Tag;
 
 /**
@@ -126,7 +124,7 @@ public class NfcTargetAnalyzer {
 
     }
 
-    private static class TargetCandidate implements Comparable<TargetCandidate> {
+    protected static class TargetCandidate implements Comparable<TargetCandidate> {
 
         private Target target;
         private NfcTargetAnalyzeResult result;
@@ -225,6 +223,7 @@ public class NfcTargetAnalyzer {
             return toResults(uidResults);
         }
 
+        // returns first match
         List<TargetCandidate> selectApplicationResults = processSelectApplication(tag, intent, uidResults, tagTechnologies);
         if(selectApplicationResults.isEmpty()) {
             // no point in continuing
@@ -282,7 +281,7 @@ public class NfcTargetAnalyzer {
             if(uidAnalyzer != null) {
                 UidAnalyzeResult result = uidAnalyzer.processUid(tagTechnologies, tag, intent);
 
-                boolean acceptableSequence = result.getSequenceType() == UidSequenceType.INSIDE || result.getSequenceType() == UidSequenceType.NOT_AVAILABLE;
+                boolean acceptableSequence = result.getSequenceType() == UidSequenceType.MATCH || result.getSequenceType() == UidSequenceType.NOT_AVAILABLE;
                 boolean acceptableManufacturer = result.getManufacturerType() == UidManufacturerType.MATCH || result.getManufacturerType() == UidManufacturerType.NOT_AVAILABLE;
 
                 if (result.isLength() && acceptableSequence && acceptableManufacturer) {

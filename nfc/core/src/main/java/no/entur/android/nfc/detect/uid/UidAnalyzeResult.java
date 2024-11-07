@@ -1,6 +1,7 @@
 package no.entur.android.nfc.detect.uid;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 // https://gototags.com/nfc/chip/features/uid
 public class UidAnalyzeResult implements Comparable<UidAnalyzeResult> {
@@ -13,9 +14,9 @@ public class UidAnalyzeResult implements Comparable<UidAnalyzeResult> {
             }
 
             // inside is best
-            if(o1 != UidSequenceType.INSIDE && o2 == UidSequenceType.INSIDE) {
+            if(o1 != UidSequenceType.MATCH && o2 == UidSequenceType.MATCH) {
                 return 1;
-            } else if(o1 == UidSequenceType.INSIDE && o2 != UidSequenceType.INSIDE) {
+            } else if(o1 == UidSequenceType.MATCH && o2 != UidSequenceType.MATCH) {
                 return -1;
             }
 
@@ -99,5 +100,18 @@ public class UidAnalyzeResult implements Comparable<UidAnalyzeResult> {
         }
 
         return SEQUENCE_TYPE_COMPARATOR.compare(sequenceType, o.sequenceType);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UidAnalyzeResult that = (UidAnalyzeResult) o;
+        return length == that.length && sequenceType == that.sequenceType && manufacturerType == that.manufacturerType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(length, sequenceType, manufacturerType);
     }
 }
