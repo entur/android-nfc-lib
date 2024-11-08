@@ -12,10 +12,10 @@ public class NfcTargetAnalyzeResult {
 
     private UidAnalyzeResult uidAnalyzeResult;
 
+    // TODO: Include command/response history?
     private SelectApplicationAnalyzeResult selectApplicationAnalyzeResult;
 
     private TagTechnologies tagTechnologies;
-    // TODO: Include command/response history?
 
     public String getId() {
         return id;

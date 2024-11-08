@@ -25,6 +25,7 @@ import no.entur.android.nfc.wrapper.tech.IsoDep;
  *
  */
 
+@Deprecated // rather use NfcTargetAnalyzer approach
 public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallbackSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNfcReaderCallbackHceSupport.class);
