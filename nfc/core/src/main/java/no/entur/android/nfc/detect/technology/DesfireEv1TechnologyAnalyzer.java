@@ -2,12 +2,10 @@ package no.entur.android.nfc.detect.technology;
 
 import android.content.Intent;
 
-import no.entur.android.nfc.detect.NfcTargetAnalyzer;
 import no.entur.android.nfc.detect.TagTechnologies;
 import no.entur.android.nfc.detect.TagTechnologiesFactory;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
-import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
 public class DesfireEv1TechnologyAnalyzer implements TechnologyAnalyzer {
     @Override
@@ -17,7 +15,7 @@ public class DesfireEv1TechnologyAnalyzer implements TechnologyAnalyzer {
         if(tagTechnologies.hasIsoDep() && tagTechnologies.hasNfcA()) {
             IsoDep isoDep = tagTechnologies.getIsoDep();
             byte[] historicalBytes = isoDep.getHistoricalBytes();
-            if(is0x80(historicalBytes)) {
+            if(isDesfireEv1(historicalBytes)) {
                 return new TechnologyAnalyzeResult("desfireEv1");
             }
         }
@@ -30,7 +28,7 @@ public class DesfireEv1TechnologyAnalyzer implements TechnologyAnalyzer {
         return new String[]{TagTechnologiesFactory.ISO_DEP, TagTechnologiesFactory.NFC_A};
     }
 
-    private boolean is0x80(byte[] historicalBytes) {
+    public static boolean isDesfireEv1(byte[] historicalBytes) {
         if(historicalBytes == null) {
             return false;
         }

@@ -7,6 +7,7 @@ import java.util.List;
 
 import no.entur.android.nfc.wrapper.ReaderCallback;
 
+@Deprecated // rather use NfcTargetAnalyzer approach
 public abstract class AbstractNfcReaderCallbackHceSupportBuilder<B extends AbstractNfcReaderCallbackHceSupportBuilder<B>> {
 
 	private static final String TAG = AbstractNfcReaderCallbackHceSupportBuilder.class.getName();

@@ -27,7 +27,7 @@ import no.entur.android.nfc.wrapper.Tag;
 
 /**
  *
- * IsoDep tag analyzer. Attempts to determine the target nature by looking at tag metadata
+ * NFC tag analyzer. Attempts to determine the target nature by looking at tag metadata
  * and issuing commands to the card.
  * <br><br>
  * In a nutshell, the tech + UID analyzer is used to include or exclude results.
@@ -216,6 +216,8 @@ public class NfcTargetAnalyzer {
 
         // sort according to the most promising
         Collections.sort(uidResults);
+
+        System.out.println("Got " + uidResults);
 
         boolean applicationAnalyzer = isApplicationAnalyzer(uidResults);
         if(!applicationAnalyzer) {

@@ -21,8 +21,6 @@ import no.entur.android.nfc.wrapper.tech.IsoDep;
 
 public class ResponseAdpuProtocolIsoDep extends IsoDep {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ResponseAdpuProtocolIsoDep.class);
-
 	private final ResponseApduProtocol target;
 	private boolean connected = false;
 
@@ -52,14 +50,7 @@ public class ResponseAdpuProtocolIsoDep extends IsoDep {
 
 	@Override
 	public byte[] transceive(byte[] data) throws IOException {
-
-		LOGGER.debug("-> " + ByteArrayHexStringConverter.toHexString(data));
-
-		byte[] response = target.handleCommandApdu(new CommandAPDU(data)).getBytes();
-
-		LOGGER.debug("<- " + ByteArrayHexStringConverter.toHexString(response));
-
-		return response;
+		return target.handleCommandApdu(new CommandAPDU(data)).getBytes();
 	}
 
 	@Override

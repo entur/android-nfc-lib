@@ -22,6 +22,9 @@ public abstract class AbstractCommandApduProtocolBuilder<B extends AbstractComma
 	protected byte[] applicationIdentifier; // https://stackoverflow.com/questions/27533193/android-hce-are-there-rules-for-aid
 	protected int timeout = -1;
 
+	// previous select application command
+	protected byte[] selectApplicationResponse;
+
 	/** In order of preference */
 	public B withProtocols(CommandApduProtocol... protocols) {
 		this.protocols = Arrays.asList(protocols);
@@ -30,6 +33,11 @@ public abstract class AbstractCommandApduProtocolBuilder<B extends AbstractComma
 
 	public AbstractCommandApduProtocolBuilder withProtocols(List<CommandApduProtocol> protocols) {
 		this.protocols = protocols;
+		return (B)this;
+	}
+
+	public AbstractCommandApduProtocolBuilder withSelectApplicationResponse(byte[] response) {
+		this.selectApplicationResponse = response;
 		return (B)this;
 	}
 
