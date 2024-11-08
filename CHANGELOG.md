@@ -1,6 +1,6 @@
 # Release notes
 
-## 2.0.3
+## 2.0.3 - 2.0.4
 
  * Add target type detector:
    * Technology type
