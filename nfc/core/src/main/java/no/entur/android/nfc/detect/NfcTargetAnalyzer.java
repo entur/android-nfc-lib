@@ -217,8 +217,6 @@ public class NfcTargetAnalyzer {
         // sort according to the most promising
         Collections.sort(uidResults);
 
-        System.out.println("Got " + uidResults);
-
         boolean applicationAnalyzer = isApplicationAnalyzer(uidResults);
         if(!applicationAnalyzer) {
             // ideally this would only be a single result
