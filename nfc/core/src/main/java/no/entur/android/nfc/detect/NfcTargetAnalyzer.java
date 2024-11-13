@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import no.entur.android.nfc.detect.app.SelectApplicationAnalyzeResult;
@@ -117,11 +119,15 @@ public class NfcTargetAnalyzer {
     protected static class Target {
 
         private String id;
+        private boolean enabled;
 
         private TechnologyAnalyzer technologyAnalyzer;
         private UidAnalyzer uidAnalyzer;
         private SelectApplicationAnalyzer selectApplicationAnalyzer;
 
+        public boolean isEnabled() {
+            return enabled;
+        }
     }
 
     protected static class TargetCandidate implements Comparable<TargetCandidate> {
@@ -145,7 +151,7 @@ public class NfcTargetAnalyzer {
         }
     }
 
-    protected final List<Target> targets;
+    protected final Map<String, Target> targets;
 
     // technologies to parse
     protected final Set<String> technologies;
@@ -153,8 +159,10 @@ public class NfcTargetAnalyzer {
     protected final TagTechnologiesFactory tagTechnologiesFactory;
 
     public NfcTargetAnalyzer(List<Target> targets, TagTechnologiesFactory tagTechnologiesFactory) {
-        this.targets = targets;
-
+        this.targets = new HashMap<>();
+        for (Target target : targets) {
+            this.targets.put(target.id, target);
+        }
         this.technologies = toTechnologies(targets);
 
         this.tagTechnologiesFactory = tagTechnologiesFactory;
@@ -186,7 +194,11 @@ public class NfcTargetAnalyzer {
 
         List<TargetCandidate> candidates = new ArrayList<>();
 
-        for(Target target : targets) {
+        for (Map.Entry<String, Target> entry : targets.entrySet()) {
+            Target target = entry.getValue();
+            if(!target.isEnabled()) {
+                continue;
+            }
             TargetCandidate c = new TargetCandidate();
 
             c.target = target;
@@ -308,5 +320,40 @@ public class NfcTargetAnalyzer {
         }
         return results;
     }
+
+    public void enableExclusively(Set<String> ids) {
+        for (Map.Entry<String, Target> entry : targets.entrySet()) {
+            entry.getValue().enabled = ids.contains(entry.getKey());
+        }
+    }
+
+    public void enableAll() {
+        for (Map.Entry<String, Target> entry : targets.entrySet()) {
+            entry.getValue().enabled = true;
+        }
+    }
+
+    public void disableAll() {
+        for (Map.Entry<String, Target> entry : targets.entrySet()) {
+            entry.getValue().enabled = false;
+        }
+    }
+
+    public void enable(String key) {
+        Target target = targets.get(key);
+        if(target == null) {
+            throw new IllegalStateException();
+        }
+        target.enabled = true;
+    }
+
+    public void disable(String key) {
+        Target target = targets.get(key);
+        if(target == null) {
+            throw new IllegalStateException();
+        }
+        target.enabled = false;
+    }
+
 
 }
