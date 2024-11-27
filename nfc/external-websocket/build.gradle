@@ -2,11 +2,7 @@ android {
     defaultConfig {
         minSdkVersion 23
     }
-
-    compileOptions {
-        coreLibraryDesugaringEnabled true
-    }
-
+    namespace "no.entur.android.nfc.external.acs"
 }
 
 dependencies {
@@ -16,7 +12,6 @@ dependencies {
 
     api ("com.squareup.okhttp3:okhttp:${okHttp3Version}")
 
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
 }
 
 

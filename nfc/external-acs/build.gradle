@@ -3,8 +3,10 @@ android {
         minSdkVersion 23
     }
 
-    compileOptions {
-        coreLibraryDesugaringEnabled true
+    namespace "no.entur.android.nfc.external.acs"
+
+    buildFeatures {
+        aidl true
     }
 
 }
@@ -15,8 +17,6 @@ dependencies {
 
     api project(":nfc:core")
     api project(":nfc:external")
-
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${desugarVersion}"
 }
 
 

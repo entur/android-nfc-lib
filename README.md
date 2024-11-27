@@ -44,7 +44,7 @@ For local development (.m2)
 
 For Maven central also add siging info.
 
-> ./gradlew build publishToSonatype --info --stacktrace -Psigning.gnupg.passphrase=xxx -Psigning.gnupg.keyName=yyy
+> ./gradlew build publishToSonatype closeAndReleaseStagingRepositories --info --stacktrace -Psigning.gnupg.passphrase=xxx -Psigning.gnupg.keyName=yyy
 
 # History
 See [CHANGELOG](CHANGELOG.md).
