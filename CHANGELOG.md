@@ -1,5 +1,11 @@
 # Release notes
 
+## 2.0.6
+
+ * Update build
+ * Bump dependencies
+ * Remove desugaring
+
 ## 2.0.3 - 2.0.5
 
  * Add target type detector:
