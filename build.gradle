@@ -18,6 +18,7 @@ buildscript {
     repositories repos
     dependencies {
         classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath("org.bouncycastle:bcutil-jdk18on:1.79") // https://issuetracker.google.com/issues/380600747
     }
 }
 
@@ -84,9 +85,6 @@ ext {
     logbackAndroidVersion = '2.0.1'
 
     slf4jVersion = '1.7.36'
-
-    // note: androidx test lower down
-    desugarVersion = '1.2.3'
 
     // test
     unitVersion = '4.13.2'
