@@ -1,3 +1,6 @@
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
+
 buildscript {
    ext.repos = {
         mavenLocal()
@@ -14,16 +17,17 @@ buildscript {
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath("org.bouncycastle:bcutil-jdk18on:1.79") // https://issuetracker.google.com/issues/380600747
     }
 }
 
 plugins {
     id 'com.diffplug.spotless' version '6.2.0' apply false
-    id "com.github.spotbugs" version '5.0.5' apply false
-    id 'org.owasp.dependencycheck' version '6.5.3' apply false
-    id 'com.github.ben-manes.versions' version '0.42.0' apply false
-    id('io.github.gradle-nexus.publish-plugin') version '1.1.0'
+    id "com.github.spotbugs" version '6.0.26' apply false
+    id 'org.owasp.dependencycheck' version '11.1.0' apply false
+    id 'com.github.ben-manes.versions' version '0.51.0' apply false
+    id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
 }
 
 def buildProjects() {
@@ -82,9 +86,6 @@ ext {
 
     slf4jVersion = '1.7.36'
 
-    // note: androidx test lower down
-    desugarVersion = '1.1.5'
-
     // test
     unitVersion = '4.13.2'
     androidxTestRulesVersion = '1.5.0'
@@ -96,16 +97,12 @@ ext {
     mockitoVersion = '5.6.0'
     byteBuddyVersion = '1.14.10'
 
-    logbackAndroidVersion = '2.0.0'
-
     okHttp3Version = '4.12.0'
-    javaWebSocketVersion = '1.5.4'
+    javaWebSocketVersion = '1.5.7'
 
-    adpu4jVersion = '23.03.21'
-
-    junitJupiterVersion = '5.8.2'
+    junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
-    logbackVersion = '1.2.13'
+    logbackVersion = '1.5.12'
 }
 
 ext.commonDependencies = {
@@ -155,19 +152,20 @@ configure(buildProjects()) {
         ignoreFailures = false
         showStackTraces = true
         showProgress = true
-        effort = 'max'
-        reportLevel = 'high'
+        effort = Effort.DEFAULT
+        reportLevel = Confidence.values()[3] // https://github.com/spotbugs/spotbugs-gradle-plugin/issues/972
         maxHeapSize = '1g'
         reportsDir = file("$buildDir/spotbugs")
         excludeFilter = rootProject.file("spotbugs-exclude.xml")
     }
 
     tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-        reports {
-            xml.enabled = false
-            html.enabled = true
+        reports.create("html") {
+            required = true
         }
     }
+
+
 }
 
 
@@ -176,13 +174,13 @@ configure(androidLibraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        buildToolsVersion "33.0.2"
-        compileSdkVersion 33
+        buildToolsVersion "34.0.0"
+        compileSdkVersion 34
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 33
+            targetSdkVersion 34
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')
@@ -251,23 +249,13 @@ configure(androidLibraryProjects()) {
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
 
-    task sourceJar(type: Jar) {
-        archiveClassifier.set('sources')
-        into ("", { from android.sourceSets.main.java.srcDirs} )
-        into ("", { from rootProject.file("LICENSE.txt")})
-    }
-
-    task javadoc(type: Javadoc) {
-        options.encoding = 'UTF-8'
-        source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-        title = "${project.name} ${project.version} API"
-        failOnError = false
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        archiveClassifier.set('javadoc')
-        from javadoc.destinationDir
+    android {
+        publishing {
+            singleVariant('release') {
+                withSourcesJar()
+                withJavadocJar()
+            }
+        }
     }
 
     afterEvaluate {
@@ -279,9 +267,6 @@ configure(androidLibraryProjects()) {
                     groupId 'no.entur.android.nfc'
                     artifactId "$project.ext.artifactId"
                     version = android.defaultConfig.versionName
-
-                    artifact sourceJar
-                    artifact javadocJar
 
                     pom {
                         name = "$project.ext.artifactId"
@@ -409,10 +394,6 @@ configure(javaLibraryProjects()) {
             includeEngines 'junit-jupiter', 'junit-vintage'
         }
 
-        reports {
-            junitXml.enabled = false
-            html.enabled = true
-        }
     }
 }
 

@@ -1,36 +1,21 @@
-plugins {
-    id 'com.android.library'
-}
-
 android {
-    compileSdk 34
-
     defaultConfig {
         minSdk 23
-        targetSdk 34
+    }
+    namespace "no.entur.android.nfc.external.minova"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles "consumer-rules.pro"
+    buildFeatures {
+        aidl true
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
 }
 
 dependencies {
     api project(":nfc:external")
     api project(":utilities:tcp-server-java-lib")
 
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.5.0'
+    api "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'

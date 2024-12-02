@@ -2,7 +2,7 @@ android {
     defaultConfig {
         minSdkVersion 23
     }
-
+    namespace "no.entur.android.nfc.external"
 }
 
 dependencies {
