@@ -2,7 +2,7 @@ name: Android tests build
 on:
     push:
         branches:
-            - develop
+            - master
     pull_request:
         types:
             - synchronize
