@@ -211,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             })
                 .build();
 
+        nfcTargetAnalyzer.enableAll();
     }
 
     @Override

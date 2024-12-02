@@ -97,16 +97,12 @@ ext {
     mockitoVersion = '5.6.0'
     byteBuddyVersion = '1.14.10'
 
-    logbackAndroidVersion = '2.0.0'
-
     okHttp3Version = '4.12.0'
-    javaWebSocketVersion = '1.5.4'
+    javaWebSocketVersion = '1.5.7'
 
-    adpu4jVersion = '23.03.21'
-
-    junitJupiterVersion = '5.8.2'
+    junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
-    logbackVersion = '1.2.13'
+    logbackVersion = '1.5.12'
 }
 
 ext.commonDependencies = {
