@@ -16,9 +16,9 @@ interface IAcr1552UReaderControl {
 
 	byte[] setAutomaticCommunicationSpeed(int speed);
 
-    byte[] getRadioFrequencyPower();
+	byte[] getRadioFrequencyPower();
 
-    byte[] setRadioFrequencyPower(int power);
+	byte[] setRadioFrequencyPower(int power);
 
 	byte[] control(int slotNum, int controlCode, in byte[] command);
 		

@@ -43,6 +43,12 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
+import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
+import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
+import no.entur.android.nfc.external.acs.reader.AcrCommunicationSpeed;
+import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
+import no.entur.android.nfc.external.acs.reader.AcrLED;
+import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
@@ -406,6 +412,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             setTagDetailTechTypes(tag);
         } else {
             showTagDetails(false);
+
+            tagDetailIdentify.setText("");
         }
     }
 

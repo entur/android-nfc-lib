@@ -181,7 +181,7 @@ public class IAcr1552UCommandWrapper extends AcrRemoteCommandWriter {
 
 			value = response == parameter;
 		} catch (Exception e) {
-			LOGGER.debug("Problem reading setting radio frequency power", e);
+			LOGGER.debug("Problem setting radio frequency power " + parameter, e);
 
 			exception = e;
 		}

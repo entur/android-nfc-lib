@@ -30,9 +30,9 @@ public class ACR1552Commands extends ACRCommands {
 	}
 
 	public Integer getPICC(int slot) throws AcrReaderException, ReaderException {
-		byte[] pseudo = new byte[] { (byte) 0xE0, 0x00, 0x01, 0x20, 0x00 };
+		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x01, 0x20, 0x00 };
 
-		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
+		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 
 		if (!isSuccess(response)) {
 			throw new IllegalArgumentException("Card responded with " + ByteArrayHexStringConverter.toHexString(response.getBytes()));
@@ -51,7 +51,7 @@ public class ACR1552Commands extends ACRCommands {
 		byte byte0 = (byte) (picc & 0xFF);
 		byte byte1 = (byte)((picc >> 8) & 0xFF);
 
-		byte[] pseudo = new byte[] { (byte) 0xE0, 0x00, 0x20, 0x02, byte0, byte1, 0x00 };
+		byte[] pseudo = new byte[] { (byte) 0xE0, 0x00, 0x01, 0x20, 0x02, byte1, byte0};
 
 		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 
@@ -61,7 +61,7 @@ public class ACR1552Commands extends ACRCommands {
 
 		byte[] data = response.getData();
 
-		return data[0] != byte0 || data[1] != byte1;
+		return data[0] != byte1 || data[1] != byte0;
 	}
 
 	public String getFirmware(int slot) throws ReaderException {
@@ -214,7 +214,7 @@ public class ACR1552Commands extends ACRCommands {
 		int max = data[0] & 0xFF;
 		int current = data[1] & 0xFF;
 
-		LOGGER.debug("Read automatic communication speed " + current + "(max " + max + ")");
+		LOGGER.debug("Set automatic communication speed " + current + "(max " + max + ")");
 
 		return new int[]{max, current};
 	}
@@ -255,7 +255,7 @@ public class ACR1552Commands extends ACRCommands {
 	}
 
 	public int setRadioFrequencyPower(int slot, int value) throws ReaderException {
-		CommandAPDU command = new CommandAPDU(0xE0, 0x00, 0x01, 0x50, new byte[] { (byte)value });
+		byte[] command = new byte[]{(byte) 0xE0, 0x00, 0x00, 0x50, 0x01, (byte)value };
 
 		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 
