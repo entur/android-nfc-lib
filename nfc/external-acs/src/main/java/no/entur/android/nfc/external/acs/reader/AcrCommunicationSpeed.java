@@ -8,6 +8,7 @@ public enum AcrCommunicationSpeed {
 
 	RATE_106_KBPS,
 	RATE_212_KBPS,
-	RATE_424_KBPS
+	RATE_424_KBPS,
+	RATE_848_KBPS
 
 }

@@ -17,6 +17,7 @@ public enum AcrAutomaticPICCPolling {
 	TURN_ANTENNA_FIELD_IF_PICC_IS_INACTIVE(1 << 2),
 
 	ACTIVATE_PICC_WHEN_DETECTED(1 << 3), // for ACR 1252
+	POLLING_ENABLE_EXTRA_MIFARE_TYPE_IDENTIFICATION(1 << 3),  // for ACR 1255
 
 	PICC_POLLING_INTERVAL_250(0x3 << 4, 0x00 << 4),
 	PICC_POLLING_INTERVAL_500(0x3 << 4, 0x01 << 4),
@@ -66,4 +67,27 @@ public enum AcrAutomaticPICCPolling {
 
 		return value;
 	}
+
+	private static final AcrAutomaticPICCPolling[] ACR_1552 = new AcrAutomaticPICCPolling[]{
+			AcrAutomaticPICCPolling.AUTO_PICC_POLLING,
+			AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_NO_PICC_FOUND,
+			AcrAutomaticPICCPolling.POLLING_ENABLE_EXTRA_MIFARE_TYPE_IDENTIFICATION,
+			AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_250,
+			AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_500,
+			AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_1000,
+			AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_2500,
+			AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4,
+	};
+
+	public static List<AcrAutomaticPICCPolling> parse1552(int picc) {
+		ArrayList<AcrAutomaticPICCPolling> parse = new ArrayList<AcrAutomaticPICCPolling>();
+
+		for (AcrAutomaticPICCPolling acrPICC : ACR_1552) {
+			if ((picc & acrPICC.getFilter()) == acrPICC.getValue()) {
+				parse.add(acrPICC);
+			}
+		}
+		return parse;
+	}
+
 }

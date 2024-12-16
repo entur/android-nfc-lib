@@ -16,6 +16,7 @@ import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
+import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1222LBinder;
@@ -25,6 +26,7 @@ import no.entur.android.nfc.external.acs.reader.bind.IAcr1252UBinder;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1255UBinder;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1281UBinder;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1283Binder;
+import no.entur.android.nfc.external.acs.reader.bind.IAcr1552UBinder;
 import no.entur.android.nfc.external.acs.reader.command.ACR1222Commands;
 import no.entur.android.nfc.external.acs.reader.command.ACR122Commands;
 import no.entur.android.nfc.external.acs.reader.command.ACR1251Commands;
@@ -32,6 +34,7 @@ import no.entur.android.nfc.external.acs.reader.command.ACR1252Commands;
 import no.entur.android.nfc.external.acs.reader.command.ACR1255UsbCommands;
 import no.entur.android.nfc.external.acs.reader.command.ACR1281Commands;
 import no.entur.android.nfc.external.acs.reader.command.ACR1283Commands;
+import no.entur.android.nfc.external.acs.reader.command.ACR1552Commands;
 import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.acs.reader.command.ACRReaderTechnology;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
@@ -48,6 +51,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 	private IAcr1283Binder acr1283Binder;
 	private IAcr1252UBinder acr1252Binder;
 	private IAcr1255UBinder acr1255Binder;
+	private IAcr1552UBinder acr1552Binder;
 
 	protected INFcTagBinder binder;
 	
@@ -67,6 +71,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		this.acr1283Binder = new IAcr1283Binder();
 		this.acr1252Binder = new IAcr1252UBinder();
 		this.acr1255Binder = new IAcr1255UBinder();
+		this.acr1552Binder = new IAcr1552UBinder();
 	}
 
 	public void close() {
@@ -93,6 +98,8 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 				return new ACR1252Commands(name, reader);
 			} else if (name.contains("1255")) {
 				return new ACR1255UsbCommands(name, reader);
+			} else if (name.contains("1552")) {
+				return new ACR1552Commands(name, reader);
 			} else {
 				LOGGER.debug("No reader control for " + name);
 			}
@@ -109,6 +116,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		acr1255Binder.clearReader();
 		acr1281Binder.clearReader();
 		acr1283Binder.clearReader();
+		acr1552Binder.clearReader();
 
 		WrappedAcrReader reader = this.reader;
 		if(reader != null) {
@@ -128,7 +136,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		ReaderWrapper readerWrapper = new ReaderWrapper(manager);
 
 		if(!readerWrapper.isSupported(device)) {
-			LOGGER.debug("Reader not supported");
+			LOGGER.debug("Reader not supported by driver");
 			return null;
 		}
 		readerWrapper.open(device);
@@ -142,7 +150,13 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 			return null;
 		}
 
-		WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, createUsbAcrReader(reader));
+		AcrReader usbAcrReader = createUsbAcrReader(reader);
+		if(usbAcrReader == null) {
+			LOGGER.debug("Reader not supported by library");
+			return null;
+		}
+
+		WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, usbAcrReader);
 		
 		this.reader = wrappedAcrReader;
 		
@@ -178,6 +192,9 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		} else if (reader instanceof ACR1283Commands) {
 			acr1283Binder.setCommands((ACR1283Commands) reader);
 			return new Acr1283LReader(reader.getName(), acr1283Binder);
+		} else if (reader instanceof ACR1552Commands) {
+			acr1552Binder.setCommands((ACR1552Commands) reader);
+			return new Acr1552UReader(reader.getName(), acr1552Binder);
 		} else {
 			LOGGER.debug("Not supporting reader extras for " + reader.getName());
 		}
