@@ -417,9 +417,9 @@ public class Acr1552UReader extends AcrReader {
 		} catch (RemoteException e) {
 			throw new AcrReaderException(e);
 		}
-		int parameter = readInteger(response);
+		int[] parameter = readIntegers(response);
 
-		return deserializeSpeed(parameter);
+		return deserializeSpeed(parameter[1]);
 	}
 
 	private static AcrCommunicationSpeed deserializeSpeed(int kbps) {
