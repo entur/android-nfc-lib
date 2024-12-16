@@ -1,5 +1,10 @@
 # Release notes
 
+## 2.0.7
+
+ * Fix nullpointer on unsupported ACS readers
+ * Add ACR 1552 readers
+ 
 ## 2.0.6
 
  * Update build
