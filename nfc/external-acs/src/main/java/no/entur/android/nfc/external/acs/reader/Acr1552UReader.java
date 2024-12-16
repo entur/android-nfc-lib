@@ -13,9 +13,7 @@ import no.entur.android.nfc.external.acs.reader.bind.IAcr1552UReaderControl;
 import no.entur.android.nfc.external.acs.reader.command.remote.IAcr1552UCommandWrapper;
 
 public class Acr1552UReader extends AcrReader {
-
-	private static final String TAG = Acr1552UReader.class.getName();
-
+	
 	// bit 3 and 7 RFU
 	private static final int POLL_SRI_OR_SRIX = 1 << 6;
 	private static final int POLL_INNOVATRON = 1 << 5;
