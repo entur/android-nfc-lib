@@ -786,7 +786,7 @@ public class ACR1222Commands extends ACRCommands {
 		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 
 		if (!isSuccess(response, 1)) {
-			throw new IllegalArgumentException();
+			return false;
 		}
 
 		LOGGER.debug("Set LED state to " + (0xFF & response.getData()[0]));

@@ -36,6 +36,7 @@ public class Acr1252UReader extends AcrReader {
 
 	public Acr1252UReader(String name, IAcr1252UReaderControl readerControl) {
 		this.readerControl = readerControl;
+		this.name = name;
 	}
 
 	public static int serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour... types) {

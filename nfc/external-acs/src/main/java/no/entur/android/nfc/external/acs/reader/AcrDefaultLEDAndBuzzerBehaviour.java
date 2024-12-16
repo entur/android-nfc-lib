@@ -7,6 +7,7 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 
 	/**
 	 * 1252: PICC Activation Status LED: To show the activation status of the PICC interface. <br/>
+	 * 1552: PICC Activation Status LED
 	 */
 	PICC_ACTIVATION_STATUS_LED,
 
@@ -21,6 +22,7 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	 * 1255: PICC Polling Status LED: To show the PICC Polling Status. <br/>
 	 * 1252: PICC Polling Status LED: To show the PICC Polling Status. <br/>
 	 * 1281: PICC Polling Status LED: To show the PICC Polling Status. <br/>
+	 * 1552: PICC Polling Status LED
 	 */
 	PICC_POLLING_STATUS_LED,
 
@@ -30,6 +32,18 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	 * 1252: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC). <br/>
 	 */
 	CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER,
+
+	/**
+	 * 1552: Presence Event (Short Buzzer Beep)
+	 */
+
+	CARD_INSERTION_EVENT_BUZZER,
+
+	/**
+	 * 1552: Card Removal Event (Short Buzzer Beep)
+	 */
+
+	CARD_REMOVAL_EVENT_BUZZER,
 
 	/**
 	 * 1252: PN512 Reset Indication Buzzer: To make a beep when the PN512 is reset <br/>
@@ -48,6 +62,7 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	 * 1255: Card Operation Blinking LED: To light up the LED whenever the card is being accessed. <br/>
 	 * 1252: Card Operation Blinking LED: To blink the LED whenever the PICC card is being accessed. <br/>
 	 * 1281: Card Operation Blinking LED: To make the LED blink whenever the card (PICC or ICC) is being accessed. <br/>
+	 * 1552: Accessing(LED Fast Blinking)
 	 */
 
 	CARD_OPERATION_BLINK_LED,

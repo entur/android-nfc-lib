@@ -56,6 +56,33 @@ public abstract class RemoteCommandReader implements Parcelable {
         }
     }
 
+    protected int[] readIntegers(byte[] response) {
+        try {
+            DataInputStream din = new DataInputStream(new ByteArrayInputStream(response));
+
+            int version = din.readInt();
+            if (version == RemoteCommandWriter.VERSION) {
+                int status = din.readInt();
+
+                if (status == RemoteCommandWriter.STATUS_OK) {
+                    int count = din.readInt();
+                    int[] integers = new int[count];
+                    for(int i = 0; i < count; i++) {
+                        integers[i] = din.readInt();
+                    }
+                    return integers;
+                } else {
+                    throw createRemoteCommandException(din.readUTF());
+                }
+            } else {
+                throw createUnexpectedVersionIllegalArgumentException(version);
+            }
+        } catch (IOException e) {
+            throw createRemoteCommandException(e);
+        }
+    }
+
+
     protected abstract RemoteCommandException createRemoteCommandException(Exception e);
     
     protected abstract RemoteCommandException createRemoteCommandException(String string);

@@ -152,4 +152,29 @@ public class RemoteCommandWriter {
 		}
 	}
 
+	protected byte[] returnValue(int[] integers, Exception exception) {
+		try {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			DataOutputStream dout = new DataOutputStream(out);
+
+			dout.writeInt(RemoteCommandWriter.VERSION);
+
+			if (integers != null) {
+				dout.writeInt(RemoteCommandWriter.STATUS_OK);
+				dout.writeInt(integers.length);
+				for(int i = 0; i < integers.length; i++) {
+					dout.writeInt(integers[i]);
+				}
+			} else {
+				dout.writeInt(RemoteCommandWriter.STATUS_EXCEPTION);
+				dout.writeUTF(exception.toString());
+			}
+			byte[] response = out.toByteArray();
+
+			return response;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 }
