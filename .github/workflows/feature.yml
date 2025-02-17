@@ -1,12 +1,11 @@
-name: Android tests build
+name: Build libraries + example client
 on:
     push:
-        branches:
+        branches-ignore:
             - master
-    pull_request:
-        types:
-            - synchronize
-            - opened
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
     build:
