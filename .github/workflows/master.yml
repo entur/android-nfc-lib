@@ -84,7 +84,7 @@ jobs:
           run: |
             echo $SONATYPE_GPG_KEY | base64 --decode | gpg --batch --no-tty --import --yes
             ./gradlew build publishToSonatype closeAndReleaseSonatypeStagingRepository -x test -Psigning.gnupg.passphrase=$SONATYPE_GPG_KEY_PASSWORD -Psigning.gnupg.keyName=$SONATYPE_GPG_KEY_NAME -PsonatypeUsername=$SONATYPE_AUTH_USER -PsonatypePassword=$SONATYPE_AUTH_TOKEN  --info --stacktrace
-          with:
+          env:
             SONATYPE_GPG_KEY: ${{ secrets.SONATYPE_GPG_KEY }}
             SONATYPE_GPG_KEY_PASSWORD: ${{ secrets.SONATYPE_GPG_KEY_PASSWORD }}
             SONATYPE_GPG_KEY_NAME: ${{ secrets.SONATYPE_GPG_KEY_NAME }}
