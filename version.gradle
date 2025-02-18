@@ -53,46 +53,6 @@ class Version {
     int getCode() { code }
 }
 
-def burnAndroidVersionName(String version) {
-    // copy version and versionCode into the build files
-    File buildFile = new File('build.gradle')
-
-    String build = buildFile.getText('UTF-8')
-
-    // versionCode 1
-    // versionName "1.0.0"
-    // versionName '1.0.0'
-    // versionName "1.0.0-SNAPSHOT"
-
-    String versionNameBuild = build.replaceAll('versionName [\'\\."A-Z0-9-]+', "versionName \"" + version + "\"")
-
-    if(versionNameBuild.equals(build)) throw new RuntimeException("Unable to copy version name into android configuration")
-
-    buildFile.write(versionNameBuild, 'UTF-8')
-}
-
-def burnAndroidVersions(String versionCode, String version) {
-    // copy version and versionCode into the build files
-    File buildFile = new File('build.gradle')
-
-    String build = buildFile.getText('UTF-8')
-
-    // copy values into the android build, to improve build performance
-    // versionCode 1
-    // versionName "1.0.0"
-    // versionName '1.0.0'
-    // versionName "1.0.0-SNAPSHOT"
-    String versionCodeBuild = build.replaceAll("versionCode [0-9]+", "versionCode " + versionCode);
-
-    if(versionCodeBuild.equals(build)) throw new RuntimeException("Unable to copy version code into android configuration")
-
-    String versionNameBuild = versionCodeBuild.replaceAll('versionName [\'\\."A-Z0-9-]+', "versionName \"" + version + "\"")
-
-    if(versionNameBuild.equals(versionCodeBuild)) throw new RuntimeException("Unable to copy version name into android configuration")
-
-    buildFile.write(versionNameBuild, 'UTF-8')
-}
-
 task toReleaseVersion {
     doFirst {
         def props = new Properties()
@@ -105,8 +65,6 @@ task toReleaseVersion {
             def versionWithoutSnapshot = value.substring(0, value.length() - 9)
             props.setProperty("version", versionWithoutSnapshot)
             props.store(propertyFile.newWriter(), null)
-
-            burnAndroidVersionName(versionWithoutSnapshot)
 
             println "Now at version $versionWithoutSnapshot"
         } else {
@@ -130,8 +88,6 @@ task toSnapshotVersion {
             props.setProperty("version", versionWithSnapshot)
             props.store(propertyFile.newWriter(), null)
 
-            burnAndroidVersionName(versionWithSnapshot)
-
             println "Now at version $versionWithSnapshot"
         }
     }
@@ -147,8 +103,6 @@ tasks.addRule("Pattern: bump<TYPE>Version") { String taskName ->
                 def propertyFile = file("gradle.properties")
                 propertyFile.withInputStream { props.load(it) }
                 
-                String value = props.getProperty("version")
-
                 String type = (taskName - 'bump' - 'Version')
 
                 String oldVersionName = props.getProperty("version")
@@ -173,8 +127,6 @@ tasks.addRule("Pattern: bump<TYPE>Version") { String taskName ->
                 }
                 props.setProperty("versionCode", Integer.toString(newVersionCode))
                 props.store(propertyFile.newWriter(), null)
-
-				burnAndroidVersions(props.getProperty("versionCode"), props.getProperty("version"))
 
                 println "Bumped ${type.toLowerCase()} version, now at ${props.getProperty('version')} / $version.code"
             }
