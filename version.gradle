@@ -125,7 +125,7 @@ tasks.addRule("Pattern: bump<TYPE>Version") { String taskName ->
                 } else {
                     props.setProperty("version", newVersionName + "-SNAPSHOT")
                 }
-                props.setProperty("versionCode", Integer.toString(newVersionCode))
+                props.setProperty("versionCode", newVersionCode)
                 props.store(propertyFile.newWriter(), null)
 
                 println "Bumped ${type.toLowerCase()} version, now at ${props.getProperty('version')} / $version.code"
