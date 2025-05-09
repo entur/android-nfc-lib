@@ -11,6 +11,7 @@ import java.util.List;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
 import no.entur.android.nfc.external.acs.reader.command.ACR1252Commands;
 import no.entur.android.nfc.external.acs.reader.command.ACR1552Commands;
+import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 
 public class IAcr1552UCommandWrapper extends AcrRemoteCommandWriter {
 
@@ -59,32 +60,6 @@ public class IAcr1552UCommandWrapper extends AcrRemoteCommandWriter {
 			exception = e;
 		}
 		return returnValue(result, exception);
-	}
-
-	public byte[] control(int slotNum, int controlCode, byte[] command) {
-		byte[] value = null;
-		Exception exception = null;
-		try {
-			value = commands.control(slotNum, controlCode, command);
-		} catch (Exception e) {
-			LOGGER.debug("Problem control", e);
-
-			exception = e;
-		}
-		return returnValue(value, exception);
-	}
-
-	public byte[] transmit(int slotNum, byte[] command) {
-		byte[] value = null;
-		Exception exception = null;
-		try {
-			value = commands.transmit(slotNum, command);
-		} catch (Exception e) {
-			LOGGER.debug("Problem transmit", e);
-
-			exception = e;
-		}
-		return returnValue(value, exception);
 	}
 
 	public byte[] getDefaultLEDAndBuzzerBehaviour() {
@@ -255,5 +230,10 @@ public class IAcr1552UCommandWrapper extends AcrRemoteCommandWriter {
 			exception = e;
 		}
 		return returnValue(value, exception);
+	}
+
+	@Override
+	public ACRCommands getCommands() {
+		return commands;
 	}
 }

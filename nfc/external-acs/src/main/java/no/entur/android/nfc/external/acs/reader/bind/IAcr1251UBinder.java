@@ -93,4 +93,36 @@ public class IAcr1251UBinder extends IAcr1251UReaderControl.Stub {
 		return wrapper.transmit(slotNum, command);
 	}
 
+	@Override
+	public byte[] power(int slotNum, int action) throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.power(slotNum, action);
+	}
+
+	@Override
+	public byte[] setProtocol(int slotNum, int preferredProtocols) throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.setProtocol(slotNum, preferredProtocols);
+	}
+
+	@Override
+	public byte[] getState(int slotNum) throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.getState(slotNum);
+	}
+
+	@Override
+	public byte[] getNumSlots() throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.getNumSlots();
+	}
+
 }

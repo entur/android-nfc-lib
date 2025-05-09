@@ -23,5 +23,13 @@ interface IAcr1222LReaderControl {
 	byte[] clearDisplay();
 	
 	byte[] displayText(char fontId, boolean styleBold, int line, int position, in byte[] message);
-	
+
+    byte[] power(int slotNum, int action);
+
+    byte[] setProtocol(int slotNum, int preferredProtocols);
+
+    byte[] getState(int slotNum);
+
+    byte[] getNumSlots();
+
 }

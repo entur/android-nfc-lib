@@ -101,7 +101,7 @@ public class ACR1252Commands extends ACRCommands {
 		final int operation = in[1] & 0xFF;
 
 		if (operation != picc) {
-			LOGGER.warn("Unable to properly update PICC for ACR 1222: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
+			LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
 			return Boolean.FALSE;
 		} else {

@@ -43,12 +43,6 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
-import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
-import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
-import no.entur.android.nfc.external.acs.reader.AcrCommunicationSpeed;
-import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
-import no.entur.android.nfc.external.acs.reader.AcrLED;
-import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
@@ -226,6 +220,26 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             AcrReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, AcrReader.class);
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
+
+
+            // TODO remove this
+            // attempt to talk to a SAM on ACR 1252
+            if(reader.getName().contains("1252") && reader.getNumberOfSlots() == 2) {
+                try {
+                    byte[] power = reader.power(1, 2);
+                    LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
+
+                    reader.setProtocol(1, 1);
+
+                    // try random command, expect response code 6986
+                    byte[] transmit = reader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
+
+                    LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
+
+                } catch(Exception e) {
+                    LOGGER.error("Problem talking to SAM", e);
+                }
+            }
         }
 
         runOnUiThread(() -> {
