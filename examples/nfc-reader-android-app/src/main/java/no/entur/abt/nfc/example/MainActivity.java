@@ -221,9 +221,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
 
-
-            // TODO remove this
-            // attempt to talk to a SAM on ACR 1252
+            // example: attempt to talk to a SAM on ACR 1252
             if(reader.getName().contains("1252") && reader.getNumberOfSlots() == 2) {
                 try {
                     byte[] power = reader.power(1, 2);
@@ -235,7 +233,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     byte[] transmit = reader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
 
                     LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
-
                 } catch(Exception e) {
                     LOGGER.error("Problem talking to SAM", e);
                 }
