@@ -48,8 +48,8 @@ interface IAcr1255UReaderControl {
 
 	byte[] setProtocol(int slotNum, int preferredProtocols);
 
-    byte[] getState(int slotNum);
+	byte[] getState(int slotNum);
 
-    byte[] getNumSlots();
+	byte[] getNumSlots();
 
 }

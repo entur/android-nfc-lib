@@ -30,12 +30,12 @@ interface IAcr1283LReaderControl {
 
 	byte[] setDisplayContrast(int contrast);
 
-    byte[] power(int slotNum, int action);
+	byte[] power(int slotNum, int action);
 
-    byte[] setProtocol(int slotNum, int preferredProtocols);
+	byte[] setProtocol(int slotNum, int preferredProtocols);
 
-    byte[] getState(int slotNum);
+	byte[] getState(int slotNum);
 
-    byte[] getNumSlots();
+	byte[] getNumSlots();
 
 }
