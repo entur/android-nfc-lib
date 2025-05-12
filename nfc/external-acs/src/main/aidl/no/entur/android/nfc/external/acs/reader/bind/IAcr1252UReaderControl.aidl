@@ -25,4 +25,13 @@ interface IAcr1252UReaderControl {
 	byte[] setAutomaticPICCPolling(int picc);
 
 	byte[] setBuzzer(boolean enable);
+
+	byte[] power(int slotNum, int action);
+
+	byte[] setProtocol(int slotNum, int preferredProtocols);
+
+	byte[] getState(int slotNum);
+
+	byte[] getNumSlots();
+
 }

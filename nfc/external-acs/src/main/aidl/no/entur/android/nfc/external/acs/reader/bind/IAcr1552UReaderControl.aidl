@@ -36,4 +36,12 @@ interface IAcr1552UReaderControl {
 
 	byte[] setBuzzerControlRepeat(int onDuration, int offDuration, int repeats);
 
+	byte[] power(int slotNum, int action);
+
+	byte[] setProtocol(int slotNum, int preferredProtocols);
+
+	byte[] getState(int slotNum);
+
+	byte[] getNumSlots();
+
 }

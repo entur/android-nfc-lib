@@ -1,11 +1,7 @@
 package no.entur.android.nfc.external.acs.reader;
 
 import android.os.Parcelable;
-import android.util.Log;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.List;
 
 import no.entur.android.nfc.external.remote.RemoteCommandException;
@@ -34,5 +30,13 @@ public abstract class AcrReader extends RemoteCommandReader implements Parcelabl
 	protected RemoteCommandException createRemoteCommandException(String string) {
 		return new AcrReaderException(string);
 	}
+
+	public abstract byte[] power(int slotNumber, int action);
+
+	public abstract int setProtocol(int slotNumber, int preferredProtocols);
+
+	public abstract int getState(int slotNumber);
+
+	public abstract int getNumberOfSlots();
 
 }

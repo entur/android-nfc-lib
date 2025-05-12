@@ -329,7 +329,7 @@ public class Acr1552UReader extends AcrReader {
 	 *
 	 * @param percent power in percent
 	 * @return true if power was updated
-	 * @throws ReaderException
+	 * @throws AcrReaderException
 	 */
 
 	public boolean setRadioFrequencyPower(int percent) {
@@ -540,4 +540,51 @@ public class Acr1552UReader extends AcrReader {
 	}
 
 
+	@Override
+	public byte[] power(int slotNum, int action) {
+		byte[] response;
+		try {
+			response = readerControl.power(slotNum, action);
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readByteArray(response);
+	}
+
+	@Override
+	public int setProtocol(int slotNum, int preferredProtocols) {
+		byte[] response;
+		try {
+			response = readerControl.setProtocol(slotNum, preferredProtocols);
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readInteger(response);
+	}
+
+	@Override
+	public int getState(int slotNum) {
+		byte[] response;
+		try {
+			response = readerControl.getState(slotNum);
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readInteger(response);
+	}
+
+	@Override
+	public int getNumberOfSlots() {
+		byte[] response;
+		try {
+			response = readerControl.getNumSlots();
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readInteger(response);
+	}
 }

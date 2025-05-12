@@ -134,4 +134,21 @@ public class ACRCommands {
 
 	}
 
+	public byte[] power(int slotNum, int action) throws ReaderException {
+		return reader.power(slotNum, action);
+	}
+
+	public int setProtocol(int slotNum, int preferredProtocols) throws ReaderException {
+		return reader.setProtocol(slotNum, preferredProtocols);
+	}
+
+	public int getState(int slotNum) throws ReaderException {
+		return reader.getState(slotNum);
+	}
+
+
+	public int getNumSlots() throws ReaderException {
+		return reader.getNumSlots();
+	}
+
 }

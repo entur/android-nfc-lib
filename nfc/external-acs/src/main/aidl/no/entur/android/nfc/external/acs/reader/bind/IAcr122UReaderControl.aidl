@@ -14,4 +14,12 @@ interface IAcr122UReaderControl {
 		
 	byte[] transmit(int slotNum, in byte[] command);
 
+	byte[] power(int slotNum, int action);
+
+	byte[] setProtocol(int slotNum, int preferredProtocols);
+
+	byte[] getState(int slotNum);
+
+	byte[] getNumSlots();
+
 }

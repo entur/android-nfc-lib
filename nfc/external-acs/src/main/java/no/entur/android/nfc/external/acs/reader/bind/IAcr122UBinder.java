@@ -1,7 +1,6 @@
 package no.entur.android.nfc.external.acs.reader.bind;
 
 import android.os.RemoteException;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import java.io.DataOutputStream;
 
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
-import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.external.acs.reader.command.ACR122Commands;
 import no.entur.android.nfc.external.acs.reader.command.remote.IAcr122UCommandWrapper;
 
@@ -19,25 +17,25 @@ public class IAcr122UBinder extends IAcr122UReaderControl.Stub {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr122UBinder.class);
 
-	private IAcr122UCommandWrapper iAcr122UCommandWrapper;
+	private IAcr122UCommandWrapper wrapper;
 
 	public IAcr122UBinder() {
 		attachInterface(this, IAcr122UReaderControl.class.getName());
 	}
 
 	public void setAcr122UCommands(ACR122Commands reader) {
-		iAcr122UCommandWrapper = new IAcr122UCommandWrapper(reader);
+		wrapper = new IAcr122UCommandWrapper(reader);
 	}
 
 	public void clearReader() {
-		this.iAcr122UCommandWrapper = null;
+		this.wrapper = null;
 	}
 
 	public byte[] getFirmware() {
-		if (iAcr122UCommandWrapper == null) {
+		if (wrapper == null) {
 			return noReaderException();
 		}
-		return iAcr122UCommandWrapper.getFirmware();
+		return wrapper.getFirmware();
 	}
 
 	private byte[] noReaderException() {
@@ -62,43 +60,76 @@ public class IAcr122UBinder extends IAcr122UReaderControl.Stub {
 	}
 
 	public byte[] getPICC() {
-		if (iAcr122UCommandWrapper == null) {
+		if (wrapper == null) {
 			return noReaderException();
 		}
-		return iAcr122UCommandWrapper.getPICC();
+		return wrapper.getPICC();
 	}
 
 	public byte[] setPICC(int picc) {
-		if (iAcr122UCommandWrapper == null) {
+		if (wrapper == null) {
 			return noReaderException();
 		}
-		return iAcr122UCommandWrapper.setPICC(picc);
+		return wrapper.setPICC(picc);
 	}
 
 	@Override
 	public byte[] setBuzzerForCardDetection(boolean enable) throws RemoteException {
-		if (iAcr122UCommandWrapper == null) {
+		if (wrapper == null) {
 			return noReaderException();
 		}
-		return iAcr122UCommandWrapper.setBuzzerForCardDetectionAcr122U(enable);
+		return wrapper.setBuzzerForCardDetectionAcr122U(enable);
 	}
 
 	@Override
 	public byte[] control(int slotNum, int controlCode, byte[] command) throws RemoteException {
-		if (iAcr122UCommandWrapper == null) {
+		if (wrapper == null) {
 			return noReaderException();
 		}
 
-		return iAcr122UCommandWrapper.control(slotNum, controlCode, command);
+		return wrapper.control(slotNum, controlCode, command);
 	}
 
 	@Override
 	public byte[] transmit(int slotNum, byte[] command) throws RemoteException {
-		if (iAcr122UCommandWrapper == null) {
+		if (wrapper == null) {
 			return noReaderException();
 		}
 
-		return iAcr122UCommandWrapper.transmit(slotNum, command);
+		return wrapper.transmit(slotNum, command);
+	}
+
+
+	@Override
+	public byte[] power(int slotNum, int action) throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.power(slotNum, action);
+	}
+
+	@Override
+	public byte[] setProtocol(int slotNum, int preferredProtocols) throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.setProtocol(slotNum, preferredProtocols);
+	}
+
+	@Override
+	public byte[] getState(int slotNum) throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.getState(slotNum);
+	}
+
+	@Override
+	public byte[] getNumSlots() throws RemoteException {
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.getNumSlots();
 	}
 
 }

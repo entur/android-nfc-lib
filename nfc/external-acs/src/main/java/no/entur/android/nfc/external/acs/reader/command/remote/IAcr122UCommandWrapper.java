@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.acs.reader.command.ACR122Commands;
+import no.entur.android.nfc.external.acs.reader.command.ACRCommands;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
 public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
@@ -77,32 +78,8 @@ public class IAcr122UCommandWrapper extends AcrRemoteCommandWriter {
 		return returnValue(picc, exception);
 	}
 
-	public byte[] control(int slotNum, int controlCode, byte[] command) {
-
-		byte[] value = null;
-		Exception exception = null;
-		try {
-			value = commands.control(slotNum, controlCode, command);
-		} catch (Exception e) {
-			LOGGER.debug("Problem control", e);
-
-			exception = e;
-		}
-
-		return returnValue(value, exception);
-	}
-
-	public byte[] transmit(int slotNum, byte[] command) {
-		byte[] value = null;
-		Exception exception = null;
-		try {
-			value = commands.transmit(slotNum, command);
-		} catch (Exception e) {
-			LOGGER.debug("Problem transmit", e);
-
-			exception = e;
-		}
-
-		return returnValue(value, exception);
+	@Override
+	public ACRCommands getCommands() {
+		return commands;
 	}
 }
