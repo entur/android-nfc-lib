@@ -26,7 +26,7 @@ plugins {
     id 'com.diffplug.spotless' version '6.2.0' apply false
     id "com.github.spotbugs" version '6.0.26' apply false
     id 'org.owasp.dependencycheck' version '11.1.0' apply false
-    id 'com.github.ben-manes.versions' version '0.51.0' apply false
+    id 'com.github.ben-manes.versions' version '0.51.0' apply false // ./gradlew dependencyUpdates
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
 }
 
@@ -410,7 +410,11 @@ group = 'no.entur.android.nfc'
 
 nexusPublishing {
     repositories {
-        sonatype()
+        // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
+        sonatype {
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+        }
     }
 }
 
