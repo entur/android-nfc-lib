@@ -19,12 +19,12 @@ import no.entur.android.nfc.wrapper.tech.IsoDep;
  *
  */
 
-public class ResponseAdpuProtocolIsoDep extends IsoDep {
+public class ResponseApduProtocolIsoDep extends IsoDep {
 
 	private final ResponseApduProtocol target;
 	private boolean connected = false;
 
-	public ResponseAdpuProtocolIsoDep(ResponseApduProtocol target) {
+	public ResponseApduProtocolIsoDep(ResponseApduProtocol target) {
 		this.target = target;
 	}
 

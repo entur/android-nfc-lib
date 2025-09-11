@@ -15,7 +15,7 @@ import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
 /**
  *
- * NFC A which wraps raw commands into adpus
+ * NFC A which wraps raw commands into apdus
  *
  * TODO can this be replaced by DefaultCommandTechnology?
  *
@@ -69,11 +69,11 @@ public class WrapNfcACommandTechnology extends AbstractTagTechnology implements 
 
 	}
 
-	public byte[] transmitRaw(byte[] adpu) throws Exception {
-		return DESFireAdapter.responseADPUToRaw(rawToRequestADPU(adpu));
+	public byte[] transmitRaw(byte[] apdu) throws Exception {
+		return DESFireAdapter.responseAPDUToRaw(rawToRequestAPDU(apdu));
 	}
 
-	public byte[] rawToRequestADPU(byte[] commandMessage) throws Exception {
+	public byte[] rawToRequestAPDU(byte[] commandMessage) throws Exception {
 		return transceive(DESFireAdapter.wrapMessage(commandMessage[0], commandMessage, 1, commandMessage.length - 1));
 	}
 

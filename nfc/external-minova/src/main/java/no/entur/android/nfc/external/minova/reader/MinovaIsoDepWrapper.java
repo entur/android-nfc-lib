@@ -22,7 +22,7 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
     @Override
     public byte[] transceive(byte[] data) throws Exception {
         try {
-            return commands.sendAdpu(data);
+            return commands.sendApdu(data);
         } catch(McrReaderException e) {
             // there is no "tag lost" even, so make sure to loose the tag as soon as possible if some command does not respond
             tagProxy.close();
@@ -36,7 +36,7 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
     @Override
     public byte[] transceiveRaw(byte[] data) throws Exception {
         try {
-            return commands.sendAdpu(data);
+            return commands.sendApdu(data);
         } catch(McrReaderException e) {
             // there is no "tag lost" even, so make sure to loose the tag as soon as possible if some command does not respond
             tagProxy.close();

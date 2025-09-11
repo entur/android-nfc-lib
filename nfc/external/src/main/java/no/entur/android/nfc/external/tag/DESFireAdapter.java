@@ -34,16 +34,16 @@ public class DESFireAdapter {
 	/**
 	 * Send compressed command message
 	 *
-	 * @param adpu raw adpu
+	 * @param apdu raw apdu
 	 * @return raw response
 	 * @throws Exception
 	 */
 
-	public byte[] transmitRaw(byte[] adpu) throws Exception {
-		return responseADPUToRaw(rawToRequestADPU(adpu));
+	public byte[] transmitRaw(byte[] apdu) throws Exception {
+		return responseAPDUToRaw(rawToRequestAPDU(apdu));
 	}
 
-	public static byte[] responseADPUToRaw(byte[] response) {
+	public static byte[] responseAPDUToRaw(byte[] response) {
 
 		byte[] result = new byte[response.length - 1];
 		result[0] = response[response.length - 1];
@@ -53,7 +53,7 @@ public class DESFireAdapter {
 		return result;
 	}
 
-	public byte[] rawToRequestADPU(byte[] commandMessage) throws Exception {
+	public byte[] rawToRequestAPDU(byte[] commandMessage) throws Exception {
 		return transceive(wrapMessage(commandMessage[0], commandMessage, 1, commandMessage.length - 1));
 	}
 
@@ -133,8 +133,8 @@ public class DESFireAdapter {
 		return sb.toString().trim().toUpperCase();
 	}
 
-	public byte[] transmitChain(byte[] adpu) throws Exception {
-		return receieveResponseChain(sendRequestChain(adpu));
+	public byte[] transmitChain(byte[] apdu) throws Exception {
+		return receieveResponseChain(sendRequestChain(apdu));
 	}
 
 	public byte[] receieveResponseChain(byte[] response) throws Exception {

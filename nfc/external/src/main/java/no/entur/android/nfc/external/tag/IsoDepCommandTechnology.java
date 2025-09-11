@@ -33,7 +33,7 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
 				transceive = adapter.transceive(data);
 			} else if (raw) {
 				// we use desfire ev1 native command set
-				// so do not wrap in an adpu here
+				// so do not wrap in an apdu here
 
 				transceive = adapter.transceive(data);
 			} else {
