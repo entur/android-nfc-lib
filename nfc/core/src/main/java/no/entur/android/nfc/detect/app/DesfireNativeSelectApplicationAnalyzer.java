@@ -14,14 +14,14 @@ public class DesfireNativeSelectApplicationAnalyzer implements SelectApplication
     protected static final byte SELECT_APPLICATION = 0x5A;
 
     protected final byte[] applicationIdentifier;
-    protected final byte[] commandAdpu;
+    protected final byte[] commandApdu;
 
     public DesfireNativeSelectApplicationAnalyzer(byte[] applicationIdentifier) {
         this.applicationIdentifier = applicationIdentifier;
 
-        this.commandAdpu = new byte[applicationIdentifier.length + 1];
-        this.commandAdpu[0] = SELECT_APPLICATION;
-        System.arraycopy(applicationIdentifier, 0, commandAdpu, 1, applicationIdentifier.length);
+        this.commandApdu = new byte[applicationIdentifier.length + 1];
+        this.commandApdu[0] = SELECT_APPLICATION;
+        System.arraycopy(applicationIdentifier, 0, commandApdu, 1, applicationIdentifier.length);
     }
 
     @Override
@@ -33,18 +33,18 @@ public class DesfireNativeSelectApplicationAnalyzer implements SelectApplication
                 isoDep.connect();
             }
 
-            byte[] responseAdpu = isoDep.transceive(commandAdpu);
+            byte[] responseApdu = isoDep.transceive(commandApdu);
 
-            boolean success = isSuccess(responseAdpu);
+            boolean success = isSuccess(responseApdu);
 
-            return new SelectApplicationAnalyzeResult(success, applicationIdentifier, commandAdpu, responseAdpu);
+            return new SelectApplicationAnalyzeResult(success, applicationIdentifier, commandApdu, responseApdu);
         }
         return null;
     }
 
-    private static boolean isSuccess(byte[] responseAdpu) {
-        if(responseAdpu.length >= 1) {
-            int status = responseAdpu[responseAdpu.length - 1] & 0xFF;
+    private static boolean isSuccess(byte[] responseApdu) {
+        if(responseApdu.length >= 1) {
+            int status = responseApdu[responseApdu.length - 1] & 0xFF;
 
             return status == 0x00;
         }

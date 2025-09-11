@@ -4,30 +4,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import no.entur.android.nfc.websocket.messages.NfcMessage;
 import no.entur.android.nfc.websocket.messages.NfcStatusResponseMessage;
 
-public class CardAdpuResponseMessage extends NfcStatusResponseMessage {
+public class CardApduResponseMessage extends NfcStatusResponseMessage {
 
     public static final int TYPE = 102;
     
-    private byte[] adpu;
+    private byte[] apdu;
 
-    public CardAdpuResponseMessage(byte[] adpu, int id) {
+    public CardApduResponseMessage(byte[] apdu, int id) {
         super(TYPE, id);
-        this.adpu = adpu;
+        this.apdu = apdu;
     }
 
-    public CardAdpuResponseMessage(int id) {
+    public CardApduResponseMessage(int id) {
         super(TYPE, id);
     }
 
     @Override
     public void write(DataOutputStream dout) throws IOException {
     	super.write(dout);
-        if(adpu != null) {
-            dout.writeInt(adpu.length);
-            dout.write(adpu);
+        if(apdu != null) {
+            dout.writeInt(apdu.length);
+            dout.write(apdu);
         } else {
             dout.writeInt(0);
         }
@@ -38,11 +37,11 @@ public class CardAdpuResponseMessage extends NfcStatusResponseMessage {
     	super.read(din);
     	
     	int count = din.readInt();
-    	adpu = new byte[count];
-    	din.readFully(adpu);
+    	apdu = new byte[count];
+    	din.readFully(apdu);
     }
 
-    public byte[] getAdpu() {
-        return adpu;
+    public byte[] getApdu() {
+        return apdu;
     }
 }

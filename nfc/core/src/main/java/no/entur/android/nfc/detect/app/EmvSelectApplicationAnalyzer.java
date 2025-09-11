@@ -26,19 +26,19 @@ public class EmvSelectApplicationAnalyzer implements SelectApplicationAnalyzer {
                 isoDep.connect();
             }
 
-            byte[] responseAdpu = isoDep.transceive(SELECT_PPSE_COMMAND);
+            byte[] responseApdu = isoDep.transceive(SELECT_PPSE_COMMAND);
 
-            boolean success = isSuccess(responseAdpu);
+            boolean success = isSuccess(responseApdu);
 
-            return new SelectApplicationAnalyzeResult(success, AID, SELECT_PPSE_COMMAND, responseAdpu);
+            return new SelectApplicationAnalyzeResult(success, AID, SELECT_PPSE_COMMAND, responseApdu);
         }
         return null;
     }
 
-    private static boolean isSuccess(byte[] responseAdpu) {
-        if(responseAdpu.length >= 2) {
-            int sw1 = responseAdpu[responseAdpu.length - 2] & 0xFF;
-            int sw2 = responseAdpu[responseAdpu.length - 1] & 0xFF;
+    private static boolean isSuccess(byte[] responseApdu) {
+        if(responseApdu.length >= 2) {
+            int sw1 = responseApdu[responseApdu.length - 2] & 0xFF;
+            int sw2 = responseApdu[responseApdu.length - 1] & 0xFF;
 
             return sw1 == 0x90 && sw2 == 0x00;
         }

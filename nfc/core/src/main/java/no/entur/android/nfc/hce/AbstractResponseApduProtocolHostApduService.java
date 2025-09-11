@@ -57,7 +57,7 @@ public abstract class AbstractResponseApduProtocolHostApduService extends HostAp
 
 			onApplicationSelected();
 
-			return handleApplicationSelectedCommandAdpu();
+			return handleApplicationSelectedCommandApdu();
 		}
 
 		if (protocol != null) {
@@ -72,7 +72,7 @@ public abstract class AbstractResponseApduProtocolHostApduService extends HostAp
 	protected abstract byte[] handleCommandApdu(CommandAPDU command);
 
 	@NonNull
-	protected abstract byte[] handleApplicationSelectedCommandAdpu();
+	protected abstract byte[] handleApplicationSelectedCommandApdu();
 
 	@Override
 	public void onDeactivated(int reason) {

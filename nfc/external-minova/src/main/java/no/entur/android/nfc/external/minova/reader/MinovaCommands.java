@@ -73,7 +73,7 @@ public class MinovaCommands {
         return response.substring(response.indexOf("=") + 1);
     }
 
-    public byte[] sendAdpu(byte[] command) throws IOException, InterruptedException {
+    public byte[] sendApdu(byte[] command) throws IOException, InterruptedException {
         String minovaCommand = McrCommandSetBuilder.newInstance(reader.getReaderId())
                 .command(CAPDU, ByteArrayHexStringConverter.byteArrayToHexString(command))
                 .build();

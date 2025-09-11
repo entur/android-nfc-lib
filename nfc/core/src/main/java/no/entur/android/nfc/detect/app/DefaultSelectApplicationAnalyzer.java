@@ -11,12 +11,12 @@ import no.entur.android.nfc.wrapper.tech.IsoDep;
 public class DefaultSelectApplicationAnalyzer implements SelectApplicationAnalyzer {
 
     protected final byte[] applicationIdentifier;
-    protected final byte[] commandAdpu;
+    protected final byte[] commandApdu;
 
     public DefaultSelectApplicationAnalyzer(byte[] bytes) {
         this.applicationIdentifier = bytes;
 
-        commandAdpu = buildSelectApplicationCommand(bytes);
+        commandApdu = buildSelectApplicationCommand(bytes);
     }
 
     private byte[] buildSelectApplicationCommand(byte[] bytes) {
@@ -44,19 +44,19 @@ public class DefaultSelectApplicationAnalyzer implements SelectApplicationAnalyz
                 isoDep.connect();
             }
 
-            byte[] responseAdpu = isoDep.transceive(commandAdpu);
+            byte[] responseApdu = isoDep.transceive(commandApdu);
 
-            boolean success = isSuccess(responseAdpu);
+            boolean success = isSuccess(responseApdu);
 
-            return new SelectApplicationAnalyzeResult(success, applicationIdentifier, commandAdpu, responseAdpu);
+            return new SelectApplicationAnalyzeResult(success, applicationIdentifier, commandApdu, responseApdu);
         }
         return null;
     }
 
-    private static boolean isSuccess(byte[] responseAdpu) {
-        if(responseAdpu.length >= 2) {
-            int sw1 = responseAdpu[responseAdpu.length - 2] & 0xFF;
-            int sw2 = responseAdpu[responseAdpu.length - 1] & 0xFF;
+    private static boolean isSuccess(byte[] responseApdu) {
+        if(responseApdu.length >= 2) {
+            int sw1 = responseApdu[responseApdu.length - 2] & 0xFF;
+            int sw2 = responseApdu[responseApdu.length - 1] & 0xFF;
 
             return sw1 == 0x90 && sw2 == 0x00;
         }

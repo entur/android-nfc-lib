@@ -45,12 +45,12 @@ public class CardClient implements NfcMessageListener {
 	}
 
 	public byte[] transcieve(byte[] message) {
-		NfcMessage response = messages.sendAndWaitForResponse(new CardAdpuRequestMessage(message), timeout);
+		NfcMessage response = messages.sendAndWaitForResponse(new CardApduRequestMessage(message), timeout);
 		
 		if(response != null) {
-			CardAdpuResponseMessage result = (CardAdpuResponseMessage)response;
+			CardApduResponseMessage result = (CardApduResponseMessage)response;
 			if(result.getStatus() == 0) {
-				return result.getAdpu();
+				return result.getApdu();
 			}
 		}
 		return null;

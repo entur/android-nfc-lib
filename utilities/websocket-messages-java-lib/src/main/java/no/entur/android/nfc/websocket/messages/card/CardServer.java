@@ -46,18 +46,18 @@ public class CardServer implements NfcMessageListener {
 
 	@Override
 	public void onMessage(NfcMessage message) {
-		if(message instanceof CardAdpuRequestMessage) {
-			CardAdpuRequestMessage cardAdpuRequestMessage = (CardAdpuRequestMessage)message;
+		if(message instanceof CardApduRequestMessage) {
+			CardApduRequestMessage cardApduRequestMessage = (CardApduRequestMessage)message;
 
 			try {
-				LOGGER.info("-> " + ByteArrayHexStringConverter.toHexString(cardAdpuRequestMessage.getAdpu()));
-				byte[] transcieve = listener.transcieve(cardAdpuRequestMessage.getAdpu());
+				LOGGER.info("-> " + ByteArrayHexStringConverter.toHexString(cardApduRequestMessage.getApdu()));
+				byte[] transcieve = listener.transcieve(cardApduRequestMessage.getApdu());
 				LOGGER.info("<- " + ByteArrayHexStringConverter.toHexString(transcieve));
-				sender.onMessage(new CardAdpuResponseMessage(transcieve, cardAdpuRequestMessage.getId()));
+				sender.onMessage(new CardApduResponseMessage(transcieve, cardApduRequestMessage.getId()));
 			} catch (Exception e) {
-				LOGGER.info("Problem sending ADPU", e);
-				CardAdpuResponseMessage m = new CardAdpuResponseMessage(null, cardAdpuRequestMessage.getId());
-				m.setStatus(CardAdpuResponseMessage.STATUS_CARD_UNABLE_TO_TRANSCIEVE);
+				LOGGER.info("Problem sending APDU", e);
+				CardApduResponseMessage m = new CardApduResponseMessage(null, cardApduRequestMessage.getId());
+				m.setStatus(CardApduResponseMessage.STATUS_CARD_UNABLE_TO_TRANSCIEVE);
 				sender.onMessage(m);
 			}
 		}

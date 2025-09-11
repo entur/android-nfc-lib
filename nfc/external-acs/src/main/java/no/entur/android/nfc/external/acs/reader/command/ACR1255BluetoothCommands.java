@@ -433,7 +433,7 @@ public class ACR1255BluetoothCommands
 
 			reader.setOnResponseApduAvailableListener(this);
 			if (!reader.transmitApdu(request)) {
-				throw new ReaderException("Unable to transmit ADPU");
+				throw new ReaderException("Unable to transmit APDU");
 			}
 
 			try {

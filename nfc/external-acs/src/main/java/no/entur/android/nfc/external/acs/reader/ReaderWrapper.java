@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.CommandAPDU;
 import no.entur.android.nfc.ResponseAPDU;
-import no.entur.android.nfc.hce.protocol.ResponseAdpuProtocolIsoDep;
+import no.entur.android.nfc.hce.protocol.ResponseApduProtocolIsoDep;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class ReaderWrapper {

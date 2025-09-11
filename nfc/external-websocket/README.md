@@ -6,7 +6,7 @@ Support for external NFC readers over websocket.
  * start/stop polling
  * tag detected
  * tag lost
- * ADPU commands
+ * APDU commands
 
 This module is primarily intended as a test artifact; it hosts a service with the above controls. A android unit test connects to the service and issue controls; the application under test in turn see
 
