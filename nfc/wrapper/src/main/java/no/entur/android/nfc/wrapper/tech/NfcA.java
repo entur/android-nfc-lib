@@ -10,8 +10,8 @@ import no.entur.android.nfc.wrapper.TagWrapper;
 
 public abstract class NfcA implements BasicTagTechnology {
 
-	String EXTRA_SAK = "sak";
-	String EXTRA_ATQA = "atqa";
+	public static final String EXTRA_SAK = "sak";
+	public static final String EXTRA_ATQA = "atqa";
 
 	/**
 	 * Get an instance of {@link NfcAImpl} for the given tag.

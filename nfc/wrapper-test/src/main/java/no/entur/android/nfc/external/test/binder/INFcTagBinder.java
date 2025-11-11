@@ -1,49 +1,49 @@
-package no.entur.android.nfc.external.test;
+package no.entur.android.nfc.external.test.binder;
 
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.os.RemoteException;
+import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
+import no.entur.android.nfc.external.test.tech.MockBasicTagTechnology;
+import no.entur.android.nfc.external.test.tech.MockIsoDep;
+import no.entur.android.nfc.external.test.tech.MockMifareClassic;
+import no.entur.android.nfc.external.test.tech.MockMifareUltralight;
+import no.entur.android.nfc.external.test.tech.MockNdef;
+import no.entur.android.nfc.external.test.tech.MockNdefFormatable;
+import no.entur.android.nfc.external.test.tech.MockNfcA;
+import no.entur.android.nfc.external.test.tech.MockNfcB;
+import no.entur.android.nfc.external.test.tech.MockNfcF;
+import no.entur.android.nfc.external.test.tech.MockNfcV;
 import no.entur.android.nfc.wrapper.ErrorCodes;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.BasicTagTechnology;
-import no.entur.android.nfc.wrapper.tech.IsoDep;
-import no.entur.android.nfc.wrapper.tech.MifareClassic;
-import no.entur.android.nfc.wrapper.tech.MifareUltralight;
 import no.entur.android.nfc.wrapper.tech.Ndef;
-import no.entur.android.nfc.wrapper.tech.NdefFormatable;
-import no.entur.android.nfc.wrapper.tech.NfcA;
-import no.entur.android.nfc.wrapper.tech.NfcB;
-import no.entur.android.nfc.wrapper.tech.NfcF;
-import no.entur.android.nfc.wrapper.tech.NfcV;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
 public class INFcTagBinder {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(INFcTagBinder.class);
+    private static final String LOG_TAG = INFcTagBinder.class.getName();
 
     private final int[] techList;
 
-    private Ndef ndef;
-    private NdefFormatable ndefFormatable;
-    private NfcA nfcA;
-    private NfcB nfcB;
-    private NfcF nfcF;
-    private NfcV nfcV;
+    private MockNdef ndef;
+    private MockNdefFormatable ndefFormatable;
+    private MockNfcA nfcA;
+    private MockNfcB nfcB;
+    private MockNfcF nfcF;
+    private MockNfcV nfcV;
 
-    private IsoDep isoDep;
-    private MifareClassic mifareClassic;
-    private MifareUltralight mifareUltralight;
+    private MockIsoDep isoDep;
+    private MockMifareClassic mifareClassic;
+    private MockMifareUltralight mifareUltralight;
 
     private int connected = -1;
 
@@ -54,7 +54,7 @@ public class INFcTagBinder {
 
     private final TagImpl tagImpl;
 
-    public INFcTagBinder(List<BasicTagTechnology> technologies, int maxTransceiveLength, boolean extendedLengthApdusSupported, int defaultTimeout, TagImpl tagImpl) {
+    public INFcTagBinder(List<MockBasicTagTechnology> technologies, int maxTransceiveLength, boolean extendedLengthApdusSupported, int defaultTimeout, TagImpl tagImpl) {
         this.maxTransceiveLength = maxTransceiveLength;
         this.extendedLengthApdusSupported = extendedLengthApdusSupported;
         this.defaultTimeout = defaultTimeout;
@@ -63,33 +63,33 @@ public class INFcTagBinder {
 
         int[] ids = new int[technologies.size()];
         for(int i = 0; i < technologies.size(); i++) {
-            BasicTagTechnology b = technologies.get(i);
-            if(b instanceof Ndef) {
-                ndef = (Ndef) b;
+            MockBasicTagTechnology b = technologies.get(i);
+            if(b instanceof MockNdef) {
+                ndef = (MockNdef) b;
                 ids[i] = BasicTagTechnology.NDEF;
-            } else if(b instanceof NdefFormatable) {
-                ndefFormatable = (NdefFormatable) b;
+            } else if(b instanceof MockNdefFormatable) {
+                ndefFormatable = (MockNdefFormatable) b;
                 ids[i] = BasicTagTechnology.NDEF;
-            } else if(b instanceof NfcA) {
-                nfcA = (NfcA) b;
+            } else if(b instanceof MockNfcA) {
+                nfcA = (MockNfcA) b;
                 ids[i] = BasicTagTechnology.NFC_A;
-            } else if(b instanceof NfcB) {
-                nfcB = (NfcB) b;
+            } else if(b instanceof MockNfcB) {
+                nfcB = (MockNfcB) b;
                 ids[i] = BasicTagTechnology.NFC_B;
-            } else if(b instanceof NfcF) {
-                nfcF = (NfcF) b;
+            } else if(b instanceof MockNfcF) {
+                nfcF = (MockNfcF) b;
                 ids[i] = BasicTagTechnology.NFC_F;
-            } else if(b instanceof NfcV) {
-                nfcV = (NfcV) b;
+            } else if(b instanceof MockNfcV) {
+                nfcV = (MockNfcV) b;
                 ids[i] = BasicTagTechnology.NFC_V;
-            } else if(b instanceof IsoDep) {
-                isoDep = (IsoDep) b;
+            } else if(b instanceof MockIsoDep) {
+                isoDep = (MockIsoDep) b;
                 ids[i] = BasicTagTechnology.ISO_DEP;
-            } else if(b instanceof MifareClassic) {
-                mifareClassic = (MifareClassic) b;
+            } else if(b instanceof MockMifareClassic) {
+                mifareClassic = (MockMifareClassic) b;
                 ids[i] = BasicTagTechnology.MIFARE_CLASSIC;
-            } else if(b instanceof MifareUltralight) {
-                mifareUltralight = (MifareUltralight) b;
+            } else if(b instanceof MockMifareUltralight) {
+                mifareUltralight = (MockMifareUltralight) b;
                 ids[i] = BasicTagTechnology.MIFARE_ULTRALIGHT;
             }
         }
@@ -105,7 +105,7 @@ public class INFcTagBinder {
 	}
 
 	public int connect(int technology) throws RemoteException {
-        BasicTagTechnology target = null;
+        MockBasicTagTechnology target = null;
         
         switch (technology) {
             case BasicTagTechnology.ISO_DEP: {
@@ -261,62 +261,38 @@ public class INFcTagBinder {
             throw new RemoteException("No connected tag technology");
         }
 
-        if(connected == TagTechnology.ISO_DEP) {
-            try {
+        try {
+            if(connected == TagTechnology.ISO_DEP) {
                 byte[] transceive = isoDep.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-            }
-        } else if(connected == TagTechnology.MIFARE_ULTRALIGHT) {
-            try {
+            } else if(connected == TagTechnology.MIFARE_ULTRALIGHT) {
                 byte[] transceive = mifareUltralight.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-            }
-        } else if(connected == TagTechnology.MIFARE_CLASSIC) {
-            try {
+            } else if(connected == TagTechnology.MIFARE_CLASSIC) {
                 byte[] transceive = mifareClassic.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-            }
-        } else if(connected == TagTechnology.NFC_A) {
-            try {
+            } else if(connected == TagTechnology.NFC_A) {
                 byte[] transceive = nfcA.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-            }
-        } else if(connected == TagTechnology.NFC_B) {
-            try {
+            } else if(connected == TagTechnology.NFC_B) {
                 byte[] transceive = nfcB.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-            }
-        } else if(connected == TagTechnology.NFC_F) {
-            try {
+            } else if(connected == TagTechnology.NFC_F) {
                 byte[] transceive = nfcF.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-            }
-        } else if(connected == TagTechnology.NFC_V) {
-            try {
+            } else if(connected == TagTechnology.NFC_V) {
                 byte[] transceive = nfcV.transceive(data);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
-            } catch (IOException e) {
-                return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
             }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, "Transceive problem", e);
         }
 
         return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);

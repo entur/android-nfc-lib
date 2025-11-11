@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.test;
+package no.entur.android.nfc.external.test.binder;
 
 import android.nfc.NdefMessage;
 import android.os.RemoteException;
@@ -41,7 +41,11 @@ public class DefaultINFcTagBinder extends INfcTag.Stub {
         return delegate;
 	}
 
-    public void lost() {
+    public void power() {
+        this.lost = false;
+    }
+
+    public void unpower() {
         this.lost = true;
     }
 
@@ -137,5 +141,9 @@ public class DefaultINFcTagBinder extends INfcTag.Stub {
 
     public boolean isLost() {
         return lost;
+    }
+
+    public int getServiceHandle() {
+        return serviceHandle;
     }
 }
