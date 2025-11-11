@@ -56,6 +56,11 @@ public class MockTag {
             return this;
         }
 
+        public IsoDepBuilder withDesfireEV1() {
+            this.historicalBytes = new byte[]{(byte) 0x80}; // TODO more specific
+            return this;
+        }
+
         public IsoDepBuilder withTransceive(MockTransceive mockTransceive) {
             this.transceive = mockTransceive;
             return this;

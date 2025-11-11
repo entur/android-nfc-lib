@@ -6,6 +6,8 @@ This project hosts tools for working with NFC on Android. Modules:
 
  * [wrapper](nfc/wrapper) - wrappers for classes in the `android.nfc` package
    * for working with external and internal tags in parallel
+ * [wrapper-utils](nfc/wrapper-utils) - wrapper-related utilities
+ * [wrapper-test](nfc/wrapper-test) - test support
  * [core](nfc/core) - various helpers for NFC support
    * abstract reader activities and Host Card Emulation services
  * [external](nfc/external) - basic support for external NFC readers
