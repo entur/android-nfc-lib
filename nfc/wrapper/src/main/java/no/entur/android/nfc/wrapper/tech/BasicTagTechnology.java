@@ -1,5 +1,5 @@
 package no.entur.android.nfc.wrapper.tech;
 
-interface BasicTagTechnology extends TagTechnology {
+public interface BasicTagTechnology extends TagTechnology {
 
 }
