@@ -103,6 +103,8 @@ ext {
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.12'
+
+    hivemqMqttClientVersion = '1.2.1'
 }
 
 ext.commonDependencies = {
