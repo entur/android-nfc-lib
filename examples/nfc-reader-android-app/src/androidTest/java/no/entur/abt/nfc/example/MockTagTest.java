@@ -1,5 +1,7 @@
 package no.entur.abt.nfc.example;
 
+import static org.junit.Assert.assertTrue;
+
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import org.junit.Rule;
@@ -9,35 +11,71 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.entur.android.nfc.external.test.MockTag;
-import no.entur.android.nfc.external.test.tech.transceive.ListMockTransceive;
+import no.entur.android.nfc.external.test.MockExternalReader;
+import no.entur.android.nfc.wrapper.test.MockTag;
+import no.entur.android.nfc.wrapper.test.tech.transceive.ListMockTransceive;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.*;
+import static androidx.test.espresso.assertion.ViewAssertions.*;
+import static androidx.test.espresso.matcher.ViewMatchers.*;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 @RunWith(androidx.test.ext.junit.runners.AndroidJUnit4.class)
 public class MockTagTest {
 
-	protected static final byte[] SELECT_PPSE_COMMAND = new byte[] {0x00, (byte) 0xA4, 0x04, 0x00, 0x0E, 0x32, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31, 0x00};
-
-	protected static final  byte[] SELECT_TRANSPORT_APPLICATION_COMMAND = ByteArrayHexStringConverter.hexStringToByteArray("D2760000850101");
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(MockTagTest.class);
-
-	public ActivityScenarioRule rule = new ActivityScenarioRule(MainActivity.class);
+	public ActivityScenarioRule<MainActivity> rule = new ActivityScenarioRule<>(MainActivity.class);
 
 	@Rule
 	public RuleChain chain;
+
+	private MainApplication mainApplication;
 
 	public MockTagTest() {
 		chain = RuleChain.outerRule(rule);
 	}
 
+
 	@Test
-	public void testDesfireEV1() throws Exception {
+	public void testDesfireEV1DirectMethodInvocation() throws Exception {
 		rule.getScenario().onActivity(activity -> {
+			mainApplication = (MainApplication) activity.getApplication();
 
 			MockTag mockTag = MockTag.newBuilder()
-					.withContext(activity)
+					.withRandomTagId()
+					.withIsoDep( (isoDep) -> {
+								isoDep.withDesfireEV1(); // desfire
+								isoDep.withTransceive(ListMockTransceive.newBuilder()
+										.withErrorResponse("63") // raw desfire response
+										.withTransceiveNativeDesfireSelectApplication("008057", "00") // raw desfire command
+										.build());
+							}
+					)
+					.build();
+
+			activity.onExternalTagDiscovered(mockTag, null);
+		});
+
+		waitForThreadExecutor();
+		onView(withId(R.id.tagStatus)).check(matches(withText("Present")));
+	}
+
+	private void waitForThreadExecutor() throws InterruptedException {
+		ThreadPoolExecutor threadPoolExecutor = mainApplication.getThreadPoolExecutor();
+
+		while(threadPoolExecutor.getActiveCount() > 0 || threadPoolExecutor.getQueue().size() > 0) {
+			Thread.sleep(100);
+		}
+	}
+
+	@Test
+	public void testDesfireEV1ViaIntent() throws Exception {
+		rule.getScenario().onActivity(activity -> {
+			mainApplication = (MainApplication) activity.getApplication();
+
+			MockTag mockTag = MockTag.newBuilder()
 					.withRandomTagId()
 					.withIsoDep( (isoDep) -> {
 						isoDep.withDesfireEV1(); // desfire
@@ -49,16 +87,23 @@ public class MockTagTest {
 					)
 					.build();
 
-			mockTag.power();
-        });
+			MockExternalReader mockExternalReader = MockExternalReader.newBuilder().withContext(activity).build();
+
+			mockExternalReader.open();
+
+			mockExternalReader.tagEnteredField(mockTag);
+		});
+
+		waitForThreadExecutor();
+		onView(withId(R.id.tagStatus)).check(matches(withText("Present")));
     }
 
     @Test
-    public void testUltralight() throws Exception {
+    public void testUltralightViaIntent() throws Exception {
         rule.getScenario().onActivity(activity -> {
+			mainApplication = (MainApplication) activity.getApplication();
 
             MockTag mockTag = MockTag.newBuilder()
-                    .withContext(activity)
                     .withMifareUltralight( (ul) -> {
                         ul.withMemoryLayout((mem) -> {
                            mem.withPage(3, new byte[]{0x00, 0x01, 0x02, 0x03});
@@ -66,7 +111,13 @@ public class MockTagTest {
                     })
                     .build();
 
-            mockTag.power();
-        });
+			MockExternalReader mockExternalReader = MockExternalReader.newBuilder().withContext(activity).build();
+
+			mockExternalReader.open();
+
+			mockExternalReader.tagEnteredField(mockTag);
+		});
+		waitForThreadExecutor();
+		onView(withId(R.id.tagStatus)).check(matches(withText("Present")));
     }
 }

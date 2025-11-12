@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private TextView tagDetailIdentify;
 
     private NfcTargetAnalyzer nfcTargetAnalyzer;
+    private boolean tagPresent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,10 +135,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
 
     private void setupNfc() {
-        threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> {
-            LOGGER.error( "Rejected execution for " + r + " " + executor);
-        });
+        MainApplication mainApplication = (MainApplication) getApplication();
+        this.threadPoolExecutor = mainApplication.getThreadPoolExecutor();
 
         boolean receiverExported = true;
 
@@ -254,9 +253,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         });
     }
 
+    public boolean isTagPresent() {
+        return tagPresent;
+    }
+
     @Override
     public void onExternalTagDiscovered(Tag tag, Intent intent) {
         LOGGER.info("External Tag discovered in activity");
+
+        tagPresent = true;
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -278,6 +284,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onTagDiscovered(Tag tag, Intent intent) {
         LOGGER.info("Tag discovered in activity");
+
+        tagPresent = true;
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -298,6 +307,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onExternalTagLost(Intent intent) {
+        tagPresent = false;
+
         runOnUiThread(() -> {
             setTagPresent(false);
 

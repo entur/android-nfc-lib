@@ -7,6 +7,9 @@ import android.preference.PreferenceManager;
 
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.android.LogcatAppender;
@@ -15,6 +18,8 @@ import no.entur.android.nfc.external.ExternalNfcServiceAdapter;
 import no.entur.android.nfc.external.acs.service.AcsUsbService;
 
 public class MainApplication extends Application {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(MainApplication.class);
 
     public static final String PREF_KEY_EXTERNAL_NFC = "externalNfcService";
 
@@ -47,11 +52,18 @@ public class MainApplication extends Application {
 
     private ExternalNfcServiceAdapter adapter;
 
+    private ThreadPoolExecutor threadPoolExecutor;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         adapter = new ExternalNfcServiceAdapter(this, AcsUsbService.class, false);
+
+        threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+        threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> {
+            LOGGER.error( "Rejected execution for " + r + " " + executor);
+        });
     }
 
     public ExternalNfcServiceAdapter getAdapter() {
@@ -77,4 +89,7 @@ public class MainApplication extends Application {
         }
     }
 
+    public ThreadPoolExecutor getThreadPoolExecutor() {
+        return threadPoolExecutor;
+    }
 }
