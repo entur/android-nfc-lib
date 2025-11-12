@@ -17,4 +17,8 @@ public class MockMifareUltralight extends MockBasicTagTechnologyImpl {
     public int getType() {
         return type;
     }
+
+    public MockTransceive getTransceive() {
+        return transceive;
+    }
 }

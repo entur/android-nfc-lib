@@ -4,6 +4,6 @@ import java.io.IOException;
 
 public interface MockTransceive {
 
-    byte[] transceive(byte[] data) throws IOException;
+    byte[] transceive(byte[] data, boolean raw) throws IOException;
 
 }

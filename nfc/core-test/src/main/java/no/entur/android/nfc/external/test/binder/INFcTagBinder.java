@@ -5,10 +5,6 @@ import android.nfc.NdefRecord;
 import android.os.RemoteException;
 import android.util.Log;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 import java.util.List;
 
 import no.entur.android.nfc.external.test.tech.MockBasicTagTechnology;
@@ -263,31 +259,31 @@ public class INFcTagBinder {
 
         try {
             if(connected == TagTechnology.ISO_DEP) {
-                byte[] transceive = isoDep.transceive(data);
+                byte[] transceive = isoDep.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             } else if(connected == TagTechnology.MIFARE_ULTRALIGHT) {
-                byte[] transceive = mifareUltralight.transceive(data);
+                byte[] transceive = mifareUltralight.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             } else if(connected == TagTechnology.MIFARE_CLASSIC) {
-                byte[] transceive = mifareClassic.transceive(data);
+                byte[] transceive = mifareClassic.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             } else if(connected == TagTechnology.NFC_A) {
-                byte[] transceive = nfcA.transceive(data);
+                byte[] transceive = nfcA.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             } else if(connected == TagTechnology.NFC_B) {
-                byte[] transceive = nfcB.transceive(data);
+                byte[] transceive = nfcB.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             } else if(connected == TagTechnology.NFC_F) {
-                byte[] transceive = nfcF.transceive(data);
+                byte[] transceive = nfcF.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             } else if(connected == TagTechnology.NFC_V) {
-                byte[] transceive = nfcV.transceive(data);
+                byte[] transceive = nfcV.transceive(data, raw);
 
                 return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
             }

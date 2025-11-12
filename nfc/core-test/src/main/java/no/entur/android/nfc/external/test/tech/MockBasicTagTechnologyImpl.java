@@ -13,7 +13,7 @@ public abstract class MockBasicTagTechnologyImpl extends MockBasicTagTechnology 
 
     private static final String LOG_TAG = MockBasicTagTechnologyImpl.class.getName();
 
-    private MockTransceive transceive;
+    protected MockTransceive transceive;
 
     public MockBasicTagTechnologyImpl(int tech, MockTransceive transceive) {
         super(tech);
@@ -25,9 +25,9 @@ public abstract class MockBasicTagTechnologyImpl extends MockBasicTagTechnology 
         this.transceive = transceive;
     }
 
-    public byte[] transceive(byte[] data) throws IOException {
+    public byte[] transceive(byte[] data, boolean raw) throws IOException {
         Log.d(LOG_TAG, " -> " + toHexString(data));
-        byte[] response = this.transceive.transceive(data);
+        byte[] response = this.transceive.transceive(data, raw);
         Log.d(LOG_TAG, " <- " + toHexString(response));
 
         return response;
@@ -59,6 +59,5 @@ public abstract class MockBasicTagTechnologyImpl extends MockBasicTagTechnology 
 
         return data;
     }
-
 
 }

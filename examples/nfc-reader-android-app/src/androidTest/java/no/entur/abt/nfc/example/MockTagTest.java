@@ -34,8 +34,6 @@ public class MockTagTest {
 
 	@Test
 	public void testDesfireEV1() throws Exception {
-		LOGGER.debug("Scan tag");
-
 		rule.getScenario().onActivity(activity -> {
 
 			MockTag mockTag = MockTag.newBuilder()
@@ -53,5 +51,22 @@ public class MockTagTest {
 
 			mockTag.power();
         });
-	}
+    }
+
+    @Test
+    public void testUltralight() throws Exception {
+        rule.getScenario().onActivity(activity -> {
+
+            MockTag mockTag = MockTag.newBuilder()
+                    .withContext(activity)
+                    .withMifareUltralight( (ul) -> {
+                        ul.withMemoryLayout((mem) -> {
+                           mem.withPage(3, new byte[]{0x00, 0x01, 0x02, 0x03});
+                        });
+                    })
+                    .build();
+
+            mockTag.power();
+        });
+    }
 }

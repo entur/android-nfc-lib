@@ -17,6 +17,8 @@ import no.entur.android.nfc.external.test.tech.MockBasicTagTechnology;
 import no.entur.android.nfc.external.test.tech.MockBasicTagTechnologyImpl;
 import no.entur.android.nfc.external.test.tech.MockIsoDep;
 import no.entur.android.nfc.external.test.tech.MockMifareUltralight;
+import no.entur.android.nfc.external.test.tech.transceive.ultralight.MifareUltralightMemoryBuilder;
+import no.entur.android.nfc.external.test.tech.transceive.ultralight.MifareUltralightMockTransceive;
 import no.entur.android.nfc.external.test.tech.transceive.MockTransceive;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.TagImpl;
@@ -32,7 +34,8 @@ public class MockTag {
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
     protected static final byte[] EXTRA_ATQA_VALUE = new byte[] { 0x44, 0x03 };
-    protected static final short EXTRA_SAK_VALUE = 0x20;
+    protected static final short EXTRA_SAK_DESFIRE_EV1_VALUE = 0x20;
+    protected static final short EXTRA_SAK_ULTRALIGHT_VALUE = 0x00;
 
     public static Builder newBuilder() {
         return new Builder();
@@ -82,12 +85,24 @@ public class MockTag {
             return this;
         }
 
+        public MifareUltralightBuilder withMemoryLayout(byte[] memory) {
+            this.transceive = new MifareUltralightMockTransceive(memory);
+            return this;
+        }
+
+        public MifareUltralightBuilder withMemoryLayout(Consumer<MifareUltralightMemoryBuilder> consumer) {
+            MifareUltralightMemoryBuilder builder = new MifareUltralightMemoryBuilder();
+            consumer.accept(builder);
+            this.transceive = builder.build();
+            return this;
+        }
+
         public MifareUltralightBuilder withType(int type) {
             this.type = type;
             return this;
         }
 
-        public MockMifareUltralight build() {
+        protected MockMifareUltralight build() {
             return new MockMifareUltralight(type, transceive);
         }
     }
@@ -185,6 +200,15 @@ public class MockTag {
                 tagId = randomTagId();
             }
 
+            if(mifareUltralight != null) {
+                // make sure memory and tag correspond for mifare ultralight
+                MockTransceive transceive = mifareUltralight.getTransceive();
+                if(transceive instanceof MifareUltralightMockTransceive) {
+                    MifareUltralightMockTransceive mock = (MifareUltralightMockTransceive)transceive;
+                    mock.setTagId(tagId);
+                }
+            }
+
             DefaultINFcTagBinder binder = new DefaultINFcTagBinder();
 
             TagImpl tag = createTag(binder);
@@ -216,7 +240,7 @@ public class MockTag {
             List<Integer> tech = new ArrayList<Integer>();
 
             if(mifareUltralight != null) {
-                addNfcATechBundle(bundles, tech);
+                addNfcATechBundle(EXTRA_SAK_ULTRALIGHT_VALUE, bundles, tech);
                 addTechBundles(mifareUltralight, bundles, tech);
             }
 
@@ -234,7 +258,7 @@ public class MockTag {
             List<Integer> tech = new ArrayList<Integer>();
 
             if(isoDep != null) {
-                addNfcATechBundle(bundles, tech);
+                addNfcATechBundle(EXTRA_SAK_DESFIRE_EV1_VALUE, bundles, tech);
                 addDesfireTechBundle(isoDep, bundles, tech);
             }
 
@@ -246,9 +270,9 @@ public class MockTag {
             return new TagImpl(tagId, techArray, bundles.toArray(new Bundle[bundles.size()]), binder.getServiceHandle(), binder);
         }
 
-        protected void addNfcATechBundle(List<Bundle> bundles, List<Integer> tech) {
+        protected void addNfcATechBundle(short sak, List<Bundle> bundles, List<Integer> tech) {
             Bundle nfcA = new Bundle();
-            nfcA.putShort(NfcA.EXTRA_SAK, EXTRA_SAK_VALUE);
+            nfcA.putShort(NfcA.EXTRA_SAK, sak);
             nfcA.putByteArray(NfcA.EXTRA_ATQA, EXTRA_ATQA_VALUE);
             bundles.add(nfcA);
             tech.add(TagTechnology.NFC_A);

@@ -564,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                         break;
                     }
                     default:
-                        throw new IllegalArgumentException("Unknown mifare ultralight tag " + type);
+                        throw new IllegalArgumentException("Unknown mifare ultralight tag type " + type);
                 }
 
                 // android read 4 and 4 pages of 4 bytes

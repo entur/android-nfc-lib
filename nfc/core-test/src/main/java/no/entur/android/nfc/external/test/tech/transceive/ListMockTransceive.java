@@ -19,10 +19,12 @@ public class ListMockTransceive implements MockTransceive {
 
         private final Predicate<byte[]> command;
         private final byte[] response;
+        private final boolean raw;
 
-        public Transceive(Predicate<byte[]> command, byte[] response) {
+        public Transceive(Predicate<byte[]> command, byte[] response, boolean raw) {
             this.command = command;
             this.response = response;
+            this.raw = raw;
         }
     }
 
@@ -42,23 +44,24 @@ public class ListMockTransceive implements MockTransceive {
             return this;
         }
 
-        public Builder withTransceive(Predicate<byte[]> command, byte[] response) {
-            transceiveList.add(new Transceive(command, response));
+        public Builder withTransceive(Predicate<byte[]> command, boolean raw, byte[] response) {
+            transceiveList.add(new Transceive(command, response, raw));
             return this;
         }
 
-        public Builder withTransceive(Predicate<byte[]> command, String response) {
+        public Builder withTransceive(Predicate<byte[]> command, boolean raw, String response) {
             transceiveList.add(
                     new Transceive(
                         command,
-                        MockBasicTagTechnologyImpl.hex(response)
+                        MockBasicTagTechnologyImpl.hex(response),
+                            raw
                     )
             );
             return this;
         }
 
-        public Builder withTransceive(String command, String response) {
-            return withTransceive(MockBasicTagTechnologyImpl.hex(command), MockBasicTagTechnologyImpl.hex(response));
+        public Builder withTransceive(String command, boolean raw, String response) {
+            return withTransceive(MockBasicTagTechnologyImpl.hex(command), raw, MockBasicTagTechnologyImpl.hex(response));
         }
 
         public Builder withTransceiveNativeDesfireSelectApplication(String applicationIdentifier, String response) {
@@ -70,7 +73,7 @@ public class ListMockTransceive implements MockTransceive {
             command[0] = SELECT_APPLICATION;
             System.arraycopy(applicationIdentifier, 0, command, 1, applicationIdentifier.length);
 
-            return withTransceive(command, response);
+            return withTransceive(command, true, response);
         }
 
         public Builder withTransceiveNativeDesfireSelectApplication(byte[] applicationIdentifier) {
@@ -80,17 +83,17 @@ public class ListMockTransceive implements MockTransceive {
 
             byte[] okResponse = new byte[]{0x00};
 
-            return withTransceive(command, okResponse);
+            return withTransceive(command, true, okResponse);
         }
 
         public Builder withTransceiveSelectApplication(String applicationIdentifier, String response) {
-            return withTransceiveSelectApplication(MockBasicTagTechnologyImpl.hex(applicationIdentifier), MockBasicTagTechnologyImpl.hex(response));
+            return withTransceiveSelectApplication(MockBasicTagTechnologyImpl.hex(applicationIdentifier), true, MockBasicTagTechnologyImpl.hex(response));
         }
 
-        public Builder withTransceiveSelectApplication(byte[] applicationIdentifier, byte[] response) {
+        public Builder withTransceiveSelectApplication(byte[] applicationIdentifier, boolean raw, byte[] response) {
             byte[] command = buildSelectApplicationCommand(applicationIdentifier);
 
-            return withTransceive(command, response);
+            return withTransceive(command, raw, response);
         }
 
         private byte[] buildSelectApplicationCommand(byte[] bytes) {
@@ -110,8 +113,8 @@ public class ListMockTransceive implements MockTransceive {
         }
 
 
-        public Builder withTransceive(byte[] command, byte[] response) {
-            withTransceive(new ByteArrayPredicate(command), response);
+        public Builder withTransceive(byte[] command, boolean raw, byte[] response) {
+            withTransceive(new ByteArrayPredicate(command), raw, response);
             return this;
         }
 
@@ -134,7 +137,7 @@ public class ListMockTransceive implements MockTransceive {
         this.errorResponse = errorResponse;
     }
 
-    public byte[] transceive(byte[] data) throws IOException {
+    public byte[] transceive(byte[] data, boolean raw) throws IOException {
         if (index >= transceiveList.size()) {
             index = 0;
             return errorResponse;
