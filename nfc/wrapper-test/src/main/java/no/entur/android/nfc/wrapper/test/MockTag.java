@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.core.util.Consumer;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -27,9 +28,6 @@ import no.entur.android.nfc.wrapper.tech.NfcA;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
 public class MockTag extends TagImpl {
-
-    public static final String ACTION_TAG_DISCOVERED = "no.entur.android.nfc.external.ExternalNfcTagCallback.action.TAG_DISCOVERED";
-    public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
     protected static final byte[] EXTRA_ATQA_VALUE = new byte[] { 0x44, 0x03 };
     protected static final short EXTRA_SAK_DESFIRE_EV1_VALUE = 0x20;
@@ -107,6 +105,8 @@ public class MockTag extends TagImpl {
 
     public static class Builder {
 
+        private Random random = new SecureRandom();
+
         private MockIsoDep isoDep;
         private MockMifareUltralight mifareUltralight;
         private byte[] tagId;
@@ -127,7 +127,6 @@ public class MockTag extends TagImpl {
 
         private byte[] randomTagId() {
             byte[] tagId = new byte[7];
-            Random random = new Random();
             random.nextBytes(tagId);
             tagId[0] = 0x04; // for NXP
            return tagId;

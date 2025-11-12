@@ -20,7 +20,7 @@ public class PredicateMockTransceive implements MockTransceive {
 
     @Override
     public byte[] transceive(byte[] data, boolean raw) throws IOException {
-        if(raw = this.raw && command.test(data)) {
+        if(raw == this.raw && command.test(data)) {
             return response;
         }
         return errorResponse;

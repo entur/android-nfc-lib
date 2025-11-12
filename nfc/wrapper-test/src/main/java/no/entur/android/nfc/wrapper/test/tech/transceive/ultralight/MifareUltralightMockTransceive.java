@@ -49,8 +49,8 @@ public class MifareUltralightMockTransceive implements MockTransceive {
         // System.arraycopy(data, 0, cmd, 2, data.length);
 
         if(!raw) {
-            if (data[0] == 0x30) {
-                int pageOffset = data[1];
+            if ((data[0] & 0xFF) == 0x30) {
+                int pageOffset = data[1] & 0xFF;
 
                 if (pageOffset >= pageCount) {
                     throw new IOException("Page offset not within page count " + pageCount);
@@ -62,8 +62,8 @@ public class MifareUltralightMockTransceive implements MockTransceive {
                 byte[] response = new byte[length];
                 System.arraycopy(memory, memoryOffset, response, 0, length);
                 return response;
-            } else if (data[0] == 0xA2) {
-                int pageOffset = data[1];
+            } else if ((data[0] & 0xFF) == 0xA2) {
+                int pageOffset = data[1] & 0xFF;
 
                 if (pageOffset >= pageCount) {
                     throw new IOException("Page offset not within page count " + pageCount);
