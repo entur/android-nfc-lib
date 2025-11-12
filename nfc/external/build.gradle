@@ -7,8 +7,6 @@ android {
 
 dependencies {
     api project(":nfc:core")
-
-    implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
 }
 
 

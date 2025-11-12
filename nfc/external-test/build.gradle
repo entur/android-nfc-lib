@@ -8,8 +8,6 @@ android {
 dependencies {
     api project(":nfc:wrapper-test")
     api project(":nfc:external")
-
-    //implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
 }
 
 
