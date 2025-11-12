@@ -33,20 +33,19 @@ public class MockTagTest {
 	}
 
 	@Test
-	public void connectReader() throws Exception {
-		LOGGER.debug("Connect reader");
+	public void testDesfireEV1() throws Exception {
+		LOGGER.debug("Scan tag");
 
 		rule.getScenario().onActivity(activity -> {
 
 			MockTag mockTag = MockTag.newBuilder()
 					.withContext(activity)
-					.withTagId(new byte[]{0x04, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06})
+					.withRandomTagId()
 					.withIsoDep( (isoDep) -> {
-						isoDep.withHiLayer(new byte[]{0x03, 0x04});
 						isoDep.withDesfireEV1(); // desfire
 						isoDep.withTransceive(ListMockTransceive.newBuilder()
 								.withErrorResponse("63") // raw desfire response
-								.withTransceive("5A008057", "00") // raw desfire command
+								.withTransceiveNativeDesfireSelectApplication("008057", "00") // raw desfire command
 								.build());
 						}
 					)
@@ -54,7 +53,5 @@ public class MockTagTest {
 
 			mockTag.power();
         });
-
-		Thread.sleep(20000);
 	}
 }

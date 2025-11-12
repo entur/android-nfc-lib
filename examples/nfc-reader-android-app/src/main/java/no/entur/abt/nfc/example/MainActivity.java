@@ -47,6 +47,7 @@ import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
 import no.entur.android.nfc.wrapper.Tag;
+import no.entur.android.nfc.wrapper.tech.IsoDep;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
 import no.entur.android.nfc.wrapper.tech.NfcA;
 
@@ -456,7 +457,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     private void setContents(Tag tag, Intent intent) throws IOException {
 
-        if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
+        if(isTechType(tag, android.nfc.tech.IsoDep.class.getName())) {
+
+            IsoDep isoDep = IsoDep.get(tag);
+
+            LOGGER.info("Hi-layer response: " + ByteArrayHexStringConverter.toHexString(isoDep.getHiLayerResponse()));
+            LOGGER.info("Historical bytes: " + ByteArrayHexStringConverter.toHexString(isoDep.getHistoricalBytes()));
+            LOGGER.info("Timeout: " + isoDep.getTimeout());
+            LOGGER.info("Max transceive length: " + isoDep.getMaxTransceiveLength());
+
+        } else if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
                 // handle NTAG21x types

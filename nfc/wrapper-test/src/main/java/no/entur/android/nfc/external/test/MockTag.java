@@ -9,6 +9,7 @@ import androidx.core.util.Consumer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import no.entur.android.nfc.external.test.binder.DefaultINFcTagBinder;
 import no.entur.android.nfc.external.test.binder.INFcTagBinder;
@@ -17,6 +18,7 @@ import no.entur.android.nfc.external.test.tech.MockBasicTagTechnologyImpl;
 import no.entur.android.nfc.external.test.tech.MockIsoDep;
 import no.entur.android.nfc.external.test.tech.MockMifareUltralight;
 import no.entur.android.nfc.external.test.tech.transceive.MockTransceive;
+import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.tech.IsoDepImpl;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
@@ -38,11 +40,8 @@ public class MockTag {
 
     public static class IsoDepBuilder {
 
-        private byte[] hiLayer;
-        private byte[] historicalBytes;
-
-        private byte[] extraAtqa = new byte[] { 0x44, 0x03 };
-        private short extraSak = 0x20;
+        private byte[] hiLayer = new byte[]{};
+        private byte[] historicalBytes = new byte[]{};
 
         private MockTransceive transceive;
 
@@ -104,9 +103,24 @@ public class MockTag {
         private boolean extendedLengthApdusSupported = true;
         private int timeout = 1000;
 
+        private String action = ACTION_TAG_DISCOVERED;
+
         public Builder withTagId(byte[] tagId) {
             this.tagId = tagId;
             return this;
+        }
+
+        public Builder withRandomTagId() {
+            this.tagId = randomTagId();
+            return this;
+        }
+
+        private byte[] randomTagId() {
+            byte[] tagId = new byte[7];
+            Random random = new Random();
+            random.nextBytes(tagId);
+            tagId[0] = 0x04; // for NXP
+           return tagId;
         }
 
         public Builder withTagId(String tagId) {
@@ -116,6 +130,11 @@ public class MockTag {
 
         public Builder withContext(Context context) {
             this.context = context;
+            return this;
+        }
+
+        public Builder withAction(String action) {
+            this.action = action;
             return this;
         }
 
@@ -159,6 +178,13 @@ public class MockTag {
         }
 
         public MockTag build() {
+            if(isoDep != null && mifareUltralight != null) {
+                throw new IllegalStateException();
+            }
+            if(tagId == null) {
+                tagId = randomTagId();
+            }
+
             DefaultINFcTagBinder binder = new DefaultINFcTagBinder();
 
             TagImpl tag = createTag(binder);
@@ -167,21 +193,39 @@ public class MockTag {
             if(isoDep != null) {
                 technologies.add(isoDep);
             }
+            if(mifareUltralight != null) {
+                technologies.add(mifareUltralight);
+            }
 
             binder.setDelegate(new INFcTagBinder(technologies, maxTransceiveLength, extendedLengthApdusSupported, timeout, tag));
 
-
-            return new MockTag(tag, context, binder);
+            return new MockTag(tag, context, binder, action);
         }
 
         private TagImpl createTag(DefaultINFcTagBinder binder) {
             if(isoDep != null) {
                 return createIsoDepTag(binder);
-            }
-            if(mifareUltralight != null) {
-                // TODO
+            } else if(mifareUltralight != null) {
+                return createMifareUltralightTag(binder);
             }
             throw new IllegalStateException();
+        }
+
+        private TagImpl createMifareUltralightTag(DefaultINFcTagBinder binder) {
+            List<Bundle> bundles = new ArrayList<Bundle>();
+            List<Integer> tech = new ArrayList<Integer>();
+
+            if(mifareUltralight != null) {
+                addNfcATechBundle(bundles, tech);
+                addTechBundles(mifareUltralight, bundles, tech);
+            }
+
+            int[] techArray = new int[tech.size()];
+            for (int i = 0; i < techArray.length; i++) {
+                techArray[i] = tech.get(i);
+            }
+
+            return new TagImpl(tagId, techArray, bundles.toArray(new Bundle[bundles.size()]), binder.getServiceHandle(), binder);
         }
 
         private TagImpl createIsoDepTag(DefaultINFcTagBinder binder) {
@@ -192,10 +236,6 @@ public class MockTag {
             if(isoDep != null) {
                 addNfcATechBundle(bundles, tech);
                 addDesfireTechBundle(isoDep, bundles, tech);
-            }
-            if(mifareUltralight != null) {
-                addNfcATechBundle(bundles, tech);
-                addTechBundles(mifareUltralight, bundles, tech);
             }
 
             int[] techArray = new int[tech.size()];
@@ -233,20 +273,23 @@ public class MockTag {
 
     }
 
-    public MockTag(TagImpl tag, Context context, DefaultINFcTagBinder binder) {
+    protected final TagImpl tag;
+    protected final Context context;
+    protected final DefaultINFcTagBinder binder;
+
+    protected final String action;
+
+    public MockTag(TagImpl tag, Context context, DefaultINFcTagBinder binder, String action) {
         this.tag = tag;
         this.context = context;
         this.binder = binder;
+        this.action = action;
     }
-
-    private final TagImpl tag;
-    private final Context context;
-    private final DefaultINFcTagBinder binder;
 
     public void power() {
         binder.power();
 
-        Intent intent = new Intent(ACTION_TAG_DISCOVERED);
+        Intent intent = new Intent(action);
 
         intent.putExtra(NfcAdapter.EXTRA_TAG, tag);
         if (tag.getId() != null) {
@@ -255,8 +298,14 @@ public class MockTag {
         context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
 
+    public Tag getTag() {
+        return tag;
+    }
+
     public void unpower() {
         binder.unpower();
+
+        // TODO tag lost?
     }
 
 }
