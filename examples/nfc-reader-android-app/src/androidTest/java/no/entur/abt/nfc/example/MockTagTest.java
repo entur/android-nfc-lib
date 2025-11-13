@@ -59,9 +59,9 @@ public class MockTagTest {
 	private void waitForThreadExecutor() throws InterruptedException {
 		ThreadPoolExecutor threadPoolExecutor = mainApplication.getThreadPoolExecutor();
 
-		while(threadPoolExecutor.getActiveCount() > 0 || threadPoolExecutor.getQueue().size() > 0) {
+		do {
 			Thread.sleep(100);
-		}
+		} while(threadPoolExecutor.getActiveCount() > 0 || threadPoolExecutor.getQueue().size() > 0);
 	}
 
 	@Test
