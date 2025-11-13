@@ -63,12 +63,14 @@ dependencies {
     androidTestImplementation "junit:junit:${unitVersion}"
     androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
 
+    androidTestImplementation project(":nfc:wrapper-test")
+    androidTestImplementation project(":nfc:external-test")
+
     modules {
         module("org.checkerframework:checker-qual") {
             replacedBy("org.checkerframework:checker")
         }
     }
-
 
 }
 

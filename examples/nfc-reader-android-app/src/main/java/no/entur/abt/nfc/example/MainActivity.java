@@ -47,6 +47,7 @@ import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
 import no.entur.android.nfc.wrapper.Tag;
+import no.entur.android.nfc.wrapper.tech.IsoDep;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
 import no.entur.android.nfc.wrapper.tech.NfcA;
 
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private TextView tagDetailIdentify;
 
     private NfcTargetAnalyzer nfcTargetAnalyzer;
+    private boolean tagPresent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,10 +135,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
 
     private void setupNfc() {
-        threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> {
-            LOGGER.error( "Rejected execution for " + r + " " + executor);
-        });
+        MainApplication mainApplication = (MainApplication) getApplication();
+        this.threadPoolExecutor = mainApplication.getThreadPoolExecutor();
 
         boolean receiverExported = true;
 
@@ -253,9 +253,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         });
     }
 
+    public boolean isTagPresent() {
+        return tagPresent;
+    }
+
     @Override
     public void onExternalTagDiscovered(Tag tag, Intent intent) {
         LOGGER.info("External Tag discovered in activity");
+
+        tagPresent = true;
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -277,6 +284,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onTagDiscovered(Tag tag, Intent intent) {
         LOGGER.info("Tag discovered in activity");
+
+        tagPresent = true;
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -297,6 +307,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onExternalTagLost(Intent intent) {
+        tagPresent = false;
+
         runOnUiThread(() -> {
             setTagPresent(false);
 
@@ -456,7 +468,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     private void setContents(Tag tag, Intent intent) throws IOException {
 
-        if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
+        if(isTechType(tag, android.nfc.tech.IsoDep.class.getName())) {
+
+            IsoDep isoDep = IsoDep.get(tag);
+
+            LOGGER.info("Hi-layer response: " + ByteArrayHexStringConverter.toHexString(isoDep.getHiLayerResponse()));
+            LOGGER.info("Historical bytes: " + ByteArrayHexStringConverter.toHexString(isoDep.getHistoricalBytes()));
+            LOGGER.info("Timeout: " + isoDep.getTimeout());
+            LOGGER.info("Max transceive length: " + isoDep.getMaxTransceiveLength());
+
+        } else if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
                 // handle NTAG21x types
@@ -465,8 +486,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
                 NfcA nfcA = NfcA.get(tag);
                 if(nfcA == null) {
-                    throw new IllegalArgumentException("No NTAG");
+                    throw new IllegalArgumentException("No NfcA");
                 }
+                LOGGER.info("Timeout: " + nfcA.getTimeout());
+                LOGGER.info("Max transceive length: " + nfcA.getMaxTransceiveLength());
 
                 int size;
                 switch(type) {
@@ -539,6 +562,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 }
                 mifareUltralight.connect();
 
+                LOGGER.info("Timeout: " + mifareUltralight.getTimeout());
+                LOGGER.info("Max transceive length: " + mifareUltralight.getMaxTransceiveLength());
+
                 int length;
 
                 int type = mifareUltralight.getType();
@@ -554,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                         break;
                     }
                     default:
-                        throw new IllegalArgumentException("Unknown mifare ultralight tag " + type);
+                        throw new IllegalArgumentException("Unknown mifare ultralight tag type " + type);
                 }
 
                 // android read 4 and 4 pages of 4 bytes
