@@ -26,7 +26,7 @@ public class MifareUltralightMockTransceive implements MockTransceive {
             throw new IllegalStateException("Expected tag id 7 bytes");
         }
         System.arraycopy(tagId, 0, memory, 0, 3); // 0, 1, 2
-        System.arraycopy(tagId, 3, memory, 3, 4); // 4, 5, 6, 7
+        System.arraycopy(tagId, 3, memory, 4, 4); // 4, 5, 6, 7
     }
 
     public void setMemory(byte[] memory) {
