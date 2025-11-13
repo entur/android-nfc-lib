@@ -8,7 +8,6 @@ android {
 dependencies {
     api project(":nfc:external")
     api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
-
 }
 
 
