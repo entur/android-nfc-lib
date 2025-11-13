@@ -30,8 +30,11 @@ import no.entur.android.nfc.wrapper.tech.TagTechnology;
 public class MockTag extends TagImpl {
 
     protected static final byte[] EXTRA_ATQA_VALUE = new byte[] { 0x44, 0x03 };
-    protected static final short EXTRA_SAK_DESFIRE_EV1_VALUE = 0x20;
+    protected static final short EXTRA_SAK_ISODEP_EV1_VALUE = 0x20;
     protected static final short EXTRA_SAK_ULTRALIGHT_VALUE = 0x00;
+
+    protected static final int ISODEP_DEFAULT_MAX_TRANSCEIVE_LENGTH = 65279;
+    protected static final int MIFARE_ULTRALIGHT_DEFAULT_MAX_TRANSCEIVE_LENGTH = 253;
 
     public static Builder newBuilder() {
         return new Builder();
@@ -55,7 +58,7 @@ public class MockTag extends TagImpl {
         }
 
         public IsoDepBuilder withDesfireEV1() {
-            this.historicalBytes = new byte[]{(byte) 0x80}; // TODO more specific
+            this.historicalBytes = new byte[]{(byte) 0x80};
             return this;
         }
 
@@ -111,9 +114,12 @@ public class MockTag extends TagImpl {
         private MockMifareUltralight mifareUltralight;
         private byte[] tagId;
 
-        private int maxTransceiveLength = 1024;
+        /** bytes */
+        private int maxTransceiveLength = -1;
         private boolean extendedLengthApdusSupported = true;
-        private int timeout = 1000;
+
+        /** milliseconds */
+        private int timeout = 618;
 
         public Builder withTagId(byte[] tagId) {
             this.tagId = tagId;
@@ -178,10 +184,24 @@ public class MockTag extends TagImpl {
 
         public MockTag build() {
             if(isoDep != null && mifareUltralight != null) {
-                throw new IllegalStateException();
+                throw new IllegalStateException("Expected IsoDep or MifareUltralight, not both.");
             }
+            if(isoDep == null && mifareUltralight == null) {
+                throw new IllegalStateException("Expected IsoDep or MifareUltralight.");
+            }
+
             if(tagId == null) {
                 tagId = randomTagId();
+            }
+
+            if(maxTransceiveLength == -1) {
+                if(mifareUltralight != null) {
+                    maxTransceiveLength = MIFARE_ULTRALIGHT_DEFAULT_MAX_TRANSCEIVE_LENGTH;
+                } else if(isoDep != null) {
+                    maxTransceiveLength = ISODEP_DEFAULT_MAX_TRANSCEIVE_LENGTH;
+                } else {
+                    throw new RuntimeException();
+                }
             }
 
             if(mifareUltralight != null) {
@@ -242,7 +262,7 @@ public class MockTag extends TagImpl {
             List<Integer> tech = new ArrayList<Integer>();
 
             if(isoDep != null) {
-                addNfcATechBundle(EXTRA_SAK_DESFIRE_EV1_VALUE, bundles, tech);
+                addNfcATechBundle(EXTRA_SAK_ISODEP_EV1_VALUE, bundles, tech);
                 addDesfireTechBundle(isoDep, bundles, tech);
             }
 

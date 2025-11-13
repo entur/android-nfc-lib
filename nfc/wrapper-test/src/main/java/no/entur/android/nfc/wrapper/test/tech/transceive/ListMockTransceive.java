@@ -64,11 +64,11 @@ public class ListMockTransceive implements MockTransceive {
             return withTransceive(MockBasicTagTechnologyImpl.hex(command), raw, MockBasicTagTechnologyImpl.hex(response));
         }
 
-        public Builder withTransceiveNativeDesfireSelectApplication(String applicationIdentifier, String response) {
-            return withTransceiveNativeDesfireSelectApplication(MockBasicTagTechnologyImpl.hex(applicationIdentifier), MockBasicTagTechnologyImpl.hex(response));
+        public Builder withTransceiveNativeDesfireEV1SelectApplication(String applicationIdentifier, String response) {
+            return withTransceiveNativeDesfireEV1SelectApplication(MockBasicTagTechnologyImpl.hex(applicationIdentifier), MockBasicTagTechnologyImpl.hex(response));
         }
 
-        public Builder withTransceiveNativeDesfireSelectApplication(byte[] applicationIdentifier, byte[] response) {
+        public Builder withTransceiveNativeDesfireEV1SelectApplication(byte[] applicationIdentifier, byte[] response) {
             byte[] command = new byte[applicationIdentifier.length + 1];
             command[0] = SELECT_APPLICATION;
             System.arraycopy(applicationIdentifier, 0, command, 1, applicationIdentifier.length);
@@ -76,7 +76,7 @@ public class ListMockTransceive implements MockTransceive {
             return withTransceive(command, true, response);
         }
 
-        public Builder withTransceiveNativeDesfireSelectApplication(byte[] applicationIdentifier) {
+        public Builder withTransceiveNativeDesfireEV1SelectApplication(byte[] applicationIdentifier) {
             byte[] command = new byte[applicationIdentifier.length + 1];
             command[0] = SELECT_APPLICATION;
             System.arraycopy(applicationIdentifier, 0, command, 1, applicationIdentifier.length);
@@ -146,7 +146,7 @@ public class ListMockTransceive implements MockTransceive {
         Transceive transceive = transceiveList.get(index);
         index++;
 
-        if(transceive.command.test(data)) {
+        if(transceive.raw == raw && transceive.command.test(data)) {
             return transceive.response;
         }
 

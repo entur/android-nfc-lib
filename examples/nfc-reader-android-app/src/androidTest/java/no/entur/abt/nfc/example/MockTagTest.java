@@ -1,23 +1,17 @@
 package no.entur.abt.nfc.example;
 
-import static org.junit.Assert.assertTrue;
-
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.test.MockExternalReader;
 import no.entur.android.nfc.wrapper.test.MockTag;
 import no.entur.android.nfc.wrapper.test.tech.transceive.ListMockTransceive;
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.*;
 import static androidx.test.espresso.assertion.ViewAssertions.*;
 import static androidx.test.espresso.matcher.ViewMatchers.*;
 
@@ -49,7 +43,7 @@ public class MockTagTest {
 								isoDep.withDesfireEV1(); // desfire
 								isoDep.withTransceive(ListMockTransceive.newBuilder()
 										.withErrorResponse("63") // raw desfire response
-										.withTransceiveNativeDesfireSelectApplication("008057", "00") // raw desfire command
+										.withTransceiveNativeDesfireEV1SelectApplication("008057", "00") // raw desfire command
 										.build());
 							}
 					)
@@ -81,7 +75,7 @@ public class MockTagTest {
 						isoDep.withDesfireEV1(); // desfire
 						isoDep.withTransceive(ListMockTransceive.newBuilder()
 								.withErrorResponse("63") // raw desfire response
-								.withTransceiveNativeDesfireSelectApplication("008057", "00") // raw desfire command
+								.withTransceiveNativeDesfireEV1SelectApplication("008057", "00") // raw desfire command
 								.build());
 						}
 					)

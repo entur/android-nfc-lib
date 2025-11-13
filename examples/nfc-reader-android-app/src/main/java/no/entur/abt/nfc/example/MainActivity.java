@@ -486,8 +486,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
                 NfcA nfcA = NfcA.get(tag);
                 if(nfcA == null) {
-                    throw new IllegalArgumentException("No NTAG");
+                    throw new IllegalArgumentException("No NfcA");
                 }
+                LOGGER.info("Timeout: " + nfcA.getTimeout());
+                LOGGER.info("Max transceive length: " + nfcA.getMaxTransceiveLength());
 
                 int size;
                 switch(type) {
@@ -559,6 +561,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     throw new IllegalArgumentException("No Mifare Ultralight");
                 }
                 mifareUltralight.connect();
+
+                LOGGER.info("Timeout: " + mifareUltralight.getTimeout());
+                LOGGER.info("Max transceive length: " + mifareUltralight.getMaxTransceiveLength());
 
                 int length;
 
