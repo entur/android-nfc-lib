@@ -6,9 +6,12 @@ This project hosts tools for working with NFC on Android. Modules:
 
  * [wrapper](nfc/wrapper) - wrappers for classes in the `android.nfc` package
    * for working with external and internal tags in parallel
+ * [wrapper-utils](nfc/wrapper-utils) - wrapper-related utilities
+ * [wrapper-test](nfc/wrapper-test) - test support for `Tag`
  * [core](nfc/core) - various helpers for NFC support
    * abstract reader activities and Host Card Emulation services
  * [external](nfc/external) - basic support for external NFC readers
+ * [external-test](nfc/external-test) - test support for NFC readers (with publishing of `Tag` intents)
  * [external-acs](nfc/external-acs) - support for ACS readers external NFC readers
  * [external-minova](nfc/external-minova) - support for Minova MCR external NFC readers (over network)
  * [external-websocket](nfc/external-websocket) - support for interacting with a pool of external readers over websocket

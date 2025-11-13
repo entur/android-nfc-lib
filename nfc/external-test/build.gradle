@@ -1,0 +1,13 @@
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+    namespace "no.entur.android.nfc.external.test"
+}
+
+dependencies {
+    api project(":nfc:wrapper-test")
+    api project(":nfc:external")
+}
+
+
