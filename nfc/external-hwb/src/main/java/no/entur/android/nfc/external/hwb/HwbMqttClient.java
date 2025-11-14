@@ -7,5 +7,10 @@ import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAck;
 
 public class HwbMqttClient {
 
+    private Mqtt3AsyncClient client;
+
+    public void init() {
+        client.
+    }
 
 }

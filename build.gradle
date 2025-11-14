@@ -105,6 +105,7 @@ ext {
     logbackVersion = '1.5.12'
 
     hivemqMqttClientVersion = '1.2.1'
+    hwbMessagesVersion = "1.0.0-SNAPSHOT"
 }
 
 ext.commonDependencies = {

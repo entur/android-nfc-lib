@@ -1,20 +1,14 @@
 # mqtt-messages
-DTOs for JSON text messages over MQTT
+Simple utilities for messaging:
+
+ * sync method calls implemented via async messaging 
+    * timeout on no response
 
 ## Reader
 
- * discovery support generic topic
- * status polling specific topic (for specific reader)
+ * presence check
 
-## Tag 
+## Card
 
- * generic topic for all readers
-     * message contains reader identifier
-     * only some readers need ADPU exchange
-
-## ADPU
-
- * transmit to specific topic (for specific reader)
- * receive from generic topic
-   * message contains per-command identifier
+ * transcieve ADPU
 

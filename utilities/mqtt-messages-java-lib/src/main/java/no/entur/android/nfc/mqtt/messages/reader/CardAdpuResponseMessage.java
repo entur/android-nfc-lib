@@ -1,8 +1,8 @@
-package no.entur.android.nfc.mqtt.messages.card;
+package no.entur.android.nfc.mqtt.messages.reader;
 
-import no.entur.android.nfc.mqtt.messages.RequestResponseMessage;
+import no.entur.android.nfc.mqtt.messages.DefaultResponseMessage;
 
-public class CardAdpuResponseMessage<T> extends CardRequestResponseMessage<T> {
+public class CardAdpuResponseMessage<T> extends DefaultResponseMessage<T> {
 
     private final byte[] adpu;
 

@@ -1,20 +1,22 @@
 package no.entur.android.nfc.mqtt.messages;
 
+import java.io.IOException;
+
 public class RequestResponseMessageLock<T> {
 
-	private RequestResponseMessage<T> request;
+	private RequestMessage<T> request;
 	
-	private volatile RequestResponseMessage<T> response;
+	private volatile ResponseMessage<T> response;
 	
-	public RequestResponseMessageLock(RequestResponseMessage<T> request) {
+	public RequestResponseMessageLock(RequestMessage<T> request) {
 		this.request = request;
 	}
 	
-	public RequestResponseMessage<T> getRequest() {
+	public RequestMessage<T> getRequest() {
 		return request;
 	}
 	
-	public void onMessage(RequestResponseMessage<T> response) {
+	public void onResponseMessage(ResponseMessage<T> response) {
 		this.response = response;
 		
 		synchronized(this) {
@@ -22,7 +24,7 @@ public class RequestResponseMessageLock<T> {
 		}
 	}
 	
-	public RequestResponseMessage<T> waitForMessage(long duration) {
+	public ResponseMessage<T> waitForMessage(long duration) throws IOException {
 		try {
 			synchronized(this) {
 				if(response == null) {
@@ -30,7 +32,10 @@ public class RequestResponseMessageLock<T> {
 				}
 			}
 		} catch (InterruptedException e) {
-			return null;
+			throw new IOException("Interrupted waiting for response", e);
+		}
+		if(response == null) {
+			throw new RequestResponseTimeoutIOException();
 		}
 		return response;
 	}

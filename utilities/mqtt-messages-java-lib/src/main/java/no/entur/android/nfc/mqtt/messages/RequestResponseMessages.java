@@ -1,29 +1,27 @@
 package no.entur.android.nfc.mqtt.messages;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RequestResponseMessages<T> implements RequestResponseMessageListener<T>, Closeable {
+public class RequestResponseMessages<T> implements ResponseMessageListener<T>, Closeable {
 	
-	private final RequestResponseMessageListener<T> remote;
+	private final RequestMessageListener<T> remote;
 	
 	private Map<T, RequestResponseMessageLock<T>> inflight = new ConcurrentHashMap<>();
 
-	public RequestResponseMessages(RequestResponseMessageListener<T> remote) {
+	public RequestResponseMessages(RequestMessageListener<T> remote) {
 		this.remote = remote;
 	}
 
-	public void send(RequestResponseMessage<T> message) {
-		remote.onMessage(message);
-	}
-	
-	public RequestResponseMessage<T> sendAndWaitForResponse(RequestResponseMessage<T> message, long duration) {
-		
+	public ResponseMessage<T> sendAndWaitForResponse(RequestMessage<T> message, long duration) throws IOException {
+
+		// TODO should duration include time to send message?
 		RequestResponseMessageLock<T> lock = new RequestResponseMessageLock<>(message);
 		inflight.put(message.getCorrelationId(), lock);
 		
-		remote.onMessage(message);
+		remote.onRequestMessage(message, this);
 		try {
 			return lock.waitForMessage(duration);
 		} finally {
@@ -32,11 +30,11 @@ public class RequestResponseMessages<T> implements RequestResponseMessageListene
 	}
 	
 	@Override
-	public void onMessage(RequestResponseMessage<T> message) {
+	public void onResponseMessage(ResponseMessage<T> message) {
 		RequestResponseMessageLock<T> lock = inflight.remove(message.getCorrelationId());
 		if(lock != null) {
 			// i.e. request-response
-			lock.onMessage(message);
+			lock.onResponseMessage(message);
 		}
 	}
 
