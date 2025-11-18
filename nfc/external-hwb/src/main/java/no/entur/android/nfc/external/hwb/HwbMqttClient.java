@@ -10,7 +10,7 @@ public class HwbMqttClient {
     private Mqtt3AsyncClient client;
 
     public void init() {
-        client.
+
     }
 
 }

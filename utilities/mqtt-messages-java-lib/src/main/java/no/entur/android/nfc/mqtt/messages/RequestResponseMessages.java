@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RequestResponseMessages<T> implements ResponseMessageListener<T>, Closeable {
 	
-	private final RequestMessageListener<T> remote;
+	private RequestMessageListener<T> remote;
 	
 	private Map<T, RequestResponseMessageLock<T>> inflight = new ConcurrentHashMap<>();
 
@@ -46,5 +46,8 @@ public class RequestResponseMessages<T> implements ResponseMessageListener<T>, C
 			}
 		}
 	}
-	
+
+	public void setRemote(RequestMessageListener<T> remote) {
+		this.remote = remote;
+	}
 }

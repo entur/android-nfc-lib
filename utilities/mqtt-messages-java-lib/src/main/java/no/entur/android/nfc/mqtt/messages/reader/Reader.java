@@ -49,7 +49,6 @@ public abstract class Reader<T, D> implements RequestMessageListener<T>, Respons
 		return deviceId;
 	}
 
-
 	public boolean isPresent() throws IOException  {
 		ReaderPresentRequestMessage<T> request = createReaderPresentRequestMessage();
 		ResponseMessage<T> response = adpuExchange.sendAndWaitForResponse(request, presentTimeout);

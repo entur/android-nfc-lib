@@ -1,8 +1,10 @@
 package no.entur.android.nfc.mqtt.messages.reader;
 
-public class CardLeftFieldMessage<T> extends CardAdpuResponseMessage<T> {
+import no.entur.android.nfc.mqtt.messages.DefaultResponseMessage;
 
-    public CardLeftFieldMessage(byte[] adpu, T id) {
-        super(adpu, id);
+public class CardLeftFieldMessage<T> extends DefaultResponseMessage<T> {
+
+    public CardLeftFieldMessage(T correlationId) {
+        super(correlationId);
     }
 }
