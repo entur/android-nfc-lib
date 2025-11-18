@@ -590,6 +590,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 }
 
                 mifareUltralight.close();
+
+                LOGGER.info("Tag id is " + ByteArrayHexStringConverter.toHexString(mifareUltralight.getTag().getId()));
             }
 
             byte[] buffer = bout.toByteArray();
@@ -599,6 +601,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 builder.append( String.format("%02x", (k / 4)) + " " + ByteArrayHexStringConverter.toHexString(buffer, k, 4));
                 builder.append('\n');
             }
+
 
             LOGGER.info(builder.toString());
         }

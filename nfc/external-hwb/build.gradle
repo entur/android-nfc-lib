@@ -1,0 +1,16 @@
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+    namespace "no.entur.android.nfc.external.hwb"
+}
+
+dependencies {
+    api project(":nfc:external")
+    api project(":utilities:mqtt-messages-java-lib")
+    api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
+    api "hwb.utilities:hwb-messages-android:${hwbMessagesVersion}"
+
+}
+
+
