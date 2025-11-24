@@ -21,8 +21,6 @@ public class INFcTagBinder extends INfcTag.Stub {
 
 	private static final String NO_READER_MSG = "No reader";
 
-	private static final String UNSUPPORTED_OPERATION_MSG = "Unsupported operation";
-
 	protected TagProxyStore store;
 
 	protected ReaderTechnology readerTechnology;

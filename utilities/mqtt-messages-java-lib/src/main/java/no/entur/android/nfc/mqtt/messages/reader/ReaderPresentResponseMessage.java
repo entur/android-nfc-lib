@@ -1,9 +1,8 @@
 package no.entur.android.nfc.mqtt.messages.reader;
 
-import no.entur.android.nfc.mqtt.messages.DefaultResponseMessage;
+import no.entur.android.nfc.mqtt.messages.sync.DefaultSynchronizedResponseMessage;
 
-public class ReaderPresentResponseMessage<T> extends DefaultResponseMessage<T> {
-
+public class ReaderPresentResponseMessage<T> extends DefaultSynchronizedResponseMessage<T> {
 
     protected final boolean present;
 
@@ -11,6 +10,7 @@ public class ReaderPresentResponseMessage<T> extends DefaultResponseMessage<T> {
         super(correlationId);
         this.present = present;
     }
+
 
     public boolean isPresent() {
         return present;

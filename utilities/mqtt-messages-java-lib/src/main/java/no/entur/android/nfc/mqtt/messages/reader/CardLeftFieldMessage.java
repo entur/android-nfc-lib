@@ -1,10 +1,14 @@
 package no.entur.android.nfc.mqtt.messages.reader;
 
-import no.entur.android.nfc.mqtt.messages.DefaultResponseMessage;
+public class CardLeftFieldMessage<D>  {
 
-public class CardLeftFieldMessage<T> extends DefaultResponseMessage<T> {
+    private D deviceId;
 
-    public CardLeftFieldMessage(T correlationId) {
-        super(correlationId);
+    public D getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(D deviceId) {
+        this.deviceId = deviceId;
     }
 }

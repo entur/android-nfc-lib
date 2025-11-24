@@ -1,8 +1,10 @@
 package no.entur.android.nfc.mqtt.messages.reader;
 
-import no.entur.android.nfc.mqtt.messages.DeviceMessage;
+import no.entur.android.nfc.mqtt.messages.card.CardContext;
 
-public class CardEnteredFieldMessage<D> implements DeviceMessage<D> {
+public class CardEnteredFieldMessage<D, CC extends CardContext> {
+
+    private CC cardContext;
 
     private D deviceId;
 
@@ -14,4 +16,11 @@ public class CardEnteredFieldMessage<D> implements DeviceMessage<D> {
         this.deviceId = deviceId;
     }
 
+    public CC getCardContext() {
+        return cardContext;
+    }
+
+    public void setCardContext(CC cardContext) {
+        this.cardContext = cardContext;
+    }
 }
