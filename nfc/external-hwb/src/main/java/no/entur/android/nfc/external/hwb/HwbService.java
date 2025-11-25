@@ -1,15 +1,13 @@
 package no.entur.android.nfc.external.hwb;
 
-import android.os.Build;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
+import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedContext;
 import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedListener;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAck;
 import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAckReturnCode;
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
-import com.hivemq.client.mqtt.mqtt3.message.subscribe.suback.Mqtt3SubAck;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -18,16 +16,12 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
+import hwb.utilities.device.diagnostics.DiagnosticsSchema;
 import hwb.utilities.validators.nfc.NfcSchema;
-import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
-import no.entur.android.nfc.external.hwb.reader.HwbReader;
-import no.entur.android.nfc.mqtt.messages.JsonResponseMqttMessage;
+import no.entur.android.nfc.external.hwb.reader.HwbReaderService;
 
 public class HwbService implements MqttClientDisconnectedListener {
 
@@ -41,11 +35,11 @@ public class HwbService implements MqttClientDisconnectedListener {
 
     private long timeout = 1000;
 
-    private Map<String, HwbReader> readers;
+    private Map<String, HwbReaderService> readers;
 
     private ObjectMapper objectMapper;
 
-    public boolean addReader(String deviceId) {
+    public void addReader(String deviceId) {
         // subscribes to topics
         // /device/[deviceId]/diagnostics <- private topic
         // /validators/nfc/apdu/receive <- shared topic, used here only for ADPU exchange
@@ -55,17 +49,18 @@ public class HwbService implements MqttClientDisconnectedListener {
         try {
             Mqtt3ConnAck ack = connect.get(timeout, TimeUnit.MILLISECONDS);
             if(ack.getReturnCode() != Mqtt3ConnAckReturnCode.SUCCESS) {
-                return false;
+                LOGGER.warn("Unable to add reader {}, connection returned status {}", deviceId, ack.getReturnCode());
+                return;
             }
 
-            CompletableFuture<Mqtt3SubAck> send = client.subscribeWith().topicFilter("/device/" + deviceId + "/diagnostics").send();
+
+            LOGGER.info("Added reader {}", deviceId);
 
         } catch (Exception e) {
-            return false;
+            LOGGER.error("Problem adding reader {}", deviceId);
         }
 
     }
-
 
     public void subscribe() {
         // subscribes to topics
@@ -79,6 +74,31 @@ public class HwbService implements MqttClientDisconnectedListener {
                 .executor(executor)
                 .send();
 
+        client.subscribeWith()
+                .topicFilter("/device/diagnostics")
+                .qos(MqttQos.EXACTLY_ONCE)
+                .callback(this::diagnostics)
+                .executor(executor)
+                .send();
+    }
+
+    protected void diagnostics(Mqtt3Publish publish) {
+
+        // is this an NFC-capable device?
+        try {
+            byte[] payloadAsBytes = publish.getPayloadAsBytes();
+            DiagnosticsSchema receiveSchema = objectMapper.readValue(payloadAsBytes, DiagnosticsSchema.class);
+            if(readers.containsKey(receiveSchema.getDeviceId())) {
+                List<Object> functionality = receiveSchema.getFunctionality();
+                if(functionality != null && functionality.contains("nfc")) {
+                    addReader(receiveSchema.getDeviceId());
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Problem parsing ADPU MQTT message", e);
+        }
+
+
     }
 
     private void newCard(Mqtt3Publish publish) {
@@ -88,14 +108,14 @@ public class HwbService implements MqttClientDisconnectedListener {
 
 
             // do we have this reader? If not then create
-            HwbReader hwbReader = readers.get(schema.getDeviceId());
-            if(hwbReader == null) {
-                hwbReader = new HwbReader(objectMapper);
-                readers.put(schema.getDeviceId(), hwbReader);
+            HwbReaderService hwbReaderService = readers.get(schema.getDeviceId());
+            if(hwbReaderService == null) {
+                hwbReaderService = new HwbReaderService(objectMapper);
+                readers.put(schema.getDeviceId(), hwbReaderService);
 
                 // TODO broadcast reader present
-                if(hwbReader.connect()) {
-                    hwbReader.subscribe();
+                if(hwbReaderService.connect()) {
+                    hwbReaderService.subscribe();
                 } else {
                     throw new IllegalStateException("Unable to connect");
                 }
@@ -104,11 +124,17 @@ public class HwbService implements MqttClientDisconnectedListener {
             // broadcast tag present
             // add one or more metadata fields depending on what is included
 
-            hwbReader.newTag(schema);
+            hwbReaderService.newTag(schema);
         } catch (Exception e) {
             LOGGER.error("Problem deserializing message" ,e);
         }
     }
 
 
+    @Override
+    public void onDisconnected(@NotNull MqttClientDisconnectedContext context) {
+        // all readers disconnected
+
+
+    }
 }

@@ -44,6 +44,7 @@ import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
+import no.entur.android.nfc.external.remote.RemoteCommandReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
 import no.entur.android.nfc.wrapper.Tag;
@@ -217,24 +218,27 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onExternalNfcReaderOpened(Intent intent) {
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
-            AcrReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, AcrReader.class);
+            RemoteCommandReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, RemoteCommandReader.class);
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
 
-            // example: attempt to talk to a SAM on ACR 1252
-            if(reader.getName().contains("1252") && reader.getNumberOfSlots() == 2) {
-                try {
-                    byte[] power = reader.power(1, 2);
-                    LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
+            if(reader instanceof AcrReader) {
+                AcrReader acrReader = (AcrReader)reader;
+                // example: attempt to talk to a SAM on ACR 1252
+                if (acrReader.getName().contains("1252") && acrReader.getNumberOfSlots() == 2) {
+                    try {
+                        byte[] power = acrReader.power(1, 2);
+                        LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
 
-                    reader.setProtocol(1, 1);
+                        acrReader.setProtocol(1, 1);
 
-                    // try random command, expect response code 6986
-                    byte[] transmit = reader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
+                        // try random command, expect response code 6986
+                        byte[] transmit = acrReader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
 
-                    LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
-                } catch(Exception e) {
-                    LOGGER.error("Problem talking to SAM", e);
+                        LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
+                    } catch (Exception e) {
+                        LOGGER.error("Problem talking to SAM", e);
+                    }
                 }
             }
         }

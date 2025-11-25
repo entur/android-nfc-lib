@@ -12,6 +12,8 @@ import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -26,12 +28,15 @@ import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.hwb.HwbService;
 import no.entur.android.nfc.external.hwb.card.HwbCard;
 import no.entur.android.nfc.external.hwb.card.HwbCardContext;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageListener;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageRequest;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessageListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-public class HwbReader {
+public class HwbReaderService implements SynchronizedRequestMessageListener<String> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HwbReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HwbReaderService.class);
 
     private long timeout = 1000;
 
@@ -47,11 +52,11 @@ public class HwbReader {
 
     private Context context;
 
-    public HwbReader(ObjectMapper objectMapper) {
+    public HwbReaderService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
-    public boolean connect() throws Exception {
+    public boolean connect(hwb.utilities.device.diagnostics.DiagnosticsSchema diagnosticsSchema) throws Exception {
         CompletableFuture<@NotNull Mqtt3ConnAck> connect = client.connect();
 
         Mqtt3ConnAck ack = connect.get(timeout, TimeUnit.MILLISECONDS);
@@ -60,7 +65,10 @@ public class HwbReader {
 
             // TODO send a diagnostics message here and wait for response?
 
-            broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+            Intent intent = new Intent();
+            intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+
+            context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
 
             return true;
         }
@@ -82,21 +90,32 @@ public class HwbReader {
         client.subscribeWith()
                 .topicFilter("/validators/nfc")
                 .qos(MqttQos.EXACTLY_ONCE)
-                .callback(this::diagnostics)
+                .callback(this::card)
                 .executor(executor)
                 .send();
-
-
     }
 
     public void card(Mqtt3Publish publish) {
-        byte[] payloadAsBytes = publish.getPayloadAsBytes();
         try {
+            byte[] payloadAsBytes = publish.getPayloadAsBytes();
+
+            // cheap filtering first
+            String string = new String(payloadAsBytes, StandardCharsets.UTF_8);
+            if(!string.contains(readerContext.getDeviceId())) {
+                // not for us
+                return;
+            }
             ReceiveSchema receiveSchema = objectMapper.readValue(payloadAsBytes, ReceiveSchema.class);
+            if(!receiveSchema.getDeviceId().equals(readerContext.getDeviceId())) {
+                // not for us
+                return;
+            }
+
+
 
 
         } catch (Exception e) {
-
+            LOGGER.warn("Problem handling nfc message", e);
         }
 
 
@@ -110,11 +129,10 @@ public class HwbReader {
 
 
         } catch (Exception e) {
-
+            LOGGER.warn("Problem handling diagnostics message", e);
         }
 
     }
-
 
     public void unsubscribe() {
         client.unsubscribeWith()
@@ -128,8 +146,10 @@ public class HwbReader {
         broadcast(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
     }
 
-
     public void connectReader() {
+
+
+        // TODO add reader controls
         broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
     }
 
@@ -170,5 +190,10 @@ public class HwbReader {
         Intent intent = new Intent();
         intent.setAction(action);
         context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
+    }
+
+    @Override
+    public void onRequestMessage(SynchronizedRequestMessageRequest<String> message, SynchronizedResponseMessageListener<String> listener) throws IOException {
+
     }
 }

@@ -2,7 +2,6 @@
 repositories repos
 
 dependencies {
-    api project(":nfc:wrapper")
     api ("com.squareup.okhttp3:okhttp:${okHttp3Version}")
     api ("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     api ("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")

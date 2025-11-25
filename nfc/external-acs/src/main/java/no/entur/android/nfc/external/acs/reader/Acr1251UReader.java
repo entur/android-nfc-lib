@@ -129,7 +129,6 @@ public class Acr1251UReader extends AcrReader {
 			IAcr1251UReaderControl iin = IAcr1251UReaderControl.Stub.asInterface(binder);
 
 			return new Acr1251UReader(name, iin);
-
 		}
 
 		@Override

@@ -1,6 +1,5 @@
 package no.entur.android.nfc.external.hwb.card;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
@@ -16,8 +15,6 @@ import java.util.concurrent.Executor;
 
 import hwb.utilities.validators.nfc.CardContent;
 import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
-import no.entur.android.nfc.external.hwb.reader.HwbReader;
-import no.entur.android.nfc.mqtt.messages.ObjectMqttMessage;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageListener;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageRequest;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
