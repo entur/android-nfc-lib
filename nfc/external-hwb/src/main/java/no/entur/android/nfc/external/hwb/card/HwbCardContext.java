@@ -16,7 +16,11 @@ public class HwbCardContext implements CardContext  {
     private byte[] historicalBytes;
     private byte[] uid;
 
+    private boolean closed = false;
+
     private TransmitSchema.ApduType apduType;
+
+    private long transcieveTimeout;
 
     public TransmitSchema.ApduType getApduType() {
         return apduType;
@@ -47,5 +51,21 @@ public class HwbCardContext implements CardContext  {
 
     public String getDeviceId() {
         return deviceId;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
+
+    public void setTranscieveTimeout(long transcieveTimeout) {
+        this.transcieveTimeout = transcieveTimeout;
+    }
+
+    public long getTranscieveTimeout() {
+        return transcieveTimeout;
     }
 }

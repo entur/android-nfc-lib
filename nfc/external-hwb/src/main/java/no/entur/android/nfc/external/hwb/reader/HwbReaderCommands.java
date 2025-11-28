@@ -6,7 +6,7 @@ import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessag
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessageListener;
 import no.entur.android.nfc.mqtt.messages.reader.ReaderCommands;
 
-public class HwbReaderCommands extends ReaderCommands<String, HwbReaderContext> implements SynchronizedRequestMessageListener<String> {
+public class HwbReaderCommands extends ReaderCommands<String, HwbReaderContext>  {
 
     // subscribes to topics
     // /device/[deviceId]/diagnostics <- private topic
@@ -20,19 +20,12 @@ public class HwbReaderCommands extends ReaderCommands<String, HwbReaderContext> 
 
         private SynchronizedRequestResponseMessages synchronizedRequestResponseMessages;
 
-        private long presentTimeout;
-
         private HwbReaderMessageConverter readerMessageConverter;
 
         private HwbReaderContext readerContext;
 
         public Builder withSynchronizedRequestResponseMessages(SynchronizedRequestResponseMessages synchronizedRequestResponseMessages) {
             this.synchronizedRequestResponseMessages = synchronizedRequestResponseMessages;
-            return this;
-        }
-
-        public Builder withPresentTimeout(long presentTimeout) {
-            this.presentTimeout = presentTimeout;
             return this;
         }
 
@@ -47,17 +40,13 @@ public class HwbReaderCommands extends ReaderCommands<String, HwbReaderContext> 
         }
 
         public HwbReaderCommands build() {
-            return new HwbReaderCommands(readerContext, synchronizedRequestResponseMessages, presentTimeout, readerMessageConverter);
+            return new HwbReaderCommands(readerContext, synchronizedRequestResponseMessages, readerMessageConverter);
         }
     }
 
-    public HwbReaderCommands(HwbReaderContext readerContext, SynchronizedRequestResponseMessages readerExchange, long presentTimeout, HwbReaderMessageConverter converter) {
-        super(readerContext, readerExchange, presentTimeout, converter);
+    public HwbReaderCommands(HwbReaderContext readerContext, SynchronizedRequestResponseMessages readerExchange, HwbReaderMessageConverter converter) {
+        super(readerContext, readerExchange, converter);
     }
 
-    @Override
-    public void onRequestMessage(SynchronizedRequestMessageRequest<String> message, SynchronizedResponseMessageListener<String> listener) {
-
-    }
 
 }

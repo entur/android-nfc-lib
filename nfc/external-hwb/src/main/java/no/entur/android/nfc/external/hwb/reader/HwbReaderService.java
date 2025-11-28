@@ -3,21 +3,9 @@ package no.entur.android.nfc.external.hwb.reader;
 import android.content.Context;
 import android.content.Intent;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hivemq.client.mqtt.datatypes.MqttQos;
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
-import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAck;
-import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAckReturnCode;
-import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 import hwb.utilities.device.deviceId.diagnostics.DiagnosticsSchema;
 import hwb.utilities.validators.nfc.CardContent;
@@ -25,132 +13,82 @@ import hwb.utilities.validators.nfc.NfcSchema;
 import hwb.utilities.validators.nfc.apdu.deviceId.transmit.TransmitSchema;
 import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.hwb.HwbMqttClient;
 import no.entur.android.nfc.external.hwb.HwbService;
-import no.entur.android.nfc.external.hwb.card.HwbCard;
+import no.entur.android.nfc.external.hwb.card.HwbCardService;
 import no.entur.android.nfc.external.hwb.card.HwbCardContext;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageListener;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageRequest;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessageListener;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-public class HwbReaderService implements SynchronizedRequestMessageListener<String> {
+public class HwbReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HwbReaderService.class);
 
-    private long timeout = 1000;
-
-    private Mqtt3AsyncClient client;
-
-    private Executor executor;
-
     private HwbReaderContext readerContext;
 
-    private ObjectMapper objectMapper;
+    private HwbReaderCommands readerCommands;
 
-    private HwbCard hwbCard;
+    private HwbCardService hwbCardService;
 
     private Context context;
 
-    public HwbReaderService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    private SynchronizedRequestResponseMessages<String> diagnosticsRequestResponseMessages = new SynchronizedRequestResponseMessages<>();
+
+    private final HwbMqttClient hwbMqttClient;
+
+    public HwbReaderService(Context context, HwbMqttClient hwbMqttClient, SynchronizedRequestResponseMessages<UUID> adpuRequestResponseMessages, HwbReaderContext readerContext, long transcieveTimeout) {
+        this.context = context;
+        this.hwbMqttClient = hwbMqttClient;
+        this.readerContext = readerContext;
+
+        this.hwbCardService = new HwbCardService(adpuRequestResponseMessages, hwbMqttClient, transcieveTimeout);
+
+        this.readerCommands = HwbReaderCommands.newBuilder()
+                .withReaderContext(readerContext)
+                .withReaderMessageConverter(new HwbReaderMessageConverter())
+                .withSynchronizedRequestResponseMessages(diagnosticsRequestResponseMessages)
+                .build();
     }
 
-    public boolean connect(hwb.utilities.device.diagnostics.DiagnosticsSchema diagnosticsSchema) throws Exception {
-        CompletableFuture<@NotNull Mqtt3ConnAck> connect = client.connect();
+    public void open() {
+        hwbMqttClient.subscribe("/device/" + readerContext.getDeviceId() + "/diagnostics", DiagnosticsSchema.class, this::diagnostics);
 
-        Mqtt3ConnAck ack = connect.get(timeout, TimeUnit.MILLISECONDS);
-
-        if(ack.getReturnCode() == Mqtt3ConnAckReturnCode.SUCCESS) {
-
-            // TODO send a diagnostics message here and wait for response?
-
-            Intent intent = new Intent();
-            intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
-
-            context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
-
-            return true;
-        }
-        return false;
+        broadcastOpened();
     }
 
-    public void subscribe() {
-        // subscribes to topics
-        // /device/[deviceId]/diagnostics <- private topic
-        // /validators/nfc/apdu/receive <- shared topic, used here only for ADPU exchange
-
-        client.subscribeWith()
-                .topicFilter("/device/" + readerContext.getDeviceId() + "/diagnostics")
-                .qos(MqttQos.EXACTLY_ONCE)
-                .callback(this::diagnostics)
-                .executor(executor)
-                .send();
-
-        client.subscribeWith()
-                .topicFilter("/validators/nfc")
-                .qos(MqttQos.EXACTLY_ONCE)
-                .callback(this::card)
-                .executor(executor)
-                .send();
-    }
-
-    public void card(Mqtt3Publish publish) {
+    public void close() {
         try {
-            byte[] payloadAsBytes = publish.getPayloadAsBytes();
-
-            // cheap filtering first
-            String string = new String(payloadAsBytes, StandardCharsets.UTF_8);
-            if(!string.contains(readerContext.getDeviceId())) {
-                // not for us
-                return;
-            }
-            ReceiveSchema receiveSchema = objectMapper.readValue(payloadAsBytes, ReceiveSchema.class);
-            if(!receiveSchema.getDeviceId().equals(readerContext.getDeviceId())) {
-                // not for us
-                return;
-            }
-
-
-
-
-        } catch (Exception e) {
-            LOGGER.warn("Problem handling nfc message", e);
+            hwbMqttClient.unsubscribe("/device/" + readerContext.getDeviceId() + "/diagnostics");
+        } finally {
+            broadcastClosed();
         }
-
-
     }
 
-    public void diagnostics(Mqtt3Publish publish) {
-        byte[] payloadAsBytes = publish.getPayloadAsBytes();
-
-        try {
-            DiagnosticsSchema diagnosticsSchema = objectMapper.readValue(payloadAsBytes, DiagnosticsSchema.class);
-
-
-        } catch (Exception e) {
-            LOGGER.warn("Problem handling diagnostics message", e);
-        }
-
-    }
-
-    public void unsubscribe() {
-        client.unsubscribeWith()
-                .topicFilter("/device/" + readerContext.getDeviceId() + "/diagnostics")
-                .send();
-    }
-
-    public void disconnect() {
-        client.disconnect();
-
+    public void broadcastClosed() {
         broadcast(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
     }
 
-    public void connectReader() {
-
-
+    public void broadcastOpened() {
         // TODO add reader controls
         broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+    }
+
+    protected void diagnostics(DiagnosticsSchema diagnosticsSchema) {
+        try {
+            diagnosticsRequestResponseMessages.onResponseMessage(new HwbReaderPresentSynchronizedResponseMessage(diagnosticsSchema, true));
+        } catch (Exception e) {
+            LOGGER.warn("Problem handling diagnostics message", e);
+        }
+    }
+
+    public void onAdpuResponse(ReceiveSchema receiveSchema) {
+        HwbCardService card = this.hwbCardService;
+        if(card != null) {
+            card.onAdpuResponse(receiveSchema);
+        } else {
+            LOGGER.info("Not forwarding ADPU response for reader {}; no card", readerContext.getDeviceId());
+        }
     }
 
     public void newTag(NfcSchema schema) {
@@ -169,10 +107,15 @@ public class HwbReaderService implements SynchronizedRequestMessageListener<Stri
             context.setApduType(TransmitSchema.ApduType.ISO_7816);
         }
 
-        hwbCard.setContext(context);
+        hwbCardService.setCardContext(context);
 
-        hwbCard.createTag(travelCardNumber, token, cardContent);
 
+        // broadcast tag present
+        // add one or more metadata fields depending on what is included
+        // block any previuos tag from talking to the new one
+        hwbCardService.createTag(travelCardNumber, token, cardContent);
+
+        // TODO
     }
 
     private boolean isDesfire(NfcSchema schema) {
@@ -192,8 +135,7 @@ public class HwbReaderService implements SynchronizedRequestMessageListener<Stri
         context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
     }
 
-    @Override
-    public void onRequestMessage(SynchronizedRequestMessageRequest<String> message, SynchronizedResponseMessageListener<String> listener) throws IOException {
-
+    public boolean isPresent(long timeout) throws IOException {
+        return readerCommands.isPresent(timeout);
     }
 }

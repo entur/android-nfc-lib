@@ -6,15 +6,15 @@ import no.entur.android.nfc.mqtt.messages.reader.ReaderContext;
 
 public class HwbReaderContext implements ReaderContext {
 
-    protected String deviceId;
+    // TODO add diagnostics message here?
 
-    protected String name;
+    protected String deviceId;
 
     public String getDeviceId() {
         return deviceId;
     }
 
-    public String getName() {
-        return name;
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }
