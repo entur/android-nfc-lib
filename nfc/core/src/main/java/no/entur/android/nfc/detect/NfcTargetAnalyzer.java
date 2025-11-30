@@ -51,6 +51,7 @@ public class NfcTargetAnalyzer {
 
         public Builder add(Consumer<TargetBuilder> builder) {
             TargetBuilder target = new TargetBuilder();
+            target.order = targets.size();
             builder.accept(target);
             targets.add(target.build());
             return this;
@@ -72,6 +73,8 @@ public class NfcTargetAnalyzer {
 
     public static class TargetBuilder {
 
+        // preserve natural order
+        private int order;
         private String id;
 
         private TechnologyAnalyzer technologyAnalyzer;
@@ -111,6 +114,7 @@ public class NfcTargetAnalyzer {
             target.technologyAnalyzer = technologyAnalyzer;
             target.selectApplicationAnalyzer = selectApplicationAnalyzer;
             target.uidAnalyzer = uidAnalyzer;
+            target.order = order;
             return target;
         }
 
@@ -124,6 +128,8 @@ public class NfcTargetAnalyzer {
         private TechnologyAnalyzer technologyAnalyzer;
         private UidAnalyzer uidAnalyzer;
         private SelectApplicationAnalyzer selectApplicationAnalyzer;
+
+        private int order;
 
         public boolean isEnabled() {
             return enabled;
@@ -147,7 +153,8 @@ public class NfcTargetAnalyzer {
                 return uidAnalyzeResult;
             }
 
-            return 0;
+            // preserve natural order if everything else is equal
+            return Integer.compare(target.order, o.target.order);
         }
     }
 
