@@ -20,7 +20,10 @@ public class HwbCardContext implements CardContext  {
 
     private TransmitSchema.ApduType apduType;
 
-    private long transcieveTimeout;
+    private long transcieveTimeout = 687;
+
+    public HwbCardContext() {
+    }
 
     public TransmitSchema.ApduType getApduType() {
         return apduType;
@@ -67,5 +70,25 @@ public class HwbCardContext implements CardContext  {
 
     public long getTranscieveTimeout() {
         return transcieveTimeout;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public void setTechnologies(List<String> technologies) {
+        this.technologies = technologies;
+    }
+
+    public void setAtr(byte[] atr) {
+        this.atr = atr;
+    }
+
+    public void setHistoricalBytes(byte[] historicalBytes) {
+        this.historicalBytes = historicalBytes;
+    }
+
+    public void setUid(byte[] uid) {
+        this.uid = uid;
     }
 }

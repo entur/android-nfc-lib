@@ -2,13 +2,22 @@ package no.entur.android.nfc.external.hwb.reader;
 
 import java.util.UUID;
 
+import hwb.utilities.device.diagnostics.DiagnosticsSchema;
 import no.entur.android.nfc.mqtt.messages.reader.ReaderContext;
 
 public class HwbReaderContext implements ReaderContext {
 
-    // TODO add diagnostics message here?
-
     protected String deviceId;
+
+    protected DiagnosticsSchema diagnosticsSchema;
+
+    public DiagnosticsSchema getDiagnosticsSchema() {
+        return diagnosticsSchema;
+    }
+
+    public void setDiagnosticsSchema(DiagnosticsSchema diagnosticsSchema) {
+        this.diagnosticsSchema = diagnosticsSchema;
+    }
 
     public String getDeviceId() {
         return deviceId;

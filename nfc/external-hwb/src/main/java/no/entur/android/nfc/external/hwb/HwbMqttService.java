@@ -23,28 +23,41 @@ import hwb.utilities.device.diagnostics.request.RequestSchema;
 import hwb.utilities.validators.nfc.NfcSchema;
 import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
+import no.entur.android.nfc.external.hwb.card.HwbTagProxy;
+import no.entur.android.nfc.external.hwb.intent.HwbService;
+import no.entur.android.nfc.external.hwb.intent.bind.HwbServiceBinder;
+import no.entur.android.nfc.external.hwb.intent.command.HwbServiceCommandsWrapper;
 import no.entur.android.nfc.external.hwb.reader.HwbReaderContext;
 import no.entur.android.nfc.external.hwb.reader.HwbReaderService;
+import no.entur.android.nfc.external.service.tag.DefaultTagProxyStore;
+import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
-public class HwbService implements MqttClientDisconnectedListener {
+public class HwbMqttService implements MqttClientDisconnectedListener {
 
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HwbService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HwbMqttService.class);
+    protected final HwbService hwbService;
 
     protected Map<String, HwbReaderService> readers = new ConcurrentHashMap<>();
 
-    protected SynchronizedRequestResponseMessages<UUID> adpuRequestResponseMessages = new SynchronizedRequestResponseMessages<>();
+    protected SynchronizedRequestResponseMessages<UUID> apduRequestResponseMessages = new SynchronizedRequestResponseMessages<>();
 
-    private long transcieveTimeout;
-    protected Context context;
-    protected HwbMqttClient client;
+    protected final long transcieveTimeout;
+    protected final Context context;
+    protected final HwbMqttClient client;
 
-    public HwbService(Context context, HwbMqttClient client, long transcieveTimeout) {
+    protected final TagProxyStore tagProxyStore = new DefaultTagProxyStore();
+
+    public HwbMqttService(Context context, HwbMqttClient client, long transcieveTimeout) {
         this.context = context;
         this.client = client;
         this.transcieveTimeout = transcieveTimeout;
+
+        HwbServiceBinder binder = new HwbServiceBinder();
+        binder.setServiceCommandsWrapper(new HwbServiceCommandsWrapper(this));
+        this.hwbService = new HwbService("HWB", binder);
     }
 
     public void addReader(String deviceId) {
@@ -94,15 +107,16 @@ public class HwbService implements MqttClientDisconnectedListener {
     public void broadcastStarted() {
         Intent intent = new Intent();
         intent.setAction(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
+        intent.putExtra(ExternalNfcServiceCallback.EXTRA_SERVICE_CONTROL, hwbService);
 
-        context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
+        context.sendBroadcast(intent, HwbMqttService.ANDROID_PERMISSION_NFC);
     }
 
     public void broadcastStopped() {
         Intent intent = new Intent();
         intent.setAction(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
 
-        context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
+        context.sendBroadcast(intent, HwbMqttService.ANDROID_PERMISSION_NFC);
     }
 
     public void subscribe() {
@@ -131,8 +145,8 @@ public class HwbService implements MqttClientDisconnectedListener {
         if (functionality != null && functionality.contains("nfc")) {
 
             synchronized (readers) {
-                if (readers.containsKey(receiveSchema.getDeviceId())) {
-                    addReader(receiveSchema.getDeviceId());
+                if (!readers.containsKey(receiveSchema.getDeviceId())) {
+                    addReader(receiveSchema.getDeviceId(), receiveSchema);
                 } else {
                     LOGGER.info("Already have reader " + receiveSchema.getDeviceId());
                 }
@@ -140,6 +154,17 @@ public class HwbService implements MqttClientDisconnectedListener {
         } else {
             LOGGER.info("Not adding non-NFC reader " + receiveSchema.getDeviceId());
         }
+    }
+
+    public HwbReaderService addReader(String deviceId, DiagnosticsSchema receiveSchema) {
+        HwbReaderContext readerContext = new HwbReaderContext();
+        readerContext.setDeviceId(deviceId);
+        readerContext.setDiagnosticsSchema(receiveSchema);
+
+        HwbReaderService hwbReaderService = new HwbReaderService(context, client, apduRequestResponseMessages, readerContext, transcieveTimeout, tagProxyStore);
+        readers.put(deviceId, hwbReaderService);
+
+        return hwbReaderService;
     }
 
     public void onNewCard(NfcSchema schema) {
@@ -151,26 +176,24 @@ public class HwbService implements MqttClientDisconnectedListener {
     @NonNull
     private HwbReaderService spawnReader(String deviceId) {
         // do we have this reader? If not then create
+
         HwbReaderService hwbReaderService = readers.get(deviceId);
         if(hwbReaderService == null) {
             synchronized (readers) {
                 hwbReaderService = readers.get(deviceId);
                 if (hwbReaderService == null) {
 
-                    HwbReaderContext readerContext = new HwbReaderContext();
-                    readerContext.setDeviceId(deviceId);
+                    // TODO send diagnostics message for this reader here and now?
 
-                    hwbReaderService = new HwbReaderService(context, client, adpuRequestResponseMessages, readerContext, transcieveTimeout);
-                    readers.put(deviceId, hwbReaderService);
+                    // add as a generic reader, we do not know which type yet
+                    hwbReaderService = addReader(deviceId, null);
 
-                    // TODO broadcast reader present
                     hwbReaderService.open();
                 }
             }
         }
         return hwbReaderService;
     }
-
 
     public void adpuResponse(ReceiveSchema receiveSchema) {
         try {
@@ -193,7 +216,7 @@ public class HwbService implements MqttClientDisconnectedListener {
         onDisconnected();
     }
 
-    protected void discoverReaders() {
+    public void discoverReaders() {
         try {
             // ping readers
             // https://github.com/entur/hwb/blob/main/specifications/device/diagnostics/request/request.md

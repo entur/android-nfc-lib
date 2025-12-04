@@ -13,10 +13,23 @@ import hwb.utilities.validators.nfc.NfcSchema;
 import hwb.utilities.validators.nfc.apdu.deviceId.transmit.TransmitSchema;
 import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.hwb.HwbMqttClient;
-import no.entur.android.nfc.external.hwb.HwbService;
+import no.entur.android.nfc.external.hwb.HwbMqttService;
 import no.entur.android.nfc.external.hwb.card.HwbCardService;
 import no.entur.android.nfc.external.hwb.card.HwbCardContext;
+import no.entur.android.nfc.external.hwb.intent.DefaultHwbReader;
+import no.entur.android.nfc.external.hwb.intent.HwbReader;
+import no.entur.android.nfc.external.hwb.intent.HwbService;
+import no.entur.android.nfc.external.hwb.intent.HwbTransceiveResultExceptionMapper;
+import no.entur.android.nfc.external.hwb.intent.bind.DefaultHwbReaderBinder;
+import no.entur.android.nfc.external.hwb.intent.bind.HwbReaderTechnology;
+import no.entur.android.nfc.external.hwb.intent.bind.HwbServiceBinder;
+import no.entur.android.nfc.external.hwb.intent.command.DefaultHwbReaderCommandsWrapper;
+import no.entur.android.nfc.external.hwb.intent.command.HwbServiceCommandsWrapper;
+import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.external.service.tag.TagProxyStore;
+import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
 import org.slf4j.Logger;
@@ -24,54 +37,84 @@ import org.slf4j.LoggerFactory;
 public class HwbReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HwbReaderService.class);
+    private final INFcTagBinder infcTagBinder;
 
-    private HwbReaderContext readerContext;
+    protected HwbReaderContext readerContext;
 
-    private HwbReaderCommands readerCommands;
+    protected HwbReaderCommands readerCommands;
 
-    private HwbCardService hwbCardService;
+    protected HwbCardService hwbCardService;
 
-    private Context context;
+    protected Context context;
 
-    private SynchronizedRequestResponseMessages<String> diagnosticsRequestResponseMessages = new SynchronizedRequestResponseMessages<>();
+    protected SynchronizedRequestResponseMessages<String> diagnosticsRequestResponseMessages = new SynchronizedRequestResponseMessages<>();
 
-    private final HwbMqttClient hwbMqttClient;
+    protected final HwbMqttClient hwbMqttClient;
 
-    public HwbReaderService(Context context, HwbMqttClient hwbMqttClient, SynchronizedRequestResponseMessages<UUID> adpuRequestResponseMessages, HwbReaderContext readerContext, long transcieveTimeout) {
+    protected HwbReader hwbReader;
+
+    protected final TagProxyStore tagProxyStore;
+
+    public HwbReaderService(Context context, HwbMqttClient hwbMqttClient, SynchronizedRequestResponseMessages<UUID> adpuRequestResponseMessages, HwbReaderContext readerContext, long transcieveTimeout, TagProxyStore tagProxyStore) {
         this.context = context;
         this.hwbMqttClient = hwbMqttClient;
         this.readerContext = readerContext;
-
-        this.hwbCardService = new HwbCardService(adpuRequestResponseMessages, hwbMqttClient, transcieveTimeout);
 
         this.readerCommands = HwbReaderCommands.newBuilder()
                 .withReaderContext(readerContext)
                 .withReaderMessageConverter(new HwbReaderMessageConverter())
                 .withSynchronizedRequestResponseMessages(diagnosticsRequestResponseMessages)
                 .build();
+
+        this.tagProxyStore = tagProxyStore;
+
+        // TODO pass type via reader context? what if not available?
+        DefaultHwbReaderBinder binder = new DefaultHwbReaderBinder();
+        binder.setReaderCommandsWrapper(new DefaultHwbReaderCommandsWrapper(readerCommands));
+        this.hwbReader = new DefaultHwbReader("HWB", binder);
+
+        infcTagBinder = new INFcTagBinder(tagProxyStore);
+        infcTagBinder.setReaderTechnology(new HwbReaderTechnology());
+
+        this.hwbCardService = new HwbCardService(context, adpuRequestResponseMessages, hwbMqttClient, transcieveTimeout, infcTagBinder, tagProxyStore);
     }
 
     public void open() {
-        hwbMqttClient.subscribe("/device/" + readerContext.getDeviceId() + "/diagnostics", DiagnosticsSchema.class, this::diagnostics);
+        subscribe();
 
         broadcastOpened();
     }
 
     public void close() {
         try {
-            hwbMqttClient.unsubscribe("/device/" + readerContext.getDeviceId() + "/diagnostics");
+            unsubscribe();
         } finally {
             broadcastClosed();
         }
     }
 
+    private void subscribe() {
+        hwbMqttClient.subscribe("/device/" + readerContext.getDeviceId() + "/diagnostics", DiagnosticsSchema.class, this::diagnostics);
+    }
+
+    private void unsubscribe() {
+        hwbMqttClient.unsubscribe("/device/" + readerContext.getDeviceId() + "/diagnostics");
+    }
+
     public void broadcastClosed() {
-        broadcast(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+        Intent intent = new Intent();
+        intent.setAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+
+        context.sendBroadcast(intent, HwbMqttService.ANDROID_PERMISSION_NFC);
     }
 
     public void broadcastOpened() {
-        // TODO add reader controls
-        broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+        Intent intent = new Intent();
+        intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+
+        intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, hwbReader);
+
+        context.sendBroadcast(intent, HwbMqttService.ANDROID_PERMISSION_NFC);
     }
 
     protected void diagnostics(DiagnosticsSchema diagnosticsSchema) {
@@ -99,23 +142,21 @@ public class HwbReaderService {
         String travelCardNumber = schema.getTravelCardNumber();
 
         HwbCardContext context = new HwbCardContext();
+        context.setDeviceId(readerContext.getDeviceId());
 
         // is this a desfire card? if so then desfire native commands
         if(isDesfire(schema)) {
             context.setApduType(TransmitSchema.ApduType.DESFIRE);
+            context.setHistoricalBytes(new byte[]{(byte) 0x80});
         } else {
             context.setApduType(TransmitSchema.ApduType.ISO_7816);
+            context.setHistoricalBytes(new byte[]{});
         }
+        // TODO set transcieve timeout?
+        //context.setTranscieveTimeout();
 
         hwbCardService.setCardContext(context);
-
-
-        // broadcast tag present
-        // add one or more metadata fields depending on what is included
-        // block any previuos tag from talking to the new one
         hwbCardService.createTag(travelCardNumber, token, cardContent);
-
-        // TODO
     }
 
     private boolean isDesfire(NfcSchema schema) {
@@ -128,14 +169,8 @@ public class HwbReaderService {
         return false;
     }
 
-    public void broadcast(String action) {
-        LOGGER.info("Broadcast " + action);
-        Intent intent = new Intent();
-        intent.setAction(action);
-        context.sendBroadcast(intent, HwbService.ANDROID_PERMISSION_NFC);
-    }
-
     public boolean isPresent(long timeout) throws IOException {
         return readerCommands.isPresent(timeout);
     }
+
 }

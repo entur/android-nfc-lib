@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.minova.reader;
+package no.entur.android.nfc.external.hwb.intent.bind;
 
 import android.os.RemoteException;
 
@@ -8,16 +8,17 @@ import no.entur.android.nfc.wrapper.ErrorCodes;
 // this is mostly a dummy implementation
 // there is a bit of api disconnect between a service with one reader and a service with multiple readers.
 
-public class MinovaReaderTechnology implements ReaderTechnology {
+public class HwbReaderTechnology implements ReaderTechnology {
 
     // assumed default value
     protected int maxTransieveLength = 253;
 
-    public MinovaReaderTechnology() {
+    public HwbReaderTechnology() {
     }
 
     @Override
     public int setTimeout(int technology, int timeout) throws RemoteException {
+        // TODO Auto-generated method stub
         return ErrorCodes.SUCCESS;
     }
 
@@ -33,7 +34,6 @@ public class MinovaReaderTechnology implements ReaderTechnology {
 
     @Override
     public boolean canMakeReadOnly(int ndefType) throws RemoteException {
-        // TODO Auto-generated method stub
         return false;
     }
 
