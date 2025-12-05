@@ -5,6 +5,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.RemoteException;
 
+import java.util.List;
+
 import no.entur.android.nfc.external.hwb.reader.IHwbServiceControl;
 import no.entur.android.nfc.external.remote.RemoteCommandException;
 import no.entur.android.nfc.external.remote.RemoteCommandReader;
@@ -27,6 +29,17 @@ public class HwbService extends RemoteCommandReader {
         }
 
         readVoid(response);
+    }
+
+    public List<String> getReaderIds() throws HwbReaderException {
+        byte[] response;
+        try {
+            response = serviceControl.getReaderIds();
+        } catch (RemoteException e) {
+            throw new HwbReaderException(e);
+        }
+
+        return readStrings(response);
     }
 
     @Override

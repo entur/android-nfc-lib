@@ -4,4 +4,6 @@ interface IHwbServiceControl {
 
     byte[] discoverReaders();
 
+    byte[] getReaderIds();
+
 }

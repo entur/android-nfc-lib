@@ -1,6 +1,5 @@
 package no.entur.android.nfc.wrapper.test;
 
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.core.util.Consumer;
@@ -16,10 +15,10 @@ import no.entur.android.nfc.wrapper.test.tech.MockBasicTagTechnology;
 import no.entur.android.nfc.wrapper.test.tech.MockBasicTagTechnologyImpl;
 import no.entur.android.nfc.wrapper.test.tech.MockIsoDep;
 import no.entur.android.nfc.wrapper.test.tech.MockMifareUltralight;
+import no.entur.android.nfc.wrapper.test.tech.transceive.MockParcelableTransceive;
 import no.entur.android.nfc.wrapper.test.tech.transceive.MockTransceive;
 import no.entur.android.nfc.wrapper.test.tech.transceive.ultralight.MifareUltralightMemoryBuilder;
 import no.entur.android.nfc.wrapper.test.tech.transceive.ultralight.MifareUltralightMockTransceive;
-import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.tech.IsoDepImpl;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
@@ -46,6 +45,7 @@ public class MockTag extends TagImpl {
         private byte[] historicalBytes = new byte[]{};
 
         private MockTransceive transceive;
+        private MockParcelableTransceive mockParcelableTransceive;
 
         public IsoDepBuilder withHiLayer(byte[] hiLayer) {
             this.hiLayer = hiLayer;
@@ -67,9 +67,13 @@ public class MockTag extends TagImpl {
             return this;
         }
 
+        public IsoDepBuilder withMockParcelableTransceive(MockParcelableTransceive mockParcelableTransceive) {
+            this.mockParcelableTransceive = mockParcelableTransceive;
+            return this;
+        }
 
         public MockIsoDep build() {
-            return new MockIsoDep(hiLayer, historicalBytes, transceive);
+            return new MockIsoDep(hiLayer, historicalBytes, transceive, mockParcelableTransceive);
         }
     }
 

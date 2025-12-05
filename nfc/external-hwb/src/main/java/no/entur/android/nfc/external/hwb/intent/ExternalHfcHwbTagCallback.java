@@ -11,4 +11,6 @@ public interface ExternalHfcHwbTagCallback extends ExternalNfcTagCallback {
 
     public static final String EXTRA_HWB_TRAVEL_CARD_NUMBER = ExternalNfcReaderCallback.class.getName() + ".extra.TRAVEL_CARD";
 
+    public static final String EXTRA_TRACE_ID = ExternalNfcReaderCallback.class.getName() + ".extra.TRACE_ID";
+
 }

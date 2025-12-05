@@ -1,5 +1,7 @@
 package no.entur.android.nfc.wrapper.tech.utils;
 
+import android.os.Parcelable;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -154,6 +156,22 @@ public class LockThreadIsoDep extends IsoDep {
             verifyLock("transceive");
         }
         return delegate.transceive(data);
+    }
+
+    @Override
+    public <T> T transceive(Parcelable data) throws IOException {
+        if(lockOnTransceive) {
+            lock("transceive");
+        } else {
+            verifyLock("transceive");
+        }
+        return delegate.transceive(data);
+    }
+
+    @Override
+    public boolean supportsTransceive(Class c) throws IOException {
+        verifyLock("supportsTransceive");
+        return delegate.supportsTransceive(c);
     }
 
     @Override

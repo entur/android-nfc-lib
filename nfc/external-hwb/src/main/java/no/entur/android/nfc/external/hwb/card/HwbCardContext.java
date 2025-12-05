@@ -22,6 +22,8 @@ public class HwbCardContext implements CardContext  {
 
     private long transcieveTimeout = 687;
 
+    private UUID traceId;
+
     public HwbCardContext() {
     }
 
@@ -90,5 +92,13 @@ public class HwbCardContext implements CardContext  {
 
     public void setUid(byte[] uid) {
         this.uid = uid;
+    }
+
+    public void setTraceId(UUID traceId) {
+        this.traceId = traceId;
+    }
+
+    public UUID getTraceId() {
+        return traceId;
     }
 }

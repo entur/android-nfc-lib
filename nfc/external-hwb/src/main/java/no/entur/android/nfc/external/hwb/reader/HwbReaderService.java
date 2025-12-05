@@ -74,7 +74,7 @@ public class HwbReaderService {
         this.hwbReader = new DefaultHwbReader("HWB", binder);
 
         infcTagBinder = new INFcTagBinder(tagProxyStore);
-        infcTagBinder.setReaderTechnology(new HwbReaderTechnology());
+        infcTagBinder.setReaderTechnology(new HwbReaderTechnology(true));
 
         this.hwbCardService = new HwbCardService(context, adpuRequestResponseMessages, hwbMqttClient, transcieveTimeout, infcTagBinder, tagProxyStore);
     }
@@ -152,6 +152,8 @@ public class HwbReaderService {
             context.setApduType(TransmitSchema.ApduType.ISO_7816);
             context.setHistoricalBytes(new byte[]{});
         }
+
+        context.setTraceId(schema.getTraceId());
         // TODO set transcieve timeout?
         //context.setTranscieveTimeout();
 

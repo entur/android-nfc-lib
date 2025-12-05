@@ -72,4 +72,9 @@ public class ACRReaderTechnology implements ReaderTechnology {
 		return 0;
 	}
 
+    @Override
+    public boolean supportsTransceiveParcelable(String className) {
+        return false;
+    }
+
 }

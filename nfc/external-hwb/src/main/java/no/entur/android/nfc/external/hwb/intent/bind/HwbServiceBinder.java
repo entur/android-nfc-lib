@@ -23,8 +23,13 @@ public class HwbServiceBinder extends IHwbServiceControl.Stub {
     }
 
     @Override
-    public byte[] discoverReaders() throws RemoteException {
+    public byte[] discoverReaders() {
         return serviceCommandsWrapper.discoverReaders();
+    }
+
+    @Override
+    public byte[] getReaderIds() {
+        return serviceCommandsWrapper.getReaderIds();
     }
 
 }

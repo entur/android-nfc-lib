@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
@@ -49,7 +51,18 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
 
 	}
 
-	public String toString() {
+    @Override
+    public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
+        throw new RuntimeException();
+
+    }
+
+    @Override
+    public boolean supportsTransceiveParcelable(String className) {
+        return false;
+    }
+
+    public String toString() {
 		return IsoDep.class.getSimpleName();
 	}
 }

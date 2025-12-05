@@ -15,6 +15,8 @@ import java.io.IOException;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagTechnology;
 import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
@@ -86,7 +88,17 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 		}
 	}
 
-	private TransceiveResult getRawTransceiveResult(byte[] data) {
+    @Override
+    public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
+        throw new RuntimeException();
+    }
+
+    @Override
+    public boolean supportsTransceiveParcelable(String className) {
+        return false;
+    }
+
+    private TransceiveResult getRawTransceiveResult(byte[] data) {
 		try {
 			byte[] result = readerWriter.transmitPassthrough(data);
 

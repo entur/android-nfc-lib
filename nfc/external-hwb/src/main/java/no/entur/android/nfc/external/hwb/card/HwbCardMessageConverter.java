@@ -23,7 +23,7 @@ public class HwbCardMessageConverter implements CardAdpuMessageConverter<UUID, H
         schema.setDeviceId(context.getDeviceId());
         schema.setTransceiveId(UUID.randomUUID());
         schema.setEventTimestamp(new Date());
-        schema.setTraceId(UUID.randomUUID());
+        schema.setTraceId(context.getTraceId());
         List<Command> commands = new ArrayList<>();
 
         // do not set expected status (it is optional)

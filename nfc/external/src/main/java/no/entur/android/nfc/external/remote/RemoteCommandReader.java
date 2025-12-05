@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import no.entur.android.nfc.external.service.AbstractService;
 
@@ -72,6 +74,32 @@ public abstract class RemoteCommandReader implements Parcelable {
                         integers[i] = din.readInt();
                     }
                     return integers;
+                } else {
+                    throw createRemoteCommandException(din.readUTF());
+                }
+            } else {
+                throw createUnexpectedVersionIllegalArgumentException(version);
+            }
+        } catch (IOException e) {
+            throw createRemoteCommandException(e);
+        }
+    }
+
+    protected List<String> readStrings(byte[] response) {
+        try {
+            DataInputStream din = new DataInputStream(new ByteArrayInputStream(response));
+
+            int version = din.readInt();
+            if (version == RemoteCommandWriter.VERSION) {
+                int status = din.readInt();
+
+                if (status == RemoteCommandWriter.STATUS_OK) {
+                    int count = din.readInt();
+                    List<String> results = new ArrayList<>(count);
+                    for(int i = 0; i < count; i++) {
+                        results.add(din.readUTF());
+                    }
+                    return results;
                 } else {
                     throw createRemoteCommandException(din.readUTF());
                 }

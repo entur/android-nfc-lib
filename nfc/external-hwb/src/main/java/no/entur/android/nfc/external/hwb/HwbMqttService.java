@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,7 +24,6 @@ import hwb.utilities.device.diagnostics.request.RequestSchema;
 import hwb.utilities.validators.nfc.NfcSchema;
 import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
-import no.entur.android.nfc.external.hwb.card.HwbTagProxy;
 import no.entur.android.nfc.external.hwb.intent.HwbService;
 import no.entur.android.nfc.external.hwb.intent.bind.HwbServiceBinder;
 import no.entur.android.nfc.external.hwb.intent.command.HwbServiceCommandsWrapper;
@@ -229,5 +229,9 @@ public class HwbMqttService implements MqttClientDisconnectedListener {
         } catch (Exception e) {
             LOGGER.error("Problem discovering MQTT NFC readers", e);
         }
+    }
+
+    public Set<String> getReaderIds() {
+        return readers.keySet();
     }
 }

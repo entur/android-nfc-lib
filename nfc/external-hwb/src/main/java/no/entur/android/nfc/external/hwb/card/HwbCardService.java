@@ -22,8 +22,6 @@ import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessageListen
 
 public class HwbCardService implements SynchronizedRequestMessageListener<UUID> {
 
-
-
     private static final HwbCardMessageConverter CONVERTER = new HwbCardMessageConverter();
 
     protected final SynchronizedRequestResponseMessages<UUID> adpuRequestResponseMessages;
@@ -100,6 +98,8 @@ public class HwbCardService implements SynchronizedRequestMessageListener<UUID> 
             if (cardContent != null) {
                 intent.putExtra(ExternalHfcHwbTagCallback.EXTRA_HWB_CARD_CONTENT, cardContent.toArray(new CardContent[cardContent.size()]));
             }
+
+            intent.putExtra(ExternalHfcHwbTagCallback.EXTRA_TRACE_ID, cardContext.getTraceId().toString());
 
             return intent;
         });
