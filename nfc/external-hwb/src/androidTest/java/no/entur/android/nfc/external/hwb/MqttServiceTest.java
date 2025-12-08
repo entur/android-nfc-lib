@@ -1,27 +1,27 @@
 package no.entur.android.nfc.external.hwb;
 
+import static org.junit.Assert.fail;
+
 import android.content.Context;
-import android.content.Intent;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
-import com.hivemq.client.mqtt.mqtt3.Mqtt3BlockingClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3Client;
-import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.android.LogcatAppender;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import io.moquette.broker.Server;
-import no.entur.android.nfc.external.hwb.test.MqttService;
-import no.entur.android.nfc.external.hwb.test.MqttServiceConnector;
+import no.entur.android.nfc.external.hwb.test.HwbMqttServiceClient;
 
 @RunWith(androidx.test.ext.junit.runners.AndroidJUnit4.class)
 public class MqttServiceTest {
@@ -59,26 +59,41 @@ public class MqttServiceTest {
 
 
     @Test
-    public void connectReader() throws Exception {
+    public void connect() throws Exception {
         Context applicationContext = ApplicationProvider.getApplicationContext();
 
-        MqttServiceConnector connection = new MqttServiceConnector(applicationContext);
+        HwbMqttServiceClient connection = new HwbMqttServiceClient(applicationContext, 1000);
+
+        connection.bind();
+        if(!connection.waitForBind()) {
+            fail();
+        }
 
         connection.run( (service) -> {
             Server server = service.getServer();
 
             System.out.println("Got server");
 
-            Mqtt3BlockingClient mqtt3BlockingClient = Mqtt3Client.builder()
+            Mqtt3AsyncClient mqtt3AsyncClient = Mqtt3Client.builder()
                     .identifier("123")
                     .serverHost("127.0.0.1")
-                    .serverPort(8080)
-                    .buildBlocking();
+                    .serverPort(1883)
+                    .buildAsync();
 
-            mqtt3BlockingClient.connect();
+            Executor executor = Executors.newSingleThreadExecutor();
+            HwbMqttServiceClient client = new HwbMqttServiceClient(executor, mqtt3AsyncClient, 1000);
 
-            System.out.println("Got connect");
+            try {
+                try {
+                    client.connect();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                System.out.println("MQTT connect");
 
+            } finally {
+                mqtt3BlockingClient.disconnect();
+            }
         });
     }
 

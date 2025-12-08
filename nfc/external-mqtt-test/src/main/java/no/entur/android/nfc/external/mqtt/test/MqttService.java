@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.hwb.test;
+package no.entur.android.nfc.external.mqtt.test;
 
 import android.app.Service;
 import android.content.Intent;
@@ -6,13 +6,9 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import io.moquette.BrokerConstants;
 import io.moquette.broker.Server;
 import io.moquette.broker.config.IConfig;
 
@@ -20,12 +16,12 @@ public class MqttService extends Service {
 
     public static final String EXTRA_CONFIGURATION = MqttService.class.getName() + ".EXTRA_CONFIGURATION";
 
-    private static final String TAG = "MQTTService";
+    private static final String TAG = MqttService.class.getName();
 
-    private Server server = new Server();
-    private boolean started = false;
+    protected Server server = new Server();
+    protected boolean started = false;
 
-    private final IBinder mBinder = new LocalBinder();
+    protected final IBinder binder = new LocalBinder();
 
     public class LocalBinder extends Binder {
         public MqttService getService() {
@@ -38,7 +34,7 @@ public class MqttService extends Service {
     }
 
     public IBinder onBind(Intent intent) {
-        return this.mBinder;
+        return this.binder;
     }
 
     @Override
@@ -58,9 +54,6 @@ public class MqttService extends Service {
                 Map<String, String> map = (HashMap) intent.getSerializableExtra(EXTRA_CONFIGURATION);
                 config.putAll(map);
             } else {
-                config.put(IConfig.WEB_SOCKET_PORT_PROPERTY_NAME, 8080);
-                //config.put(IConfig.HOST_PROPERTY_NAME, BrokerConstants.HOST);
-
                 config.put(IConfig.ALLOW_ANONYMOUS_PROPERTY_NAME, Boolean.TRUE.toString());
                 config.put(IConfig.AUTHENTICATOR_CLASS_NAME, "");
 
@@ -76,7 +69,6 @@ public class MqttService extends Service {
             }
         }
     }
-
 
     private void stopServer() {
         if(started) {

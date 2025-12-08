@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.hwb.test;
+package no.entur.android.nfc.external.mqtt.test;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,13 +12,20 @@ import java.util.Properties;
 
 public class MqttServiceConnector {
 
-    private final Properties configuration;
-    private Context context;
+    static {
+        System.setProperty("io.netty.noUnsafe", "true");
+        System.setProperty("io.netty.processId", Integer.toString(android.os.Process.myPid()));
+    }
+
+    protected final Properties configuration;
+    protected Context context;
 
     /** Flag indicating whether we have called bind on the service. */
-    private boolean bound;
+    protected boolean bound;
 
-    private MqttService.LocalBinder service;
+    protected MqttService.LocalBinder service;
+
+    protected long timeout;
     /**
      * Class for interacting with the main interface of the service.
      */
@@ -34,8 +41,9 @@ public class MqttServiceConnector {
         }
     };
 
-    public MqttServiceConnector(Context context) {
+    public MqttServiceConnector(Context context, long timeout) {
         this(context, null);
+        this.timeout = timeout;
     }
 
     public MqttServiceConnector(Context context, Properties configuration) {
@@ -44,12 +52,6 @@ public class MqttServiceConnector {
     }
 
     public void run(Consumer<MqttService> consumer) throws Exception {
-        Intent intent = new Intent(context, MqttService.class);
-        if(configuration != null && !configuration.isEmpty()) {
-            intent.putExtra(MqttService.EXTRA_CONFIGURATION, configuration);
-        }
-        context.startService(intent);
-
         try {
             bind();
 
@@ -63,17 +65,17 @@ public class MqttServiceConnector {
         }
     }
 
-    public boolean waitForBind() throws InterruptedException {
-        long deadline = System.currentTimeMillis() + 1000;
+    public void start() throws Exception {
+        Intent intent = new Intent(context, MqttService.class);
+        if (configuration != null && !configuration.isEmpty()) {
+            intent.putExtra(MqttService.EXTRA_CONFIGURATION, configuration);
+        }
+        context.startService(intent);
+    }
 
-        do {
-            Thread.sleep(50);
-            if(bound) {
-                return true;
-            }
-        } while(System.currentTimeMillis() < deadline);
-
-        return bound;
+    public void stop() throws Exception {
+        Intent intent = new Intent(context, MqttService.class);
+        context.stopService(intent);
     }
 
     public void bind() {
@@ -86,5 +88,17 @@ public class MqttServiceConnector {
         }
     }
 
+    public boolean waitForBind() throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeout;
+
+        do {
+            Thread.sleep(50);
+            if(bound) {
+                return true;
+            }
+        } while(System.currentTimeMillis() < deadline);
+
+        return bound;
+    }
 
 }
