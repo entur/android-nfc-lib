@@ -29,7 +29,6 @@ public interface TagProxy {
 
     TagImpl rediscover(Object inFcTagBinder);
 
-
     void close();
 
 }

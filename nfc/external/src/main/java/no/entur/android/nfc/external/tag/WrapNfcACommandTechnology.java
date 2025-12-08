@@ -76,11 +76,6 @@ public class WrapNfcACommandTechnology extends AbstractTagTechnology implements 
         throw new RuntimeException();
     }
 
-    @Override
-    public boolean supportsTransceiveParcelable(String className) {
-        return false;
-    }
-
     public byte[] transmitRaw(byte[] adpu) throws Exception {
 		return DESFireAdapter.responseADPUToRaw(rawToRequestADPU(adpu));
 	}

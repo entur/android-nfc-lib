@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.tag;
 
+import android.os.Parcelable;
 import android.util.Log;
 
 import org.slf4j.Logger;
@@ -187,7 +188,10 @@ public class DESFireAdapter {
 			}
 			nextCommand = ADDITIONAL_FRAME;
 		}
-
 	}
+
+    public Parcelable transceive(Parcelable requestData) throws Exception {
+        return isoDep.transceive(requestData);
+    }
 
 }

@@ -13,5 +13,4 @@ public interface CommandTechnology extends TagTechnology {
 
     ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException;
 
-    boolean supportsTransceiveParcelable(String className);
 }

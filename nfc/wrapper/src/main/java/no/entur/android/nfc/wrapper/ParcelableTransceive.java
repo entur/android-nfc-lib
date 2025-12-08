@@ -32,5 +32,7 @@ public class ParcelableTransceive implements Parcelable {
         }
     };
 
-
+    public Parcelable getRequestData() {
+        return mRequestData;
+    }
 }

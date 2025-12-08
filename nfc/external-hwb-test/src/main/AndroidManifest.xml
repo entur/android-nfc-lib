@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application >
+
+        <service android:name="no.entur.android.nfc.external.hwb.test.MqttService" />
+
+    </application>
+
+</manifest>

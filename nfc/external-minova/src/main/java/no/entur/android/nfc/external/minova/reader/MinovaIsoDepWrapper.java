@@ -2,6 +2,7 @@ package no.entur.android.nfc.external.minova.reader;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Parcelable;
 
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.minova.service.MinovaService;
@@ -54,6 +55,11 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
         intent.putExtra(MinovaService.EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE, tagProxy.getHandle());
 
         context.sendBroadcast(intent, "android.permission.NFC");
+    }
+
+    @Override
+    public Parcelable transceive(Parcelable parcelable) throws Exception {
+        throw new RuntimeException("Not implemented");
     }
 
 }

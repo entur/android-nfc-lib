@@ -68,8 +68,4 @@ public class DefaultCommandTechnology extends AbstractTagTechnology implements C
         throw new RuntimeException();
     }
 
-    @Override
-    public boolean supportsTransceiveParcelable(String className) {
-        return false;
-    }
 }

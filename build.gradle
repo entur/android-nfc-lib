@@ -12,7 +12,12 @@ buildscript {
                 includeGroup "com.github.martinpaljak"
             }
         }
-
+       maven {
+           url "https://jitpack.io"
+           content {
+               includeGroup "com.github.moquette-io.moquette"
+           }
+       }
     }
 
     repositories repos
@@ -81,7 +86,7 @@ allprojects {
 
 ext {
     // note: see abt alignment rule
-    androidxAppcompatVersion = '1.4.1'
+    androidxAppcompatVersion = '1.7.0'
     logbackAndroidVersion = '2.0.1'
 
     slf4jVersion = '1.7.36'
@@ -89,7 +94,7 @@ ext {
 
     // test
     unitVersion = '4.13.2'
-    androidxTestRulesVersion = '1.5.0'
+    androidxTestRulesVersion = '1.7.0'
     androidxEspressoVersion = '3.5.1'
     androidxTestRunnerVersion = '1.7.0'
     androidxTestExtJunitVersion = '1.3.0'
@@ -107,6 +112,7 @@ ext {
 
     hivemqMqttClientVersion = '1.2.1'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
+    moquetteVersion = "0.18.0"
 }
 
 ext.commonDependencies = {
@@ -128,6 +134,12 @@ ext.commonDependencies = {
 
     androidTestImplementation "junit:junit:${unitVersion}"
     androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
+
+    modules {
+        module("org.checkerframework:checker-qual") {
+            replacedBy("org.checkerframework:checker")
+        }
+    }
 }
 
 configure(buildProjects()) {

@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.hwb.card;
 
+import android.os.Parcelable;
+
 import java.io.IOException;
 
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
@@ -20,5 +22,10 @@ public class HwbIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 	public byte[] transceiveRaw(byte[] req) throws Exception {
 		return cardCommands.transcieve(req);
 	}
+
+    @Override
+    public Parcelable transceive(Parcelable parcelable) throws Exception {
+        return cardCommands.transcieve(parcelable);
+    }
 
 }

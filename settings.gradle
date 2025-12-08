@@ -1,5 +1,5 @@
 include ":nfc:wrapper", ":nfc:wrapper-utils", ":nfc:wrapper-test"
-include ":nfc:core", ":nfc:external", ":utilities:tcp-server-java-lib", ":nfc:external-acs", ":nfc:external-minova", ":nfc:external-test", ":nfc:external-hwb"
+include ":nfc:core", ":nfc:external", ":utilities:tcp-server-java-lib", ":nfc:external-acs", ":nfc:external-minova", ":nfc:external-test", ":nfc:external-hwb", ":nfc:external-hwb-test"
 include ":utilities:websocket-messages-java-lib", ":nfc:external-websocket", ":utilities:websocket-server-java-lib", ":utilities:websocket-client-java-lib", ":utilities:mqtt-messages-java-lib"
 
 include ":examples:nfc-reader-android-app", ":examples:nfc-websocket-server-java-app"
