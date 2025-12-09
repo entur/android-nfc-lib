@@ -12,11 +12,6 @@ import java.util.Properties;
 
 public class MqttServiceConnector {
 
-    static {
-        System.setProperty("io.netty.noUnsafe", "true");
-        System.setProperty("io.netty.processId", Integer.toString(android.os.Process.myPid()));
-    }
-
     protected final Properties configuration;
     protected Context context;
 

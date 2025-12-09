@@ -1,13 +1,10 @@
 package no.entur.android.nfc.wrapper.test.tech;
 
 import android.os.Parcelable;
-import android.util.Log;
 
 import java.io.IOException;
 
-import no.entur.android.nfc.wrapper.ParcelableTransceive;
 import no.entur.android.nfc.wrapper.test.tech.transceive.MockParcelableTransceive;
-import no.entur.android.nfc.wrapper.test.tech.transceive.MockTransceive;
 import no.entur.android.nfc.wrapper.tech.BasicTagTechnology;
 
 public class MockIsoDep extends MockBasicTagTechnologyImpl {
@@ -19,8 +16,8 @@ public class MockIsoDep extends MockBasicTagTechnologyImpl {
 
     private MockParcelableTransceive mockParcelableTransceive;
 
-    public MockIsoDep(byte[] hiLayerResponse, byte[] historicalBytes, MockTransceive mockTransceive, MockParcelableTransceive mockParcelableTransceive) {
-        super(BasicTagTechnology.ISO_DEP, mockTransceive);
+    public MockIsoDep(byte[] hiLayerResponse, byte[] historicalBytes, MockParcelableTransceive mockParcelableTransceive) {
+        super(BasicTagTechnology.ISO_DEP, mockParcelableTransceive);
 
         this.hiLayerResponse = hiLayerResponse;
         this.historicalBytes = historicalBytes;

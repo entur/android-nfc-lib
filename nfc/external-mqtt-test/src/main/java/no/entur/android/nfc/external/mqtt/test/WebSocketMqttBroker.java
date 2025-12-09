@@ -1,0 +1,373 @@
+package no.entur.android.nfc.external.mqtt.test;
+
+import android.util.Log;
+
+import com.hivemq.client.internal.mqtt.datatypes.MqttVariableByteInteger;
+import com.hivemq.client.mqtt.mqtt3.message.Mqtt3MessageType;
+
+import org.java_websocket.WebSocket;
+import org.java_websocket.drafts.Draft;
+import org.java_websocket.drafts.Draft_6455;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
+
+import java.io.ByteArrayOutputStream;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+/**
+ * A simple WebSocketServer MQTT broker implementation for use with testing.
+ *
+ * While crude, this is avoids pulling in netty as a dependency.
+ */
+public class WebSocketMqttBroker extends WebSocketServer {
+
+    private static final String LOG_TAG = WebSocketMqttBroker.class.getName();
+
+    private static AtomicInteger atomicInteger = new AtomicInteger();
+
+    public static class Subscription {
+
+        private int qos;
+        private String topic;
+
+        public Subscription(String topic, byte qos) {
+            this.topic = topic;
+            this.qos = qos;
+        }
+    }
+
+    public class Subscriptions {
+        private List<Subscription> subscriptions = new ArrayList<>();
+
+        public void add(String topic, byte qos) {
+            subscriptions.add(new Subscription(topic, qos));
+        }
+
+        public void remove(String topic) {
+            for(int i = 0; i < subscriptions.size(); i++) {
+                Subscription subscription = subscriptions.get(i);
+                if(subscription.topic.equals(topic)) {
+                    subscriptions.remove(i);
+                    i--;
+                }
+            }
+        }
+
+        public boolean hasTopic(String topic) {
+            for (Subscription subscription : subscriptions) {
+                if(subscription.topic.equals(topic)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    public WebSocketMqttBroker(int port) {
+        super(new InetSocketAddress(port));
+    }
+
+    public WebSocketMqttBroker(InetSocketAddress address) {
+        super(address);
+    }
+
+    public WebSocketMqttBroker(int port, Draft_6455 draft) {
+        super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
+    }
+
+    @Override
+    protected boolean onConnect(SelectionKey key) {
+        Log.d(LOG_TAG, "onConnect");
+        return super.onConnect(key);
+    }
+
+    @Override
+    public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        Log.d(LOG_TAG, "onOpen");
+
+        Subscriptions subscriptions = new Subscriptions();
+        conn.setAttachment(subscriptions);
+
+        // CONNACK
+        ByteBuffer msg = ByteBuffer.wrap(new byte[]{0x20, // message type
+                0x02, // remaining length 2 bytes
+                0x01, // Connect Acknowledge Flags. Bit 0 (SP1) is the Session Present Flag.
+                0x00, // Connect Return code. 0x00 Connection Accepted
+        });
+
+        conn.send(msg);
+    }
+
+    @Override
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        Log.d(LOG_TAG, "onClose");
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, String message) {
+        Log.d(LOG_TAG, conn + ": " + message);
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, ByteBuffer message) {
+        message.mark();
+
+        int typeAndFlags = message.get() & 0xFF;
+
+        int type = (typeAndFlags >> 4) & 0xF;
+        int flags = typeAndFlags & 0xF;
+
+        int length = decodeRemainingLength(message);
+
+        Mqtt3MessageType mqtt3MessageType = Mqtt3MessageType.fromCode(type);
+
+        switch (mqtt3MessageType) {
+
+            case SUBSCRIBE: {
+                byte packetIdentifierMsb = message.get();
+                byte packetIdentifierLsb = message.get();
+
+                Subscriptions subscriptions = conn.getAttachment();
+
+                while (message.hasRemaining()) {
+
+                    int topicLength = message.getShort();
+
+                    byte[] topicBytes = new byte[topicLength];
+
+                    message.get(topicBytes);
+
+                    byte qos = message.get();
+
+                    String topic = new String(topicBytes);
+
+                    Log.d(LOG_TAG, "Subscribe to " + topic + " with QoS " + String.format("%02X", qos));
+
+                    subscriptions.add(topic, qos);
+                }
+
+
+                // SUBACK
+                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x90, // message type
+                        0x03, // remaining length 3 bytes
+                        packetIdentifierMsb, packetIdentifierLsb, // packet identifier
+                        0x02, // return code Maximum QoS 2
+                });
+
+                conn.send(msg);
+
+                break;
+            }
+            case UNSUBSCRIBE: {
+                byte packetIdentifierMsb = message.get();
+                byte packetIdentifierLsb = message.get();
+
+                Subscriptions subscriptions = conn.getAttachment();
+
+                while (message.hasRemaining()) {
+
+                    int topicLength = message.getShort() & 0xFFFF;
+
+                    byte[] topicBytes = new byte[topicLength];
+
+                    message.get(topicBytes);
+
+                    String topic = new String(topicBytes);
+
+                    Log.d(LOG_TAG, "Unsubscribe to " + topic);
+
+                    subscriptions.remove(topic);
+                }
+
+                // SUBACK
+                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0xB0, // message type
+                        0x02, // remaining length 3 bytes
+                        packetIdentifierMsb, packetIdentifierLsb, // packet identifier
+                });
+
+                conn.send(msg);
+                break;
+            }
+            case PUBLISH: {
+                int topicLength = message.getShort() & 0xFFFF;
+
+                byte[] topicBytes = new byte[topicLength];
+
+                message.get(topicBytes);
+
+                String topic = new String(topicBytes);
+
+                byte packetIdentifierMsb = message.get();
+                byte packetIdentifierLsb = message.get();
+
+                byte[] payload = new byte[message.remaining()];
+                message.get(payload);
+
+                int qos = (flags >>> 1) & 0x3;
+
+                Log.d(LOG_TAG, "Publish to " + new String(topicBytes) + " with QoS " + String.format("%02X", qos) + ":\n" + new String(payload));
+
+                if (qos == 2) {
+                    // PUBREC
+                    ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x50, // message type
+                            0x02, // remaining length 2 bytes
+                            packetIdentifierMsb, packetIdentifierLsb, // packet identifier
+                    });
+                    conn.send(msg);
+                } else if (qos == 1) {
+                    // PUBACK
+                    ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x40, // message type
+                            0x02, // remaining length 2 bytes
+                            packetIdentifierMsb, packetIdentifierLsb, // packet identifier
+                    });
+                    conn.send(msg);
+                } else if (qos == 0) {
+                    // do nothing
+                }
+
+                message.reset();
+
+
+                byte[] bytes = new byte[message.remaining()];
+                message.get(bytes);
+
+                // clear dup flag
+                bytes[0] = (byte) (bytes[0] & ~0b11110111);
+
+                for (WebSocket connection : getConnections()) {
+                    Subscriptions subscriptions = connection.getAttachment();
+
+                    if (subscriptions.hasTopic(topic)) {
+                        connection.send(bytes);
+                    }
+                }
+
+                break;
+            }
+            case PUBREL: {
+                byte packetIdentifierMsb = message.get();
+                byte packetIdentifierLsb = message.get();
+
+                // PUBCOMP
+                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x70, // message type
+                        0x02, // remaining length 2 bytes
+                        packetIdentifierMsb, packetIdentifierLsb, // packet identifier
+                });
+                conn.send(msg);
+
+                break;
+            }
+            case PINGREQ: {
+                // PINGRESP
+                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0xD0, // message type
+                        0x00, // remaining length 0 bytes
+                });
+                conn.send(msg);
+                break;
+            }
+            case PUBREC: { // client sends this message when we publish
+                // PUBREL
+                byte packetIdentifierMsb = message.get();
+                byte packetIdentifierLsb = message.get();
+
+                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x70, // message type
+                        0x02, // remaining length 0 bytes
+                        packetIdentifierMsb, packetIdentifierLsb
+                });
+                conn.send(msg);
+                break;
+            }
+            case PUBACK: { // client sends this message when we publish - QoS level 1
+                byte packetIdentifierMsb = message.get();
+                byte packetIdentifierLsb = message.get();
+                break;
+            }
+        }
+    }
+
+    public void publish(String topic, int qos, byte[] payload) {
+        byte[] topicBytes = topic.getBytes(StandardCharsets.UTF_8);
+
+        ByteBuf buffer = Unpooled.buffer(payload.length + topicBytes.length + 5 + 2 + 2);
+
+        int header = 0b00111000 | encodeQos(qos) << 1;
+
+        buffer.writeByte(0b00111100);
+        MqttVariableByteInteger.encode(payload.length + 2 + 2 + topicBytes.length, buffer);
+        buffer.writeShort(topicBytes.length);
+        buffer.writeBytes(topicBytes);
+
+        buffer.writeShort(atomicInteger.incrementAndGet());
+
+        buffer.writeBytes(payload);
+
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        bout.write(buffer.array(), 0, buffer.readableBytes());
+
+        publishRaw(topic, bout.toByteArray());
+    }
+
+    private int encodeQos(int qos) { // bit 1 and 2
+        switch (qos) {
+            case 0: return 0;
+            case 1: return 1;
+            case 2: return 2;
+        }
+        throw new RuntimeException("Unexpected QoS " + qos);
+    }
+
+    public void publishRaw(String topic, byte[] bytes) {
+        for(WebSocket connection : getConnections()) {
+            Subscriptions subscriptions = connection.getAttachment();
+
+            if(subscriptions.hasTopic(topic)) {
+                connection.send(bytes);
+
+                Log.d(LOG_TAG, "Publish message size " + bytes.length + " to topic " + topic);
+            }
+        }
+    }
+
+    public static int decodeRemainingLength(ByteBuffer in) {
+        int multiplier = 1;
+        int value = 0;
+        int encodedByte;
+
+        int count = 0;
+
+        do {
+            encodedByte = in.get() & 0xFF;
+
+            value += (encodedByte & ~0x80) * multiplier;
+            multiplier *= 128;
+
+            if((encodedByte & 0x80) == 0) {
+                break;
+            }
+            count++;
+        } while (count < 4); // Continue if the MSB is set
+
+        return value;
+    }
+
+    @Override
+    public void onError(WebSocket conn, Exception ex) {
+        Log.e(LOG_TAG, "Error", ex);
+    }
+
+    @Override
+    public void onStart() {
+        Log.d(LOG_TAG, "Server started!");
+    }
+
+}

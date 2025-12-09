@@ -14,9 +14,11 @@ public class MqttService extends Service {
 
     public static final String EXTRA_CONFIGURATION = MqttService.class.getName() + ".EXTRA_CONFIGURATION";
 
+    public static final String PORT = MqttService.class.getName() + ".PORT";
+
     private static final String TAG = MqttService.class.getName();
 
-    protected Server server = new Server();
+    protected WebSocketMqttBroker broker;
     protected boolean started = false;
 
     protected final IBinder binder = new LocalBinder();
@@ -26,8 +28,8 @@ public class MqttService extends Service {
             return MqttService.this;
         }
 
-        public Server getServer() {
-            return server;
+        public WebSocketMqttBroker getBroker() {
+            return broker;
         }
     }
 
@@ -37,13 +39,13 @@ public class MqttService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "Starting Notification Service");
+        Log.i(TAG, "Starting service");
 
-        startServer(intent);
+        startBroker(intent);
         return START_STICKY;
     }
 
-    private void startServer(Intent intent) {
+    private void startBroker(Intent intent) {
         if(!started) {
             started = true;
 
@@ -54,29 +56,44 @@ public class MqttService extends Service {
             }
 
             try {
-                server.startServer(config);
+                String property = config.getProperty(MqttService.PORT);
+                int port;
+                if(property != null) {
+                    port = Integer.parseInt(property);
+                } else {
+                    port = SocketUtils.findAvailableTcpPort(10000, 30000);
+                }
 
-                Log.i(TAG, "Started MQTT broker on port " + server.getPort());
+                broker = new WebSocketMqttBroker(port);
+                broker.start();
+
+                Log.i(TAG, "Started MQTT broker on port " + broker.getPort());
             } catch (Exception e) {
                 Log.e(TAG, "Problem starting MQTT broker", e);
             }
         }
     }
 
-    private void stopServer() {
+    private void stopBroker() throws InterruptedException {
         if(started) {
             started = false;
-            server.stopServer();
+            if(broker != null) {
+                broker.stop();
+            }
         }
     }
 
     @Override
     public void onDestroy() {
-        stopServer();
+        try {
+            stopBroker();
+        } catch (InterruptedException e) {
+            // ignore
+        }
         super.onDestroy();
     }
 
-    public Server getServer() {
-        return server;
+    public WebSocketMqttBroker getBroker() {
+        return broker;
     }
 }

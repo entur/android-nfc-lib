@@ -104,7 +104,7 @@ ext {
     byteBuddyVersion = '1.14.10'
 
     okHttp3Version = '4.12.0'
-    javaWebSocketVersion = '1.5.7'
+    javaWebSocketVersion = '1.6.0'
 
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
@@ -112,7 +112,6 @@ ext {
 
     hivemqMqttClientVersion = '1.2.1'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
-    moquetteVersion = "0.18.0"
 }
 
 ext.commonDependencies = {

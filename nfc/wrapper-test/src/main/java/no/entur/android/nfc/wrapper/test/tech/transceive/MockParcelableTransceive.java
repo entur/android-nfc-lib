@@ -4,10 +4,7 @@ import android.os.Parcelable;
 
 import java.io.IOException;
 
-import no.entur.android.nfc.wrapper.ParcelableTransceive;
-import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
-
-public interface MockParcelableTransceive {
+public interface MockParcelableTransceive extends MockTransceive {
 
     <T> T parcelableTranscieve(Parcelable data) throws IOException;
     boolean supportsTransceiveParcelable(String className) throws IOException;

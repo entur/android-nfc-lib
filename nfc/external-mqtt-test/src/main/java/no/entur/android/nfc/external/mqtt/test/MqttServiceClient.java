@@ -55,20 +55,6 @@ public class MqttServiceClient {
                 .send();
     }
 
-    public <T, R> void exchangeOne(MqttServiceExchange<T, R> exchange) {
-        subscribe(exchange.getReadTopic(), (c) -> {
-            try {
-                byte[] apply = exchange.apply(c.getPayloadAsBytes());
-
-                publish(exchange.getWriteTopic(), apply);
-            } catch(Exception e) {
-                exchange.getErrorHandler().accept(e);
-            } finally {
-                unsubscribe(exchange.getReadTopic());
-            }
-        });
-    }
-
     public <T, R> void exchange(MqttServiceExchange<T, R> exchange) {
         subscribe(exchange.getReadTopic(), (c) -> {
             try {
