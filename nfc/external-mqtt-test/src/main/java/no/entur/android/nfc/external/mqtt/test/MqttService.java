@@ -9,8 +9,6 @@ import android.util.Log;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import io.moquette.broker.Server;
-import io.moquette.broker.config.IConfig;
 
 public class MqttService extends Service {
 
@@ -53,11 +51,6 @@ public class MqttService extends Service {
             if(intent.hasExtra(EXTRA_CONFIGURATION)) {
                 Map<String, String> map = (HashMap) intent.getSerializableExtra(EXTRA_CONFIGURATION);
                 config.putAll(map);
-            } else {
-                config.put(IConfig.ALLOW_ANONYMOUS_PROPERTY_NAME, Boolean.TRUE.toString());
-                config.put(IConfig.AUTHENTICATOR_CLASS_NAME, "");
-
-                config.put(IConfig.PERSISTENCE_ENABLED_PROPERTY_NAME, Boolean.FALSE.toString());
             }
 
             try {
