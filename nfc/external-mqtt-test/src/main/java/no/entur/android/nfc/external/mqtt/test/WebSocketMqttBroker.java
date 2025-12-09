@@ -120,6 +120,8 @@ public class WebSocketMqttBroker extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, ByteBuffer message) {
+        int position = message.position();
+
         message.mark();
 
         int typeAndFlags = message.get() & 0xFF;
@@ -139,7 +141,7 @@ public class WebSocketMqttBroker extends WebSocketServer {
 
                 Subscriptions subscriptions = conn.getAttachment();
 
-                while (message.hasRemaining()) {
+                while (message.position() < length + 2) {
 
                     int topicLength = message.getShort();
 
@@ -155,7 +157,6 @@ public class WebSocketMqttBroker extends WebSocketServer {
 
                     subscriptions.add(topic, qos);
                 }
-
 
                 // SUBACK
                 ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x90, // message type
@@ -174,7 +175,7 @@ public class WebSocketMqttBroker extends WebSocketServer {
 
                 Subscriptions subscriptions = conn.getAttachment();
 
-                while (message.hasRemaining()) {
+                while (message.position() < length + 2) {
 
                     int topicLength = message.getShort() & 0xFFFF;
 
@@ -210,7 +211,9 @@ public class WebSocketMqttBroker extends WebSocketServer {
                 byte packetIdentifierMsb = message.get();
                 byte packetIdentifierLsb = message.get();
 
-                byte[] payload = new byte[message.remaining()];
+                int payloadLength = message.position() - length - 2;
+
+                byte[] payload = new byte[payloadLength];
                 message.get(payload);
 
                 int qos = (flags >>> 1) & 0x3;
@@ -235,10 +238,11 @@ public class WebSocketMqttBroker extends WebSocketServer {
                     // do nothing
                 }
 
+                int read = message.position() - position;
+
                 message.reset();
 
-
-                byte[] bytes = new byte[message.remaining()];
+                byte[] bytes = new byte[read];
                 message.get(bytes);
 
                 // clear dup flag
@@ -302,7 +306,7 @@ public class WebSocketMqttBroker extends WebSocketServer {
 
         int header = 0b00111000 | encodeQos(qos) << 1;
 
-        buffer.writeByte(0b00111100);
+        buffer.writeByte(header);
         MqttVariableByteInteger.encode(payload.length + 2 + 2 + topicBytes.length, buffer);
         buffer.writeShort(topicBytes.length);
         buffer.writeBytes(topicBytes);
