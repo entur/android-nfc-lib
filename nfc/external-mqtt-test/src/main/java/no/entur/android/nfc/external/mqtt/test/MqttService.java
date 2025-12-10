@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import no.entur.android.nfc.external.mqtt.test.broker.SocketUtils;
+import no.entur.android.nfc.external.mqtt.test.broker.Mqtt3WebSocketBroker;
+
 public class MqttService extends Service {
 
     public static final String EXTRA_CONFIGURATION = MqttService.class.getName() + ".EXTRA_CONFIGURATION";
@@ -18,7 +21,7 @@ public class MqttService extends Service {
 
     private static final String TAG = MqttService.class.getName();
 
-    protected WebSocketMqttBroker broker;
+    protected Mqtt3WebSocketBroker broker;
     protected boolean started = false;
 
     protected final IBinder binder = new LocalBinder();
@@ -28,7 +31,7 @@ public class MqttService extends Service {
             return MqttService.this;
         }
 
-        public WebSocketMqttBroker getBroker() {
+        public Mqtt3WebSocketBroker getBroker() {
             return broker;
         }
     }
@@ -64,7 +67,7 @@ public class MqttService extends Service {
                     port = SocketUtils.findAvailableTcpPort(10000, 30000);
                 }
 
-                broker = new WebSocketMqttBroker(port);
+                broker = new Mqtt3WebSocketBroker(port);
                 broker.start();
 
                 Log.i(TAG, "Started MQTT broker on port " + broker.getPort());
@@ -93,7 +96,7 @@ public class MqttService extends Service {
         super.onDestroy();
     }
 
-    public WebSocketMqttBroker getBroker() {
+    public Mqtt3WebSocketBroker getBroker() {
         return broker;
     }
 }

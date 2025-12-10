@@ -1,9 +1,6 @@
-package no.entur.android.nfc.external.mqtt.test;
+package no.entur.android.nfc.external.mqtt.test.broker;
 
 import android.util.Log;
-
-import com.hivemq.client.internal.mqtt.datatypes.MqttVariableByteInteger;
-import com.hivemq.client.mqtt.mqtt3.message.Mqtt3MessageType;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
@@ -29,11 +26,15 @@ import io.netty.buffer.Unpooled;
  *
  * While crude, this is avoids pulling in netty as a dependency.
  */
-public class WebSocketMqttBroker extends WebSocketServer {
+public class Mqtt3WebSocketBroker extends WebSocketServer {
 
-    private static final String LOG_TAG = WebSocketMqttBroker.class.getName();
+    private static final int CONTINUATION_BIT_MASK = 0x80;
+    private static final int VALUE_MASK = 0x7f;
+    private static final byte VALUE_BITS = 7;
 
-    private static AtomicInteger atomicInteger = new AtomicInteger();
+    private static final String LOG_TAG = Mqtt3WebSocketBroker.class.getName();
+
+    private static final AtomicInteger messageNumber = new AtomicInteger();
 
     public static class Subscription {
 
@@ -73,15 +74,15 @@ public class WebSocketMqttBroker extends WebSocketServer {
         }
     }
 
-    public WebSocketMqttBroker(int port) {
+    public Mqtt3WebSocketBroker(int port) {
         super(new InetSocketAddress(port));
     }
 
-    public WebSocketMqttBroker(InetSocketAddress address) {
+    public Mqtt3WebSocketBroker(InetSocketAddress address) {
         super(address);
     }
 
-    public WebSocketMqttBroker(int port, Draft_6455 draft) {
+    public Mqtt3WebSocketBroker(int port, Draft_6455 draft) {
         super(new InetSocketAddress(port), Collections.<Draft>singletonList(draft));
     }
 
@@ -248,13 +249,7 @@ public class WebSocketMqttBroker extends WebSocketServer {
                 // clear dup flag
                 bytes[0] = (byte) (bytes[0] & ~0b11110111);
 
-                for (WebSocket connection : getConnections()) {
-                    Subscriptions subscriptions = connection.getAttachment();
-
-                    if (subscriptions.hasTopic(topic)) {
-                        connection.send(bytes);
-                    }
-                }
+                publishToClients(conn, topic, bytes);
 
                 break;
             }
@@ -299,6 +294,19 @@ public class WebSocketMqttBroker extends WebSocketServer {
         }
     }
 
+    public void publishToClients(WebSocket source, String topic, byte[] bytes) {
+        for (WebSocket connection : getConnections()) {
+            if(connection == source) {
+                continue;
+            }
+            Subscriptions subscriptions = connection.getAttachment();
+
+            if (subscriptions.hasTopic(topic)) {
+                connection.send(bytes);
+            }
+        }
+    }
+
     public void publish(String topic, int qos, byte[] payload) {
         byte[] topicBytes = topic.getBytes(StandardCharsets.UTF_8);
 
@@ -307,11 +315,11 @@ public class WebSocketMqttBroker extends WebSocketServer {
         int header = 0b00111000 | encodeQos(qos) << 1;
 
         buffer.writeByte(header);
-        MqttVariableByteInteger.encode(payload.length + 2 + 2 + topicBytes.length, buffer);
+        encode(payload.length + 2 + 2 + topicBytes.length, buffer);
         buffer.writeShort(topicBytes.length);
         buffer.writeBytes(topicBytes);
 
-        buffer.writeShort(atomicInteger.incrementAndGet());
+        buffer.writeShort(messageNumber.incrementAndGet());
 
         buffer.writeBytes(payload);
 
@@ -320,6 +328,27 @@ public class WebSocketMqttBroker extends WebSocketServer {
 
         publishRaw(topic, bout.toByteArray());
     }
+
+    /**
+     * Encodes the given value as a variable byte integer to the given byte buffer at the current writer index.
+     * <p>
+     * This method does not check if the value is in range of a 4 byte variable byte integer.
+     *
+     * @param value   the value to encode.
+     * @param byteBuf the byte buffer to encode to.
+     */
+
+    private void encode(int value, final ByteBuf byteBuf) {
+        do {
+            int encodedByte = value & VALUE_MASK;
+            value >>>= VALUE_BITS;
+            if (value > 0) {
+                encodedByte |= CONTINUATION_BIT_MASK;
+            }
+            byteBuf.writeByte(encodedByte);
+        } while (value > 0);
+    }
+
 
     private int encodeQos(int qos) { // bit 1 and 2
         switch (qos) {
@@ -342,7 +371,7 @@ public class WebSocketMqttBroker extends WebSocketServer {
         }
     }
 
-    public static int decodeRemainingLength(ByteBuffer in) {
+    private int decodeRemainingLength(ByteBuffer in) {
         int multiplier = 1;
         int value = 0;
         int encodedByte;

@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.mqtt.test;
+package no.entur.android.nfc.external.mqtt.test.broker;
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;

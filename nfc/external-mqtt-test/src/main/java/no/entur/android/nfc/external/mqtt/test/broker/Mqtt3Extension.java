@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.mqtt.test;
+package no.entur.android.nfc.external.mqtt.test.broker;
 
 import android.util.Log;
 
@@ -8,20 +8,18 @@ import org.java_websocket.extensions.DefaultExtension;
 import org.java_websocket.extensions.IExtension;
 import org.java_websocket.framing.Framedata;
 
-public class MqttExtension implements IExtension {
+public class Mqtt3Extension implements IExtension {
 
-    private static final String LOG_TAG = MqttExtension.class.getName();
+    private static final String LOG_TAG = Mqtt3Extension.class.getName();
 
     @Override
-    public void decodeFrame(Framedata inputFrame) throws InvalidDataException {
+    public void decodeFrame(Framedata inputFrame) {
         //Nothing to do here
-        Log.d(LOG_TAG, "decodeFrame");
     }
 
     @Override
     public void encodeFrame(Framedata inputFrame) {
         //Nothing to do here
-        Log.d(LOG_TAG, "encodeFrame");
     }
 
     @Override
@@ -36,7 +34,6 @@ public class MqttExtension implements IExtension {
 
     @Override
     public void isFrameValid(Framedata inputFrame) throws InvalidDataException {
-        Log.d(LOG_TAG, "isFrameValid");
         if (inputFrame.isRSV1() || inputFrame.isRSV2() || inputFrame.isRSV3()) {
             throw new InvalidFrameException(
                     "bad rsv RSV1: " + inputFrame.isRSV1() + " RSV2: " + inputFrame.isRSV2() + " RSV3: "

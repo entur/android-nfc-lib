@@ -25,8 +25,8 @@ import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import no.entur.android.nfc.external.mqtt.test.MqttExtension;
-import no.entur.android.nfc.external.mqtt.test.WebSocketMqttBroker;
+import no.entur.android.nfc.external.mqtt.test.broker.Mqtt3Extension;
+import no.entur.android.nfc.external.mqtt.test.broker.Mqtt3WebSocketBroker;
 
 @RunWith(androidx.test.ext.junit.runners.AndroidJUnit4.class)
 public class MqttServiceTest {
@@ -39,10 +39,10 @@ public class MqttServiceTest {
 
         List<IProtocol> mqtt = Collections.<IProtocol>singletonList(new Protocol("mqtt"));
 
-        List<IExtension> extensions = Collections.<IExtension>singletonList(new MqttExtension());
+        List<IExtension> extensions = Collections.<IExtension>singletonList(new Mqtt3Extension());
         Draft_6455 draft6455 = new Draft_6455(extensions, mqtt);
 
-        WebSocketMqttBroker server = new WebSocketMqttBroker(port, draft6455);
+        Mqtt3WebSocketBroker server = new Mqtt3WebSocketBroker(port, draft6455);
         server.start();
         Thread.sleep(1000);
         System.out.println(server.getAddress());
@@ -87,10 +87,10 @@ public class MqttServiceTest {
 
         List<IProtocol> mqtt = Collections.<IProtocol>singletonList(new Protocol("mqtt"));
 
-        List<IExtension> extensions = Collections.<IExtension>singletonList(new MqttExtension());
+        List<IExtension> extensions = Collections.<IExtension>singletonList(new Mqtt3Extension());
         Draft_6455 draft6455 = new Draft_6455(extensions, mqtt);
 
-        WebSocketMqttBroker server = new WebSocketMqttBroker(port, draft6455);
+        Mqtt3WebSocketBroker server = new Mqtt3WebSocketBroker(port, draft6455);
         server.start();
         Thread.sleep(1000);
         System.out.println(server.getAddress());
