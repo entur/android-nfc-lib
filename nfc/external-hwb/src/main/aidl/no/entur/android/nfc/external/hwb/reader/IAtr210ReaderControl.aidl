@@ -1,8 +1,0 @@
-package no.entur.android.nfc.external.hwb.reader;
-
-interface IAtr210ReaderControl {
-
-    byte[] getDiagnostics(long timeout);
-
-    byte[] isPresent(long timeout);
-}

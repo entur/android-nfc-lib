@@ -12,30 +12,9 @@ public class ReaderCommands<T, C extends ReaderContext> {
 
 	protected C readerContext;
 
-	protected ReaderPresentMessageConverter<T, C> readerPresentMessageConverter;
-
-	public ReaderCommands(C readerContext, SynchronizedRequestResponseMessages readerExchange, ReaderPresentMessageConverter<T, C> readerPresentMessageConverter) {
+	public ReaderCommands(C readerContext, SynchronizedRequestResponseMessages readerExchange) {
 		this.readerContext = readerContext;
 		this.readerExchange = readerExchange;
-		this.readerPresentMessageConverter = readerPresentMessageConverter;
 	}
-
-	public boolean isPresent(long readerPresentTimeout) throws IOException  {
-		ReaderPresentSynchronizedRequestMessageRequest<T, ?> request = readerPresentMessageConverter.createReaderPresentRequestMessage(readerContext);
-
-		try {
-			SynchronizedResponseMessage<T> response = readerExchange.sendAndWaitForResponse(request, readerPresentTimeout);
-
-			if (response != null) {
-				ReaderPresentResponseMessage result = readerPresentMessageConverter.createReaderPresentResponseMessage(response, readerContext);
-				return result.isPresent();
-			}
-			throw new IOException();
-		} catch (SynchronizedResponseMessageTimeoutException e) {
-			// timeout; not present
-			return false;
-		}
-	}
-
 
 }

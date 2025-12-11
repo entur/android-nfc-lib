@@ -10,8 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import no.entur.android.nfc.external.mqtt.test.broker.SocketUtils;
-import no.entur.android.nfc.external.mqtt.test.broker.Mqtt3WebSocketBroker;
+import hwb.utilities.mqtt3.broker.Mqtt3WebSocketBroker;
 
 public class MqttService extends Service {
 
@@ -59,15 +58,13 @@ public class MqttService extends Service {
             }
 
             try {
+                Mqtt3WebSocketBroker.Builder builder = Mqtt3WebSocketBroker.newBuilder();
                 String property = config.getProperty(MqttService.PORT);
-                int port;
                 if(property != null) {
-                    port = Integer.parseInt(property);
-                } else {
-                    port = SocketUtils.findAvailableTcpPort(10000, 30000);
+                    builder.withPort(Integer.parseInt(property));
                 }
 
-                broker = new Mqtt3WebSocketBroker(port);
+                broker = builder.build();
                 broker.start();
 
                 Log.i(TAG, "Started MQTT broker on port " + broker.getPort());
