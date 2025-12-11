@@ -105,13 +105,13 @@ ext {
 
     okHttp3Version = '4.12.0'
     javaWebSocketVersion = '1.6.0'
-
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.12'
 
     hivemqMqttClientVersion = '1.2.1'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
+    nettyVersion = '4.1.48.Final'
 }
 
 ext.commonDependencies = {
@@ -409,6 +409,16 @@ configure(javaLibraryProjects()) {
             includeEngines 'junit-jupiter', 'junit-vintage'
         }
 
+    }
+
+    dependencies {
+        testImplementation platform("org.junit:junit-bom:${junitJupiterVersion}") // Use the desired JUnit 5 version
+
+        testImplementation 'org.junit.jupiter:junit-jupiter-api'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+        testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     }
 }
 
