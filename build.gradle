@@ -411,6 +411,10 @@ configure(javaLibraryProjects()) {
 
     }
 
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
     dependencies {
         testImplementation platform("org.junit:junit-bom:${junitJupiterVersion}") // Use the desired JUnit 5 version
 

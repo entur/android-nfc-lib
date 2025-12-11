@@ -7,10 +7,9 @@ android {
 
 dependencies {
     api project(":nfc:external")
+    api project(":utilities:mqtt3-broker-java-lib")
 
-    api("io.netty:netty-codec-http:4.1.48.Final")
     api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
-    api "hwb.utilities:hwb-messages-android:${hwbMessagesVersion}"
     api "org.java-websocket:Java-WebSocket:${javaWebSocketVersion}"
 
 }
