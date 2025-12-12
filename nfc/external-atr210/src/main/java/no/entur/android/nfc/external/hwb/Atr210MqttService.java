@@ -12,8 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -26,11 +24,14 @@ import no.entur.android.nfc.external.hwb.intent.bind.Atr210ServiceBinder;
 import no.entur.android.nfc.external.hwb.intent.command.Atr210ServiceCommandsWrapper;
 import no.entur.android.nfc.external.hwb.reader.Atr210ReaderContext;
 import no.entur.android.nfc.external.hwb.reader.Atr210ReaderService;
+import no.entur.android.nfc.external.hwb.schema.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.external.service.tag.DefaultTagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
 public class Atr210MqttService implements MqttClientDisconnectedListener {
+
+    private static final String TOPIC_HEARTBEAT = "itxpt/inventory/providers/{PROVIDER_ID}/heartbeat/relative";
 
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
@@ -54,7 +55,7 @@ public class Atr210MqttService implements MqttClientDisconnectedListener {
 
         Atr210ServiceBinder binder = new Atr210ServiceBinder();
         binder.setServiceCommandsWrapper(new Atr210ServiceCommandsWrapper(this));
-        this.atr210Service = new Atr210Service("HWB", binder);
+        this.atr210Service = new Atr210Service("ATR210", binder);
     }
 
     public void addReader(String deviceId) {
@@ -75,7 +76,7 @@ public class Atr210MqttService implements MqttClientDisconnectedListener {
 
         broadcastStarted();
 
-        discoverReaders();
+        // do not discover readers here, rather listen to heartbeats
     }
 
     public void disconnect() {
@@ -118,45 +119,18 @@ public class Atr210MqttService implements MqttClientDisconnectedListener {
 
     public void subscribe() {
         // subscribes to topics
-        // /device/diagnostics <- new readers
-        // /validators/nfc <- new tags
-        // /validators/nfc/apdu/receive <- response to ADPU messages
-
-        client.subscribe("/validators/nfc", NfcSchema.class, this::onNewCard);
-        client.subscribe("/validators/diagnostics", DiagnosticsSchema.class, this::onDiagnostics);
-        client.subscribe("/validators/nfc/apdu/receive", ReceiveSchema.class, this::adpuResponse);
+        client.subscribeToJson(TOPIC_HEARTBEAT, this::onHeartbeat, HeartbeatResponse.class);
     }
 
     public void unsubscribe() {
         // subscribes to topics
-        // /device/diagnostics <- new readers
-        // /validators/nfc <- new tags
-
-        client.unsubscribe("/validators/nfc");
-        client.unsubscribe("/device/diagnostics");
-        client.unsubscribe("/validators/nfc/apdu/receive");
+        client.unsubscribe(TOPIC_HEARTBEAT);
     }
 
-    public void onDiagnostics(DiagnosticsSchema receiveSchema) {
-        List<Object> functionality = receiveSchema.getFunctionality();
-        if (functionality != null && functionality.contains("nfc")) {
-
-            synchronized (readers) {
-                if (!readers.containsKey(receiveSchema.getDeviceId())) {
-                    addReader(receiveSchema.getDeviceId(), receiveSchema);
-                } else {
-                    LOGGER.info("Already have reader " + receiveSchema.getDeviceId());
-                }
-            }
-        } else {
-            LOGGER.info("Not adding non-NFC reader " + receiveSchema.getDeviceId());
-        }
-    }
-
-    public Atr210ReaderService addReader(String deviceId, DiagnosticsSchema receiveSchema) {
+    public Atr210ReaderService addReader(String deviceId, HeartbeatResponse heartbeat) {
         Atr210ReaderContext readerContext = new Atr210ReaderContext();
-        readerContext.setDeviceId(deviceId);
-        readerContext.setDiagnosticsSchema(receiveSchema);
+        readerContext.setClientId(deviceId);
+        readerContext.setHeartbeat(heartbeat);
 
         Atr210ReaderService atr210ReaderService = new Atr210ReaderService(context, client, apduRequestResponseMessages, readerContext, transcieveTimeout, tagProxyStore);
         readers.put(deviceId, atr210ReaderService);
@@ -164,10 +138,10 @@ public class Atr210MqttService implements MqttClientDisconnectedListener {
         return atr210ReaderService;
     }
 
-    public void onNewCard(NfcSchema schema) {
-        Atr210ReaderService atr210ReaderService = spawnReader(schema.getDeviceId());
+    public void onHeartbeat(HeartbeatResponse heartbeat) {
+        Atr210ReaderService atr210ReaderService = spawnReader(heartbeat.getDeviceId());
 
-        atr210ReaderService.newTag(schema);
+        atr210ReaderService.setNextHeartbeatDeadline(System.currentTimeMillis() + heartbeat.getNextHeartbeatWithinSeconds().intValue() * 1000 + 1000);
     }
 
     @NonNull
@@ -179,53 +153,25 @@ public class Atr210MqttService implements MqttClientDisconnectedListener {
             synchronized (readers) {
                 atr210ReaderService = readers.get(deviceId);
                 if (atr210ReaderService == null) {
-
-                    // TODO send diagnostics message for this reader here and now?
-
-                    // add as a generic reader, we do not know which type yet
                     atr210ReaderService = addReader(deviceId, null);
 
                     atr210ReaderService.open();
+
+                    scheduleHeartbeatCheck();
                 }
             }
         }
         return atr210ReaderService;
     }
 
-    public void adpuResponse(ReceiveSchema receiveSchema) {
-        try {
-            Atr210ReaderService atr210ReaderService = readers.get(receiveSchema.getDeviceId());
-
-            if(atr210ReaderService == null) {
-                LOGGER.warn("Got ADPU response for unknown reader {}", receiveSchema.getDeviceId());
-                return;
-            }
-
-            atr210ReaderService.onAdpuResponse(receiveSchema);
-        } catch (Exception e) {
-            LOGGER.error("Problem handling ADPU MQTT response message", e);
-        }
+    private void scheduleHeartbeatCheck() {
+        // TODO remove readers if no more heartbeat
     }
 
     @Override
     public void onDisconnected(@NotNull MqttClientDisconnectedContext context) {
         // all readers disconnected
         onDisconnected();
-    }
-
-    public void discoverReaders() {
-        try {
-            // ping readers
-            // https://github.com/entur/hwb/blob/main/specifications/device/diagnostics/request/request.md
-
-            RequestSchema requestSchema = new RequestSchema();
-            requestSchema.setTraceId(UUID.randomUUID());
-            requestSchema.setEventTimestamp(new Date());
-
-            client.publish("/device/diagnostics/request", requestSchema);
-        } catch (Exception e) {
-            LOGGER.error("Problem discovering MQTT NFC readers", e);
-        }
     }
 
     public Set<String> getReaderIds() {

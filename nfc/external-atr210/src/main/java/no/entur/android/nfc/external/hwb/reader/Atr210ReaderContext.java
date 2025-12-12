@@ -1,27 +1,36 @@
 package no.entur.android.nfc.external.hwb.reader;
 
 import hwb.utilities.device.diagnostics.DiagnosticsSchema;
+import no.entur.android.nfc.external.hwb.schema.ClientIdToProviderIdConverter;
+import no.entur.android.nfc.external.hwb.schema.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.mqtt.messages.reader.ReaderContext;
 
 public class Atr210ReaderContext implements ReaderContext {
 
-    protected String deviceId;
+    protected String clientId;
+    protected String providerId;
 
-    protected DiagnosticsSchema diagnosticsSchema;
+    protected HeartbeatResponse heartbeat;
 
-    public DiagnosticsSchema getDiagnosticsSchema() {
-        return diagnosticsSchema;
+    public HeartbeatResponse getHeartbeat() {
+        return heartbeat;
     }
 
-    public void setDiagnosticsSchema(DiagnosticsSchema diagnosticsSchema) {
-        this.diagnosticsSchema = diagnosticsSchema;
+    public void setHeartbeat(HeartbeatResponse heartbeat) {
+        this.heartbeat = heartbeat;
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+
+        this.providerId = ClientIdToProviderIdConverter.convert(clientId);
+    }
+
+    public String getProviderId() {
+        return providerId;
     }
 }

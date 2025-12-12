@@ -5,14 +5,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import hwb.utilities.validators.nfc.apdu.deviceId.transmit.Command;
-import hwb.utilities.validators.nfc.apdu.deviceId.transmit.TransmitSchema;
 import no.entur.android.nfc.mqtt.messages.JsonResponseMqttMessage;
 import no.entur.android.nfc.mqtt.messages.card.CardAdpuMessageConverter;
 import no.entur.android.nfc.mqtt.messages.card.CardAdpuSynchronizedRequestMessageRequest;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessage;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
-import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
 
 public class Atr210CardMessageConverter implements CardAdpuMessageConverter<UUID, Atr210CardContext> {
 

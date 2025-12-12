@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/hf/status
-public class ReadersStatusResponse extends AbstractResponse {
+// itxpt/ticketreader/{PROVIDER_ID}/nfc/readers
+public class ReadersStatusResponse extends AbstractMessage {
 
     // "hf_readers":
     @JsonProperty("hf_readers")

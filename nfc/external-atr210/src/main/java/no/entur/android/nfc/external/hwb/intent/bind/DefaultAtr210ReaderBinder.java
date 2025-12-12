@@ -2,38 +2,43 @@ package no.entur.android.nfc.external.hwb.intent.bind;
 
 import android.os.RemoteException;
 
-import no.entur.android.nfc.external.hwb.intent.command.DefaultAtr210ReaderCommandsWrapper;
-import no.entur.android.nfc.external.hwb.intent.command.HwbReaderCommandsWrapper;
-import no.entur.android.nfc.external.hwb.reader.IHwbReaderControl;
+import no.entur.android.nfc.external.atr210.reader.IAtr210ReaderControl;
+import no.entur.android.nfc.external.hwb.intent.command.Atr210ReaderCommandsWrapper;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-public class DefaultAtr210ReaderBinder extends IHwbReaderControl.Stub {
+public class DefaultAtr210ReaderBinder extends IAtr210ReaderControl.Stub {
 
-	private DefaultAtr210ReaderCommandsWrapper readerCommandsWrapper;
+	private Atr210ReaderCommandsWrapper readerCommandsWrapper;
 
 	public DefaultAtr210ReaderBinder() {
-		attachInterface(this, IHwbReaderControl.class.getName());
+		attachInterface(this, IAtr210ReaderControl.class.getName());
 	}
 
-    public void setReaderCommandsWrapper(DefaultAtr210ReaderCommandsWrapper readerCommandsWrapper) {
+    public void setReaderCommandsWrapper(Atr210ReaderCommandsWrapper readerCommandsWrapper) {
         this.readerCommandsWrapper = readerCommandsWrapper;
     }
 
     @Override
-    public byte[] getDiagnostics(long timeout) throws RemoteException {
+    public byte[] getNfcReadersConfiguration(long timeout) throws RemoteException {
         if (readerCommandsWrapper == null) {
             return RemoteCommandWriter.noReaderException();
         }
-        return readerCommandsWrapper.diagnostics(timeout);
+        return readerCommandsWrapper.getNfcReadersConfiguration(timeout);
     }
 
     @Override
-    public byte[] isPresent(long timeout) throws RemoteException {
+    public byte[] setNfcReadersConfiguration(byte[] value, long timeout) throws RemoteException {
         if (readerCommandsWrapper == null) {
             return RemoteCommandWriter.noReaderException();
         }
-        return readerCommandsWrapper.isPresent(timeout);
+        return readerCommandsWrapper.setNfcReadersConfiguration(value, timeout);
     }
 
-
+    @Override
+    public byte[] getNfcReaders(long timeout) throws RemoteException {
+        if (readerCommandsWrapper == null) {
+            return RemoteCommandWriter.noReaderException();
+        }
+        return readerCommandsWrapper.getNfcReaders(timeout);
+    }
 }

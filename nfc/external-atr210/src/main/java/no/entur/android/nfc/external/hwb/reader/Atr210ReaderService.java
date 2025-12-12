@@ -18,11 +18,10 @@ import no.entur.android.nfc.external.hwb.HwbMqttClient;
 import no.entur.android.nfc.external.hwb.Atr210MqttService;
 import no.entur.android.nfc.external.hwb.card.Atr210CardService;
 import no.entur.android.nfc.external.hwb.card.Atr210CardContext;
-import no.entur.android.nfc.external.hwb.intent.DefaultAtr210Reader;
 import no.entur.android.nfc.external.hwb.intent.Atr210Reader;
 import no.entur.android.nfc.external.hwb.intent.bind.DefaultAtr210ReaderBinder;
 import no.entur.android.nfc.external.hwb.intent.bind.Atr210ReaderTechnology;
-import no.entur.android.nfc.external.hwb.intent.command.DefaultAtr210ReaderCommandsWrapper;
+import no.entur.android.nfc.external.hwb.intent.command.Atr210ReaderCommandsWrapper;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
@@ -31,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 public class Atr210ReaderService {
 
+    private static final String TOPIC_TICKET_REQUEST = "itxpt/ticketreader/{PROVIDER_ID}/request/validation";
+    private static final String TOPIC_TICKET_RESPONSE = "itxpt/ticketreader/+/response/validation";
     private static final Logger LOGGER = LoggerFactory.getLogger(Atr210ReaderService.class);
     private final INFcTagBinder infcTagBinder;
 
@@ -50,6 +51,8 @@ public class Atr210ReaderService {
 
     protected final TagProxyStore tagProxyStore;
 
+    protected long nextHeartbeatDeadline = -1L;
+
     public Atr210ReaderService(Context context, MqttServiceClient hwbMqttClient, SynchronizedRequestResponseMessages<UUID> adpuRequestResponseMessages, Atr210ReaderContext readerContext, long transcieveTimeout, TagProxyStore tagProxyStore) {
         this.context = context;
         this.hwbMqttClient = hwbMqttClient;
@@ -65,8 +68,8 @@ public class Atr210ReaderService {
 
         // TODO pass type via reader context? what if not available?
         DefaultAtr210ReaderBinder binder = new DefaultAtr210ReaderBinder();
-        binder.setReaderCommandsWrapper(new DefaultAtr210ReaderCommandsWrapper(readerCommands));
-        this.atr210Reader = new DefaultAtr210Reader("HWB", binder);
+        binder.setReaderCommandsWrapper(new Atr210ReaderCommandsWrapper(readerCommands));
+        this.atr210Reader = new Atr210Reader("ATR210", readerContext.getClientId(), readerContext.getProviderId(), binder);
 
         infcTagBinder = new INFcTagBinder(tagProxyStore);
         infcTagBinder.setReaderTechnology(new Atr210ReaderTechnology(true));
@@ -89,11 +92,11 @@ public class Atr210ReaderService {
     }
 
     private void subscribe() {
-        hwbMqttClient.subscribe("/device/" + readerContext.getDeviceId() + "/diagnostics", DiagnosticsSchema.class, this::diagnostics);
+        hwbMqttClient.subscribe("/device/" + readerContext.getClientId() + "/diagnostics", DiagnosticsSchema.class, this::diagnostics);
     }
 
     private void unsubscribe() {
-        hwbMqttClient.unsubscribe("/device/" + readerContext.getDeviceId() + "/diagnostics");
+        hwbMqttClient.unsubscribe("/device/" + readerContext.getClientId() + "/diagnostics");
     }
 
     public void broadcastClosed() {
@@ -125,7 +128,7 @@ public class Atr210ReaderService {
         if(card != null) {
             card.onAdpuResponse(receiveSchema);
         } else {
-            LOGGER.info("Not forwarding ADPU response for reader {}; no card", readerContext.getDeviceId());
+            LOGGER.info("Not forwarding ADPU response for reader {}; no card", readerContext.getClientId());
         }
     }
 
@@ -137,7 +140,7 @@ public class Atr210ReaderService {
         String travelCardNumber = schema.getTravelCardNumber();
 
         Atr210CardContext context = new Atr210CardContext();
-        context.setDeviceId(readerContext.getDeviceId());
+        context.setDeviceId(readerContext.getClientId());
 
         // is this a desfire card? if so then desfire native commands
         if(isDesfire(schema)) {
@@ -169,5 +172,11 @@ public class Atr210ReaderService {
     public boolean isPresent(long timeout) throws IOException {
         return readerCommands.isPresent(timeout);
     }
+
+    public void setNextHeartbeatDeadline(long nextHeartbeatDeadline) {
+        this.nextHeartbeatDeadline = nextHeartbeatDeadline;
+    }
+
+
 
 }

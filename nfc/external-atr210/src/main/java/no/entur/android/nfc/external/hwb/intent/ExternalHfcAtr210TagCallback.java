@@ -5,6 +5,6 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 
 public interface ExternalHfcAtr210TagCallback extends ExternalNfcTagCallback {
 
-    public static final String EXTRA_HWB_DEVICE_ID = ExternalNfcReaderCallback.class.getName() + ".extra.DEVICE_ID";
+    public static final String EXTRA_PROVIDER_ID = ExternalNfcReaderCallback.class.getName() + ".extra.PROVIDER_ID";
 
 }

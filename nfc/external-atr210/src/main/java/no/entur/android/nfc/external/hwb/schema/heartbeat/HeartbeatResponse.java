@@ -1,20 +1,16 @@
 
 package no.entur.android.nfc.external.hwb.schema.heartbeat;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import no.entur.android.nfc.external.hwb.schema.AbstractResponse;
+import no.entur.android.nfc.external.hwb.schema.AbstractMessage;
 
 // itxpt/inventory/providers/{PROVIDER_ID}/heartbeat/relative
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class HeartbeatResponse extends AbstractResponse {
+public class HeartbeatResponse extends AbstractMessage {
 
     @JsonProperty("apiVersion")
     private String apiVersion;

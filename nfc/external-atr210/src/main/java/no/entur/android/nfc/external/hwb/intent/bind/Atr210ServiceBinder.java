@@ -1,15 +1,14 @@
 package no.entur.android.nfc.external.hwb.intent.bind;
 
+import no.entur.android.nfc.external.atr210.reader.IAtr210ServiceControl;
 import no.entur.android.nfc.external.hwb.intent.command.Atr210ServiceCommandsWrapper;
-import no.entur.android.nfc.external.hwb.reader.IAtr210ReaderControl;
-import no.entur.android.nfc.external.hwb.reader.IHwbServiceControl;
 
-public class Atr210ServiceBinder extends IHwbServiceControl.Stub {
+public class Atr210ServiceBinder extends IAtr210ServiceControl.Stub {
 
 	private Atr210ServiceCommandsWrapper serviceCommandsWrapper;
 
 	public Atr210ServiceBinder() {
-		attachInterface(this, IAtr210ReaderControl.class.getName());
+		attachInterface(this, IAtr210ServiceControl.class.getName());
 	}
 
     public void clearReader() {

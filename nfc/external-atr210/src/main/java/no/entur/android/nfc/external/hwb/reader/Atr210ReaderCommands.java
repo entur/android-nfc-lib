@@ -2,7 +2,8 @@ package no.entur.android.nfc.external.hwb.reader;
 
 import java.io.IOException;
 
-import hwb.utilities.device.deviceId.diagnostics.DiagnosticsSchema;
+import no.entur.android.nfc.external.hwb.schema.NfcConfiguationRequest;
+import no.entur.android.nfc.external.hwb.schema.NfcConfiguationResponse;
 import no.entur.android.nfc.mqtt.messages.reader.ReaderPresentSynchronizedRequestMessageRequest;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessage;
@@ -65,5 +66,16 @@ public class Atr210ReaderCommands extends ReaderCommands<String, Atr210ReaderCon
         }
         throw new IOException();
     }
+
+    public NfcConfiguationResponse setNfcReadersConfiguration(NfcConfiguationRequest value, long timeout) {
+
+    }
+
+    public NfcConfiguationResponse getNfcReaders(long timeout) {
+    }
+
+    public NfcConfiguationResponse getNfcReadersConfiguration(long timeout) {
+    }
+
 
 }

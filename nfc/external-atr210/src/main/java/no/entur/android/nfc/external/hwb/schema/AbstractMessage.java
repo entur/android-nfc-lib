@@ -3,11 +3,8 @@ package no.entur.android.nfc.external.hwb.schema;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AbstractResponse {
+public class AbstractMessage {
 
     @JsonProperty("sequence")
     private int sequence;

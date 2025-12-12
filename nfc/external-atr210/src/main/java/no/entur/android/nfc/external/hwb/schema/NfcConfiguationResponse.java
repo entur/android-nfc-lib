@@ -1,9 +1,11 @@
 package no.entur.android.nfc.external.hwb.schema;
 
+import android.os.Parcelable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/configuration
-public class NfcConfiguationResponse extends AbstractResponse {
+public class NfcConfiguationResponse extends AbstractMessage {
 
     private boolean enabled;
 

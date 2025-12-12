@@ -3,14 +3,11 @@ package hwb.utilities.mqtt3.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3Client;
-import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAck;
-import hwb.utilities.device.diagnostics.request.RequestSchema;
+
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -26,10 +23,6 @@ public class MqttServiceClientTest {
                 .serverPort(1883)
                 .serverHost("192.168.3.30")
                 .buildAsync();
-
-        RequestSchema ping = new RequestSchema();
-        ping.setTraceId(UUID.randomUUID());
-        ping.setEventTimestamp(new Date());
 
         Executor executor = Executors.newSingleThreadExecutor();
         MqttServiceClient client = new MqttServiceClient(executor, mqtt3AsyncClient, 1000);

@@ -13,29 +13,17 @@ public class Atr210ServiceCommandsWrapper extends RemoteCommandWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Atr210ServiceCommandsWrapper.class);
 
-    private final Atr210MqttService hwbService;
+    private final Atr210MqttService atr210MqttService;
 
-    public Atr210ServiceCommandsWrapper(Atr210MqttService hwbService) {
-        this.hwbService = hwbService;
-    }
-
-    public byte[] discoverReaders() {
-        Exception exception = null;
-        try {
-            hwbService.discoverReaders();
-        } catch (Exception e) {
-            LOGGER.debug("Problem discovering readers", e);
-
-            exception = e;
-        }
-        return returnValue(exception);
+    public Atr210ServiceCommandsWrapper(Atr210MqttService atr210MqttService) {
+        this.atr210MqttService = atr210MqttService;
     }
 
     public byte[] getReaderIds() {
         Exception exception = null;
         List<String> result = null;
         try {
-            result = new ArrayList<>(hwbService.getReaderIds());
+            result = new ArrayList<>(atr210MqttService.getReaderIds());
         } catch (Exception e) {
             LOGGER.debug("Problem discovering readers", e);
 

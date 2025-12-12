@@ -1,13 +1,12 @@
 package no.entur.android.nfc.external.hwb.schema;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.List;
 
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/hf/status
-public class HfReaderStatusResponse extends AbstractResponse {
+public class HfReaderStatusResponse extends AbstractMessage {
 
     // "hf_readers":
     @JsonProperty("hf_readers")

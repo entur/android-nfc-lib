@@ -17,7 +17,7 @@ public class Atr210ReaderMessageConverter implements ReaderPresentMessageConvert
         schema.setEventTimestamp(new Date());
         schema.setTraceId(UUID.randomUUID());
 
-        return new Atr210ReaderPresentSynchronizedRequestMessageRequest(schema, context.getDeviceId());
+        return new Atr210ReaderPresentSynchronizedRequestMessageRequest(schema, context.getClientId());
     }
 
     @Override

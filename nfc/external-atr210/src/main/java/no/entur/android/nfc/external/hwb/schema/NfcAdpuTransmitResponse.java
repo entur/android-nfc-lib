@@ -1,12 +1,10 @@
 package no.entur.android.nfc.external.hwb.schema;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.util.ArrayList;
 import java.util.List;
 
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/hf/apdu/response
-public class NfcAdpuTransmitResponse extends AbstractResponse {
+public class NfcAdpuTransmitResponse extends AbstractMessage {
 
     private List<ApduResponse> result = new ArrayList<>();
 

@@ -7,28 +7,17 @@ import android.os.RemoteException;
 
 import java.util.List;
 
-import no.entur.android.nfc.external.hwb.reader.IHwbServiceControl;
+import no.entur.android.nfc.external.atr210.reader.IAtr210ServiceControl;
 import no.entur.android.nfc.external.remote.RemoteCommandException;
 import no.entur.android.nfc.external.remote.RemoteCommandReader;
 
 public class Atr210Service extends RemoteCommandReader {
 
-    protected IHwbServiceControl serviceControl;
+    protected IAtr210ServiceControl serviceControl;
 
-    public Atr210Service(String name, IHwbServiceControl serviceControl) {
+    public Atr210Service(String name, IAtr210ServiceControl serviceControl) {
         this.name = name;
         this.serviceControl = serviceControl;
-    }
-
-    public void discoverReaders() throws Atr210ReaderException {
-        byte[] response;
-        try {
-            response = serviceControl.discoverReaders();
-        } catch (RemoteException e) {
-            throw new Atr210ReaderException(e);
-        }
-
-        readVoid(response);
     }
 
     public List<String> getReaderIds() throws Atr210ReaderException {
@@ -60,7 +49,7 @@ public class Atr210Service extends RemoteCommandReader {
 
             IBinder binder = in.readStrongBinder();
 
-            IHwbServiceControl iin = IHwbServiceControl.Stub.asInterface(binder);
+            IAtr210ServiceControl iin = IAtr210ServiceControl.Stub.asInterface(binder);
 
             return new Atr210Service(name, iin);
         }

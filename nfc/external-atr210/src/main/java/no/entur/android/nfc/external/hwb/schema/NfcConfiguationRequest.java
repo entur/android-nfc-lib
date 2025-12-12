@@ -2,6 +2,8 @@ package no.entur.android.nfc.external.hwb.schema;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+// use empty request to read
+
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/configuration/request
 public class NfcConfiguationRequest {
 

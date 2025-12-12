@@ -17,21 +17,11 @@ public class Atr210CardContext implements CardContext  {
 
     private boolean closed = false;
 
-    private TransmitSchema.ApduType apduType;
-
     private long transcieveTimeout = 687;
 
     private UUID traceId;
 
     public Atr210CardContext() {
-    }
-
-    public TransmitSchema.ApduType getApduType() {
-        return apduType;
-    }
-
-    public void setApduType(TransmitSchema.ApduType apduType) {
-        this.apduType = apduType;
     }
 
     @Override
