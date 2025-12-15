@@ -10,7 +10,7 @@ import java.util.List;
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/hf/status
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/status
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers
-public class ReadersStatusResponse extends AbstractMessage implements Parcelable {
+public class ReadersStatusResponse extends AbstractMessage {
 
     // "hf_readers":
     @JsonProperty("hf_readers")
