@@ -7,7 +7,7 @@ import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessage;
 
 public class CardCommands<T, C extends CardContext> {
 
-	protected final SynchronizedRequestResponseMessages<T> adpuExchange;
+	protected final SynchronizedRequestResponseMessages<T> exchange;
 
 	protected long adpuTranscieveTimeout;
 
@@ -15,9 +15,9 @@ public class CardCommands<T, C extends CardContext> {
 
 	protected final C cardContext;
 
-	public CardCommands(C cardContext, SynchronizedRequestResponseMessages<T> adpuExchange, long adpuTranscieveTimeout, CardAdpuMessageConverter<T, C> cardAdpuMessageConverter) {
+	public CardCommands(C cardContext, SynchronizedRequestResponseMessages<T> exchange, long adpuTranscieveTimeout, CardAdpuMessageConverter<T, C> cardAdpuMessageConverter) {
 		this.cardContext = cardContext;
-        this.adpuExchange = adpuExchange;
+        this.exchange = exchange;
         this.adpuTranscieveTimeout = adpuTranscieveTimeout;
 		this.cardAdpuMessageConverter = cardAdpuMessageConverter;
     }
@@ -28,7 +28,7 @@ public class CardCommands<T, C extends CardContext> {
 
 	public byte[] transcieve(byte[] message) throws IOException  {
 		CardAdpuSynchronizedRequestMessageRequest<T, ?> request = cardAdpuMessageConverter.createCardAdpuRequestMessage(message, cardContext);
-		SynchronizedResponseMessage<T> response = adpuExchange.sendAndWaitForResponse(request, adpuTranscieveTimeout);
+		SynchronizedResponseMessage<T> response = exchange.sendAndWaitForResponse(request, adpuTranscieveTimeout);
 		
 		if(response != null) {
 			CardAdpuSynchronizedResponseMessage result = cardAdpuMessageConverter.createCardAdpuResponseMessage(response, cardContext);

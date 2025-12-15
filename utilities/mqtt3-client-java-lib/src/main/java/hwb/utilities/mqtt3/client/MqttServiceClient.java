@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class MqttServiceClient {
@@ -84,6 +85,22 @@ public class MqttServiceClient {
                     try {
                         T t = objectMapper.readValue(c.getPayloadAsBytes(), cls);
                         callback.accept(t);
+                    } catch (Exception e) {
+                        LOGGER.error("Problem deserializing payload for " + topic, e);
+                    }
+                })
+                .executor(executor)
+                .send();
+    }
+
+    public <T> void subscribeToJson(String topic, BiConsumer<String, T> callback, Class<T> cls) {
+        client.subscribeWith()
+                .topicFilter(topic)
+                .qos(MqttQos.EXACTLY_ONCE)
+                .callback( (c) -> {
+                    try {
+                        T t = objectMapper.readValue(c.getPayloadAsBytes(), cls);
+                        callback.accept(topic, t);
                     } catch (Exception e) {
                         LOGGER.error("Problem deserializing payload for " + topic, e);
                     }

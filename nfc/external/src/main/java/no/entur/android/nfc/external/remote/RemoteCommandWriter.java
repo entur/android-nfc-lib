@@ -263,4 +263,9 @@ public class RemoteCommandWriter {
         }
     }
 
+    public <T> T readParcelable(byte[] response, Parcelable.Creator<T> creator) {
+        return RemoteCommandReader.unmarshall(response, creator);
+    }
+
+
 }

@@ -93,11 +93,6 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
         throw new RuntimeException();
     }
 
-    @Override
-    public boolean supportsTransceiveParcelable(String className) {
-        return false;
-    }
-
     private TransceiveResult getRawTransceiveResult(byte[] data) {
 		try {
 			byte[] result = readerWriter.transmitPassthrough(data);
