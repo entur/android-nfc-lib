@@ -21,7 +21,7 @@ public class NativeDesfireChunkedResponseValidator implements TransceiveResponse
             return false;
         }
 
-        int status = response[response.length - 1] & 0xFF;
+        int status = response[0] & 0xFF;
         return status == this.status;
     }
 
@@ -46,6 +46,5 @@ public class NativeDesfireChunkedResponseValidator implements TransceiveResponse
             return new NativeDesfireChunkedResponseValidator[size];
         }
     };
-
 
 }

@@ -77,5 +77,5 @@ public class Atr210ReaderCommands extends ReaderCommands<String, Atr210ReaderCon
         // use empty payload to get configuration
         return setNfcReadersConfiguration(new NfcConfiguationRequest(), timeout);
     }
-    
+
 }

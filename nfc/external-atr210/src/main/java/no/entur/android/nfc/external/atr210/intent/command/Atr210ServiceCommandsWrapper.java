@@ -6,16 +6,16 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.entur.android.nfc.external.atr210.Atr210MqttService;
+import no.entur.android.nfc.external.atr210.Atr210MqttHandler;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
 public class Atr210ServiceCommandsWrapper extends RemoteCommandWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Atr210ServiceCommandsWrapper.class);
 
-    private final Atr210MqttService atr210MqttService;
+    private final Atr210MqttHandler atr210MqttService;
 
-    public Atr210ServiceCommandsWrapper(Atr210MqttService atr210MqttService) {
+    public Atr210ServiceCommandsWrapper(Atr210MqttHandler atr210MqttService) {
         this.atr210MqttService = atr210MqttService;
     }
 

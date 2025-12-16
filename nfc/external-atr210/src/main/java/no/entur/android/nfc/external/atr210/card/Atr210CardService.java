@@ -2,20 +2,13 @@ package no.entur.android.nfc.external.atr210.card;
 
 import android.content.Context;
 
-import java.io.IOException;
-
 import hwb.utilities.mqtt3.client.MqttServiceClient;
-import no.entur.android.nfc.external.atr210.intent.Atr210TransceiveResultExceptionMapper;
-import no.entur.android.nfc.external.atr210.intent.ExternalAtr210NfcTagCallback;
 import no.entur.android.nfc.external.atr210.schema.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageListener;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageRequest;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessageListener;
 
 public class Atr210CardService {
 
@@ -80,8 +73,8 @@ public class Atr210CardService {
         // broadcast tag present
         this.currentCard = isoDepTagServiceSupport.card(0, wrapper, cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
 
-            intent.putExtra(ExternalAtr210NfcTagCallback.EXTRA_PROVIDER_ID, cardContext.getProviderId());
-            intent.putExtra(ExternalAtr210NfcTagCallback.EXTRA_CLIENT_ID, cardContext.getClientId());
+            intent.putExtra(Atr210NfcTagCallback.EXTRA_PROVIDER_ID, cardContext.getProviderId());
+            intent.putExtra(Atr210NfcTagCallback.EXTRA_CLIENT_ID, cardContext.getClientId());
 
             return intent;
         });

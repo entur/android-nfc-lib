@@ -251,4 +251,12 @@ public abstract class RemoteCommandReader implements Parcelable {
         return result;
     }
 
+    protected static byte[] marshall(Parcelable p) {
+        Parcel parcel = Parcel.obtain();
+        p.writeToParcel(parcel, 0);
+        byte[] marshall = parcel.marshall();
+        parcel.recycle();
+        return marshall;
+    }
+
 }

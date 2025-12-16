@@ -208,14 +208,6 @@ public class RemoteCommandWriter {
         }
     }
 
-
-    protected static Parcel unmarshall(byte[] bytes) {
-        Parcel parcel = Parcel.obtain();
-        parcel.unmarshall(bytes, 0, bytes.length);
-        parcel.setDataPosition(0); // This is extremely important!
-        return parcel;
-    }
-
     protected byte[] returnValue(Parcelable parcelable, Exception exception) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();

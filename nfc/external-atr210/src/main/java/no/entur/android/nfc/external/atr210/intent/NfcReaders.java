@@ -6,8 +6,6 @@ import android.os.Parcelable;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.entur.android.nfc.external.atr210.schema.Status;
-
 public class NfcReaders implements Parcelable {
 
     private List<NfcTagReader> tagReaders = new ArrayList<>();
@@ -48,9 +46,9 @@ public class NfcReaders implements Parcelable {
             dest.writeString(hfReader.getId());
             dest.writeString(hfReader.getName());
 
-            List<Status> status = hfReader.getStatus();
+            List<NfcCardStatus> status = hfReader.getStatus();
             dest.writeInt(status.size());
-            for (Status s : status) {
+            for (NfcCardStatus s : status) {
                 dest.writeInt(s.ordinal());
             }
         }
@@ -60,9 +58,9 @@ public class NfcReaders implements Parcelable {
             dest.writeString(samReader.getId());
             dest.writeString(samReader.getName());
 
-            List<Status> status = samReader.getStatus();
+            List<NfcCardStatus> status = samReader.getStatus();
             dest.writeInt(status.size());
-            for (Status s : status) {
+            for (NfcCardStatus s : status) {
                 dest.writeInt(s.ordinal());
             }
         }
@@ -80,11 +78,11 @@ public class NfcReaders implements Parcelable {
                 String id = in.readString();
                 String name = in.readString();
 
-                List<Status> status = new ArrayList<>();
+                List<NfcCardStatus> status = new ArrayList<>();
 
                 int statusCount = in.readInt();
                 for(int k = 0; k < statusCount; k++) {
-                    status.add(Status.fromOrdinal(in.readInt()));
+                    status.add(NfcCardStatus.fromOrdinal(in.readInt()));
                 }
 
                 hfReaders.add(new NfcTagReader(id, status, name));
@@ -96,11 +94,11 @@ public class NfcReaders implements Parcelable {
                 String id = in.readString();
                 String name = in.readString();
 
-                List<Status> status = new ArrayList<>();
+                List<NfcCardStatus> status = new ArrayList<>();
 
                 int statusCount = in.readInt();
                 for(int k = 0; k < statusCount; k++) {
-                    status.add(Status.fromOrdinal(in.readInt()));
+                    status.add(NfcCardStatus.fromOrdinal(in.readInt()));
                 }
 
                 samReaders.add(new NfcSamReader(id, status, name));

@@ -3,12 +3,11 @@ package no.entur.android.nfc.external.atr210.reader;
 import android.content.Context;
 import android.content.Intent;
 
-import java.io.IOException;
 import java.util.List;
 
 import hwb.utilities.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
-import no.entur.android.nfc.external.atr210.Atr210MqttService;
+import no.entur.android.nfc.external.atr210.Atr210MqttHandler;
 import no.entur.android.nfc.external.atr210.card.Atr210CardContext;
 import no.entur.android.nfc.external.atr210.card.Atr210CardService;
 import no.entur.android.nfc.external.atr210.intent.Atr210Reader;
@@ -19,7 +18,7 @@ import no.entur.android.nfc.external.atr210.schema.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.external.atr210.schema.NfcConfiguationResponse;
 import no.entur.android.nfc.external.atr210.schema.ReaderStatus;
 import no.entur.android.nfc.external.atr210.schema.ReadersStatusResponse;
-import no.entur.android.nfc.external.atr210.schema.Status;
+import no.entur.android.nfc.external.atr210.intent.NfcCardStatus;
 import no.entur.android.nfc.external.atr210.schema.TicketRequest;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
@@ -123,7 +122,7 @@ public class Atr210ReaderService {
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
 
-        context.sendBroadcast(intent, Atr210MqttService.ANDROID_PERMISSION_NFC);
+        context.sendBroadcast(intent, Atr210MqttHandler.ANDROID_PERMISSION_NFC);
     }
 
     public void broadcastOpened() {
@@ -132,7 +131,7 @@ public class Atr210ReaderService {
 
         intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, atr210Reader);
 
-        context.sendBroadcast(intent, Atr210MqttService.ANDROID_PERMISSION_NFC);
+        context.sendBroadcast(intent, Atr210MqttHandler.ANDROID_PERMISSION_NFC);
     }
 
     private void reader(String topic, ReadersStatusResponse readersStatusResponse) {
@@ -172,16 +171,16 @@ public class Atr210ReaderService {
 
     private boolean isTagPresent(ReaderStatus hfReader) {
         // CHANGED,PRESENT
-        return hfReader.hasStatus(Status.CHANGED) && hfReader.hasStatus(Status.PRESENT);
+        return hfReader.hasStatus(NfcCardStatus.CHANGED) && hfReader.hasStatus(NfcCardStatus.PRESENT);
     }
 
     private boolean isTagLost(ReaderStatus hfReader) {
         // CHANGED,PRESENT
-        return hfReader.hasStatus(Status.CHANGED) && hfReader.hasStatus(Status.EMPTY);
+        return hfReader.hasStatus(NfcCardStatus.CHANGED) && hfReader.hasStatus(NfcCardStatus.EMPTY);
     }
 
-    public boolean hasHeartbeat() throws IOException {
-        return nextHeartbeatDeadline == -1 || nextHeartbeatDeadline + HEARTBEAT_LEEWAY >= System.currentTimeMillis();
+    public boolean hasHeartbeat() {
+        return nextHeartbeatDeadline + HEARTBEAT_LEEWAY >= System.currentTimeMillis();
     }
 
     public void setNextHeartbeatDeadline(long nextHeartbeatDeadline) {

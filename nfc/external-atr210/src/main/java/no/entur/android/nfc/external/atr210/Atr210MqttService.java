@@ -1,20 +1,34 @@
 package no.entur.android.nfc.external.atr210;
 
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.hivemq.client.mqtt.lifecycle.MqttClientConnectedContext;
+import com.hivemq.client.mqtt.lifecycle.MqttClientConnectedListener;
 import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedContext;
 import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedListener;
+import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt3.Mqtt3Client;
+import com.hivemq.client.mqtt.mqtt3.Mqtt3ClientBuilder;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import hwb.utilities.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
@@ -26,152 +40,115 @@ import no.entur.android.nfc.external.atr210.reader.Atr210ReaderService;
 import no.entur.android.nfc.external.atr210.schema.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.external.service.tag.DefaultTagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
-import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
-public class Atr210MqttService implements MqttClientDisconnectedListener {
+public class Atr210MqttService extends Service implements MqttClientConnectedListener, MqttClientDisconnectedListener {
 
-    private static final String TOPIC_HEARTBEAT = "itxpt/inventory/providers/+/heartbeat/relative";
+    public static final String MQTT_CLIENT_PORT = "PORT";
+    public static final String MQTT_CLIENT_HOST = "HOST";
+    public static final String MQTT_CLIENT_IDENTIFIER = "IDENTIFIER";
+
+    public static final String MQTT_CLIENT_DEFAULT_WEBSOCKET_CONFIGURATION = "DEFAULT_WEBSOCKET_CONFIGURATION";
+
+    public static final String MQTT_CLIENT_CONNECT_TIMEOUT = "CONNECT_TIMEOUT";
+    public static final String MQTT_CLIENT_TRANSCEIVE_TIMEOUT = "TRANSCEIVE_TIMEOUT";
 
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
+    private static final String MQTT_CLIENT_RECONNECT_INITIAL_DELAY = "RECONNECT_INITIAL_DELAY";
+    private static final String MQTT_CLIENT_RECONNECT_MAX_DELAY = "RECONNECT_MAX_DELAY";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Atr210MqttService.class);
-    protected final Atr210Service atr210Service;
 
-    protected Map<String, Atr210ReaderService> readers = new ConcurrentHashMap<>();
+    protected Atr210MqttHandler handler;
 
-    protected final long transcieveTimeout;
-    protected final Context context;
-    protected final MqttServiceClient client;
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if(handler == null) {
+            MqttServiceClient mqttServiceClient = createMqttServiceClient(intent);
 
-    protected final TagProxyStore tagProxyStore = new DefaultTagProxyStore();
+            long transceiveTimeout = intent.getLongExtra(MQTT_CLIENT_TRANSCEIVE_TIMEOUT, 1000);
 
-    public Atr210MqttService(Context context, MqttServiceClient client, long transcieveTimeout) {
-        this.context = context;
-        this.client = client;
-        this.transcieveTimeout = transcieveTimeout;
-
-        Atr210ServiceBinder binder = new Atr210ServiceBinder();
-        binder.setServiceCommandsWrapper(new Atr210ServiceCommandsWrapper(this));
-        this.atr210Service = new Atr210Service("ATR210", binder);
-    }
-
-    public void addReader(String deviceId) {
-        spawnReader(deviceId);
-    }
-
-    public boolean connect() throws Exception {
-        if(client.connect()) {
-            onConnected();
-
-            return true;
+            handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout);
         }
-        return false;
-    }
+        handler.broadcastStarted();
 
-    public void onConnected() {
-        subscribe();
-
-        broadcastStarted();
-
-        // do not discover readers here, rather listen to heartbeats
-    }
-
-    public void disconnect() {
-        try {
-            unsubscribe();
-
-            client.disconnect();
-        } finally {
-            onDisconnected();
-        }
-    }
-
-    public void onDisconnected() {
-        try {
-            synchronized (readers) {
-                for (Map.Entry<String, Atr210ReaderService> entry : readers.entrySet()) {
-                    Atr210ReaderService value = entry.getValue();
-                    value.close();
-                }
-            }
-        } finally {
-            broadcastStopped();
-        }
-    }
-
-    public void broadcastStarted() {
-        Intent intent = new Intent();
-        intent.setAction(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
-        intent.putExtra(ExternalNfcServiceCallback.EXTRA_SERVICE_CONTROL, atr210Service);
-
-        context.sendBroadcast(intent, Atr210MqttService.ANDROID_PERMISSION_NFC);
-    }
-
-    public void broadcastStopped() {
-        Intent intent = new Intent();
-        intent.setAction(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
-
-        context.sendBroadcast(intent, Atr210MqttService.ANDROID_PERMISSION_NFC);
-    }
-
-    public void subscribe() {
-        // subscribes to topics
-        client.subscribeToJson(TOPIC_HEARTBEAT, this::onHeartbeat, HeartbeatResponse.class);
-    }
-
-    public void unsubscribe() {
-        // subscribes to topics
-        client.unsubscribe(TOPIC_HEARTBEAT);
-    }
-
-    public Atr210ReaderService addReader(String deviceId, HeartbeatResponse heartbeat) {
-        Atr210ReaderContext readerContext = new Atr210ReaderContext();
-        readerContext.setClientId(deviceId);
-        readerContext.setHeartbeat(heartbeat);
-
-        Atr210ReaderService atr210ReaderService = new Atr210ReaderService(context, client, readerContext, transcieveTimeout, tagProxyStore);
-        readers.put(deviceId, atr210ReaderService);
-
-        return atr210ReaderService;
-    }
-
-    public void onHeartbeat(HeartbeatResponse heartbeat) {
-        Atr210ReaderService atr210ReaderService = spawnReader(heartbeat.getDeviceId());
-
-        atr210ReaderService.setNextHeartbeatDeadline(System.currentTimeMillis() + heartbeat.getNextHeartbeatWithinSeconds().intValue() * 1000 + 1000);
+        return Service.START_STICKY;
     }
 
     @NonNull
-    private Atr210ReaderService spawnReader(String deviceId) {
-        // do we have this reader? If not then create
+    protected MqttServiceClient createMqttServiceClient(Intent intent) {
+        // get MQTT client details
 
-        Atr210ReaderService atr210ReaderService = readers.get(deviceId);
-        if(atr210ReaderService == null) {
-            synchronized (readers) {
-                atr210ReaderService = readers.get(deviceId);
-                if (atr210ReaderService == null) {
-                    atr210ReaderService = addReader(deviceId, null);
+        int port = intent.getIntExtra(MQTT_CLIENT_PORT, 1183);
 
-                    atr210ReaderService.open();
-
-                    scheduleHeartbeatCheck();
-                }
-            }
+        String host = intent.getStringExtra(MQTT_CLIENT_HOST);
+        String identifier;
+        if(intent.hasExtra(MQTT_CLIENT_IDENTIFIER)) {
+            identifier = intent.getStringExtra(MQTT_CLIENT_IDENTIFIER);
+        } else {
+            identifier = UUID.randomUUID().toString();
         }
-        return atr210ReaderService;
+
+        boolean defaultConfiguration = intent.getBooleanExtra(MQTT_CLIENT_DEFAULT_WEBSOCKET_CONFIGURATION, false);
+
+        Mqtt3ClientBuilder mqtt3ClientBuilder = Mqtt3Client.builder()
+                .identifier(identifier)
+                .serverPort(port)
+                .serverHost(host);
+
+        mqtt3ClientBuilder = configureAutomaticReconnect(intent, mqtt3ClientBuilder);
+
+        if(defaultConfiguration) {
+            mqtt3ClientBuilder = mqtt3ClientBuilder.webSocketWithDefaultConfig();
+        }
+
+        mqtt3ClientBuilder = mqtt3ClientBuilder.addConnectedListener(this);
+        mqtt3ClientBuilder = mqtt3ClientBuilder.addDisconnectedListener(this);
+
+
+        long timeout = intent.getLongExtra(MQTT_CLIENT_CONNECT_TIMEOUT, 5000);
+
+        Mqtt3AsyncClient mqtt3AsyncClient = mqtt3ClientBuilder.buildAsync();
+
+        Executor executor = Executors.newCachedThreadPool();
+
+        MqttServiceClient mqttServiceClient = new MqttServiceClient(executor, mqtt3AsyncClient, timeout);
+        return mqttServiceClient;
     }
 
-    private void scheduleHeartbeatCheck() {
-        // TODO remove readers if no more heartbeat
+    protected Mqtt3ClientBuilder configureAutomaticReconnect(Intent intent, Mqtt3ClientBuilder mqtt3ClientBuilder) {
+
+        long initialDelay = intent.getLongExtra(MQTT_CLIENT_RECONNECT_INITIAL_DELAY, 500);
+        long maxDelay = intent.getLongExtra(MQTT_CLIENT_RECONNECT_MAX_DELAY, 30_000);
+
+        return mqtt3ClientBuilder.automaticReconnect()
+                .initialDelay(initialDelay, TimeUnit.MILLISECONDS)
+                .maxDelay(maxDelay, TimeUnit.MILLISECONDS)
+                .applyAutomaticReconnect();
+    }
+
+    public void onDestroy() {
+
+        if(handler != null) {
+            handler.broadcastStopped();
+            handler.onDestroy();
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        LOGGER.debug("Bind for intent " + intent.getAction());
+
+        return new Binder();
+    }
+
+    @Override
+    public void onConnected(@NotNull MqttClientConnectedContext context) {
+        handler.onConnected();
     }
 
     @Override
     public void onDisconnected(@NotNull MqttClientDisconnectedContext context) {
-        // all readers disconnected
-        onDisconnected();
-    }
-
-    public Set<String> getReaderIds() {
-        return readers.keySet();
+        handler.onDisconnected();
     }
 }

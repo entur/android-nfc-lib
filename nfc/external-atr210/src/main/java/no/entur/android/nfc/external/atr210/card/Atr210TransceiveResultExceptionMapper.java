@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.atr210.intent;
+package no.entur.android.nfc.external.atr210.card;
 
 import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.wrapper.TransceiveResult;

@@ -2,10 +2,10 @@ package no.entur.android.nfc.external.atr210.intent;
 
 import android.os.IBinder;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import no.entur.android.nfc.external.atr210.reader.IAtr210ReaderControl;
-import no.entur.android.nfc.external.atr210.schema.NfcConfiguationResponse;
 import no.entur.android.nfc.external.remote.RemoteCommandException;
 import no.entur.android.nfc.external.remote.RemoteCommandReader;
 
@@ -32,7 +32,7 @@ public class Atr210Reader extends RemoteCommandReader {
         this.readerControl = readerControl;
     }
 
-    public NfcConfiguationResponse getNfcReadersConfiguration(long timeout) throws Atr210ReaderException {
+    public NfcConfiguration getNfcConfiguration(long timeout) throws Atr210ReaderException {
         byte[] response;
         try {
             response = readerControl.getNfcReadersConfiguration(timeout);
@@ -40,7 +40,27 @@ public class Atr210Reader extends RemoteCommandReader {
             throw new Atr210ReaderException(e);
         }
 
-        return readParcelable(response, NfcConfiguationResponse.CREATOR);
+        return readParcelable(response, NfcConfiguration.CREATOR);
+    }
+
+    public NfcConfiguration setNfcConfiguration(NfcConfiguration configuration, long timeout) throws Atr210ReaderException {
+        byte[] response;
+        try {
+            response = readerControl.setNfcReadersConfiguration(marshall(configuration), timeout);
+        } catch (RemoteException e) {
+            throw new Atr210ReaderException(e);
+        }
+        return readParcelable(response, NfcConfiguration.CREATOR);
+    }
+
+    public NfcReaders getNfcReaders(long timeout) throws Atr210ReaderException {
+        byte[] response;
+        try {
+            response = readerControl.getNfcReaders(timeout);
+        } catch (RemoteException e) {
+            throw new Atr210ReaderException(e);
+        }
+        return readParcelable(response, NfcReaders.CREATOR);
     }
 
     @Override
@@ -75,4 +95,5 @@ public class Atr210Reader extends RemoteCommandReader {
             return new Atr210Reader[size];
         }
     };
+
 }
