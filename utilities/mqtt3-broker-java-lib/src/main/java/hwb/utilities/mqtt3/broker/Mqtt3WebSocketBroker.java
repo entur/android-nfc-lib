@@ -230,7 +230,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                     byte qos = message.get();
 
-                    String topic = new String(topicBytes);
+                    String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
                     LOGGER.info("Subscribe to " + topic + " with QoS " + String.format("%02X", qos));
 
@@ -262,7 +262,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                     message.get(topicBytes);
 
-                    String topic = new String(topicBytes);
+                    String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
                     LOGGER.info("Unsubscribe to " + topic);
 
@@ -285,7 +285,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                 message.get(topicBytes);
 
-                String topic = new String(topicBytes);
+                String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
                 byte packetIdentifierMsb = message.get();
                 byte packetIdentifierLsb = message.get();
@@ -297,7 +297,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                 int qos = (flags >>> 1) & 0x3;
 
-                LOGGER.info("Publish to " + new String(topicBytes) + " with QoS " + String.format("%02X", qos) + ":\n" + new String(payload));
+                LOGGER.info("Publish to " + topic + " with QoS " + String.format("%02X", qos) + ":\n" + new String(payload, StandardCharsets.UTF_8));
 
                 if (qos == 2) {
                     // PUBREC

@@ -38,7 +38,7 @@ public class Mqtt3WebSocketHwbBrokerTest {
             AtomicBoolean result = new AtomicBoolean(false);
             mqtt3AsyncClient.subscribeWith().topicFilter("/myTopic").callback((a) -> {
                 byte[] payloadAsBytes = a.getPayloadAsBytes();
-                System.out.println("Got message " + new String(payloadAsBytes));
+                System.out.println("Got message " + new String(payloadAsBytes, StandardCharsets.UTF_8));
 
                 result.set(true);
             }).send().get();
