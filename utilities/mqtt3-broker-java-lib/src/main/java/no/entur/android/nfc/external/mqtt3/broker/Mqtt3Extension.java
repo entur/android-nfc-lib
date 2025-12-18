@@ -1,4 +1,4 @@
-package hwb.utilities.mqtt3.broker;
+package no.entur.android.nfc.external.mqtt3.broker;
 
 import org.java_websocket.exceptions.InvalidDataException;
 import org.java_websocket.exceptions.InvalidFrameException;

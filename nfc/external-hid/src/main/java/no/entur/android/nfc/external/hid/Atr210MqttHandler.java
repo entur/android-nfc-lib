@@ -106,7 +106,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
     }
 
     public void onHeartbeat(HeartbeatResponse heartbeat) {
-        LOGGER.info("Got heartbeat");
+        LOGGER.info("Got heartbeat for " + heartbeat.getDeviceId());
 
         Atr210ReaderService atr210ReaderService = spawnReader(heartbeat);
 

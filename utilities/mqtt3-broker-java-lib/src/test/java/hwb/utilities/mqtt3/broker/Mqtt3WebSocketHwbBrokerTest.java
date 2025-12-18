@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
+
 public class Mqtt3WebSocketHwbBrokerTest {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Mqtt3WebSocketHwbBrokerTest.class);

@@ -1,4 +1,4 @@
-package hwb.utilities.mqtt3.broker;
+package no.entur.android.nfc.external.mqtt3.broker;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
@@ -15,14 +15,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -94,19 +92,19 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
             for(int i = minPort; i < maxPort; i++) {
 
-                int port = (i + randomOffset) % portRange;
+                int port = minPort + (i + randomOffset) % portRange;
                 if(isPortAvailable(port)) {
                     return port;
                 }
             }
 
-            throw new IllegalStateException("Could not find an available port");
+            throw new IllegalStateException("Could not find an available port in range " + minPort + " -> " + maxPort);
         }
 
         protected boolean isPortAvailable(int port) {
             try {
                 ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(
-                        port, 1, InetAddress.getByName("localhost"));
+                        port, 1);
                 serverSocket.close();
                 return true;
             } catch (Exception ex) {
@@ -234,7 +232,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
         Mqtt3MessageType mqtt3MessageType = Mqtt3MessageType.fromCode(type);
 
-        LOGGER.info("onMessage " + conn.getRemoteSocketAddress() + " " + mqtt3MessageType);
+        //LOGGER.info("onMessage " + conn.getRemoteSocketAddress() + " " + mqtt3MessageType);
 
         switch (mqtt3MessageType) {
 
@@ -397,6 +395,10 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
                 byte packetIdentifierLsb = message.get();
                 break;
             }
+            case DISCONNECT: {
+                // do nothing
+                break;
+            }
             default : {
                 LOGGER.warn("Unknown message type " + mqtt3MessageType);
             }
@@ -478,7 +480,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
             if(subscriptions.matchesTopic(topicParts)) {
                 connection.send(bytes);
 
-                LOGGER.info("Publish message size " + bytes.length + " to topic " + topic + " for client " + connection.getRemoteSocketAddress());
+                // LOGGER.info("Publish message size " + bytes.length + " to topic " + topic + " for client " + connection.getRemoteSocketAddress());
             }
         }
     }
@@ -534,4 +536,9 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
         }
     }
 
+    public void stop() throws InterruptedException {
+        LOGGER.info("Stop broker");
+
+        super.stop();
+    }
 }

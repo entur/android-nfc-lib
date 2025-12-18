@@ -1,11 +1,10 @@
 package no.entur.android.nfc.external.mqtt.test;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import hwb.utilities.mqtt3.broker.Mqtt3TopicListener;
+import no.entur.android.nfc.external.mqtt3.broker.Mqtt3TopicListener;
 
 public class DefaultMqttBrokerServiceConnection implements MqttBrokerServiceConnection {
 
@@ -30,6 +29,14 @@ public class DefaultMqttBrokerServiceConnection implements MqttBrokerServiceConn
             delegate.getBroker().removeListener(listener);
         }
 
+        if(stopServiceOnClose) {
+            try {
+                delegate.stopBroker();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+
         connector.unbind();
         if(stopServiceOnClose) {
             connector.stop();
@@ -43,12 +50,12 @@ public class DefaultMqttBrokerServiceConnection implements MqttBrokerServiceConn
 
     @Override
     public void start() {
-        delegate.getBroker().start();
+        delegate.startBroker();
     }
 
     @Override
     public void stop() throws InterruptedException {
-        delegate.getBroker().stop();
+        delegate.stopBroker();
     }
 
     @Override

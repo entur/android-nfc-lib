@@ -6,15 +6,15 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import hwb.utilities.mqtt3.broker.Mqtt3TopicListener;
-import hwb.utilities.mqtt3.broker.Mqtt3WebSocketBroker;
+import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
 
 public class MqttBrokerService extends Service {
+
+    private static final String LOG_TAG = MqttBrokerService.class.getName();
 
     public static final String EXTRA_CONFIGURATION = MqttBrokerService.class.getName() + ".EXTRA_CONFIGURATION";
 
@@ -26,7 +26,6 @@ public class MqttBrokerService extends Service {
     protected boolean started = false;
 
     protected final IBinder binder = new LocalBinder();
-
 
     public class LocalBinder extends Binder {
         public MqttBrokerService getService() {
@@ -46,14 +45,14 @@ public class MqttBrokerService extends Service {
         return START_STICKY;
     }
 
-    public void startBroker() throws Exception {
+    public void startBroker() {
         if(!started) {
             try {
                 broker.start();
 
                 started = true;
 
-                Log.i(TAG, "Started MQTT broker on port " + broker.getPort());
+                Log.i(TAG, "Started MQTT broker on port " + broker.getPort() + " " + this);
             } catch (Exception e) {
                 Log.e(TAG, "Problem starting MQTT broker", e);
 
@@ -93,26 +92,37 @@ public class MqttBrokerService extends Service {
         if(property != null) {
             port = Integer.parseInt(property);
         } else {
-            port = 1883;
+            port = -1;
         }
         return port;
     }
 
     public void stopBroker() throws InterruptedException {
+        Log.i(TAG, "stop the broker " + this);
+
         if(started) {
             started = false;
+
             if(broker != null) {
+                Log.i(TAG, "stop broker");
                 broker.stop();
+            } else {
+                Log.i(TAG, "no broker");
             }
+        } else {
+            Log.i(TAG, "Broker not started " + this);
         }
     }
 
     @Override
     public void onDestroy() {
+        Log.i(TAG, "onDestroy");
+
         try {
             stopBroker();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             // ignore
+            Log.d(LOG_TAG, "Problem stopping broker");
         }
         super.onDestroy();
     }

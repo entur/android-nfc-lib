@@ -1,17 +1,11 @@
 package no.entur.android.nfc.external.hid.test;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
-
 import org.java_websocket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import hwb.utilities.mqtt3.broker.Mqtt3TopicListener;
-import hwb.utilities.mqtt3.broker.Mqtt3WebSocketBroker;
+import no.entur.android.nfc.external.mqtt3.broker.Mqtt3TopicListener;
+import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 
 

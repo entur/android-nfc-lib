@@ -82,8 +82,6 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
 
             HidServiceConnection serviceConnection = serviceConnector.connect(true);
             try {
-
-
                 HidMqttService service = serviceConnection.getService();
                 Atr210MqttHandler handler = service.getHandler();
 
@@ -97,7 +95,7 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
                 Set<String> readerIds = handler.getReaderIds();
                 assertEquals(readerIds.size(), 1);
 
-                System.out.println("Got " + readerIds);
+                System.out.println("Got reader " + readerIds.iterator().next());
 
             } finally {
                 serviceConnection.close();

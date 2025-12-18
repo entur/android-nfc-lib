@@ -3,8 +3,7 @@ package no.entur.android.nfc.external.mqtt.test;
 import java.io.Closeable;
 import java.io.IOException;
 
-import hwb.utilities.mqtt3.broker.Mqtt3TopicListener;
-import hwb.utilities.mqtt3.broker.Mqtt3WebSocketBroker;
+import no.entur.android.nfc.external.mqtt3.broker.Mqtt3TopicListener;
 
 public interface MqttBrokerServiceConnection extends Closeable {
 

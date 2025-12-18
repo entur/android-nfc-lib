@@ -152,17 +152,15 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     }
 
     public void onDestroy() {
-
         if(handler != null) {
             handler.broadcastStopped();
+            handler.getClient().disconnect();
             handler.onDestroy();
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        LOGGER.debug("Bind for intent " + intent.getAction());
-
         return new LocalBinder();
     }
 

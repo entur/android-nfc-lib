@@ -30,8 +30,6 @@ public abstract class AbstractService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		LOGGER.debug("Bind for intent " + intent.getAction());
-
 		return new Binder();
 	}
 
