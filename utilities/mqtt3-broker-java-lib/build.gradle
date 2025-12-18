@@ -5,7 +5,9 @@ dependencies {
   api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
   api "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
 
-  api "org.java-websocket:Java-WebSocket:${javaWebSocketVersion}"
+  api ("org.java-websocket:Java-WebSocket:${javaWebSocketVersion}") {
+      exclude group: "org.slf4j", module: "slf4j-api"
+  }
 
   testImplementation "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
   testImplementation("io.netty:netty-codec-http:${nettyVersion}")

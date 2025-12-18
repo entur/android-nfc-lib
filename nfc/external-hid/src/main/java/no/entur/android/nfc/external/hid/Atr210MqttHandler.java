@@ -58,10 +58,6 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         this.atr210HeartbeatTimer = new Atr210HeartbeatTimer(5000, this);
     }
 
-    public void addReader(String deviceId) {
-        spawnReader(deviceId);
-    }
-
     public void onConnected() {
         subscribe();
         // do not discover readers here, rather listen to heartbeats
@@ -91,13 +87,18 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         client.unsubscribe(TOPIC_HEARTBEAT);
     }
 
-    public Atr210ReaderService addReader(String deviceId, HeartbeatResponse heartbeat) {
+    public Atr210ReaderService addReader(HeartbeatResponse heartbeat) {
         Atr210ReaderContext readerContext = new Atr210ReaderContext();
-        readerContext.setClientId(deviceId);
+
+        // FRATR210EH1234567890
+        readerContext.setClientId("FR" + heartbeat.getDeviceType() + heartbeat.getDeviceId());
+
+        // itxpt.ticketreader.ATR210EH.1234567890
+        readerContext.setProviderId("itxpt.ticketreader." + heartbeat.getDeviceType() + "." + heartbeat.getDeviceId());
         readerContext.setHeartbeat(heartbeat);
 
         Atr210ReaderService atr210ReaderService = new Atr210ReaderService(context, client, readerContext, transceiveTimeout, tagProxyStore);
-        readers.put(deviceId, atr210ReaderService);
+        readers.put(heartbeat.getDeviceId(), atr210ReaderService);
 
         atr210HeartbeatTimer.schedule();
 
@@ -105,21 +106,23 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
     }
 
     public void onHeartbeat(HeartbeatResponse heartbeat) {
-        Atr210ReaderService atr210ReaderService = spawnReader(heartbeat.getDeviceId());
+        LOGGER.info("Got heartbeat");
+
+        Atr210ReaderService atr210ReaderService = spawnReader(heartbeat);
 
         atr210ReaderService.setNextHeartbeatDeadline(System.currentTimeMillis() + heartbeat.getNextHeartbeatWithinSeconds().intValue() * 1000 + 1000);
     }
 
     @NonNull
-    private Atr210ReaderService spawnReader(String deviceId) {
+    private Atr210ReaderService spawnReader(HeartbeatResponse heartbeat) {
         // do we have this reader? If not then create
 
-        Atr210ReaderService atr210ReaderService = readers.get(deviceId);
+        Atr210ReaderService atr210ReaderService = readers.get(heartbeat.getDeviceId());
         if(atr210ReaderService == null) {
             synchronized (readers) {
-                atr210ReaderService = readers.get(deviceId);
+                atr210ReaderService = readers.get(heartbeat.getDeviceId());
                 if (atr210ReaderService == null) {
-                    atr210ReaderService = addReader(deviceId, null);
+                    atr210ReaderService = addReader(heartbeat);
 
                     atr210ReaderService.open();
                 }
@@ -178,4 +181,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         context.sendBroadcast(intent, HidMqttService.ANDROID_PERMISSION_NFC);
     }
 
+    public MqttServiceClient getClient() {
+        return client;
+    }
 }

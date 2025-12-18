@@ -124,6 +124,7 @@ public class MqttServiceClient {
     }
 
     public void disconnect() {
+        LOGGER.info("Disconnect");
         client.disconnect();
     }
 

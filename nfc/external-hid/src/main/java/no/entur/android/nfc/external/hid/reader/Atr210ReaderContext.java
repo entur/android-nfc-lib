@@ -25,8 +25,10 @@ public class Atr210ReaderContext implements ReaderContext {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
 
-        this.providerId = ClientIdToProviderIdConverter.convert(clientId);
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
     }
 
     public String getProviderId() {

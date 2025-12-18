@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -39,25 +40,59 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
 
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
-    private static final String MQTT_CLIENT_RECONNECT_INITIAL_DELAY = "RECONNECT_INITIAL_DELAY";
-    private static final String MQTT_CLIENT_RECONNECT_MAX_DELAY = "RECONNECT_MAX_DELAY";
+    public static final String MQTT_CLIENT_RECONNECT_INITIAL_DELAY = "RECONNECT_INITIAL_DELAY";
+    public static final String MQTT_CLIENT_RECONNECT_MAX_DELAY = "RECONNECT_MAX_DELAY";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HidMqttService.class);
 
     protected Atr210MqttHandler handler;
 
+    public class LocalBinder extends Binder {
+        public HidMqttService getService() {
+            return HidMqttService.this;
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        LOGGER.info("Starting " + HidMqttService.class.getName() + " service");
+
         if(handler == null) {
             MqttServiceClient mqttServiceClient = createMqttServiceClient(intent);
 
             long transceiveTimeout = intent.getLongExtra(MQTT_CLIENT_TRANSCEIVE_TIMEOUT, 1000);
 
             handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout);
+
+            connect();
         }
         handler.broadcastStarted();
 
         return Service.START_STICKY;
+    }
+
+    public void connect() {
+        if(handler != null) {
+            try {
+                if(handler.getClient().connect()) {
+                    LOGGER.info("Connected to MQTT broker");
+                } else {
+                    LOGGER.warn("Not connected to MQTT broker");
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Problem connecting to MQTT broker", e);
+            }
+        }
+    }
+
+    public void disconnect() {
+        if(handler != null) {
+            try {
+                handler.getClient().disconnect();
+            } catch (Exception e) {
+                LOGGER.warn("Problem disconnecting from MQTT broker", e);
+            }
+        }
     }
 
     @NonNull
@@ -67,6 +102,10 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
         int port = intent.getIntExtra(MQTT_CLIENT_PORT, 1183);
 
         String host = intent.getStringExtra(MQTT_CLIENT_HOST);
+        if(host == null) {
+            throw new IllegalStateException("Expect client host");
+        }
+
         String identifier;
         if(intent.hasExtra(MQTT_CLIENT_IDENTIFIER)) {
             identifier = intent.getStringExtra(MQTT_CLIENT_IDENTIFIER);
@@ -124,7 +163,7 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     public IBinder onBind(Intent intent) {
         LOGGER.debug("Bind for intent " + intent.getAction());
 
-        return new Binder();
+        return new LocalBinder();
     }
 
     @Override
@@ -136,4 +175,9 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     public void onDisconnected(@NotNull MqttClientDisconnectedContext context) {
         handler.onDisconnected();
     }
+
+    public Atr210MqttHandler getHandler() {
+        return handler;
+    }
+
 }

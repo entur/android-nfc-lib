@@ -96,25 +96,25 @@ public class Atr210ReaderService {
 
         // List of readers response:
         // txpt/ticketreader/{PROVIDER_ID}/nfc/readers
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getClientId() + "/request/validation", this::barcode, TicketRequest.class);
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/readers/configuration", this::configuration, NfcConfiguationResponse.class);
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/readers", this::reader, ReadersStatusResponse.class);
+        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/request/validation", this::barcode, TicketRequest.class);
+        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/configuration", this::configuration, NfcConfiguationResponse.class);
+        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers", this::reader, ReadersStatusResponse.class);
 
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/hf/apdu/response", this::onAdpuResponse, NfcAdpuTransmitResponse.class);
+        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/hf/apdu/response", this::onAdpuResponse, NfcAdpuTransmitResponse.class);
 
         // this is invoked on a new card, without there being a corresponding message sent to
         // txpt/ticketreader/{PROVIDER_ID}/nfc/readers/status/request first. Documentation is not accurate.
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/readers/status", this::newTag, ReadersStatusResponse.class);
+        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/status", this::newTag, ReadersStatusResponse.class);
     }
 
     private void unsubscribe() {
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getClientId() + "/request/validation");
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/readers/configuration");
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/readers");
+        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/request/validation");
+        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/configuration");
+        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers");
 
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/hf/apdu/response");
+        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/hf/apdu/response");
 
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getClientId() + "/nfc/readers/status");
+        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/status");
 
     }
 

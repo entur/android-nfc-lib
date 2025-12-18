@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -117,11 +118,32 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
     public static class Subscription {
 
         private int qos;
+        private String[] topicParts;
+
         private String topic;
 
         public Subscription(String topic, byte qos) {
             this.topic = topic;
+            this.topicParts = topic.split("/");
             this.qos = qos;
+        }
+
+        public boolean isTopic(String[] target) {
+
+            if(target.length != this.topicParts.length) {
+                return false;
+            }
+
+            for(int i = 0; i < topicParts.length; i++) {
+                if(topicParts[i].equals("+")) {
+                    continue;
+                }
+                if(!topicParts[i].equals(target[i])) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 
@@ -142,9 +164,9 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
             }
         }
 
-        public boolean hasTopic(String topic) {
+        public boolean matchesTopic(String[] topic) {
             for (Subscription subscription : subscriptions) {
-                if(subscription.topic.equals(topic)) {
+                if(subscription.isTopic(topic)) {
                     return true;
                 }
             }
@@ -172,7 +194,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        LOGGER.info("onOpen");
+        LOGGER.info("onOpen " + conn.getRemoteSocketAddress());
 
         Subscriptions subscriptions = new Subscriptions();
         conn.setAttachment(subscriptions);
@@ -189,7 +211,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        LOGGER.info("onClose");
+        LOGGER.info("onClose " + code + " " + reason + " " + remote + " client " + conn.getRemoteSocketAddress());
     }
 
     @Override
@@ -211,6 +233,8 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
         int length = decodeRemainingLength(message);
 
         Mqtt3MessageType mqtt3MessageType = Mqtt3MessageType.fromCode(type);
+
+        LOGGER.info("onMessage " + conn.getRemoteSocketAddress() + " " + mqtt3MessageType);
 
         switch (mqtt3MessageType) {
 
@@ -361,7 +385,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
                 byte packetIdentifierMsb = message.get();
                 byte packetIdentifierLsb = message.get();
 
-                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x70, // message type
+                ByteBuffer msg = ByteBuffer.wrap(new byte[]{(byte) 0x60, // message type
                         0x02, // remaining length 0 bytes
                         packetIdentifierMsb, packetIdentifierLsb
                 });
@@ -373,17 +397,23 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
                 byte packetIdentifierLsb = message.get();
                 break;
             }
+            default : {
+                LOGGER.warn("Unknown message type " + mqtt3MessageType);
+            }
         }
     }
 
     public void publishToClients(WebSocket source, String topic, byte[] bytes) {
+
+        String[] topicParts = topic.split("/");
+
         for (WebSocket connection : getConnections()) {
             if(connection == source) {
                 continue;
             }
             Subscriptions subscriptions = connection.getAttachment();
 
-            if (subscriptions.hasTopic(topic)) {
+            if (subscriptions.matchesTopic(topicParts)) {
                 connection.send(bytes);
             }
         }
@@ -440,13 +470,15 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
     }
 
     public void publishRaw(String topic, byte[] bytes) {
+        String[] topicParts = topic.split("/");
+
         for(WebSocket connection : getConnections()) {
             Subscriptions subscriptions = connection.getAttachment();
 
-            if(subscriptions.hasTopic(topic)) {
+            if(subscriptions.matchesTopic(topicParts)) {
                 connection.send(bytes);
 
-                LOGGER.info("Publish message size " + bytes.length + " to topic " + topic);
+                LOGGER.info("Publish message size " + bytes.length + " to topic " + topic + " for client " + connection.getRemoteSocketAddress());
             }
         }
     }
@@ -491,6 +523,15 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
         ArrayList<Mqtt3TopicListener> mqtt3TopicListeners = new ArrayList<>(this.listeners);
         mqtt3TopicListeners.add(listener);
         this.listeners = mqtt3TopicListeners;
+    }
+
+    public void removeListener(Mqtt3TopicListener listener) {
+        for(int i = 0; i < listeners.size(); i++) {
+            if(listener == listeners.get(i)) {
+                listeners.remove(i);
+                i--;
+            }
+        }
     }
 
 }

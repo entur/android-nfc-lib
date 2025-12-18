@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.mqtt.test;
+package no.entur.android.nfc.external.mqtt.test.crap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
@@ -8,15 +8,12 @@ import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAckReturnCo
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class MqttServiceClient {
     protected ObjectMapper objectMapper = new ObjectMapper();

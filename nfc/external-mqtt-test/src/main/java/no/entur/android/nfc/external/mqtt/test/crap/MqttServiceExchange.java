@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.mqtt.test;
+package no.entur.android.nfc.external.mqtt.test.crap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
