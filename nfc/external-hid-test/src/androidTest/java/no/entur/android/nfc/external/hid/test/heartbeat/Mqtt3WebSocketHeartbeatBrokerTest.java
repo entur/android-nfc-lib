@@ -19,10 +19,12 @@ import ch.qos.logback.classic.android.LogcatAppender;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import no.entur.android.nfc.external.hid.Atr210MqttHandler;
 import no.entur.android.nfc.external.hid.HidMqttService;
+import no.entur.android.nfc.external.hid.dto.atr210.HfReaderStatusResponse;
 import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.external.hid.test.Atr210MessageSequence;
 import no.entur.android.nfc.external.hid.test.HidServiceConnection;
 import no.entur.android.nfc.external.hid.test.HidServiceConnector;
+import no.entur.android.nfc.external.hid.test.tag.Atr210ReaderEmulator;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnector;
 
@@ -86,16 +88,26 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
                 Atr210MqttHandler handler = service.getHandler();
 
                 HeartbeatResponse heartbeatResponse = objectMapper.readValue(getClass().getResourceAsStream("/atr210/heartbeat.json"), HeartbeatResponse.class);
-                Atr210Heartbeat heartbeat = new Atr210Heartbeat(heartbeatResponse, brokerConnection, sequence);
+                Atr210HeartbeatEmulator heartbeat = new Atr210HeartbeatEmulator(heartbeatResponse, brokerConnection, sequence);
 
                 heartbeat.start();
 
-                Thread.sleep(2000);
+                Thread.sleep(500);
 
                 Set<String> readerIds = handler.getReaderIds();
                 assertEquals(readerIds.size(), 1);
 
                 System.out.println("Got reader " + readerIds.iterator().next());
+
+                Atr210ReaderEmulator readerEmulator = new Atr210ReaderEmulator(heartbeatResponse.getDeviceType(), heartbeatResponse.getDeviceId(), "123", brokerConnection, sequence);
+
+                readerEmulator.sendPresent("3B8180018080", "040E317A7C4480");
+
+                Thread.sleep(500);
+
+                readerEmulator.sendNotPresent();
+
+                Thread.sleep(500);
 
             } finally {
                 serviceConnection.close();

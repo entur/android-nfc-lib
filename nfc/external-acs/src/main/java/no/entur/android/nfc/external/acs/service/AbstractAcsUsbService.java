@@ -8,10 +8,9 @@ import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
-import no.entur.android.nfc.external.acs.reader.AcrReader;
-import no.entur.android.nfc.external.acs.tag.DefaultTagTypeDetector;
+import org.nfctools.api.detect.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
-import no.entur.android.nfc.external.acs.tag.TagTypeDetector;
+import org.nfctools.api.detect.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

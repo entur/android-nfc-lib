@@ -20,4 +20,7 @@ public class HfReaderStatusResponse extends AbstractMessage {
         this.hfReaders = hfReaders;
     }
 
+    public void add(ReaderStatus readerStatus) {
+        this.hfReaders.add(readerStatus);
+    }
 }

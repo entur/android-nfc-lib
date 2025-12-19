@@ -1,4 +1,4 @@
-package no.entur.android.nfc.external.acs.tag;
+package org.nfctools.api.detect;
 
 import org.nfctools.api.TagType;
 

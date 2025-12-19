@@ -4,6 +4,7 @@ package no.entur.android.nfc.external.acs.tag;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.nfctools.api.detect.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
 
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;

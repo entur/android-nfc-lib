@@ -2,8 +2,10 @@ package no.entur.android.nfc.external.hid.dto.atr210;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import no.entur.android.nfc.external.hid.intent.NfcCardStatus;
@@ -11,10 +13,12 @@ import no.entur.android.nfc.external.hid.intent.NfcCardStatus;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReaderStatus {
 
+    private String cardCSN;
     private String cardATR;
     private String id;
 
     @JsonDeserialize(using = StatusDeserializer.class)
+    @JsonSerialize(using = StatusSerializer.class)
     private List<NfcCardStatus> status = new ArrayList<>();
 
     private String name;
@@ -51,7 +55,29 @@ public class ReaderStatus {
         this.status = status;
     }
 
+    public void add(NfcCardStatus ... statuses) {
+        for (NfcCardStatus nfcCardStatus : statuses) {
+            this.status.add(nfcCardStatus);
+        }
+    }
+
     public boolean hasStatus(NfcCardStatus status) {
         return this.status.contains(status);
+    }
+
+    public boolean hasCardAtr() {
+        return cardATR != null && !cardATR.isEmpty();
+    }
+
+    public void setCardCSN(String cardCSN) {
+        this.cardCSN = cardCSN;
+    }
+
+    public boolean hasCardCsn() {
+        return cardCSN != null && !cardCSN.isEmpty();
+    }
+
+    public String getCardCSN() {
+        return cardCSN;
     }
 }

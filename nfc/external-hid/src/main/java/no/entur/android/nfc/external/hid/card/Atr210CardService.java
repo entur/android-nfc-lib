@@ -2,7 +2,14 @@ package no.entur.android.nfc.external.hid.card;
 
 import android.content.Context;
 
+import org.nfctools.api.ATR;
+import org.nfctools.api.TagType;
+import org.nfctools.api.detect.DefaultTagTypeDetector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import hwb.utilities.mqtt3.client.MqttServiceClient;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxy;
@@ -11,6 +18,8 @@ import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
 public class Atr210CardService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Atr210CardService.class);
 
     private static final Atr210CardMessageConverter CONVERTER = new Atr210CardMessageConverter();
 
@@ -70,14 +79,24 @@ public class Atr210CardService {
             }
         }
 
-        // broadcast tag present
-        this.currentCard = isoDepTagServiceSupport.card(0, wrapper, cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
+        DefaultTagTypeDetector detector = new DefaultTagTypeDetector();
+        TagType tagType = detector.parseHistoricalBytes(null, cardContext.getAtr());
 
-            intent.putExtra(Atr210NfcTagCallback.EXTRA_PROVIDER_ID, cardContext.getProviderId());
-            intent.putExtra(Atr210NfcTagCallback.EXTRA_CLIENT_ID, cardContext.getClientId());
+        if(tagType == TagType.ISO_DEP || tagType == TagType.DESFIRE_EV1 || tagType == TagType.ISO_14443_TYPE_A) {
 
-            return intent;
-        });
+            // broadcast tag present
+            this.currentCard = isoDepTagServiceSupport.card(0, wrapper, cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
+
+                intent.putExtra(Atr210NfcTagCallback.EXTRA_PROVIDER_ID, cardContext.getProviderId());
+                intent.putExtra(Atr210NfcTagCallback.EXTRA_CLIENT_ID, cardContext.getClientId());
+
+                return intent;
+            });
+        } else {
+            if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast tech discovered");
+            // broadcast tag tech
+            isoDepTagServiceSupport.broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+        }
     }
 
     public void onTagLost() {

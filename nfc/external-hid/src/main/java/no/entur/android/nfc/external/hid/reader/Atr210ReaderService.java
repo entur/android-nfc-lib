@@ -23,7 +23,9 @@ import no.entur.android.nfc.external.hid.dto.atr210.TicketRequest;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
+import org.nfctools.api.ATR;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 public class Atr210ReaderService {
@@ -159,6 +161,18 @@ public class Atr210ReaderService {
                 Atr210CardContext context = new Atr210CardContext();
                 context.setClientId(readerContext.getClientId());
                 context.setProviderId(readerContext.getProviderId());
+
+                if(hfReader.hasCardAtr()) {
+                    context.setAtr(ByteArrayHexStringConverter.hexStringToByteArray(hfReader.getCardATR()));
+
+                    ATR atr = new ATR(context.getAtr());
+
+                    context.setHistoricalBytes(atr.getHistoricalBytes());
+
+                }
+                if(hfReader.hasCardCsn()) {
+                    context.setUid(ByteArrayHexStringConverter.hexStringToByteArray(hfReader.getCardCSN()));
+                }
 
                 atr210CardService.setCardContext(context);
                 atr210CardService.createTag();

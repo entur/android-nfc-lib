@@ -11,9 +11,9 @@ import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.external.hid.test.Atr210MessageSequence;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 
-public class Atr210Heartbeat implements HeartbeatTimer.HeartbeatListener, Closeable {
+public class Atr210HeartbeatEmulator implements HeartbeatTimer.HeartbeatListener, Closeable {
 
-    private static final String LOG_TAG = Atr210Heartbeat.class.getName();
+    private static final String LOG_TAG = Atr210HeartbeatEmulator.class.getName();
 
     protected final HeartbeatResponse heartbeatResponse;
 
@@ -27,7 +27,7 @@ public class Atr210Heartbeat implements HeartbeatTimer.HeartbeatListener, Closea
 
     protected final Atr210MessageSequence sequence;
 
-    public Atr210Heartbeat(HeartbeatResponse heartbeatResponse, MqttBrokerServiceConnection mqttBrokerServiceConnection, Atr210MessageSequence sequence) {
+    public Atr210HeartbeatEmulator(HeartbeatResponse heartbeatResponse, MqttBrokerServiceConnection mqttBrokerServiceConnection, Atr210MessageSequence sequence) {
         this.heartbeatResponse = heartbeatResponse;
         this.mqttBrokerServiceConnection = mqttBrokerServiceConnection;
 
