@@ -1,9 +1,11 @@
 package no.entur.android.nfc.external.hid.dto.atr210;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"stability"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AbstractMessage {
 
     @JsonProperty("sequence")

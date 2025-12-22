@@ -28,7 +28,13 @@ public class DefaultSynchronizedRequestMessageRequest<T, P> implements Synchroni
 
     @Override
     public void write(JsonGenerator generator) throws IOException {
-        generator.writeObject(payload);
+        if(payload != null) {
+            generator.writeObject(payload);
+        } else {
+            // empty
+            generator.writeStartObject();
+            generator.writeEndObject();
+        }
     }
 
     @Override

@@ -40,7 +40,7 @@ public class Atr210CardMessageConverter implements CardAdpuMessageConverter<Stri
             JsonResponseMqttMessage jsonResponseMqttMessage = (JsonResponseMqttMessage)message;
             Object payload = jsonResponseMqttMessage.getPayload();
             if(payload instanceof NfcAdpuTransmitResponse) {
-                String topic = "txpt/ticketreader/" + context.getProviderId() + "/nfc/hf/apdu/response";
+                String topic = "itxpt/ticketreader/" + context.getProviderId() + "/nfc/hf/apdu/response";
                 return new Atr210CardAdpuSynchronizedResponseMessage(topic, (NfcAdpuTransmitResponse) payload);
             }
             throw new IllegalArgumentException("Unknown response payload type " + payload.getClass().getName());

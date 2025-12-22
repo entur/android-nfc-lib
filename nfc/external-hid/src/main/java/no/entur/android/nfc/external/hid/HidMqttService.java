@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -43,6 +42,11 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     public static final String MQTT_CLIENT_RECONNECT_INITIAL_DELAY = "RECONNECT_INITIAL_DELAY";
     public static final String MQTT_CLIENT_RECONNECT_MAX_DELAY = "RECONNECT_MAX_DELAY";
 
+    public static final String NFC_HF_READER = "NFC_HF";
+    public static final String NFC_SAM_READER = "NFC_SAM";
+
+    public static final String AUTO_NFC_READER_CONFIGURATION = "AUTO_NFC_READER_CONFIGURATION";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(HidMqttService.class);
 
     protected Atr210MqttHandler handler;
@@ -63,9 +67,19 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
             long transceiveTimeout = intent.getLongExtra(MQTT_CLIENT_TRANSCEIVE_TIMEOUT, 1000);
 
             handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout);
-
-            connect();
         }
+
+        boolean autoConfigureReaders = intent.getBooleanExtra(AUTO_NFC_READER_CONFIGURATION, false);
+        if(autoConfigureReaders) {
+            boolean autoEnableHfReader = intent.getBooleanExtra(NFC_HF_READER, false);
+            boolean autoEnableSamReader = intent.getBooleanExtra(NFC_SAM_READER, false);
+            handler.enableNfcAutoNfcConfiguration(autoEnableHfReader, autoEnableSamReader);
+        } else {
+            handler.disableNfcAutoNfcConfiguration();
+        }
+
+        connect();
+
         handler.broadcastStarted();
 
         return Service.START_STICKY;
@@ -74,7 +88,8 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     public void connect() {
         if(handler != null) {
             try {
-                if(handler.getClient().connect()) {
+                MqttServiceClient client = handler.getClient();
+                if(client.connect()) {
                     LOGGER.info("Connected to MQTT broker");
                 } else {
                     LOGGER.warn("Not connected to MQTT broker");

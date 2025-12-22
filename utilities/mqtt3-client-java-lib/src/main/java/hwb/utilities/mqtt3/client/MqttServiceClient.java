@@ -115,7 +115,7 @@ public class MqttServiceClient {
         return objectMapper.readValue(payloadAsBytes, cls);
     }
 
-    public boolean connect() throws Exception {
+    public synchronized boolean connect() throws Exception {
         CompletableFuture<Mqtt3ConnAck> connect = client.connect();
 
         Mqtt3ConnAck ack = connect.get(connectionTimeout, TimeUnit.MILLISECONDS);

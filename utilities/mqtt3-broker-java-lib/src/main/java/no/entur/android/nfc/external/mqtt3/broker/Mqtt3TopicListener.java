@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.mqtt3.broker;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.java_websocket.WebSocket;
 
 public interface Mqtt3TopicListener {

@@ -3,10 +3,15 @@ package no.entur.android.nfc.external.hid.dto.atr210;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/hf/apdu/transmit
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"stability"})
 public class NfcAdpuTransmitRequest implements Parcelable {
 
     private List<ApduCommand> commands;

@@ -44,7 +44,7 @@ public class Atr210ReaderCommands extends ReaderCommands<String, Atr210ReaderCon
         String requestTopic = "itxpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/configuration/request";
         String responseTopic = "itxpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/configuration";
 
-        Atr210FirstMessageOnTopicSynchronizedRequestMessage r = new Atr210FirstMessageOnTopicSynchronizedRequestMessage(request, responseTopic, requestTopic);
+        Atr210FirstMessageOnTopicSynchronizedRequestMessage r = new Atr210FirstMessageOnTopicSynchronizedRequestMessage(request, requestTopic, responseTopic);
 
         SynchronizedResponseMessage<String> response = readerExchange.sendAndWaitForResponse(r, timeout);
 
@@ -59,9 +59,7 @@ public class Atr210ReaderCommands extends ReaderCommands<String, Atr210ReaderCon
         String requestTopic = "itxpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/request";
         String responseTopic = "itxpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers";
 
-        Object request = new Object();
-
-        Atr210FirstMessageOnTopicSynchronizedRequestMessage r = new Atr210FirstMessageOnTopicSynchronizedRequestMessage(request, responseTopic, requestTopic);
+        Atr210FirstMessageOnTopicSynchronizedRequestMessage r = new Atr210FirstMessageOnTopicSynchronizedRequestMessage(null, requestTopic, responseTopic);
 
         SynchronizedResponseMessage<String> response = readerExchange.sendAndWaitForResponse(r, timeout);
 

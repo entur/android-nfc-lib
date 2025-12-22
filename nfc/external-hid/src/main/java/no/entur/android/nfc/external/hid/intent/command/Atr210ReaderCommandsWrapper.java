@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.hid.intent.NfcConfiguration;
-import no.entur.android.nfc.external.hid.intent.NfcTagReader;
+import no.entur.android.nfc.external.hid.intent.NfcHfReader;
 import no.entur.android.nfc.external.hid.intent.NfcReaders;
 import no.entur.android.nfc.external.hid.intent.NfcSamReader;
 import no.entur.android.nfc.external.hid.reader.Atr210ReaderCommands;
@@ -73,7 +73,7 @@ public class Atr210ReaderCommandsWrapper extends RemoteCommandWriter {
             result = new NfcReaders();
 
             for (ReaderStatus samReader : response.getHfReaders()) {
-                result.add(new NfcTagReader(samReader.getId(), samReader.getStatus(), samReader.getName()));
+                result.add(new NfcHfReader(samReader.getId(), samReader.getStatus(), samReader.getName()));
             }
 
             for (ReaderStatus samReader : response.getSamReaders()) {

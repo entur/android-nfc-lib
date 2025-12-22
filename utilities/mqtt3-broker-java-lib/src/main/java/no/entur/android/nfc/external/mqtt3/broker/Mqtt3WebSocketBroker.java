@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -254,7 +255,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                     String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
-                    LOGGER.info("Subscribe to " + topic + " with QoS " + String.format("%02X", qos));
+                    LOGGER.info("Broker subscribe to " + topic + " with QoS " + String.format("%02X", qos));
 
                     subscriptions.add(topic, qos);
                 }
@@ -286,7 +287,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                     String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
-                    LOGGER.info("Unsubscribe to " + topic);
+                    LOGGER.info("Broker unsubscribe to " + topic);
 
                     subscriptions.remove(topic);
                 }
@@ -312,14 +313,14 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
                 byte packetIdentifierMsb = message.get();
                 byte packetIdentifierLsb = message.get();
 
-                int payloadLength = message.position() - length - 2;
+                int payloadLength = message.remaining();
 
                 byte[] payload = new byte[payloadLength];
                 message.get(payload);
 
                 int qos = (flags >>> 1) & 0x3;
 
-                LOGGER.info("Publish to " + topic + " with QoS " + String.format("%02X", qos) + ":\n" + new String(payload, StandardCharsets.UTF_8));
+                LOGGER.info("Broker publish to " + topic + " with QoS " + String.format("%02X", qos) + ":\n" + new String(payload, StandardCharsets.UTF_8));
 
                 if (qos == 2) {
                     // PUBREC
@@ -352,7 +353,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
                 publishToClients(conn, topic, bytes);
 
                 for (Mqtt3TopicListener listener : listeners) {
-                    listener.onPublish(this, conn, topic, bytes);
+                    listener.onPublish(this, conn, topic, payload);
                 }
 
                 break;
@@ -422,6 +423,7 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
     }
 
     public void publish(String topic, int qos, byte[] payload) throws IOException {
+        LOGGER.info("Publish to " + topic);
         byte[] topicBytes = topic.getBytes(StandardCharsets.UTF_8);
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream(payload.length + topicBytes.length + 5 + 2 + 2);
@@ -480,7 +482,9 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
             if(subscriptions.matchesTopic(topicParts)) {
                 connection.send(bytes);
 
-                // LOGGER.info("Publish message size " + bytes.length + " to topic " + topic + " for client " + connection.getRemoteSocketAddress());
+                LOGGER.info("Publish message size " + bytes.length + " to topic " + topic + " for client " + connection.getRemoteSocketAddress());
+            } else {
+                LOGGER.info("Topic " + topic + " not relevant for client " + connection.getRemoteSocketAddress());
             }
         }
     }

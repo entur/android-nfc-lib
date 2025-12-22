@@ -1,6 +1,7 @@
 package no.entur.android.nfc.external.hid.dto.atr210;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -10,7 +11,8 @@ import java.util.List;
 
 import no.entur.android.nfc.external.hid.intent.NfcCardStatus;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"stability"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReaderStatus {
 
     private String cardCSN;

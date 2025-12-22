@@ -22,6 +22,7 @@ import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.hid.intent.HidService;
 import no.entur.android.nfc.external.hid.intent.bind.Atr210ServiceBinder;
 import no.entur.android.nfc.external.hid.intent.command.Atr210ServiceCommandsWrapper;
+import no.entur.android.nfc.external.hid.reader.Atr210ReaderConfiguration;
 import no.entur.android.nfc.external.hid.reader.Atr210ReaderContext;
 import no.entur.android.nfc.external.hid.reader.Atr210ReaderService;
 import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
@@ -46,10 +47,15 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
     protected final TagProxyStore tagProxyStore = new DefaultTagProxyStore();
 
+    private Atr210ReaderConfiguration configuration;
+
+
     public Atr210MqttHandler(Context context, MqttServiceClient client, long transceiveTimeout) {
         this.context = context;
         this.client = client;
         this.transceiveTimeout = transceiveTimeout;
+
+        this.configuration = new Atr210ReaderConfiguration(transceiveTimeout);
 
         Atr210ServiceBinder binder = new Atr210ServiceBinder();
         binder.setServiceCommandsWrapper(new Atr210ServiceCommandsWrapper(this));
@@ -124,7 +130,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
                 if (atr210ReaderService == null) {
                     atr210ReaderService = addReader(heartbeat);
 
-                    atr210ReaderService.open();
+                    configuration.open(atr210ReaderService);
                 }
             }
         }
@@ -184,4 +190,14 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
     public MqttServiceClient getClient() {
         return client;
     }
+
+    public void enableNfcAutoNfcConfiguration(boolean hf, boolean sam) {
+        configuration.setAutoConfiguration(true);
+        configuration.setNfcReaders(hf, sam);
+    }
+
+    public void disableNfcAutoNfcConfiguration() {
+        configuration.setAutoConfiguration(false);
+    }
+
 }

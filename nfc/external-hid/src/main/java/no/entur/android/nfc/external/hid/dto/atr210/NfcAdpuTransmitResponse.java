@@ -3,6 +3,8 @@ package no.entur.android.nfc.external.hid.dto.atr210;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.ArrayList;
 import java.util.List;
 

@@ -3,13 +3,16 @@ package no.entur.android.nfc.external.hid.reader;
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import hwb.utilities.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.hid.Atr210MqttHandler;
 import no.entur.android.nfc.external.hid.card.Atr210CardContext;
 import no.entur.android.nfc.external.hid.card.Atr210CardService;
+import no.entur.android.nfc.external.hid.dto.atr210.NfcConfiguationRequest;
 import no.entur.android.nfc.external.hid.intent.Atr210Reader;
 import no.entur.android.nfc.external.hid.intent.bind.Atr210ReaderBinder;
 import no.entur.android.nfc.external.hid.intent.bind.Atr210ReaderTechnology;
@@ -22,13 +25,16 @@ import no.entur.android.nfc.external.hid.intent.NfcCardStatus;
 import no.entur.android.nfc.external.hid.dto.atr210.TicketRequest;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageListener;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestMessageRequest;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
+import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessageListener;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 import org.nfctools.api.ATR;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-public class Atr210ReaderService {
+public class Atr210ReaderService implements SynchronizedRequestMessageListener<String> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Atr210ReaderService.class);
 
@@ -73,6 +79,8 @@ public class Atr210ReaderService {
         infcTagBinder.setReaderTechnology(new Atr210ReaderTechnology(true));
 
         this.atr210CardService = new Atr210CardService(context, requestResponseMessages, mqttClient, transcieveTimeout, infcTagBinder, tagProxyStore);
+
+        requestResponseMessages.setRequestMessageListener(this);
     }
 
     public void open() {
@@ -89,7 +97,7 @@ public class Atr210ReaderService {
         }
     }
 
-    private void subscribe() {
+    public void subscribe() {
 
         // correlation of messages (i.e. request-response) is primarily "first message on topic".
 
@@ -98,25 +106,30 @@ public class Atr210ReaderService {
 
         // List of readers response:
         // txpt/ticketreader/{PROVIDER_ID}/nfc/readers
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/request/validation", this::barcode, TicketRequest.class);
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/configuration", this::configuration, NfcConfiguationResponse.class);
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers", this::reader, ReadersStatusResponse.class);
 
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/hf/apdu/response", this::onAdpuResponse, NfcAdpuTransmitResponse.class);
+        String prefix = "itxpt/ticketreader/" + readerContext.getProviderId();
+
+        mqttClient.subscribeToJson(prefix + "/request/validation", this::barcode, TicketRequest.class);
+        mqttClient.subscribeToJson(prefix + "/nfc/readers/configuration", this::configuration, NfcConfiguationResponse.class);
+        mqttClient.subscribeToJson(prefix + "/nfc/readers", this::reader, ReadersStatusResponse.class);
+
+        mqttClient.subscribeToJson(prefix + "/nfc/hf/apdu/response", this::onAdpuResponse, NfcAdpuTransmitResponse.class);
 
         // this is invoked on a new card, without there being a corresponding message sent to
         // txpt/ticketreader/{PROVIDER_ID}/nfc/readers/status/request first. Documentation is not accurate.
-        mqttClient.subscribeToJson("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/status", this::newTag, ReadersStatusResponse.class);
+        mqttClient.subscribeToJson(prefix+ "/nfc/readers/status", this::newTagStatus, ReadersStatusResponse.class);
     }
 
-    private void unsubscribe() {
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/request/validation");
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/configuration");
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers");
+    public void unsubscribe() {
+        String prefix = "itxpt/ticketreader/" + readerContext.getProviderId();
 
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/hf/apdu/response");
+        mqttClient.unsubscribe(prefix + "/request/validation");
+        mqttClient.unsubscribe(prefix + "/nfc/readers/configuration");
+        mqttClient.unsubscribe(prefix + "/nfc/readers");
 
-        mqttClient.unsubscribe("txpt/ticketreader/" + readerContext.getProviderId() + "/nfc/readers/status");
+        mqttClient.unsubscribe(prefix + "/nfc/hf/apdu/response");
+
+        mqttClient.unsubscribe(prefix + "/nfc/readers/status");
 
     }
 
@@ -153,7 +166,7 @@ public class Atr210ReaderService {
         }
     }
 
-    public void newTag(ReadersStatusResponse response) {
+    public void newTagStatus(ReadersStatusResponse response) {
         List<ReaderStatus> hfReaders = response.getHfReaders();
 
         for (ReaderStatus hfReader : hfReaders) {
@@ -178,7 +191,7 @@ public class Atr210ReaderService {
                 atr210CardService.createTag();
                 
             } else if(isTagLost(hfReader)) {
-                atr210CardService.clearCardContext();
+                atr210CardService.onTagLost();
             }
         }
     }
@@ -209,6 +222,79 @@ public class Atr210ReaderService {
         }
     }
 
+    public void configureNfcReaders(boolean hf, boolean sam, long timeout) throws IOException {
+
+        // enable or disable readers
+
+        // send configuration request
+
+        // if hf id none, sam id none or enabled false:
+
+        // get list of NFC and SAM devices
+
+        // update configuration
+
+        // check response received
+
+        NfcConfiguationResponse nfcReadersConfiguration = readerCommands.getNfcReadersConfiguration(timeout);
+
+        boolean enable = nfcReadersConfiguration.hasEnabled() && !nfcReadersConfiguration.getEnabled();
+
+        boolean updateEnabled = (hf || sam) != enable;
+
+        boolean updateHf = hf == "none".equals(nfcReadersConfiguration.getHfId());
+        boolean updateSam = sam == "none".equals(nfcReadersConfiguration.getSamId());
+
+        if(updateEnabled || updateHf || updateSam) {
+            NfcConfiguationRequest request = new NfcConfiguationRequest();
+
+            ReadersStatusResponse nfcReaders = readerCommands.getNfcReaders(timeout);
+
+            if(hf) {
+                if(nfcReaders.hasHfReaders()) {
+                    // use the first
+                    ReaderStatus readerStatus = nfcReaders.getHfReaders().get(0);
+                    request.setHfId(readerStatus.getId());
+                } else {
+                    LOGGER.warn("Unable to enable NFC HF reader; no readers present.");
+                }
+            } else {
+                request.setHfId("none");
+            }
+
+            if(sam) {
+                if (nfcReaders.hasSamReaders()) {
+                    ReaderStatus readerStatus = nfcReaders.getSamReaders().get(0);
+                    request.setSamId(readerStatus.getId());
+                } else {
+                    LOGGER.warn("Unable to enable NFC SAM reader; no readers present.");
+                }
+            } else {
+                request.setSamId("none");
+            }
+
+            request.setEnabled(hf || sam);
+
+            NfcConfiguationResponse nfcConfiguationResponse = readerCommands.setNfcReadersConfiguration(request, timeout);
+
+            // verify
+            if(!Objects.equals(request.getEnabled(), nfcConfiguationResponse.getEnabled())
+                    || !Objects.equals(request.getHfId(), nfcConfiguationResponse.getHfId())
+                    || !Objects.equals(request.getSamId(), nfcConfiguationResponse.getSamId())
+            ) {
+                LOGGER.warn("Configuration update problem, wanted {}, got {}.", request, nfcReadersConfiguration);
+            } else {
+                LOGGER.warn("Configuration updated");
+            }
+        } else {
+            LOGGER.info("Reader configuration already up to date (enabled {}, HF {}, SAM {})", enable, nfcReadersConfiguration.getHfId(), nfcReadersConfiguration.getSamId());
+        }
+
+    }
 
 
+    @Override
+    public void onRequestMessage(SynchronizedRequestMessageRequest<String> message, SynchronizedResponseMessageListener<String> listener) throws IOException {
+        mqttClient.publishAsJson(message.getTopic(), message.getPayload());
+    }
 }

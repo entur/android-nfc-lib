@@ -3,11 +3,16 @@ package no.entur.android.nfc.external.hid.dto.atr210;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 // use empty request to read
 
 // itxpt/ticketreader/{PROVIDER_ID}/nfc/readers/configuration/request
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"stability"})
 public class NfcConfiguationRequest implements Parcelable {
 
     private Boolean enabled;
@@ -103,4 +108,21 @@ public class NfcConfiguationRequest implements Parcelable {
             return new NfcConfiguationRequest[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "NfcConfiguationRequest{" +
+                "enabled=" + enabled +
+                ", hfId='" + hfId + '\'' +
+                ", hfName='" + hfName + '\'' +
+                ", samId='" + samId + '\'' +
+                ", samName='" + samName + '\'' +
+                '}';
+    }
+
+    @JsonIgnore
+    public boolean isEmpty() {
+        return enabled == null && hfId == null && hfName == null && samId == null && samName == null;
+    }
+
 }

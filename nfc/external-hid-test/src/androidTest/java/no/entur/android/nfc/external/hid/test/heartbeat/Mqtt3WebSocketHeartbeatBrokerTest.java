@@ -1,6 +1,7 @@
 package no.entur.android.nfc.external.hid.test.heartbeat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 
@@ -19,12 +20,13 @@ import ch.qos.logback.classic.android.LogcatAppender;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import no.entur.android.nfc.external.hid.Atr210MqttHandler;
 import no.entur.android.nfc.external.hid.HidMqttService;
-import no.entur.android.nfc.external.hid.dto.atr210.HfReaderStatusResponse;
 import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.external.hid.test.Atr210MessageSequence;
 import no.entur.android.nfc.external.hid.test.HidServiceConnection;
 import no.entur.android.nfc.external.hid.test.HidServiceConnector;
-import no.entur.android.nfc.external.hid.test.tag.Atr210ReaderEmulator;
+import no.entur.android.nfc.external.hid.test.configuration.Atr210ConfigurationEmulator;
+import no.entur.android.nfc.external.hid.test.configuration.DefaultAtr210ConfigurationListener;
+import no.entur.android.nfc.external.hid.test.tag.Atr210TagEmulator;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnector;
 
@@ -90,6 +92,14 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
                 HeartbeatResponse heartbeatResponse = objectMapper.readValue(getClass().getResourceAsStream("/atr210/heartbeat.json"), HeartbeatResponse.class);
                 Atr210HeartbeatEmulator heartbeat = new Atr210HeartbeatEmulator(heartbeatResponse, brokerConnection, sequence);
 
+                DefaultAtr210ConfigurationListener listener = new DefaultAtr210ConfigurationListener();
+                listener.setEnabled(true);
+                listener.setHfReader("testHfName", "testHfId");
+                listener.setEnabledHfReader(false); // assume automatically enabled
+                handler.enableNfcAutoNfcConfiguration(true, false);
+
+                Atr210ConfigurationEmulator configurationEmulator = new Atr210ConfigurationEmulator(heartbeatResponse.getDeviceType(), heartbeatResponse.getDeviceId(), "123", brokerConnection, sequence, listener);
+
                 heartbeat.start();
 
                 Thread.sleep(500);
@@ -97,15 +107,19 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
                 Set<String> readerIds = handler.getReaderIds();
                 assertEquals(readerIds.size(), 1);
 
+                // check that readers have enabled HF
+                assertTrue(listener.isEnabled());
+                assertTrue(listener.isEnabledHfReader());
+
                 System.out.println("Got reader " + readerIds.iterator().next());
 
-                Atr210ReaderEmulator readerEmulator = new Atr210ReaderEmulator(heartbeatResponse.getDeviceType(), heartbeatResponse.getDeviceId(), "123", brokerConnection, sequence);
+                Atr210TagEmulator readerEmulator = new Atr210TagEmulator(heartbeatResponse.getDeviceType(), heartbeatResponse.getDeviceId(), "123", brokerConnection, sequence);
 
-                readerEmulator.sendPresent("3B8180018080", "040E317A7C4480");
+                readerEmulator.sendTagPresent("3B8180018080", "040E317A7C4480");
 
                 Thread.sleep(500);
 
-                readerEmulator.sendNotPresent();
+                readerEmulator.sendTagNotPresent();
 
                 Thread.sleep(500);
 

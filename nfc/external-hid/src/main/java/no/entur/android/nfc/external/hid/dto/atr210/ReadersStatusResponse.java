@@ -32,4 +32,20 @@ public class ReadersStatusResponse extends AbstractMessage {
     public void setSamReaders(List<ReaderStatus> samReaders) {
         this.samReaders = samReaders;
     }
+
+    public boolean hasHfReaders() {
+        return hfReaders != null && !hfReaders.isEmpty();
+    }
+
+    public boolean hasSamReaders() {
+        return samReaders != null && !samReaders.isEmpty();
+    }
+
+    public void addHfReader(ReaderStatus reader) {
+        this.hfReaders.add(reader);
+    }
+
+    public void addSamReader(ReaderStatus reader) {
+        this.samReaders.add(reader);
+    }
 }

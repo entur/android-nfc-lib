@@ -8,15 +8,15 @@ import java.util.List;
 
 public class NfcReaders implements Parcelable {
 
-    private List<NfcTagReader> tagReaders = new ArrayList<>();
+    private List<NfcHfReader> tagReaders = new ArrayList<>();
 
     private List<NfcSamReader> samReaders = new ArrayList<>();
 
-    public List<NfcTagReader> getTagReaders() {
+    public List<NfcHfReader> getTagReaders() {
         return tagReaders;
     }
 
-    public void setTagReaders(List<NfcTagReader> tagReaders) {
+    public void setTagReaders(List<NfcHfReader> tagReaders) {
         this.tagReaders = tagReaders;
     }
 
@@ -32,7 +32,7 @@ public class NfcReaders implements Parcelable {
         this.samReaders.add(r);
     }
 
-    public void add(NfcTagReader r) {
+    public void add(NfcHfReader r) {
         this.tagReaders.add(r);
     }
 
@@ -42,7 +42,7 @@ public class NfcReaders implements Parcelable {
 
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(tagReaders.size());
-        for (NfcTagReader hfReader : tagReaders) {
+        for (NfcHfReader hfReader : tagReaders) {
             dest.writeString(hfReader.getId());
             dest.writeString(hfReader.getName());
 
@@ -70,7 +70,7 @@ public class NfcReaders implements Parcelable {
     public static final Parcelable.Creator<NfcReaders> CREATOR = new Parcelable.Creator<NfcReaders>() {
         @Override
         public NfcReaders createFromParcel(Parcel in) {
-            List<NfcTagReader> hfReaders = new ArrayList<>();
+            List<NfcHfReader> hfReaders = new ArrayList<>();
 
             int hfReadersSize = in.readInt();
             for(int i = 0; i < hfReadersSize; i++) {
@@ -85,7 +85,7 @@ public class NfcReaders implements Parcelable {
                     status.add(NfcCardStatus.fromOrdinal(in.readInt()));
                 }
 
-                hfReaders.add(new NfcTagReader(id, status, name));
+                hfReaders.add(new NfcHfReader(id, status, name));
             }
 
             List<NfcSamReader> samReaders = new ArrayList<>();

@@ -2,7 +2,7 @@ package no.entur.android.nfc.external.hid.intent;
 
 import java.util.List;
 
-public class NfcTagReader {
+public class NfcHfReader {
 
     private String id;
 
@@ -10,7 +10,7 @@ public class NfcTagReader {
 
     private String name;
 
-    public NfcTagReader(String id, List<NfcCardStatus> status, String name) {
+    public NfcHfReader(String id, List<NfcCardStatus> status, String name) {
         this.id = id;
         this.status = status;
         this.name = name;
