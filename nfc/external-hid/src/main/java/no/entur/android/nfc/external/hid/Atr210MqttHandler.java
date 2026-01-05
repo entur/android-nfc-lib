@@ -49,7 +49,6 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
     private Atr210ReaderConfiguration configuration;
 
-
     public Atr210MqttHandler(Context context, MqttServiceClient client, long transceiveTimeout) {
         this.context = context;
         this.client = client;
@@ -200,4 +199,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         configuration.setAutoConfiguration(false);
     }
 
+    public Atr210ReaderService getReaderService(String id) {
+        return readers.get(id);
+    }
 }

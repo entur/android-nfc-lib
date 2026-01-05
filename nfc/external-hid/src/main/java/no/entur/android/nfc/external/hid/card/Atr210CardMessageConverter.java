@@ -45,6 +45,9 @@ public class Atr210CardMessageConverter implements CardAdpuMessageConverter<Stri
             }
             throw new IllegalArgumentException("Unknown response payload type " + payload.getClass().getName());
         }
+        if(message instanceof Atr210CardAdpuSynchronizedResponseMessage) {
+            return (Atr210CardAdpuSynchronizedResponseMessage) message;
+        }
         throw new IllegalArgumentException("Unknown response message type " + message.getClass().getName());
     }
 

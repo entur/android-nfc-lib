@@ -31,4 +31,7 @@ public interface TagProxy {
 
     void close();
 
+    void setUid(byte[] uid);
+
+    byte[] getUid();
 }

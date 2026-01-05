@@ -172,6 +172,8 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
 
+            tagProxy.setUid(uid);
+
             return tagProxy;
         } catch (Exception e) {
             LOGGER.debug("Problem reading from tag", e);

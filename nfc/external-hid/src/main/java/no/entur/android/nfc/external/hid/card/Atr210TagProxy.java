@@ -18,8 +18,9 @@ public class Atr210TagProxy implements TagProxy {
 	private TagProxyStore tagProxyStore;
 
 	private boolean present = true;
+    private byte[] uid;
 
-	public Atr210TagProxy(int handle, List<TagTechnology> technologies, TagProxyStore tagProxyStore) {
+    public Atr210TagProxy(int handle, List<TagTechnology> technologies, TagProxyStore tagProxyStore) {
 		this.handle = handle;
 		this.technologies = technologies;
 		this.tagProxyStore = tagProxyStore;
@@ -117,4 +118,14 @@ public class Atr210TagProxy implements TagProxy {
 	public void close() {
 		tagProxyStore.remove(this);
 	}
+
+    @Override
+    public void setUid(byte[] uid) {
+        this.uid = uid;
+    }
+
+    @Override
+    public byte[] getUid() {
+        return uid;
+    }
 }

@@ -21,6 +21,8 @@ public class WebsocketTagProxy implements TagProxy {
 
 	private boolean present = true;
 
+    private byte[] uid;
+
 	public WebsocketTagProxy(int handle, int slotNumber, List<TagTechnology> technologies, TagProxyStore tagProxyStore) {
 		this.handle = handle;
 		this.slotNumber = slotNumber;
@@ -123,4 +125,14 @@ public class WebsocketTagProxy implements TagProxy {
 	public void close() {
 		tagProxyStore.remove(this);
 	}
+
+    @Override
+    public void setUid(byte[] uid) {
+        this.uid = uid;
+    }
+
+    @Override
+    public byte[] getUid() {
+        return uid;
+    }
 }

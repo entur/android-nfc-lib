@@ -1,8 +1,9 @@
 package no.entur.android.nfc.external.hid.card;
 
 import android.content.Context;
+import android.content.Intent;
+import android.nfc.NfcAdapter;
 
-import org.nfctools.api.ATR;
 import org.nfctools.api.TagType;
 import org.nfctools.api.detect.DefaultTagTypeDetector;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import hwb.utilities.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
+import no.entur.android.nfc.external.hid.HidMqttService;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxy;
@@ -61,8 +63,8 @@ public class Atr210CardService {
                 .build();
     }
 
-    public void onAdpuResponse(String topic, NfcAdpuTransmitResponse receiveSchema) {
-        adpuRequestResponseMessages.onResponseMessage(new Atr210CardAdpuSynchronizedResponseMessage(topic, receiveSchema));
+    public void onAdpuResponse(String topic, NfcAdpuTransmitResponse response) {
+        adpuRequestResponseMessages.onResponseMessage(new Atr210CardAdpuSynchronizedResponseMessage(topic, response));
     }
 
     public void createTag() {
@@ -100,10 +102,26 @@ public class Atr210CardService {
     }
 
     public void onTagLost() {
+        Atr210CardContext cardContext = this.cardContext;
+        if(cardContext != null) {
+            Intent intent = new Intent();
+            intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+
+            TagProxy currentCard = this.currentCard;
+            if(currentCard != null) {
+                intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, currentCard.getHandle());
+            }
+
+            intent.putExtra(Atr210NfcTagCallback.EXTRA_PROVIDER_ID, cardContext.getProviderId());
+            intent.putExtra(Atr210NfcTagCallback.EXTRA_CLIENT_ID, cardContext.getClientId());
+
+            byte[] uid = cardContext.getUid();
+            if(uid != null) {
+                intent.putExtra(NfcAdapter.EXTRA_TAG, cardContext.getUid());
+            }
+            isoDepTagServiceSupport.broadcast(intent);
+        }
         clearCardContext();
-
-        // TODO tag lost
-
     }
 
     public void clearCardContext() {
@@ -112,6 +130,13 @@ public class Atr210CardService {
             cardContext.setClosed(true);
 
             this.cardContext = null;
+        }
+
+        TagProxy currentCard = this.currentCard;
+        if(currentCard != null) {
+            currentCard.close();
+
+            this.currentCard = null;
         }
     }
 

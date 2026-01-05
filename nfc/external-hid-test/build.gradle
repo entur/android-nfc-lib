@@ -22,6 +22,7 @@ dependencies {
     api project(":nfc:external")
     api project(":nfc:external-hid")
 
+    api project(":nfc:wrapper-test")
     api project(":nfc:external-mqtt-test")
     api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
 

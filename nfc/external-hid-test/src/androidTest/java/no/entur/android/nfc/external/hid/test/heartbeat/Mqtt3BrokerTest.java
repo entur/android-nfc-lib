@@ -4,20 +4,25 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
+import android.content.Intent;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Set;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.android.LogcatAppender;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
+import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.hid.Atr210MqttHandler;
 import no.entur.android.nfc.external.hid.HidMqttService;
 import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
@@ -27,10 +32,16 @@ import no.entur.android.nfc.external.hid.test.HidServiceConnector;
 import no.entur.android.nfc.external.hid.test.configuration.Atr210ConfigurationEmulator;
 import no.entur.android.nfc.external.hid.test.configuration.DefaultAtr210ConfigurationListener;
 import no.entur.android.nfc.external.hid.test.tag.Atr210TagEmulator;
+import no.entur.android.nfc.external.hid.test.tag.Atr210MqttTag;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnector;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.android.nfc.wrapper.Tag;
+import no.entur.android.nfc.wrapper.tech.IsoDep;
+import no.entur.android.nfc.wrapper.test.tech.transceive.ListMockTransceive;
 
-public class Mqtt3WebSocketHeartbeatBrokerTest {
+@RunWith(androidx.test.ext.junit.runners.AndroidJUnit4.class)
+public class Mqtt3BrokerTest {
 
     static {
         configureLogbackDirectly();
@@ -60,7 +71,7 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
     }
 
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Mqtt3WebSocketHeartbeatBrokerTest.class);
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Mqtt3BrokerTest.class);
 
     private final static Atr210MessageSequence sequence = new Atr210MessageSequence();
 
@@ -115,11 +126,49 @@ public class Mqtt3WebSocketHeartbeatBrokerTest {
 
                 Atr210TagEmulator readerEmulator = new Atr210TagEmulator(heartbeatResponse.getDeviceType(), heartbeatResponse.getDeviceId(), "123", brokerConnection, sequence);
 
-                readerEmulator.sendTagPresent("3B8180018080", "040E317A7C4480");
+                Atr210MqttTag tag = Atr210MqttTag.newBuilder().withDesfireEV1(b -> {
+                    b.withTransceive(ListMockTransceive.newBuilder()
+                            .withErrorResponse("63") // raw desfire response
+                            .withTransceiveNativeDesfireEV1SelectApplication("008057", "00") // raw desfire command
+                            .build());
+                }).build();
+
+
+                ExternalNfcTagCallback callback = new ExternalNfcTagCallback() {
+                    @Override
+                    public void onTagDiscovered(Tag tag, Intent intent) {
+
+                        LOGGER.info("onTagDiscovered");
+
+                        IsoDep isoDep = IsoDep.get(tag);
+
+
+                        try {
+                            try {
+                                isoDep.connect();
+
+                                byte[] transceive = isoDep.transceive(new byte[]{0x5A, 0x00, (byte) 0x80, 0x57});
+                                LOGGER.info("transceive response " + ByteArrayHexStringConverter.toHexString(transceive));
+                            } finally {
+                                isoDep.close();
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    }
+                };
+                ExternalNfcTagCallbackSupport externalNfcTagCallbackSupport = new ExternalNfcTagCallbackSupport(callback, applicationContext, null, true);
+                externalNfcTagCallbackSupport.setEnabled(true);
+                externalNfcTagCallbackSupport.onResume();
+
+                readerEmulator.tagPresent(tag);
 
                 Thread.sleep(500);
 
-                readerEmulator.sendTagNotPresent();
+                readerEmulator.tagLost();
+
+                externalNfcTagCallbackSupport.onPause();
 
                 Thread.sleep(500);
 

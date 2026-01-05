@@ -1,7 +1,5 @@
 package no.entur.android.nfc.external.hid.test.heartbeat;
 
-import android.util.Log;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
@@ -11,9 +9,14 @@ import java.io.Closeable;
 import java.util.Date;
 
 import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
-import no.entur.android.nfc.external.hid.test.Atr210Emulator;
 import no.entur.android.nfc.external.hid.test.Atr210MessageSequence;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
+
+/**
+ *
+ * Emulate an ATR 210 NFC reader connected via MQTT.
+ *
+ */
 
 public class Atr210HeartbeatEmulator implements HeartbeatTimer.HeartbeatListener, Closeable {
 

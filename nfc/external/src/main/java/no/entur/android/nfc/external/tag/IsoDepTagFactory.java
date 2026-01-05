@@ -7,7 +7,9 @@ import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagFactory;
+import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
@@ -59,8 +61,9 @@ public class IsoDepTagFactory extends TagFactory {
 			intent.putExtra(NfcAdapter.EXTRA_ID, id);
 		}
 
-		return extras.enrich(intent);
+        intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, serviceHandle);
 
+		return extras.enrich(intent);
 	}
 
 	private void addTechBundles(byte[] hiLayer, byte[] historicalBytes, List<Bundle> bundles, List<Integer> tech) {

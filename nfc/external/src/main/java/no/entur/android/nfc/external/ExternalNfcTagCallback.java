@@ -16,7 +16,9 @@ public interface ExternalNfcTagCallback extends ReaderCallback {
 	/** Action corresponding to hidden {@linkplain android.nfc.NfcAdapter#ACTION_TAG_LEFT_FIELD}. */
 	public static final String ACTION_TAG_LEFT_FIELD = ExternalNfcTagCallback.class.getName() + ".action.TAG_LEFT_FIELD";
 
-	/**
+    public static final String EXTRAS_TAG_HANDLE = ExternalNfcTagCallback.class.getName() + ".extra.EXTRAS_TAG_HANDLE";
+
+    /**
 	 *
 	 * Reader callback for external tags.
 	 *

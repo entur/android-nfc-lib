@@ -8,6 +8,7 @@ import java.util.List;
 import no.entur.android.nfc.external.hid.dto.atr210.ApduResponse;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.mqtt.messages.card.CardAdpuSynchronizedResponseMessage;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class Atr210CardAdpuSynchronizedResponseMessage extends CardAdpuSynchronizedResponseMessage<String> {
 
@@ -31,9 +32,10 @@ public class Atr210CardAdpuSynchronizedResponseMessage extends CardAdpuSynchroni
                 throw new IOException("Expected single ADPU response, got " + result.size());
             }
 
-            String frame = result.get(0).getFrame();
+            String frame = result.get(0).getResponse();
             if(frame != null && !frame.isEmpty()) {
-                return Base64.decode(frame, 0);
+                byte[] decode = ByteArrayHexStringConverter.hexStringToByteArray(frame);
+                return decode;
             }
             throw new IOException("Empty response ADPU");
         }

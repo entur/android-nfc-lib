@@ -65,9 +65,11 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
 
             wrapper.setTagProxy(tagProxy);
 
-            if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast IsoDep tag");
+            if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast IsoDep tag: " + intent.getAction());
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+
+            tagProxy.setUid(uid);
 
             return tagProxy;
         } catch (Exception e) {

@@ -1,2 +1,2 @@
-# external-hwb-test
-This library helps with testing interaction with `Tag` via simulated HWB broker.
+# external-mqtt-test
+This library helps with testing interaction with `Tag` via simulated MQTT broker.

@@ -14,7 +14,9 @@ This project hosts tools for working with NFC on Android. Modules:
  * [external-test](nfc/external-test) - test support for NFC readers (with publishing of `Tag` intents)
  * [external-acs](nfc/external-acs) - support for ACS readers external NFC readers
  * [external-minova](nfc/external-minova) - support for Minova MCR external NFC readers (over network)
- * [external-hid](nfc/external-hid) - support for HID ATR-210 external NFC readers (over network - MQTT)
+ * [external-hid](nfc/external-hid) - support for HID external NFC readers (over network - MQTT) - ATR 210
+ * [external-hid-test](nfc/external-hid-test) - emulate external NFC readers for unit testing - ATR 210
+ * [external-mqtt-test](nfc/external-mqtt-test) - simple MQTT broker (over websocket) for unit testing
  * [external-websocket](nfc/external-websocket) - support for interacting with a pool of external readers over websocket
    * add NFC support to devices without NFC chips (i.e. emulator / Android TV / certain tablets), and/or 
    * programmatically interact with multiple cards/readers during testing, using fine-grained controls:

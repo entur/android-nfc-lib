@@ -162,7 +162,12 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public void onCardLost() {
         LOGGER.info("onCardLost");
 
-        broadcast(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+        Intent intent = new Intent();
+        intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+
+
+
+        sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
 
     @Override

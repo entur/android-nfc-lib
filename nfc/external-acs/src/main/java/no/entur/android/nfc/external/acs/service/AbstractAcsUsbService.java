@@ -2,6 +2,7 @@ package no.entur.android.nfc.external.acs.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.nfc.NfcAdapter;
 import android.os.AsyncTask;
 
 import com.acs.smartcard.Reader;
@@ -22,6 +23,7 @@ import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusListener;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
+import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public abstract class AbstractAcsUsbService extends AbstractService implements ExternalNfcReaderStatusListener<WrappedAcrReader> {
@@ -132,10 +134,18 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 	public void onTagAbsent(int slot) {
 		LOGGER.info("onTagAbsent");
 
-		store.removeItem(slot);
+        Intent intent = new Intent();
+        intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
 
-		Intent intent = new Intent();
-		intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+        TagProxy proxy = store.removeItem(slot);
+        if(proxy != null) {
+            byte[] uid = proxy.getUid();
+            if(uid != null) {
+                intent.putExtra(NfcAdapter.EXTRA_ID, uid);
+            }
+            intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, proxy.getHandle());
+        }
+
 		sendBroadcast(intent, "android.permission.NFC");
 	}
 

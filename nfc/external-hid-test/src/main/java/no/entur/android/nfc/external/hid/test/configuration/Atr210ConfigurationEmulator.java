@@ -22,6 +22,13 @@ import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 import no.entur.android.nfc.external.mqtt3.broker.Mqtt3TopicListener;
 import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
 
+/**
+ *
+ * Emulate an ATR 210 NFC reader configuration via MQTT.
+ *
+ */
+
+
 public class Atr210ConfigurationEmulator implements Mqtt3TopicListener, Closeable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Atr210ConfigurationEmulator.class);
