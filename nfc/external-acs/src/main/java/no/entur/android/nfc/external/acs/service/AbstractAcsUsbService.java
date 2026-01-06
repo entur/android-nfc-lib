@@ -15,6 +15,7 @@ import org.nfctools.api.detect.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
@@ -144,6 +145,7 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
                 intent.putExtra(NfcAdapter.EXTRA_ID, uid);
             }
             intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, proxy.getHandle());
+            intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
         }
 
 		sendBroadcast(intent, "android.permission.NFC");

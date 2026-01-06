@@ -306,10 +306,12 @@ public class MockTag extends TagImpl {
     }
 
     protected DefaultINFcTagBinder binder;
+    protected final int serviceHandle;
 
     public MockTag(byte[] id, int[] techList, Bundle[] techListExtras, int serviceHandle, DefaultINFcTagBinder tagService) {
         super(id, techList, techListExtras, serviceHandle, tagService);
         this.binder = tagService;
+        this.serviceHandle = serviceHandle;
     }
 
     public void setBinder(DefaultINFcTagBinder binder) {
@@ -323,6 +325,10 @@ public class MockTag extends TagImpl {
     public void lost() {
         binder.lost();
         // TODO tag lost?
+    }
+
+    public int getServiceHandle() {
+        return serviceHandle;
     }
 
 }

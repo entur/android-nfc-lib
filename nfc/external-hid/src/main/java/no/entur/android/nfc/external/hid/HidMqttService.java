@@ -25,8 +25,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import hwb.utilities.mqtt3.client.MqttServiceClient;
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 
 public class HidMqttService extends Service implements MqttClientConnectedListener, MqttClientDisconnectedListener {
+
+    public static final String ACTION_MQTT_CONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_CONNECTED";
+    public static final String ACTION_MQTT_DISCONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_DISCONNECTED";
 
     public static final String MQTT_CLIENT_PORT = "PORT";
     public static final String MQTT_CLIENT_HOST = "HOST";
@@ -69,9 +74,9 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
             handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout);
         }
 
-        boolean autoConfigureReaders = intent.getBooleanExtra(AUTO_NFC_READER_CONFIGURATION, false);
+        boolean autoConfigureReaders = intent.getBooleanExtra(AUTO_NFC_READER_CONFIGURATION, true);
         if(autoConfigureReaders) {
-            boolean autoEnableHfReader = intent.getBooleanExtra(NFC_HF_READER, false);
+            boolean autoEnableHfReader = intent.getBooleanExtra(NFC_HF_READER, true);
             boolean autoEnableSamReader = intent.getBooleanExtra(NFC_SAM_READER, false);
             handler.enableNfcAutoNfcConfiguration(autoEnableHfReader, autoEnableSamReader);
         } else {
@@ -85,12 +90,14 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
         return Service.START_STICKY;
     }
 
-    public void connect() {
+    public boolean connect() {
         if(handler != null) {
             try {
                 MqttServiceClient client = handler.getClient();
                 if(client.connect()) {
                     LOGGER.info("Connected to MQTT broker");
+
+                    return true;
                 } else {
                     LOGGER.warn("Not connected to MQTT broker");
                 }
@@ -98,6 +105,15 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
                 LOGGER.warn("Problem connecting to MQTT broker", e);
             }
         }
+        return false;
+    }
+
+    public boolean isConnected() {
+        if(handler != null) {
+            return handler.isConnected();
+        }
+        return false;
+
     }
 
     public void disconnect() {
@@ -181,11 +197,19 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
 
     @Override
     public void onConnected(@NotNull MqttClientConnectedContext context) {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_MQTT_CONNECTED);
+        sendBroadcast(intent, Atr210MqttHandler.ANDROID_PERMISSION_NFC);
+
         handler.onConnected();
     }
 
     @Override
     public void onDisconnected(@NotNull MqttClientDisconnectedContext context) {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_MQTT_DISCONNECTED);
+        sendBroadcast(intent, Atr210MqttHandler.ANDROID_PERMISSION_NFC);
+
         handler.onDisconnected();
     }
 

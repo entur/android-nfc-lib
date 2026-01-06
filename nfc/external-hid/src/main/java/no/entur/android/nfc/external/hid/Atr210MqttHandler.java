@@ -48,6 +48,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
     protected final TagProxyStore tagProxyStore = new DefaultTagProxyStore();
 
     private Atr210ReaderConfiguration configuration;
+    private boolean connected = false;
 
     public Atr210MqttHandler(Context context, MqttServiceClient client, long transceiveTimeout) {
         this.context = context;
@@ -64,11 +65,16 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
     }
 
     public void onConnected() {
+        connected = true;
+
         subscribe();
         // do not discover readers here, rather listen to heartbeats
+
     }
 
     public void onDisconnected() {
+        connected = false;
+
         unsubscribe(); // TODO is this necessary?
 
         synchronized (readers) {
@@ -201,5 +207,9 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
     public Atr210ReaderService getReaderService(String id) {
         return readers.get(id);
+    }
+
+    public boolean isConnected() {
+        return connected;
     }
 }

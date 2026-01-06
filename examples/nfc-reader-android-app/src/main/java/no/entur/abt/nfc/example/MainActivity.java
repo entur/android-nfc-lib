@@ -5,12 +5,15 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.nfctools.mf.ul.ntag.NfcNtag;
@@ -83,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private TextView tagDetailTechTypes;
     private TextView tagDetailIdentify;
 
+    private TextView tagDetailReaderValue;
+
     private NfcTargetAnalyzer nfcTargetAnalyzer;
     private boolean tagPresent = false;
 
@@ -127,7 +132,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         tagDetailsTitle = findViewById(R.id.tagDetailsTitle);
         tagDetailsTable = findViewById(R.id.tagDetailsTable);
-        tagDetailTechTypes =  findViewById(R.id.tagDetailTechTypes);
+        tagDetailTechTypes = findViewById(R.id.tagDetailTechTypes);
+
+        tagDetailReaderValue = findViewById(R.id.tagDetailReaderValue);
 
         tagDetailIdentify =  findViewById(R.id.tagDetailIdentifyValue);
 
@@ -437,6 +444,13 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             showTagDetails(true);
 
             setTagDetailTechTypes(tag);
+
+            String readerId = "-";
+            if(intent.hasExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID)) {
+                readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
+            }
+
+            tagDetailReaderValue.setText(readerId);
         } else {
             showTagDetails(false);
 
@@ -662,6 +676,44 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         LOGGER.info("Start reader service");
 
         mainApplication.setExternalNfcReader(true);
+    }
+
+    public void stopHidReaderService(View view) {
+        LOGGER.info("Stop Hid reader service");
+
+        mainApplication.setExternalHidNfcReader(false);
+    }
+
+    public void startHidReaderService(View view) {
+        LOGGER.info("Start Hid reader service");
+
+        mainApplication.setExternalHidNfcReader(true);
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(@NonNull Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 }

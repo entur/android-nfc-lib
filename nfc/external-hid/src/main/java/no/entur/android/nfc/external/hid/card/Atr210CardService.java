@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import hwb.utilities.mqtt3.client.MqttServiceClient;
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
-import no.entur.android.nfc.external.hid.HidMqttService;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxy;
@@ -91,6 +91,8 @@ public class Atr210CardService {
 
                 intent.putExtra(Atr210NfcTagCallback.EXTRA_PROVIDER_ID, cardContext.getProviderId());
                 intent.putExtra(Atr210NfcTagCallback.EXTRA_CLIENT_ID, cardContext.getClientId());
+
+                intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, cardContext.getReaderId());
 
                 return intent;
             });

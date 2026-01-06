@@ -89,4 +89,7 @@ public class Atr210CardContext implements CardContext  {
         this.uid = uid;
     }
 
+    public String getReaderId() {
+        return clientId + "-" + providerId;
+    }
 }

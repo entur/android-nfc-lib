@@ -13,6 +13,9 @@
     <string name="startService">Enable USB service</string>
     <string name="stopService">Disable USB service</string>
 
+    <string name="hidStartService">Enable HID service</string>
+    <string name="hidStopService">Disable HID service</string>
+
     <string name="serviceStatus">Service status</string>
     <string name="serviceStatusUnknown">Unknown</string>
     <string name="serviceStatusStarted">Started</string>
@@ -40,5 +43,11 @@
 
     <string name="tagDetailIdentifyTitle">Identified as</string>
     <string name="tagDetailIdentifyUnknown">Unknown</string>
+    <string name="preferences_network_summary">Network configuration</string>
+    <string name="preferences_network_title">Network</string>
+    <string name="preferences_mqtt_broker_host">MQTT broker host</string>
+    <string name="tagDetailReaderTitle">From reader</string>
+    <string name="action_settings">Settings</string>
+    <string name="activity_title_preferences">Preferences</string>
 
 </resources>
