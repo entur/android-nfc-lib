@@ -328,4 +328,7 @@ public class ReaderWrapper {
 		LOGGER.debug(string);
 	}
 
+    public String getId() {
+        return "acs-" + reader.getDevice().getDeviceId();
+    }
 }

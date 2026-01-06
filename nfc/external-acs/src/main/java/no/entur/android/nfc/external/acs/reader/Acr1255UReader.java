@@ -107,9 +107,10 @@ public class Acr1255UReader extends AcrReader {
 
 	protected IAcr1255UReaderControl readerControl;
 
-	public Acr1255UReader(String name, IAcr1255UReaderControl readerControl) {
-		this.name = name;
-		this.readerControl = readerControl;
+	public Acr1255UReader(String name, String id, IAcr1255UReaderControl readerControl) {
+        super(id, name);
+
+        this.readerControl = readerControl;
 	}
 
 	public String getFirmware() throws AcrReaderException {
@@ -214,6 +215,7 @@ public class Acr1255UReader extends AcrReader {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(name);
+        dest.writeString(id);
 		dest.writeStrongBinder(readerControl.asBinder());
 	}
 
@@ -221,12 +223,12 @@ public class Acr1255UReader extends AcrReader {
 		@Override
 		public Acr1255UReader createFromParcel(Parcel in) {
 			String name = in.readString();
-
+            String id = in.readString();
 			IBinder binder = in.readStrongBinder();
 
 			IAcr1255UReaderControl iin = IAcr1255UReaderControl.Stub.asInterface(binder);
 
-			return new Acr1255UReader(name, iin);
+			return new Acr1255UReader(name, id, iin);
 
 		}
 

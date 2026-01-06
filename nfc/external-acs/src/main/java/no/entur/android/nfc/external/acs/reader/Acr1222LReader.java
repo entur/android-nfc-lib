@@ -18,8 +18,8 @@ public class Acr1222LReader extends AcrReader {
 
 	protected IAcr1222LReaderControl readerControl;
 
-	public Acr1222LReader(String name, IAcr1222LReaderControl readerControl) {
-		this.name = name;
+	public Acr1222LReader(String name, String id, IAcr1222LReaderControl readerControl) {
+		super(id, name);
 		this.readerControl = readerControl;
 	}
 
@@ -193,6 +193,7 @@ public class Acr1222LReader extends AcrReader {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(name);
+        dest.writeString(id);
 		dest.writeStrongBinder(readerControl.asBinder());
 	}
 
@@ -200,12 +201,12 @@ public class Acr1222LReader extends AcrReader {
 		@Override
 		public Acr1222LReader createFromParcel(Parcel in) {
 			String name = in.readString();
-
+            String id = in.readString();
 			IBinder binder = in.readStrongBinder();
 
 			IAcr1222LReaderControl iin = IAcr1222LReaderControl.Stub.asInterface(binder);
 
-			return new Acr1222LReader(name, iin);
+			return new Acr1222LReader(name, id, iin);
 		}
 
 		@Override

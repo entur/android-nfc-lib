@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3Client;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,7 @@ public class MqttServiceClientTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @Disabled
     public void connect() throws Exception {
         Mqtt3AsyncClient mqtt3AsyncClient = Mqtt3Client.builder()
                 .identifier(UUID.randomUUID().toString())
@@ -72,11 +74,27 @@ public class MqttServiceClientTest {
 
         String providerId = "FRATR210EH1852258710";
 
-        String key = "itxpt.ticketreader.ATR210EH.1852258710";
+        String key = "itxpt.ticketreader.ATR210EH.2514441629";
 
         client.publish("itxpt/ticketreader/" + key + "/nfc/readers/configuration/request", "{}");
 
         //client.publish("device/diagnostics/request", ping);
+
+        client.subscribe("itxpt/#", (a) -> {
+            byte[] payloadAsBytes = a.getPayloadAsBytes();
+
+            System.out.println(" <- " + a.getTopic().toString() + " " + new String(payloadAsBytes));
+
+        });
+
+        if(false) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            TicketResponse ticket = new TicketResponse();
+            ticket.setValid(true);
+            ticket.setLed("REJECT");
+            ticket.setSound("REJECT");
+            client.publish("itxpt/ticketreader/" + key + "/response/validation", objectMapper.writeValueAsString(ticket));
+        }
 
         System.out.println("Waiting");
 

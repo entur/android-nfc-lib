@@ -110,4 +110,19 @@ public class Atr210ReaderCommandsWrapper extends RemoteCommandWriter {
         }
         return returnValue(result, exception);
     }
+
+    public byte[] setResult(boolean valid, String led, String sound) {
+        if (atr210ReaderCommands == null) {
+            return RemoteCommandWriter.noReaderException();
+        }
+        Exception exception = null;
+        try {
+            atr210ReaderCommands.setResult(valid, led, sound);
+        } catch (Exception e) {
+            LOGGER.debug("Problem setting result", e);
+
+            exception = e;
+        }
+        return returnValue(exception);
+    }
 }

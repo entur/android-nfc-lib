@@ -40,4 +40,12 @@ public class Atr210ReaderBinder extends IAtr210ReaderControl.Stub {
         }
         return readerCommandsWrapper.getNfcReaders(timeout);
     }
+
+    @Override
+    public byte[] setResult(boolean valid, String led, String sound) throws RemoteException {
+        if (readerCommandsWrapper == null) {
+            return Atr210ReaderCommandsWrapper.noReaderException();
+        }
+        return readerCommandsWrapper.setResult(valid, led, sound);
+    }
 }

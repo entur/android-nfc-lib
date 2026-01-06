@@ -67,6 +67,7 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
         this.readerCommands = Atr210ReaderCommands.newBuilder()
                 .withReaderContext(readerContext)
                 .withSynchronizedRequestResponseMessages(requestResponseMessages)
+                .withMqttClient(mqttClient)
                 .build();
 
         this.tagProxyStore = tagProxyStore;

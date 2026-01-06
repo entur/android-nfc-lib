@@ -4,11 +4,12 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
 
+import no.entur.android.nfc.external.ExternalNfcReader;
 import no.entur.android.nfc.external.hid.reader.IAtr210ReaderControl;
 import no.entur.android.nfc.external.remote.RemoteCommandException;
 import no.entur.android.nfc.external.remote.RemoteCommandReader;
 
-public class Atr210Reader extends RemoteCommandReader {
+public class Atr210Reader extends RemoteCommandReader implements ExternalNfcReader {
 
 	protected RemoteCommandException createRemoteCommandException(Exception e) {
 		return new HidReaderException(e);
@@ -17,7 +18,6 @@ public class Atr210Reader extends RemoteCommandReader {
 	protected RemoteCommandException createRemoteCommandException(String string) {
 		return new HidReaderException(string);
 	}
-
 
     protected IAtr210ReaderControl readerControl;
 
@@ -50,6 +50,19 @@ public class Atr210Reader extends RemoteCommandReader {
             throw new HidReaderException(e);
         }
         return readParcelable(response, NfcConfiguration.CREATOR);
+    }
+
+    public void setResult(boolean valid, LedType led, SoundType sound) {
+        byte[] response;
+        try {
+            String ledString = (led != null && led != LedType.NONE) ? led.toString() : null;
+            String soundString = (sound != null && sound != SoundType.NONE) ? sound.toString() : null;
+
+            response = readerControl.setResult(valid, ledString, soundString);
+        } catch (RemoteException e) {
+            throw new HidReaderException(e);
+        }
+        readVoid(response);
     }
 
     public NfcReaders getNfcReaders(long timeout) throws HidReaderException {
@@ -95,4 +108,8 @@ public class Atr210Reader extends RemoteCommandReader {
         }
     };
 
+    @Override
+    public String getId() {
+        return clientId + "-" + providerId;
+    }
 }

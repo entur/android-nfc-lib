@@ -3,6 +3,7 @@ package no.entur.abt.nfc.example;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -210,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onExternalNfcReaderOpened(Intent intent) {
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
-            AcrReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, AcrReader.class);
+            Parcelable reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, Parcelable.class);
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
 
@@ -224,15 +225,15 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     Acr1252UReader acr1252UReader = (Acr1252UReader) acrReader;
                     acr1252UReader.setAutomaticPICCPolling(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.ACTIVATE_PICC_WHEN_DETECTED);
 
-                    if(reader.getNumberOfSlots() == 2) {
+                    if(acrReader.getNumberOfSlots() == 2) {
                         try {
                             byte[] power = acrReader.power(1, 2);
                             LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
 
-                            reader.setProtocol(1, 1);
+                            acrReader.setProtocol(1, 1);
 
                             // try random command, expect response code 6986
-                            byte[] transmit = reader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
+                            byte[] transmit = acrReader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
 
                             LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
                         } catch (Exception e) {

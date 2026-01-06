@@ -84,9 +84,10 @@ public class Acr1281UReader extends AcrReader {
 
 	protected IAcr1281UReaderControl readerControl;
 
-	public Acr1281UReader(String name, IAcr1281UReaderControl readerControl) {
-		this.name = name;
-		this.readerControl = readerControl;
+	public Acr1281UReader(String name, String id, IAcr1281UReaderControl readerControl) {
+        super(id, name);
+
+        this.readerControl = readerControl;
 	}
 
 	public String getFirmware() throws AcrReaderException {
@@ -158,19 +159,20 @@ public class Acr1281UReader extends AcrReader {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(name);
-		dest.writeStrongBinder(readerControl.asBinder());
+        dest.writeString(id);
+        dest.writeStrongBinder(readerControl.asBinder());
 	}
 
 	public static final Parcelable.Creator<Acr1281UReader> CREATOR = new Parcelable.Creator<Acr1281UReader>() {
 		@Override
 		public Acr1281UReader createFromParcel(Parcel in) {
 			String name = in.readString();
-
+            String id = in.readString();
 			IBinder binder = in.readStrongBinder();
 
 			IAcr1281UReaderControl iin = IAcr1281UReaderControl.Stub.asInterface(binder);
 
-			return new Acr1281UReader(name, iin);
+			return new Acr1281UReader(name, id, iin);
 
 		}
 

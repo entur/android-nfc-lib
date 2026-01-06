@@ -47,4 +47,9 @@ public class SynchronizedRequestResponseMessages<T> implements SynchronizedRespo
 	public void setRequestMessageListener(SynchronizedRequestMessageListener<T> synchronizedRequestMessageListener) {
 		this.synchronizedRequestMessageListener = synchronizedRequestMessageListener;
 	}
+
+    public void send(SynchronizedRequestMessageRequest<T> message) throws IOException {
+        synchronizedRequestMessageListener.onRequestMessage(message, null);
+    }
+
 }

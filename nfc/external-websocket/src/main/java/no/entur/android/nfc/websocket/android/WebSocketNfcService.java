@@ -174,6 +174,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public void onCardPresent(CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
         LOGGER.info("onCardPresent: " + technologies);
 
+        // TODO add reader id
+
         if(technologies.contains("IsoDep")) {
             WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
 

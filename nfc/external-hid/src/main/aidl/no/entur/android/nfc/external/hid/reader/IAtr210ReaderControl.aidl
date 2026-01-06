@@ -8,4 +8,6 @@ interface IAtr210ReaderControl {
 
     byte[] getNfcReaders(long timeout);
 
+    byte[] setResult(boolean valid, String led, String sound);
+
 }

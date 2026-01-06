@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
 
-public class Mqtt3WebSocketHwbBrokerTest {
+public class Mqtt3WebSocketBrokerTest {
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Mqtt3WebSocketHwbBrokerTest.class);
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Mqtt3WebSocketBrokerTest.class);
 
     @Test
     public void connect() throws Exception {
@@ -34,8 +34,6 @@ public class Mqtt3WebSocketHwbBrokerTest {
                     .buildAsync();
 
             Mqtt3ConnAck connect = mqtt3AsyncClient.connect().get();
-
-            System.out.println(connect);
 
             AtomicBoolean result = new AtomicBoolean(false);
             mqtt3AsyncClient.subscribeWith().topicFilter("/myTopic").callback((a) -> {

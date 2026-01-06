@@ -61,28 +61,28 @@ public class AcsUsbService extends AbstractAcsUsbService {
 		byte[] historicalBytes = TechnologyType.getHistoricalBytes(atr);
 
 		if (tagType == TagType.MIFARE_ULTRALIGHT || tagType == TagType.MIFARE_ULTRALIGHT_C) {
-			acsMifareUltralightTagServiceSupport.mifareUltralight(slotNumber, atr, tagType, acsTag, wrapper, reader.getReaderName());
+			acsMifareUltralightTagServiceSupport.mifareUltralight(slotNumber, atr, tagType, acsTag, wrapper, reader.getReaderName(), new AcsIntentEnricher(reader));
 		} else if (tagType == TagType.DESFIRE_EV1) {
 			byte[] uid = TagUtility.getPcscUid(wrapper);
 			if (uid != null) {
 				LOGGER.debug("Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
-			isoDepTagServiceSupport.card(slotNumber, wrapper, uid, historicalBytes, IntentEnricher.identity());
+			isoDepTagServiceSupport.card(slotNumber, wrapper, uid, historicalBytes, new AcsIntentEnricher(reader));
 		} else if (tagType == TagType.ISO_DEP) {
 			byte[] uid = TagUtility.getPcscUid(wrapper);
 			if (uid != null) {
 				LOGGER.debug("Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
-			isoDepTagServiceSupport.card(slotNumber, wrapper, uid, historicalBytes, IntentEnricher.identity());
+			isoDepTagServiceSupport.card(slotNumber, wrapper, uid, historicalBytes, new AcsIntentEnricher(reader));
 		} else if (tagType == TagType.ISO_14443_TYPE_A) {
 			byte[] uid = TagUtility.getPcscUid(wrapper);
 			if (uid != null) {
 				LOGGER.debug("Read tag UID " + ByteArrayHexStringConverter.toHexString(uid));
 			}
 
-			isoDepTagServiceSupport.hce(slotNumber, wrapper, uid, historicalBytes, IntentEnricher.identity());
+			isoDepTagServiceSupport.hce(slotNumber, wrapper, uid, historicalBytes, new AcsIntentEnricher(reader));
 		} else {
 			TagUtility.sendTechBroadcast(AcsUsbService.this);
 		}
