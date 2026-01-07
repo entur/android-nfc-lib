@@ -1,4 +1,4 @@
-package hwb.utilities.mqtt3.client;
+package no.entur.android.nfc.external.mqtt3.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
@@ -17,7 +17,6 @@ public class MqttServiceClientTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    @Disabled
     public void connect() throws Exception {
         Mqtt3AsyncClient mqtt3AsyncClient = Mqtt3Client.builder()
                 .identifier(UUID.randomUUID().toString())

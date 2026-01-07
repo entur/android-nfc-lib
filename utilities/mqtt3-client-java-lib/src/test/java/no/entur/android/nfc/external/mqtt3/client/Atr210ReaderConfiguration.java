@@ -1,4 +1,4 @@
-package hwb.utilities.mqtt3.client;
+package no.entur.android.nfc.external.mqtt3.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

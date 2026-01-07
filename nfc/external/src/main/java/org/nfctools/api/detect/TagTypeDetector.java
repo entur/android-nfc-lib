@@ -3,6 +3,8 @@ package org.nfctools.api.detect;
 import org.nfctools.api.ATR;
 import org.nfctools.api.TagType;
 
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+
 public interface TagTypeDetector<R> {
 
     default TagType parseAtr(R reader, byte[] atrBytes) {
@@ -23,6 +25,8 @@ public interface TagTypeDetector<R> {
         ATR atr = new ATR(atrBytes);
 
         byte[] historicalBytes = atr.getHistoricalBytes();
+
+        System.out.println(ByteArrayHexStringConverter.toHexString(historicalBytes));
 
         return parseHistoricalBytes(reader, historicalBytes);
     }

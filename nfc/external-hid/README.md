@@ -1,4 +1,4 @@
 # external-hid
-Support for ATR 210  reader messages over MQTT.
+Support for HID ATR 210 (previously Access-IS ATR210) reader messages over MQTT.
 
 

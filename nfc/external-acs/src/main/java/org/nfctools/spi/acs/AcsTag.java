@@ -64,7 +64,7 @@ public class AcsTag extends Tag implements ApduTag {
 	public Response transmit(Command command) throws ReaderException {
 		CommandAPDU commandAPDU = null;
 		if (command.isDataOnly()) {
-			commandAPDU = new CommandAPDU(0xff, 0, 0, 0, command.getData(), command.getOffset(), command.getLength());
+			commandAPDU = new CommandAPDU(Apdu.CLS_PTS, 0, 0, 0, command.getData(), command.getOffset(), command.getLength());
 		} else if (command.hasData()) {
 			commandAPDU = new CommandAPDU(Apdu.CLS_PTS, command.getInstruction(), command.getP1(), command.getP2(), command.getData());
 		} else {

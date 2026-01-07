@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import hwb.utilities.mqtt3.client.MqttServiceClient;
+import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.hid.intent.HidService;
 import no.entur.android.nfc.external.hid.intent.bind.Atr210ServiceBinder;

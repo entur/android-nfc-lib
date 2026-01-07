@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import hwb.utilities.mqtt3.client.MqttServiceClient;
+import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.hid.Atr210MqttHandler;
 import no.entur.android.nfc.external.hid.card.Atr210CardContext;
@@ -174,27 +174,36 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
     public void newTagStatus(ReadersStatusResponse response) {
         List<ReaderStatus> hfReaders = response.getHfReaders();
 
+        // expect
+        // CHANGED,PRESENT
+        // CHANGED,PRESENT,INUSE
+        // and possibly back to CHANGED,PRESENT
+        // then
+        // CHANGED,EMPTY
+
         for (ReaderStatus hfReader : hfReaders) {
             if(isTagPresent(hfReader)) {
-                Atr210CardContext context = new Atr210CardContext();
-                context.setClientId(readerContext.getClientId());
-                context.setProviderId(readerContext.getProviderId());
 
-                if(hfReader.hasCardAtr()) {
-                    context.setAtr(ByteArrayHexStringConverter.hexStringToByteArray(hfReader.getCardATR()));
+                if(!atr210CardService.hasCardContext()) {
+                    Atr210CardContext context = new Atr210CardContext();
+                    context.setClientId(readerContext.getClientId());
+                    context.setProviderId(readerContext.getProviderId());
 
-                    ATR atr = new ATR(context.getAtr());
+                    if (hfReader.hasCardAtr()) {
+                        context.setAtr(ByteArrayHexStringConverter.hexStringToByteArray(hfReader.getCardATR()));
 
-                    context.setHistoricalBytes(atr.getHistoricalBytes());
+                        ATR atr = new ATR(context.getAtr());
 
+                        context.setHistoricalBytes(atr.getHistoricalBytes());
+
+                    }
+                    if (hfReader.hasCardCsn()) {
+                        context.setUid(ByteArrayHexStringConverter.hexStringToByteArray(hfReader.getCardCSN()));
+                    }
+
+                    atr210CardService.setCardContext(context);
+                    atr210CardService.createTag();
                 }
-                if(hfReader.hasCardCsn()) {
-                    context.setUid(ByteArrayHexStringConverter.hexStringToByteArray(hfReader.getCardCSN()));
-                }
-
-                atr210CardService.setCardContext(context);
-                atr210CardService.createTag();
-                
             } else if(isTagLost(hfReader)) {
                 atr210CardService.onTagLost();
             }

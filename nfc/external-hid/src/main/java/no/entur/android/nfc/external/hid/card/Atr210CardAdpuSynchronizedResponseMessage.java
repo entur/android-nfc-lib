@@ -33,7 +33,7 @@ public class Atr210CardAdpuSynchronizedResponseMessage extends CardAdpuSynchroni
             }
 
             String frame = result.get(0).getResponse();
-            if(frame != null && !frame.isEmpty()) {
+            if(frame != null) {
                 byte[] decode = ByteArrayHexStringConverter.hexStringToByteArray(frame);
                 return decode;
             }

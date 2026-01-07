@@ -2,7 +2,7 @@ package no.entur.android.nfc.external.hid.reader;
 
 import java.io.IOException;
 
-import hwb.utilities.mqtt3.client.MqttServiceClient;
+import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcConfiguationRequest;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcConfiguationResponse;
 import no.entur.android.nfc.external.hid.dto.atr210.ReadersStatusResponse;

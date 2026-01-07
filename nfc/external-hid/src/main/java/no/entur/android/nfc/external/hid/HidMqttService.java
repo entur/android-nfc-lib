@@ -14,18 +14,19 @@ import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedListener;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3Client;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3ClientBuilder;
+import com.hivemq.client.mqtt.mqtt3.Mqtt3ClientConfig;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import hwb.utilities.mqtt3.client.MqttServiceClient;
-import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 
 public class HidMqttService extends Service implements MqttClientConnectedListener, MqttClientDisconnectedListener {
@@ -90,19 +91,33 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
         return Service.START_STICKY;
     }
 
+    public void connectInBackground() {
+        if(handler != null) {
+            MqttServiceClient client = handler.getClient();
+            Mqtt3ClientConfig config = client.getClient().getConfig();
+            LOGGER.info("Connect to MQTT broker " + config.getServerHost() + ":" + config.getServerPort());
+
+            client.connectInBackground();
+        }
+    }
+
     public boolean connect() {
         if(handler != null) {
+            MqttServiceClient client = handler.getClient();
+
+            Mqtt3ClientConfig config = client.getClient().getConfig();
+            LOGGER.info("Connect to MQTT broker {}:{}", config.getServerHost(), config.getServerPort());
+
             try {
-                MqttServiceClient client = handler.getClient();
                 if(client.connect()) {
                     LOGGER.info("Connected to MQTT broker");
 
                     return true;
                 } else {
-                    LOGGER.warn("Not connected to MQTT broker");
+                    LOGGER.warn("Not connected to MQTT broker at {}:{}", config.getServerHost(), config.getServerPort());
                 }
             } catch (Exception e) {
-                LOGGER.warn("Problem connecting to MQTT broker", e);
+                LOGGER.warn("Problem connecting to MQTT broker {}:{}", config.getServerHost(), config.getServerPort(), e);
             }
         }
         return false;
@@ -130,7 +145,7 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     protected MqttServiceClient createMqttServiceClient(Intent intent) {
         // get MQTT client details
 
-        int port = intent.getIntExtra(MQTT_CLIENT_PORT, 1183);
+        int port = intent.getIntExtra(MQTT_CLIENT_PORT, 1883);
 
         String host = intent.getStringExtra(MQTT_CLIENT_HOST);
         if(host == null) {
@@ -168,6 +183,12 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
         Executor executor = Executors.newCachedThreadPool();
 
         MqttServiceClient mqttServiceClient = new MqttServiceClient(executor, mqtt3AsyncClient, timeout);
+
+        mqttServiceClient.subscribe("itxpt/#", (a) -> {
+            byte[] payloadAsBytes = a.getPayloadAsBytes();
+            System.out.println(" <- " + a.getTopic().toString() + " " + new String(payloadAsBytes, StandardCharsets.UTF_8));
+        });
+
         return mqttServiceClient;
     }
 

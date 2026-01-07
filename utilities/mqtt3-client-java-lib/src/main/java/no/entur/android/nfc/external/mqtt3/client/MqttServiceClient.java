@@ -1,4 +1,4 @@
-package hwb.utilities.mqtt3.client;
+package no.entur.android.nfc.external.mqtt3.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
@@ -123,6 +123,10 @@ public class MqttServiceClient {
         return ack.getReturnCode() == Mqtt3ConnAckReturnCode.SUCCESS;
     }
 
+    public void connectInBackground() {
+        client.connect();
+    }
+
     public void disconnect() {
         LOGGER.info("Disconnect");
         client.disconnect();
@@ -134,4 +138,7 @@ public class MqttServiceClient {
                 .send();
     }
 
+    public Mqtt3AsyncClient getClient() {
+        return client;
+    }
 }
