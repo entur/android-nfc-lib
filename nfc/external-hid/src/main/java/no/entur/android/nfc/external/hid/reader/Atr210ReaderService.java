@@ -2,11 +2,13 @@ package no.entur.android.nfc.external.hid.reader;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Base64;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
+import no.entur.android.nfc.external.ExternalBarcodeCallback;
 import no.entur.android.nfc.external.hid.HidMqttService;
 import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
@@ -229,13 +231,18 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
 
     protected void barcode(TicketRequest ticketRequest) {
         try {
-            Intent intent = new Intent(HidMqttService.ACTION_BARCODE);
-            intent.putExtra(HidMqttService.BARCODE_EXTRA_BODY, ticketRequest.getBarcode());
+            Intent intent = new Intent(ExternalBarcodeCallback.ACTION_BARCODE_DISCOVERED);
+
+            String barcode = ticketRequest.getBarcode();
+
+            byte[] bytes = Base64.decode(barcode, Base64.NO_WRAP);
+
+            intent.putExtra(ExternalBarcodeCallback.BARCODE_EXTRA_BODY, bytes);
             intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, atr210Reader.getId());
 
             context.sendBroadcast(intent, Atr210MqttHandler.ANDROID_PERMISSION_NFC);
         } catch (Exception e) {
-            LOGGER.warn("Problem handling diagnostics message", e);
+            LOGGER.warn("Problem handling barcode message", e);
         }
     }
 

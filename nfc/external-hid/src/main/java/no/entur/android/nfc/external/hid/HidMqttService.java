@@ -40,9 +40,6 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     public static final String ACTION_MQTT_CONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_CONNECTED";
     public static final String ACTION_MQTT_DISCONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_DISCONNECTED";
 
-    public static final String ACTION_BARCODE = ExternalNfcServiceCallback.class.getName() + ".action.BARCODE";
-    public static final String BARCODE_EXTRA_BODY = ExternalNfcServiceCallback.class.getName() + ".extra.BODY"; // TODO could add encoding / type too
-
     public static final String MQTT_CLIENT_PORT = "PORT";
     public static final String MQTT_CLIENT_HOST = "HOST";
     public static final String MQTT_CLIENT_IDENTIFIER = "IDENTIFIER";
