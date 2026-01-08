@@ -9,13 +9,13 @@ import java.util.List;
 import no.entur.android.nfc.external.hid.Atr210MqttHandler;
 import no.entur.android.nfc.external.remote.RemoteCommandWriter;
 
-public class Atr210ServiceCommandsWrapper extends RemoteCommandWriter {
+public class HidServiceCommandsWrapper extends RemoteCommandWriter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Atr210ServiceCommandsWrapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HidServiceCommandsWrapper.class);
 
     private final Atr210MqttHandler atr210MqttService;
 
-    public Atr210ServiceCommandsWrapper(Atr210MqttHandler atr210MqttService) {
+    public HidServiceCommandsWrapper(Atr210MqttHandler atr210MqttService) {
         this.atr210MqttService = atr210MqttService;
     }
 

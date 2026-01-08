@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 
 public class Atr210HeartbeatTimer {
 
-	private final long intervalInMillis;
-	private final ScheduledExecutorService executorService;
-	private final Atr210MqttHandler listener;
+    protected final long intervalInMillis;
+    protected final ScheduledExecutorService executorService;
+    protected final Atr210MqttHandler listener;
 
-	private Future<?> scheduledTask = CompletableFuture.completedFuture(null);
+    protected Future<?> scheduledTask = CompletableFuture.completedFuture(null);
 
 	public Atr210HeartbeatTimer(long intervalInMillis, Atr210MqttHandler service) {
 		this(intervalInMillis, Executors.newSingleThreadScheduledExecutor(), service);

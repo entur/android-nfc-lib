@@ -1,11 +1,11 @@
 package no.entur.android.nfc.external.hid.intent.bind;
 
 import no.entur.android.nfc.external.hid.reader.IHidServiceControl;
-import no.entur.android.nfc.external.hid.intent.command.Atr210ServiceCommandsWrapper;
+import no.entur.android.nfc.external.hid.intent.command.HidServiceCommandsWrapper;
 
 public class Atr210ServiceBinder extends IHidServiceControl.Stub {
 
-	private Atr210ServiceCommandsWrapper serviceCommandsWrapper;
+	private HidServiceCommandsWrapper serviceCommandsWrapper;
 
 	public Atr210ServiceBinder() {
 		attachInterface(this, IHidServiceControl.class.getName());
@@ -15,7 +15,7 @@ public class Atr210ServiceBinder extends IHidServiceControl.Stub {
 		this.serviceCommandsWrapper = null;
 	}
 
-    public void setServiceCommandsWrapper(Atr210ServiceCommandsWrapper serviceCommandsWrapper) {
+    public void setServiceCommandsWrapper(HidServiceCommandsWrapper serviceCommandsWrapper) {
         this.serviceCommandsWrapper = serviceCommandsWrapper;
     }
 

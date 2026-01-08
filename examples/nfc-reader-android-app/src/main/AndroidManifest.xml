@@ -98,6 +98,8 @@
             >
         </service>
 
+        <service android:name="no.entur.android.nfc.external.mqtt.test.MqttBrokerService" />
+
     </application>
 
 </manifest>

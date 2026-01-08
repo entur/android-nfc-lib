@@ -21,7 +21,7 @@ import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.hid.intent.HidService;
 import no.entur.android.nfc.external.hid.intent.bind.Atr210ServiceBinder;
-import no.entur.android.nfc.external.hid.intent.command.Atr210ServiceCommandsWrapper;
+import no.entur.android.nfc.external.hid.intent.command.HidServiceCommandsWrapper;
 import no.entur.android.nfc.external.hid.reader.Atr210ReaderConfiguration;
 import no.entur.android.nfc.external.hid.reader.Atr210ReaderContext;
 import no.entur.android.nfc.external.hid.reader.Atr210ReaderService;
@@ -29,9 +29,16 @@ import no.entur.android.nfc.external.hid.dto.atr210.heartbeat.HeartbeatResponse;
 import no.entur.android.nfc.external.service.tag.DefaultTagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 
+/**
+ *
+ * Handler for ATR-210 readers over MQTT.
+ *
+ */
+
+
 public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
-    private static final String TOPIC_HEARTBEAT = "itxpt/inventory/providers/+/heartbeat/relative";
+    protected static final String TOPIC_HEARTBEAT = "itxpt/inventory/providers/+/heartbeat/relative";
 
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
@@ -47,8 +54,8 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
     protected final TagProxyStore tagProxyStore = new DefaultTagProxyStore();
 
-    private Atr210ReaderConfiguration configuration;
-    private boolean connected = false;
+    protected Atr210ReaderConfiguration configuration;
+    protected boolean connected = false;
 
     public Atr210MqttHandler(Context context, MqttServiceClient client, long transceiveTimeout) {
         this.context = context;
@@ -58,7 +65,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         this.configuration = new Atr210ReaderConfiguration(transceiveTimeout);
 
         Atr210ServiceBinder binder = new Atr210ServiceBinder();
-        binder.setServiceCommandsWrapper(new Atr210ServiceCommandsWrapper(this));
+        binder.setServiceCommandsWrapper(new HidServiceCommandsWrapper(this));
         this.hidService = new HidService("ATR210", binder);
 
         this.atr210HeartbeatTimer = new Atr210HeartbeatTimer(5000, this);

@@ -29,10 +29,19 @@ import java.util.concurrent.TimeUnit;
 import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 
+/**
+ *
+ * Service for HID readers over MQTT.
+ *
+ */
+
 public class HidMqttService extends Service implements MqttClientConnectedListener, MqttClientDisconnectedListener {
 
     public static final String ACTION_MQTT_CONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_CONNECTED";
     public static final String ACTION_MQTT_DISCONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_DISCONNECTED";
+
+    public static final String ACTION_BARCODE = ExternalNfcServiceCallback.class.getName() + ".action.BARCODE";
+    public static final String BARCODE_EXTRA_BODY = ExternalNfcServiceCallback.class.getName() + ".extra.BODY"; // TODO could add encoding / type too
 
     public static final String MQTT_CLIENT_PORT = "PORT";
     public static final String MQTT_CLIENT_HOST = "HOST";
@@ -84,7 +93,7 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
             handler.disableNfcAutoNfcConfiguration();
         }
 
-        connect();
+        connectInBackground();
 
         handler.broadcastStarted();
 
