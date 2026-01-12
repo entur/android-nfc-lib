@@ -2,11 +2,14 @@ package no.entur.android.nfc.wrapper.test.binder;
 
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.Log;
 
 import java.util.List;
 
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.test.tech.MockBasicTagTechnology;
 import no.entur.android.nfc.wrapper.test.tech.MockIsoDep;
 import no.entur.android.nfc.wrapper.test.tech.MockMifareClassic;
@@ -293,6 +296,39 @@ public class INFcTagBinder {
 
         return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 	}
+
+    public ParcelableTransceiveResult parcelableTranscieve(ParcelableTransceive data) throws RemoteException {
+        if(connected == -1) {
+            throw new RemoteException("No connected tag technology");
+        }
+
+        try {
+            if(connected == TagTechnology.ISO_DEP) {
+                Parcelable transceive = isoDep.transceive(data);
+
+                return new ParcelableTransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
+            }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, "Transceive problem", e);
+        }
+
+        return new ParcelableTransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+    }
+
+    public boolean supportsTransceiveParcelable(String className) throws RemoteException {
+        if(connected == -1) {
+            throw new RemoteException("No connected tag technology");
+        }
+
+        try {
+            if(connected == TagTechnology.ISO_DEP) {
+                return isoDep.supportsTransceiveParcelable(className);
+            }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, "Transceive problem", e);
+        }
+        return false;
+    }
 
 
 }

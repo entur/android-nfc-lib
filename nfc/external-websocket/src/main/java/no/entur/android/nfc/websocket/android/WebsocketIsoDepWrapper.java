@@ -1,5 +1,7 @@
 package no.entur.android.nfc.websocket.android;
 
+import android.os.Parcelable;
+
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.websocket.messages.card.CardClient;
 
@@ -20,4 +22,8 @@ public class WebsocketIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 		return cardClient.transcieve(req);
 	}
 
+    @Override
+    public Parcelable transceive(Parcelable parcelable) throws Exception {
+        throw new RuntimeException("Not implemented");
+    }
 }

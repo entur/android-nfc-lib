@@ -11,7 +11,7 @@ MockTag mockTag = MockTag.newBuilder()
             isoDep.withDesfireEV1(); // desfire
             isoDep.withTransceive(ListMockTransceive.newBuilder()
                     .withErrorResponse("63") // raw desfire response
-                    .withTransceiveNativeDesfireSelectApplication("008057", "00") // raw desfire command
+                    .withTransceiveNativeDesfireEV1SelectApplication("008057", "00") // raw desfire command
                     .build());
             }
         )

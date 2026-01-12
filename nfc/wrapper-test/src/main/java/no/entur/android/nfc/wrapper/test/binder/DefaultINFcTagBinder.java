@@ -4,6 +4,8 @@ import android.nfc.NdefMessage;
 import android.os.RemoteException;
 
 import no.entur.android.nfc.wrapper.INfcTag;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
@@ -137,6 +139,16 @@ public class DefaultINFcTagBinder extends INfcTag.Stub {
     @Override
     public boolean getExtendedLengthApdusSupported() throws RemoteException {
         return delegate.getExtendedLengthApdusSupported();
+    }
+
+    @Override
+    public ParcelableTransceiveResult parcelableTranscieve(int nativeHandle, ParcelableTransceive data) throws RemoteException {
+        return delegate.parcelableTranscieve(data);
+    }
+
+    @Override
+    public boolean supportsTransceiveParcelable(String className) throws RemoteException {
+        return delegate.supportsTransceiveParcelable(className);
     }
 
     public boolean isLost() {

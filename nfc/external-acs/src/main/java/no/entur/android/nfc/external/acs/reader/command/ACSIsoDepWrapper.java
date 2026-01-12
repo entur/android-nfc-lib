@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.acs.reader.command;
 
+import android.os.Parcelable;
+
 import com.acs.smartcard.ReaderException;
 
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
@@ -35,4 +37,10 @@ public class ACSIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 	public byte[] transceiveRaw(byte[] req) throws Exception {
 		throw new ReaderException();
 	}
+
+    @Override
+    public Parcelable transceive(Parcelable parcelable) throws Exception {
+        throw new RuntimeException("Not implemented");
+    }
+
 }

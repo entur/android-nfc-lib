@@ -1,5 +1,7 @@
 package no.entur.android.nfc.wrapper.tech.utils;
 
+import android.os.Parcelable;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -81,6 +83,26 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
         } finally {
             invocation.completed(System.nanoTime());
         }
+    }
+
+    @Override
+    public <T> T transceive(Parcelable data) throws IOException {
+        ParcelableTransceiveInvocation invocation = listener.onParcelableTransceive(data);
+        try {
+            Parcelable transceive = delegate.transceive(data);
+            invocation.setResponse(transceive);
+            return (T)transceive;
+        } catch (Exception e) {
+            invocation.setException(e);
+            throw e;
+        } finally {
+            invocation.completed(System.nanoTime());
+        }
+    }
+
+    @Override
+    public boolean supportsTransceive(Class c) throws IOException {
+        return delegate.supportsTransceive(c);
     }
 
     @Override

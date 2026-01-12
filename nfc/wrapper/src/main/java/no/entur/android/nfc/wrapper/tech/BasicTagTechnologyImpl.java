@@ -29,8 +29,8 @@ import no.entur.android.nfc.wrapper.TransceiveResult;
  * A base class for tag technologies that are built on top of transceive().
  */
 public class BasicTagTechnologyImpl implements BasicTagTechnology {
-	private static final String TAG = "NFC";
-	private static final String NFC_SERVICE_DEAD_MSG = "NFC service dead";
+    protected static final String TAG = "NFC";
+	protected static final String NFC_SERVICE_DEAD_MSG = "NFC service dead";
 
 	final TagImpl mTag;
 

@@ -18,4 +18,5 @@ public interface ReaderTechnology {
 
 	int reconnect(int handle) throws RemoteException;
 
+    boolean supportsTransceiveParcelable(String className);
 }

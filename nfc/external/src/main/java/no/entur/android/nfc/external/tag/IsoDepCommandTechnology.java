@@ -1,12 +1,15 @@
 package no.entur.android.nfc.external.tag;
 
 import android.nfc.tech.IsoDep;
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
 
@@ -46,10 +49,22 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
 
 			return mapper.mapException(e);
 		}
-
 	}
 
-	public String toString() {
+    @Override
+    public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
+        try {
+            Parcelable result = adapter.transceive(parcelable.getRequestData());
+
+            return new ParcelableTransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
+        } catch (Exception e) {
+            LOGGER.debug("Problem sending commands", e);
+
+            return new ParcelableTransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+        }
+    }
+
+    public String toString() {
 		return IsoDep.class.getSimpleName();
 	}
 }

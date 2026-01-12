@@ -19,6 +19,8 @@ package no.entur.android.nfc.wrapper;
 import android.nfc.NdefMessage;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
 
 /**
  * @hide
@@ -46,4 +48,9 @@ interface INfcTag
     boolean canMakeReadOnly(int ndefType);
     int getMaxTransceiveLength(int technology);
     boolean getExtendedLengthApdusSupported();
+
+    // more complex transcieve
+    // could be transcieve with an additional trace or multiple transcieve
+    ParcelableTransceiveResult parcelableTranscieve(int nativeHandle, in ParcelableTransceive data);
+    boolean supportsTransceiveParcelable(String className);
 }

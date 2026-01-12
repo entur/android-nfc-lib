@@ -1,5 +1,6 @@
 package no.entur.android.nfc.wrapper.tech;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import java.io.IOException;
@@ -54,7 +55,11 @@ public abstract class IsoDep implements BasicTagTechnology {
 
 	public abstract byte[] transceive(byte[] data) throws IOException;
 
-	public abstract int getMaxTransceiveLength();
+    public abstract <T> T transceive(Parcelable data) throws IOException;
+
+    public abstract boolean supportsTransceive(Class c) throws IOException;
+
+    public abstract int getMaxTransceiveLength();
 
 	public abstract boolean isExtendedLengthApduSupported();
 
