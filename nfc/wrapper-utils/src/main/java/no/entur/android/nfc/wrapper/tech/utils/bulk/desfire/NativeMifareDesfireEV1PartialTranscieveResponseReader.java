@@ -1,20 +1,20 @@
-package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
+package no.entur.android.nfc.wrapper.tech.utils.bulk.desfire;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponseHandler;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponseReader;
 import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
 
-public class ApduPartialTranscieveResponseHandler implements PartialTranscieveResponseHandler {
+public class NativeMifareDesfireEV1PartialTranscieveResponseReader implements PartialTranscieveResponseReader {
 
-    // Response ADPUs: Two status bytes at the end of the response
+    // Response ADPUs: One status byte at the start of the response
 
     private byte[] nextPartCommand;
 
     private byte[] response = new byte[1024];
-    private int offset = 0;
+    private int offset = 1;
 
     private final PartialTranscieveResponsePredicate predicate;
 
-    public ApduPartialTranscieveResponseHandler(byte[] nextPartCommand, PartialTranscieveResponsePredicate predicate) {
+    public NativeMifareDesfireEV1PartialTranscieveResponseReader(byte[] nextPartCommand, PartialTranscieveResponsePredicate predicate) {
         super();
 
         this.nextPartCommand = nextPartCommand;
@@ -32,12 +32,12 @@ public class ApduPartialTranscieveResponseHandler implements PartialTranscieveRe
             this.response = nextResponse;
         }
 
-        // overwrite last status if present
-        int writeOffset = Math.max(0, this.offset - 2);
+        // copy body
+        System.arraycopy(part, 1, response, offset, part.length - 1);
+        // copy last status
+        response[0] = part[0];
 
-        System.arraycopy(part, 0, response, writeOffset, part.length);
-
-        this.offset = writeOffset + part.length;
+        this.offset = offset + part.length  -1;
 
         if(predicate.test(part)) {
             return nextPartCommand;
@@ -52,4 +52,5 @@ public class ApduPartialTranscieveResponseHandler implements PartialTranscieveRe
         System.arraycopy(response, 0, parts, 0, parts.length);
         return parts;
     }
+
 }

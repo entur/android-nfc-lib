@@ -23,7 +23,6 @@ public class ExtendedBasicTagTechnologyImpl extends BasicTagTechnologyImpl {
         super(tag, tech);
     }
 
-
     public Parcelable transceive(Parcelable command) throws IOException {
         checkConnected();
 

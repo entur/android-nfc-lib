@@ -2,7 +2,11 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk;
 
 import android.os.Parcelable;
 
-import java.util.function.Predicate;
+/**
+ *
+ * Predicate for checking the transcieve response.
+ *
+ */
 
 public interface TranscieveResponsePredicate extends Parcelable {
 

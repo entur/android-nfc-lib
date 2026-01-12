@@ -8,25 +8,18 @@ import java.util.List;
 
 public class BulkTransceiveCommands implements Parcelable {
 
-    private PartialTranscieveResponseHandlerFactory partialTranscieveResponseHandlerFactory;
-    private PartialTranscieveResponsePredicate partialTranscieveResponsePredicate;
+    // handler for partial responses.
+    private List<PartialTranscieveResponseHandler> partialHandlers = new ArrayList<>();
 
+    // commands
     private List<BulkTransceiveCommand> items = new ArrayList<>();
 
-    public PartialTranscieveResponseHandlerFactory getPartialTranscieveResponseHandlerFactory() {
-        return partialTranscieveResponseHandlerFactory;
+    public void setPartialHandlers(List<PartialTranscieveResponseHandler> partialHandlers) {
+        this.partialHandlers = partialHandlers;
     }
 
-    public void setPartialTranscieveResponseHandlerFactory(PartialTranscieveResponseHandlerFactory partialTranscieveResponseHandlerFactory) {
-        this.partialTranscieveResponseHandlerFactory = partialTranscieveResponseHandlerFactory;
-    }
-
-    public PartialTranscieveResponsePredicate getPartialTranscieveResponsePredicate() {
-        return partialTranscieveResponsePredicate;
-    }
-
-    public void setPartialTranscieveResponsePredicate(PartialTranscieveResponsePredicate partialTranscieveResponsePredicate) {
-        this.partialTranscieveResponsePredicate = partialTranscieveResponsePredicate;
+    public List<PartialTranscieveResponseHandler> getPartialHandlers() {
+        return partialHandlers;
     }
 
     public List<BulkTransceiveCommand> getItems() {
@@ -52,13 +45,7 @@ public class BulkTransceiveCommands implements Parcelable {
             dest.writeInt(response.length);
             dest.writeByteArray(response);
 
-            PartialTranscieveResponsePredicate partialPredicate = item.getPartialTranscieveResponsePredicate();
-            if(partialPredicate != null) {
-                dest.writeInt(1);
-                dest.writeParcelable(partialPredicate, 0);
-            } else {
-                dest.writeInt(0);
-            }
+            dest.writeString(item.getPartialHandlerId());
 
             TranscieveResponsePredicate responsePredicate = item.getResponsePredicate();
             if(responsePredicate != null) {
@@ -68,6 +55,14 @@ public class BulkTransceiveCommands implements Parcelable {
                 dest.writeInt(0);
             }
         }
+
+        dest.writeInt(partialHandlers.size());
+        for (PartialTranscieveResponseHandler item : partialHandlers) {
+            dest.writeString(item.getId());
+            dest.writeParcelable(item.getFactory(), 0);
+            dest.writeParcelable(item.getPredicate(), 0);
+        }
+
     }
 
     public static final Parcelable.Creator<BulkTransceiveCommands> CREATOR = new Parcelable.Creator<BulkTransceiveCommands>() {
@@ -76,9 +71,9 @@ public class BulkTransceiveCommands implements Parcelable {
 
             BulkTransceiveCommands responses = new BulkTransceiveCommands();
 
-            int count = in.readInt();
+            int commandCount = in.readInt();
 
-            for(int i = 0; i < count; i++) {
+            for(int i = 0; i < commandCount; i++) {
 
                 BulkTransceiveCommand item = new BulkTransceiveCommand();
 
@@ -88,19 +83,26 @@ public class BulkTransceiveCommands implements Parcelable {
                 byte[] response = new byte[length];
                 in.readByteArray(response);
 
-                if(in.readInt() == 1) {
-                    item.setPartialTranscieveResponsePredicate(in.readParcelable(PartialTranscieveResponsePredicate.class.getClassLoader()));
-                }
+                String partialTranscieveResponseHandlerId = in.readString();
+
+                item.setCommand(response);
+                item.setId(id);
+                item.setPartialHandlerId(partialTranscieveResponseHandlerId);
 
                 if(in.readInt() == 1) {
                     item.setResponsePredicate(in.readParcelable(TranscieveResponsePredicate.class.getClassLoader()));
                 }
 
-                item.setCommand(response);
-                item.setId(id);
-
                 responses.add(item);
+            }
 
+            int partialHandlerCount = in.readInt();
+            for(int i = 0; i < partialHandlerCount; i++) {
+                String id = in.readString();
+                PartialTranscieveResponseReaderFactory factory = in.readParcelable(PartialTranscieveResponseReaderFactory.class.getClassLoader());
+                PartialTranscieveResponsePredicate predicate = in.readParcelable(PartialTranscieveResponsePredicate.class.getClassLoader());
+
+                responses.add(new PartialTranscieveResponseHandler(id, predicate, factory));
             }
 
             return responses;
@@ -111,6 +113,10 @@ public class BulkTransceiveCommands implements Parcelable {
             return new BulkTransceiveCommands[size];
         }
     };
+
+    private void add(PartialTranscieveResponseHandler handler) {
+        this.partialHandlers.add(handler);
+    }
 
     public void add(BulkTransceiveCommand item) {
         this.items.add(item);

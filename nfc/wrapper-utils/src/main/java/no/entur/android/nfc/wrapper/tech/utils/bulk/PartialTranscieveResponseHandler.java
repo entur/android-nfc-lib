@@ -1,9 +1,27 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk;
 
-public interface PartialTranscieveResponseHandler {
+public class PartialTranscieveResponseHandler {
 
-    byte[] next(byte[] content);
+    protected final String id;
 
-    byte[] assemble();
+    protected final PartialTranscieveResponsePredicate predicate;
+    protected final PartialTranscieveResponseReaderFactory factory;
 
+    public PartialTranscieveResponseHandler(String id, PartialTranscieveResponsePredicate predicate, PartialTranscieveResponseReaderFactory factory) {
+        this.id = id;
+        this.predicate = predicate;
+        this.factory = factory;
+    }
+
+    public PartialTranscieveResponsePredicate getPredicate() {
+        return predicate;
+    }
+
+    public PartialTranscieveResponseReaderFactory getFactory() {
+        return factory;
+    }
+
+    public String getId() {
+        return id;
+    }
 }

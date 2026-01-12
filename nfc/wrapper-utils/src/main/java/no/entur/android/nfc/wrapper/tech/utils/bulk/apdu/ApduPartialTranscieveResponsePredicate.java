@@ -3,8 +3,6 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import androidx.annotation.NonNull;
-
 import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
 
 public class ApduPartialTranscieveResponsePredicate implements PartialTranscieveResponsePredicate {

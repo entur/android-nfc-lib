@@ -3,10 +3,7 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.desfire;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import androidx.annotation.NonNull;
-
 import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
-import no.entur.android.nfc.wrapper.tech.utils.bulk.apdu.ApduTranscieveReponseStatusPredicate;
 
 public class NativeMifareDesfireEV1PartialTranscieveResponsePredicate implements PartialTranscieveResponsePredicate {
 
