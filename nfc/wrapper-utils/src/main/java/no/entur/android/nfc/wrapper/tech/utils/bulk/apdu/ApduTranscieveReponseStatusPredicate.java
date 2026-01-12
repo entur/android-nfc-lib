@@ -1,8 +1,7 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
 
 import android.os.Parcel;
-
-import androidx.annotation.NonNull;
+import android.os.Parcelable;
 
 import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
 
@@ -15,9 +14,14 @@ import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePre
 
 public class ApduTranscieveReponseStatusPredicate implements PartialTranscieveResponsePredicate {
 
-    private int sw1;
+    protected final int sw1;
 
-    private int sw2;
+    protected final int sw2;
+
+    public ApduTranscieveReponseStatusPredicate(int sw1, int sw2) {
+        this.sw1 = sw1;
+        this.sw2 = sw2;
+    }
 
     @Override
     public boolean test(byte[] response) {
@@ -35,13 +39,28 @@ public class ApduTranscieveReponseStatusPredicate implements PartialTranscieveRe
         return sw2 == responseSw2;
     }
 
-    @Override
     public int describeContents() {
         return 0;
     }
 
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(sw1);
+        dest.writeInt(sw2);
     }
+
+    public static final Parcelable.Creator<ApduTranscieveReponseStatusPredicate> CREATOR = new Parcelable.Creator<ApduTranscieveReponseStatusPredicate>() {
+        @Override
+        public ApduTranscieveReponseStatusPredicate createFromParcel(Parcel in) {
+
+            int sw1 = in.readInt();
+            int sw2 = in.readInt();
+
+            return new ApduTranscieveReponseStatusPredicate(sw1, sw2);
+        }
+
+        @Override
+        public ApduTranscieveReponseStatusPredicate[] newArray(int size) {
+            return new ApduTranscieveReponseStatusPredicate[size];
+        }
+    };
 }

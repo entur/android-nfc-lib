@@ -1,10 +1,12 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk.desfire;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
 import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.apdu.ApduTranscieveReponseStatusPredicate;
 
 public class NativeMifareDesfireEV1PartialTranscieveResponsePredicate implements PartialTranscieveResponsePredicate {
 
@@ -20,13 +22,22 @@ public class NativeMifareDesfireEV1PartialTranscieveResponsePredicate implements
         return ADDITIONAL_FRAME_STATUS == (response[0] & 0xFF);
     }
 
-    @Override
     public int describeContents() {
         return 0;
     }
 
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-
+    public void writeToParcel(Parcel dest, int flags) {
     }
+
+    public static final Parcelable.Creator<NativeMifareDesfireEV1PartialTranscieveResponsePredicate> CREATOR = new Parcelable.Creator<NativeMifareDesfireEV1PartialTranscieveResponsePredicate>() {
+        @Override
+        public NativeMifareDesfireEV1PartialTranscieveResponsePredicate createFromParcel(Parcel in) {
+            return new NativeMifareDesfireEV1PartialTranscieveResponsePredicate();
+        }
+
+        @Override
+        public NativeMifareDesfireEV1PartialTranscieveResponsePredicate[] newArray(int size) {
+            return new NativeMifareDesfireEV1PartialTranscieveResponsePredicate[size];
+        }
+    };
 }

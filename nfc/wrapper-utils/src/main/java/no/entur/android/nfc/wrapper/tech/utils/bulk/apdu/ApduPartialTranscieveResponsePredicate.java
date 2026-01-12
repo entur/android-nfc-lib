@@ -1,6 +1,7 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
@@ -37,13 +38,22 @@ public class ApduPartialTranscieveResponsePredicate implements PartialTranscieve
         return sw2 == responseSw2;
     }
 
-    @Override
     public int describeContents() {
         return 0;
     }
 
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-
+    public void writeToParcel(Parcel dest, int flags) {
     }
+
+    public static final Parcelable.Creator<ApduPartialTranscieveResponsePredicate> CREATOR = new Parcelable.Creator<ApduPartialTranscieveResponsePredicate>() {
+        @Override
+        public ApduPartialTranscieveResponsePredicate createFromParcel(Parcel in) {
+            return new ApduPartialTranscieveResponsePredicate();
+        }
+
+        @Override
+        public ApduPartialTranscieveResponsePredicate[] newArray(int size) {
+            return new ApduPartialTranscieveResponsePredicate[size];
+        }
+    };
 }
