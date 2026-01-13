@@ -1,4 +1,4 @@
-package hwb.utilities.mqtt3.broker;
+package no.entur.android.nfc.external.mqtt3.broker;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
 
 public class Mqtt3WebSocketBrokerTest {
 

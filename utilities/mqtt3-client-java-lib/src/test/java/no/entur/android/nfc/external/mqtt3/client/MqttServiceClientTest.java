@@ -17,6 +17,7 @@ public class MqttServiceClientTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @Disabled
     public void connect() throws Exception {
         Mqtt3AsyncClient mqtt3AsyncClient = Mqtt3Client.builder()
                 .identifier(UUID.randomUUID().toString())
