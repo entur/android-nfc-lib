@@ -173,28 +173,28 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 	protected AcrReader createUsbAcrReader(ACRCommands reader) {
 		if (reader instanceof ACR122Commands) {
 			acr122Binder.setAcr122UCommands((ACR122Commands) reader);
-			return new Acr122UReader(reader.getName(), acr122Binder);
+			return new Acr122UReader(reader.getName(), reader.getId(), acr122Binder);
 		} else if (reader instanceof ACR1222Commands) {
 			acr1222Binder.setAcr1222LCommands((ACR1222Commands) reader);
-			return new Acr1222LReader(reader.getName(), acr1222Binder);
+			return new Acr1222LReader(reader.getName(), reader.getId(), acr1222Binder);
 		} else if (reader instanceof ACR1251Commands) {
 			acr1251Binder.setCommands((ACR1251Commands) reader);
-			return new Acr1251UReader(reader.getName(), acr1251Binder);
+			return new Acr1251UReader(reader.getName(), reader.getId(), acr1251Binder);
 		} else if (reader instanceof ACR1252Commands) {
 			acr1252Binder.setCommands((ACR1252Commands) reader);
-			return new Acr1252UReader(reader.getName(), acr1252Binder);
+			return new Acr1252UReader(reader.getName(), reader.getId(), acr1252Binder);
 		} else if (reader instanceof ACR1255UsbCommands) {
 			acr1255Binder.setCommands((ACR1255UsbCommands) reader);
-			return new Acr1255UReader(reader.getName(), acr1255Binder);
+			return new Acr1255UReader(reader.getName(), reader.getId(), acr1255Binder);
 		} else if (reader instanceof ACR1281Commands) {
 			acr1281Binder.setCommands((ACR1281Commands) reader);
-			return new Acr1281UReader(reader.getName(), acr1281Binder);
+			return new Acr1281UReader(reader.getName(), reader.getId(), acr1281Binder);
 		} else if (reader instanceof ACR1283Commands) {
 			acr1283Binder.setCommands((ACR1283Commands) reader);
-			return new Acr1283LReader(reader.getName(), acr1283Binder);
+			return new Acr1283LReader(reader.getName(), reader.getId(), acr1283Binder);
 		} else if (reader instanceof ACR1552Commands) {
 			acr1552Binder.setCommands((ACR1552Commands) reader);
-			return new Acr1552UReader(reader.getName(), acr1552Binder);
+			return new Acr1552UReader(reader.getName(), reader.getId(), acr1552Binder);
 		} else {
 			LOGGER.debug("Not supporting reader extras for " + reader.getName());
 		}

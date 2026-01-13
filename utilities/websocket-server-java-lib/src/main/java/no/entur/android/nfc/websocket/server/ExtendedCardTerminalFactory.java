@@ -18,11 +18,8 @@ public class ExtendedCardTerminalFactory {
 
         if(name.contains("ACR1252")) {
             Acr1252CardTerminal terminal = new Acr1252CardTerminal(cardTerminal);
-            System.out.println("Enrich");
 
             enricher.enrich(terminal);
-
-            System.out.println("Stop polling");
 
             terminal.stopPolling();
 

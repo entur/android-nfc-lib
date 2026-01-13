@@ -51,9 +51,10 @@ public class Acr1552UReader extends AcrReader {
 
 	protected IAcr1552UReaderControl readerControl;
 
-	public Acr1552UReader(String name, IAcr1552UReaderControl readerControl) {
-		this.readerControl = readerControl;
-		this.name = name;
+	public Acr1552UReader(String name, String id, IAcr1552UReaderControl readerControl) {
+        super(id, name);
+
+        this.readerControl = readerControl;
 	}
 
 	public static int serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour... types) {
@@ -493,6 +494,7 @@ public class Acr1552UReader extends AcrReader {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(name);
+        dest.writeString(id);
 		dest.writeStrongBinder(readerControl.asBinder());
 	}
 
@@ -500,12 +502,13 @@ public class Acr1552UReader extends AcrReader {
 		@Override
 		public Acr1552UReader createFromParcel(Parcel in) {
 			String name = in.readString();
+            String id = in.readString();
 
 			IBinder binder = in.readStrongBinder();
 
 			IAcr1552UReaderControl iin = IAcr1552UReaderControl.Stub.asInterface(binder);
 
-			return new Acr1552UReader(name, iin);
+			return new Acr1552UReader(name, id, iin);
 
 		}
 

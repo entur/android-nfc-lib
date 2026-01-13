@@ -26,8 +26,8 @@ public class Acr122UReader extends AcrReader {
 
 	protected IAcr122UReaderControl readerControl;
 
-	public Acr122UReader(String name, IAcr122UReaderControl readerControl) {
-		this.name = name;
+	public Acr122UReader(String name, String id, IAcr122UReaderControl readerControl) {
+		super(id, name);
 		this.readerControl = readerControl;
 	}
 
@@ -160,12 +160,12 @@ public class Acr122UReader extends AcrReader {
 		@Override
 		public Acr122UReader createFromParcel(Parcel in) {
 			String name = in.readString();
-
+            String id = in.readString();
 			IBinder binder = in.readStrongBinder();
 
 			IAcr122UReaderControl iin = IAcr122UReaderControl.Stub.asInterface(binder);
 
-			return new Acr122UReader(name, iin);
+			return new Acr122UReader(name, id, iin);
 
 		}
 

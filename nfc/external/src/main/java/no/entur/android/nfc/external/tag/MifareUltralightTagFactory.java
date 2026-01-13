@@ -7,9 +7,8 @@ import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.entur.android.nfc.external.ExternalNfcReaderCallback;
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagFactory;
-import no.entur.android.nfc.external.tag.TechnologyType;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
@@ -126,7 +125,9 @@ public class MifareUltralightTagFactory extends TagFactory {
 
 		intent.putExtra(NfcAdapter.EXTRA_TAG, createTag(id, techArray, bundles.toArray(new Bundle[bundles.size()]), serviceHandle, tagService));
 
-		return extras.enrich(intent);
+        intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, serviceHandle);
+
+        return extras.enrich(intent);
 	}
 
 	protected void addTechBundles(int type, byte[] id, byte[] atr, List<Bundle> bundles, List<Integer> tech) {

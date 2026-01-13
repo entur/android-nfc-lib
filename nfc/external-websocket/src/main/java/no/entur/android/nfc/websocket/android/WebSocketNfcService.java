@@ -16,6 +16,7 @@ import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.external.tag.DefaultTransceiveResultExceptionMapper;
 import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.websocket.client.WebSocketClient;
@@ -37,8 +38,8 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
     private WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
 
-    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store, new WebSocketExceptionMapper());
-    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, new INFcTagBinder(store), store, new WebSocketExceptionMapper());
+    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store, new DefaultTransceiveResultExceptionMapper());
+    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, new INFcTagBinder(store), store, new DefaultTransceiveResultExceptionMapper());
 
     private WebSocketClient client = null;
 
@@ -161,12 +162,19 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
     public void onCardLost() {
         LOGGER.info("onCardLost");
 
-        broadcast(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+        Intent intent = new Intent();
+        intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+
+
+
+        sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
 
     @Override
     public void onCardPresent(CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
         LOGGER.info("onCardPresent: " + technologies);
+
+        // TODO add reader id
 
         if(technologies.contains("IsoDep")) {
             WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);

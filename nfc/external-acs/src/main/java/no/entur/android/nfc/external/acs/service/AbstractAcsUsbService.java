@@ -2,19 +2,20 @@ package no.entur.android.nfc.external.acs.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.nfc.NfcAdapter;
 import android.os.AsyncTask;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.ReaderException;
 import com.acs.smartcard.RemovedCardException;
 
-import no.entur.android.nfc.external.acs.reader.AcrReader;
-import no.entur.android.nfc.external.acs.tag.DefaultTagTypeDetector;
+import org.nfctools.api.detect.DefaultTagTypeDetector;
 import org.nfctools.api.TagType;
-import no.entur.android.nfc.external.acs.tag.TagTypeDetector;
+import org.nfctools.api.detect.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
@@ -23,6 +24,7 @@ import no.entur.android.nfc.external.service.AbstractService;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusListener;
 import no.entur.android.nfc.external.service.ExternalNfcReaderStatusSupport;
 import no.entur.android.nfc.external.service.ExternalUsbNfcServiceSupport;
+import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public abstract class AbstractAcsUsbService extends AbstractService implements ExternalNfcReaderStatusListener<WrappedAcrReader> {
@@ -133,10 +135,19 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 	public void onTagAbsent(int slot) {
 		LOGGER.info("onTagAbsent");
 
-		store.removeItem(slot);
+        Intent intent = new Intent();
+        intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
 
-		Intent intent = new Intent();
-		intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+        TagProxy proxy = store.removeItem(slot);
+        if(proxy != null) {
+            byte[] uid = proxy.getUid();
+            if(uid != null) {
+                intent.putExtra(NfcAdapter.EXTRA_ID, uid);
+            }
+            intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, proxy.getHandle());
+            intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
+        }
+
 		sendBroadcast(intent, "android.permission.NFC");
 	}
 

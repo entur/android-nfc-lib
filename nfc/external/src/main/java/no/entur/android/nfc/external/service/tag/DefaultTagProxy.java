@@ -17,6 +17,8 @@ public class DefaultTagProxy implements TagProxy {
 
 	private boolean present = true;
 
+    private byte[] uid;
+
 	public DefaultTagProxy(int handle, int slotNumber, List<TagTechnology> technologies, TagProxyStore tagProxyStore) {
 		this.handle = handle;
 		this.slotNumber = slotNumber;
@@ -119,4 +121,12 @@ public class DefaultTagProxy implements TagProxy {
 	public void close() {
 		tagProxyStore.remove(this);
 	}
+
+    public void setUid(byte[] uid) {
+        this.uid = uid;
+    }
+
+    public byte[] getUid() {
+        return uid;
+    }
 }

@@ -2,6 +2,12 @@ android {
     defaultConfig {
         minSdkVersion 23
     }
+
+    buildFeatures {
+        aidl true
+    }
+
+
     namespace "no.entur.android.nfc.external"
 }
 

@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.remote;
 
+import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
@@ -9,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import no.entur.android.nfc.external.service.AbstractService;
 
@@ -71,6 +74,32 @@ public abstract class RemoteCommandReader implements Parcelable {
                         integers[i] = din.readInt();
                     }
                     return integers;
+                } else {
+                    throw createRemoteCommandException(din.readUTF());
+                }
+            } else {
+                throw createUnexpectedVersionIllegalArgumentException(version);
+            }
+        } catch (IOException e) {
+            throw createRemoteCommandException(e);
+        }
+    }
+
+    protected List<String> readStrings(byte[] response) {
+        try {
+            DataInputStream din = new DataInputStream(new ByteArrayInputStream(response));
+
+            int version = din.readInt();
+            if (version == RemoteCommandWriter.VERSION) {
+                int status = din.readInt();
+
+                if (status == RemoteCommandWriter.STATUS_OK) {
+                    int count = din.readInt();
+                    List<String> results = new ArrayList<>(count);
+                    for(int i = 0; i < count; i++) {
+                        results.add(din.readUTF());
+                    }
+                    return results;
                 } else {
                     throw createRemoteCommandException(din.readUTF());
                 }
@@ -201,4 +230,33 @@ public abstract class RemoteCommandReader implements Parcelable {
             throw createRemoteCommandException(e);
         }
     }
+
+    protected <T> T readParcelable(byte[] response, Parcelable.Creator<T> creator) {
+        byte[] bytes = readByteArray(response);
+
+        return unmarshall(bytes, creator);
+    }
+
+    public static Parcel unmarshall(byte[] bytes) {
+        Parcel parcel = Parcel.obtain();
+        parcel.unmarshall(bytes, 0, bytes.length);
+        parcel.setDataPosition(0); // This is extremely important!
+        return parcel;
+    }
+
+    public static <T> T unmarshall(byte[] bytes, Parcelable.Creator<T> creator) {
+        Parcel parcel = unmarshall(bytes);
+        T result = creator.createFromParcel(parcel);
+        parcel.recycle();
+        return result;
+    }
+
+    protected static byte[] marshall(Parcelable p) {
+        Parcel parcel = Parcel.obtain();
+        p.writeToParcel(parcel, 0);
+        byte[] marshall = parcel.marshall();
+        parcel.recycle();
+        return marshall;
+    }
+
 }

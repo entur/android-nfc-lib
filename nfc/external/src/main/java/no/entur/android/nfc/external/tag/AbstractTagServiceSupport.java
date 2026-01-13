@@ -23,6 +23,10 @@ public class AbstractTagServiceSupport {
     public void broadcast(String action) {
         Intent intent = new Intent();
         intent.setAction(action);
+        broadcast(intent);
+    }
+
+    public void broadcast(Intent intent) {
         context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
 

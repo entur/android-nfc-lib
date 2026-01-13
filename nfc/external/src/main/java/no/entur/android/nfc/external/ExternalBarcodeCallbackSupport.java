@@ -1,11 +1,9 @@
 package no.entur.android.nfc.external;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.NfcAdapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,36 +11,36 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.Executor;
 
 import no.entur.android.nfc.util.RegisterReceiverUtils;
-import no.entur.android.nfc.wrapper.Tag;
 
-public class ExternalNfcTagCallbackSupport {
+public class ExternalBarcodeCallbackSupport {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalNfcTagCallbackSupport.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExternalBarcodeCallbackSupport.class);
 
 	public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
-	protected final ExternalNfcTagCallback callback;
+	protected final ExternalBarcodeCallback callback;
 	protected final Context context;
 
-	private boolean recieveTagBroadcasts = false;
+	private boolean recieveBarcodeBroadcasts = false;
 
 	protected boolean enabled = false;
 	protected Executor executor; // non-final for testing
 
 	protected boolean receiverExported;
 
-	private final BroadcastReceiver tagReceiver = new BroadcastReceiver() {
+	private final BroadcastReceiver barcodeReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
             LOGGER.debug("Action " + intent.getAction());
-		if (intent.getAction().equals(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED)) {
-			Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+		if (intent.getAction().equals(ExternalBarcodeCallback.ACTION_BARCODE_DISCOVERED)) {
+
+			byte[] bytes = intent.getByteArrayExtra(ExternalBarcodeCallback.BARCODE_EXTRA_BODY);
 
 			if(executor != null) {
 				executor.execute(() -> {
-					callback.onExternalTagDiscovered(tag, intent);
+					callback.onBarcodeDiscovered(bytes, intent);
 				});
 			} else {
-				callback.onExternalTagDiscovered(tag, intent);
+				callback.onBarcodeDiscovered(bytes, intent);
 			}
 
 		} else {
@@ -51,7 +49,7 @@ public class ExternalNfcTagCallbackSupport {
 		}
 	};
 
-	public ExternalNfcTagCallbackSupport(ExternalNfcTagCallback callback, Context context, Executor executor, boolean receiverExported) {
+	public ExternalBarcodeCallbackSupport(ExternalBarcodeCallback callback, Context context, Executor executor, boolean receiverExported) {
 		this.callback = callback;
 		this.context = context;
 		this.executor = executor;
@@ -87,17 +85,17 @@ public class ExternalNfcTagCallbackSupport {
 	}
 
 	private void startReceivingTagBroadcasts() {
-		if (!recieveTagBroadcasts) {
+		if (!recieveBarcodeBroadcasts) {
 			LOGGER.debug("Start receiving tag broadcasts");
 
-			recieveTagBroadcasts = true;
+			recieveBarcodeBroadcasts = true;
 
 			// register receiver
 			IntentFilter filter = new IntentFilter();
-			filter.addAction(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED);
+			filter.addAction(ExternalBarcodeCallback.ACTION_BARCODE_DISCOVERED);
 			RegisterReceiverUtils.registerReceiver(
 					context,
-					tagReceiver,
+                    barcodeReceiver,
 					filter,
 					ANDROID_PERMISSION_NFC,
 					null,
@@ -108,12 +106,12 @@ public class ExternalNfcTagCallbackSupport {
 	}
 
 	private void stopReceivingTagBroadcasts() {
-		if (recieveTagBroadcasts) {
+		if (recieveBarcodeBroadcasts) {
 			LOGGER.debug("Stop receiving tag broadcasts");
 
-			recieveTagBroadcasts = false;
+			recieveBarcodeBroadcasts = false;
 
-			context.unregisterReceiver(tagReceiver);
+			context.unregisterReceiver(barcodeReceiver);
 		}
 	}
 
