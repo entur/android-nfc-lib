@@ -63,7 +63,7 @@ public class IsoDepTagFactory extends TagFactory {
 
         intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, serviceHandle);
 
-		return extras.enrich(intent);
+        return extras.enrich(intent);
 	}
 
 	private void addTechBundles(byte[] hiLayer, byte[] historicalBytes, List<Bundle> bundles, List<Integer> tech) {

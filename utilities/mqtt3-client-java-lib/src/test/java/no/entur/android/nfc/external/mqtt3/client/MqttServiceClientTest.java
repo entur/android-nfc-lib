@@ -82,7 +82,7 @@ public class MqttServiceClientTest {
         client.subscribe("itxpt/#", (a) -> {
             byte[] payloadAsBytes = a.getPayloadAsBytes();
 
-            System.out.println(" <- " + a.getTopic().toString() + " " + new String(payloadAsBytes));
+            System.out.println(" <- " + a.getTopic().toString() + " " + new String(payloadAsBytes, StandardCharsets.UTF_8));
 
         });
 
@@ -97,11 +97,7 @@ public class MqttServiceClientTest {
 
         System.out.println("Waiting");
 
-        Thread.sleep(1000 * 60 * 10);
-
         System.out.println("Done");
-
-
     }
 
 }

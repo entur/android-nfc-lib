@@ -98,13 +98,13 @@ public class MqttBrokerService extends Service {
     }
 
     public void stopBroker() throws InterruptedException {
-        Log.i(TAG, "Stop the broker on port " + broker.getPort());
 
         if(started) {
             started = false;
 
             if(broker != null) {
-                Log.i(TAG, "Stop broker");
+                Log.i(TAG, "Stop the broker on port " + broker.getPort());
+
                 broker.stop();
             } else {
                 Log.i(TAG, "No broker");
@@ -122,7 +122,7 @@ public class MqttBrokerService extends Service {
             stopBroker();
         } catch (Exception e) {
             // ignore
-            Log.d(LOG_TAG, "Problem stopping broker on port " + broker.getPort());
+            Log.d(LOG_TAG, "Problem stopping broker", e);
         }
         super.onDestroy();
     }

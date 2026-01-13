@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.tag;
 
+import android.os.RemoteException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
