@@ -18,7 +18,6 @@ public class MinovaReaderTechnology implements ReaderTechnology {
 
     @Override
     public int setTimeout(int technology, int timeout) throws RemoteException {
-        // TODO Auto-generated method stub
         return ErrorCodes.SUCCESS;
     }
 

@@ -84,6 +84,10 @@ public class MockExternalReader {
         if (mockTag.getId() != null) {
             intent.putExtra(NfcAdapter.EXTRA_ID, mockTag.getId());
         }
+
+        intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, mockTag.getServiceHandle());
+        intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
+
         context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
 
@@ -96,6 +100,10 @@ public class MockExternalReader {
         if (mockTag.getId() != null) {
             intent.putExtra(NfcAdapter.EXTRA_ID, mockTag.getId());
         }
+
+        intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, mockTag.getServiceHandle());
+        intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
+
         consumer.accept(intent);
         context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
@@ -104,6 +112,10 @@ public class MockExternalReader {
         mockTag.lost();
 
         Intent intent = new Intent(actionTagLost);
+
+        intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, mockTag.getServiceHandle());
+        intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
+
         context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
 
@@ -111,6 +123,9 @@ public class MockExternalReader {
         mockTag.lost();
 
         Intent intent = new Intent(actionTagLost);
+        intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, mockTag.getServiceHandle());
+        intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
+
         consumer.accept(intent);
         context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }

@@ -39,13 +39,13 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
 
             Intent intent = isoDepTagFactory.getTag(tagProxy.getHandle(), null, uid, true, historicalBytes, tagService, extras);
 
-            LOGGER.debug("Broadcast hce");
+            if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast hce");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
 
             return tagProxy;
         } catch (Exception e) {
-            LOGGER.debug("Problem reading from tag", e);
+            if(LOGGER.isInfoEnabled()) LOGGER.info("Problem reading from tag", e);
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }
@@ -65,13 +65,15 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
 
             wrapper.setTagProxy(tagProxy);
 
-            LOGGER.debug("Broadcast IsoDep tag");
+            if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast IsoDep tag: " + intent.getAction());
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
 
+            tagProxy.setUid(uid);
+
             return tagProxy;
         } catch (Exception e) {
-            LOGGER.debug("Problem reading from tag", e);
+            if(LOGGER.isInfoEnabled()) LOGGER.info("Problem reading from tag", e);
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
         }

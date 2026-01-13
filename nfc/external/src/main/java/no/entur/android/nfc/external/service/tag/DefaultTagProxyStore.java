@@ -51,20 +51,20 @@ public class DefaultTagProxyStore implements TagProxyStore {
 		}
 	}
 
-	public void removeItem(int slotNumber) {
+	public TagProxy removeItem(int slotNumber) {
 		synchronized (items) {
-			for (TagProxy tagItem : items) {
-				if (tagItem.getSlotNumber() == slotNumber) {
-					tagItem.setPresent(false);
-					tagItem.closeTechnology();
+			for (TagProxy item : items) {
+				if (item.getSlotNumber() == slotNumber) {
+					item.setPresent(false);
+					item.closeTechnology();
 
-					items.remove(tagItem);
+					items.remove(item);
 
-					return;
+					return item;
 				}
 			}
 		}
-
+        return null;
 	}
 
 	public TagProxy get(int serviceHandle) {

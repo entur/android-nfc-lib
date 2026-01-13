@@ -1,6 +1,10 @@
-package no.entur.android.nfc.external.acs.tag;
+package org.nfctools.api.detect;
 
 import org.nfctools.api.TagType;
+
+import java.io.ByteArrayOutputStream;
+
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 /**
  * 'IsoDep first' type of tag type detector.
@@ -128,13 +132,14 @@ public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
                         if (offset + 1 + objLen > limit) {
                             break;
                         }
+                        offset++;
                         if (tag == TAG_INITIAL_ACCESS_DATA) {
-                            TagType result = parseInitialData(historicalBytes, offset + 1, objLen);
+                            TagType result = parseInitialData(historicalBytes, offset, objLen);
                             if (result != null) {
                                 return result;
                             }
                         }
-                        offset += 1 + objLen;
+                        offset += objLen;
                     }
                 }
             } else {
@@ -162,9 +167,15 @@ public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
         return true;
     }
 
-    private TagType parseInitialData(byte[] historicalBytes, int offset, int length) {
+    protected TagType parseInitialData(byte[] historicalBytes, int offset, int length) {
 
         // https://stackoverflow.com/questions/23404314/determine-card-type-from-atr
+
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        bout.write(historicalBytes, offset, length);
+
+        bout = new ByteArrayOutputStream();
+        bout.write(historicalBytes, offset + 6, length - 6);
 
         int tagId = (historicalBytes[offset + 6] & 0xff) << 8 | (historicalBytes[offset + 7] & 0xff);
 

@@ -146,9 +146,12 @@ public class ACRCommands {
 		return reader.getState(slotNum);
 	}
 
-
 	public int getNumSlots() throws ReaderException {
 		return reader.getNumSlots();
 	}
+
+    public String getId() {
+        return reader.getId();
+    }
 
 }

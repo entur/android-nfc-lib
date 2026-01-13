@@ -1,7 +1,13 @@
 package no.entur.android.nfc.external.remote;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.util.List;
+
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class RemoteCommandWriter {
 
@@ -176,5 +182,82 @@ public class RemoteCommandWriter {
 			throw new RuntimeException(e);
 		}
 	}
+
+    protected byte[] returnValue(List<String> results, Exception exception) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DataOutputStream dout = new DataOutputStream(out);
+
+            dout.writeInt(RemoteCommandWriter.VERSION);
+
+            if (results != null) {
+                dout.writeInt(RemoteCommandWriter.STATUS_OK);
+                dout.writeInt(results.size());
+                for (String result : results) {
+                    dout.writeUTF(result);
+                }
+            } else {
+                dout.writeInt(RemoteCommandWriter.STATUS_EXCEPTION);
+                dout.writeUTF(exception.toString());
+            }
+            byte[] response = out.toByteArray();
+
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected byte[] returnValue(Parcelable parcelable, Exception exception) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DataOutputStream dout = new DataOutputStream(out);
+
+            dout.writeInt(RemoteCommandWriter.VERSION);
+
+            if (parcelable != null) {
+                dout.writeInt(RemoteCommandWriter.STATUS_OK);
+
+                Parcel parcel = Parcel.obtain();
+                parcelable.writeToParcel(parcel, 0);
+                byte[] marshall = parcel.marshall();
+                parcel.recycle();
+
+                dout.writeInt(marshall.length);
+                dout.write(marshall);
+            } else {
+                dout.writeInt(RemoteCommandWriter.STATUS_EXCEPTION);
+                dout.writeUTF(exception.toString());
+            }
+            byte[] response = out.toByteArray();
+
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] noReaderException() {
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DataOutputStream dout = new DataOutputStream(out);
+
+            dout.writeInt(RemoteCommandWriter.VERSION);
+            dout.writeInt(RemoteCommandWriter.STATUS_EXCEPTION);
+            dout.writeUTF("Reader not connected");
+
+            byte[] response = out.toByteArray();
+
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public <T> T readParcelable(byte[] response, Parcelable.Creator<T> creator) {
+        return RemoteCommandReader.unmarshall(response, creator);
+    }
+
 
 }

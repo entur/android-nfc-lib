@@ -6,9 +6,10 @@ import android.os.RemoteException;
 
 import java.util.List;
 
+import no.entur.android.nfc.external.ExternalNfcReader;
 import no.entur.android.nfc.external.remote.RemoteCommandException;
 
-public class McrReader extends MinovaReader {
+public class McrReader extends MinovaReader implements ExternalNfcReader {
 
     private static final String TAG = McrReader.class.getName();
 
@@ -59,6 +60,10 @@ public class McrReader extends MinovaReader {
             return new McrReader[size];
         }
     };
+
+    public String getId() {
+        return "minova-" + getIp();
+    }
 
     public String getIp() {
         byte[] response;

@@ -12,7 +12,6 @@ buildscript {
                 includeGroup "com.github.martinpaljak"
             }
         }
-
     }
 
     repositories repos
@@ -81,14 +80,15 @@ allprojects {
 
 ext {
     // note: see abt alignment rule
-    androidxAppcompatVersion = '1.4.1'
+    androidxAppcompatVersion = '1.7.0'
     logbackAndroidVersion = '2.0.1'
 
     slf4jVersion = '1.7.36'
+    jacksonVersion = '2.20.1'
 
     // test
     unitVersion = '4.13.2'
-    androidxTestRulesVersion = '1.5.0'
+    androidxTestRulesVersion = '1.7.0'
     androidxEspressoVersion = '3.5.1'
     androidxTestRunnerVersion = '1.7.0'
     androidxTestExtJunitVersion = '1.3.0'
@@ -98,8 +98,7 @@ ext {
     byteBuddyVersion = '1.14.10'
 
     okHttp3Version = '4.12.0'
-    javaWebSocketVersion = '1.5.7'
-
+    javaWebSocketVersion = '1.6.0'
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.12'
@@ -124,6 +123,12 @@ ext.commonDependencies = {
 
     androidTestImplementation "junit:junit:${unitVersion}"
     androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
+
+    modules {
+        module("org.checkerframework:checker-qual") {
+            replacedBy("org.checkerframework:checker")
+        }
+    }
 }
 
 configure(buildProjects()) {
@@ -394,6 +399,20 @@ configure(javaLibraryProjects()) {
             includeEngines 'junit-jupiter', 'junit-vintage'
         }
 
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    dependencies {
+        testImplementation platform("org.junit:junit-bom:${junitJupiterVersion}") // Use the desired JUnit 5 version
+
+        testImplementation 'org.junit.jupiter:junit-jupiter-api'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+        testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     }
 }
 

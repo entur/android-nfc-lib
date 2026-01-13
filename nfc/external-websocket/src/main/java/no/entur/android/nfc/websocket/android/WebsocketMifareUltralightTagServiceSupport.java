@@ -41,7 +41,7 @@ public class WebsocketMifareUltralightTagServiceSupport extends AbstractTagServi
 
         TagProxy tagProxy = store.add(slotNumber, technologies);
 
-        Intent intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, MifareUltralightTagFactory.TYPE_ULTRALIGHT, uid, atr, tagService, IntentEnricher.identity());
+        Intent intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, MifareUltralightTagFactory.TYPE_ULTRALIGHT, uid, atr, tagService, extras);
 
         LOGGER.debug("Broadcast mifare ultralight");
 
