@@ -10,6 +10,12 @@ public abstract class AbstractBulkTransceiveExecutor {
     public BulkTransceiveResponses transceive(BulkTransceiveCommands commands) throws IOException {
         BulkTransceiveResponses responses = new BulkTransceiveResponses();
 
+        transceive(commands, responses);
+
+        return responses;
+    }
+
+    public void transceive(BulkTransceiveCommands commands, BulkTransceiveResponses responses) throws IOException {
         List<PartialTranscieveResponseHandler> partialTranscieveResponseHandlers = commands.getPartialHandlers();
         Map<String, PartialTranscieveResponseHandler> handlers = new HashMap<>();
         for (PartialTranscieveResponseHandler h : partialTranscieveResponseHandlers) {
@@ -64,7 +70,6 @@ public abstract class AbstractBulkTransceiveExecutor {
             }
         }
 
-        return responses;
     }
 
     public abstract byte[] transceive(byte[] data) throws IOException;
