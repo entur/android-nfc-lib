@@ -68,7 +68,6 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
             WebSocketNfcService.this.endPolling();
         }
 
-
     }
 
     @Override
@@ -164,8 +163,6 @@ public class WebSocketNfcService extends Service implements CardClient.Listener,
 
         Intent intent = new Intent();
         intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
-
-
 
         sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }

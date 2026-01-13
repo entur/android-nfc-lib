@@ -20,7 +20,7 @@ public class MinovaService extends AbstractMinovaTcpService {
     public static final String EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG = "NEW_TAG";
     public static final String EXTRA_TAG_LEFT_FIELD_REASON_TRANSCEIVE_FAILED = "TRANSCEIVE_FAILED";
 
-    @Deprecated // use
+    @Deprecated
     public static final String EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE = AbstractMinovaTcpService.class.getName() + ".extra.EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE";
 
     protected IsoDepTagServiceSupport isoDepTagServiceSupport;

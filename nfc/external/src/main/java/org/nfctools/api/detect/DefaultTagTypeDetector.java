@@ -173,11 +173,9 @@ public class DefaultTagTypeDetector<R> implements TagTypeDetector<R> {
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         bout.write(historicalBytes, offset, length);
-        System.out.println(ByteArrayHexStringConverter.toHexString(bout.toByteArray()));
 
         bout = new ByteArrayOutputStream();
         bout.write(historicalBytes, offset + 6, length - 6);
-        System.out.println(ByteArrayHexStringConverter.toHexString(bout.toByteArray()));
 
         int tagId = (historicalBytes[offset + 6] & 0xff) << 8 | (historicalBytes[offset + 7] & 0xff);
 
