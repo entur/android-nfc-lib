@@ -32,7 +32,6 @@ public class MockTagTest {
 		chain = RuleChain.outerRule(rule);
 	}
 
-
 	@Test
 	public void testDesfireEV1DirectMethodInvocation() throws Exception {
 		rule.getScenario().onActivity(activity -> {

@@ -1,7 +1,5 @@
 package no.entur.android.nfc.external.tag;
 
-import android.os.RemoteException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,5 +65,4 @@ public class DefaultCommandTechnology extends AbstractTagTechnology implements C
     public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
         throw new RuntimeException();
     }
-
 }

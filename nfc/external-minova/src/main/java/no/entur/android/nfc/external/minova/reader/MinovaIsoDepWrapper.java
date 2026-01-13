@@ -70,5 +70,4 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
     public Parcelable transceive(Parcelable parcelable) throws Exception {
         throw new RuntimeException("Not implemented");
     }
-
 }
