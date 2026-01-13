@@ -1,5 +1,7 @@
 package no.entur.android.nfc.wrapper.tech.utils;
 
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,15 @@ public class TagTechnologyInvocationRecorder implements TagTechnologyInvocationL
     @Override
     public TransceiveInvocation onTransceive(byte[] command) {
         TransceiveInvocation transceive = new TransceiveInvocation();
+        transceive.setCommand(command);
+        transceive.setTimestamp(System.nanoTime());
+        this.invocations.add(transceive);
+        return transceive;
+    }
+
+    @Override
+    public ParcelableTransceiveInvocation onParcelableTransceive(Parcelable command) {
+        ParcelableTransceiveInvocation transceive = new ParcelableTransceiveInvocation();
         transceive.setCommand(command);
         transceive.setTimestamp(System.nanoTime());
         this.invocations.add(transceive);

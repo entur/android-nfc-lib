@@ -1,5 +1,6 @@
 package no.entur.android.nfc.wrapper.tech;
 
+import android.os.Parcelable;
 import android.util.Log;
 
 import java.io.IOException;
@@ -43,7 +44,17 @@ public class IsoDepWrapper extends IsoDep {
 		return transceive;
 	}
 
-	public int getMaxTransceiveLength() {
+    @Override
+    public <T> T transceive(Parcelable data) throws IOException {
+        throw new RuntimeException("This operation is not supported for native tags");
+    }
+
+    @Override
+    public boolean supportsTransceive(Class c) throws IOException {
+        return false;
+    }
+
+    public int getMaxTransceiveLength() {
 		return delegate.getMaxTransceiveLength();
 	}
 

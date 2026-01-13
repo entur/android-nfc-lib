@@ -1,6 +1,5 @@
 package no.entur.android.nfc.wrapper.test;
 
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.core.util.Consumer;
@@ -16,10 +15,11 @@ import no.entur.android.nfc.wrapper.test.tech.MockBasicTagTechnology;
 import no.entur.android.nfc.wrapper.test.tech.MockBasicTagTechnologyImpl;
 import no.entur.android.nfc.wrapper.test.tech.MockIsoDep;
 import no.entur.android.nfc.wrapper.test.tech.MockMifareUltralight;
+import no.entur.android.nfc.wrapper.test.tech.transceive.MockParcelableTransceive;
+import no.entur.android.nfc.wrapper.test.tech.transceive.MockParcelableTransceiveAdapter;
 import no.entur.android.nfc.wrapper.test.tech.transceive.MockTransceive;
 import no.entur.android.nfc.wrapper.test.tech.transceive.ultralight.MifareUltralightMemoryBuilder;
 import no.entur.android.nfc.wrapper.test.tech.transceive.ultralight.MifareUltralightMockTransceive;
-import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.tech.IsoDepImpl;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
@@ -45,7 +45,7 @@ public class MockTag extends TagImpl {
         private byte[] hiLayer = new byte[]{};
         private byte[] historicalBytes = new byte[]{};
 
-        private MockTransceive transceive;
+        private MockParcelableTransceive mockParcelableTransceive;
 
         public IsoDepBuilder withHiLayer(byte[] hiLayer) {
             this.hiLayer = hiLayer;
@@ -63,13 +63,17 @@ public class MockTag extends TagImpl {
         }
 
         public IsoDepBuilder withTransceive(MockTransceive mockTransceive) {
-            this.transceive = mockTransceive;
+            this.mockParcelableTransceive = new MockParcelableTransceiveAdapter(mockTransceive);
             return this;
         }
 
+        public IsoDepBuilder withTransceive(MockParcelableTransceive mockParcelableTransceive) {
+            this.mockParcelableTransceive = mockParcelableTransceive;
+            return this;
+        }
 
         public MockIsoDep build() {
-            return new MockIsoDep(hiLayer, historicalBytes, transceive);
+            return new MockIsoDep(hiLayer, historicalBytes, mockParcelableTransceive);
         }
     }
 
@@ -302,10 +306,12 @@ public class MockTag extends TagImpl {
     }
 
     protected DefaultINFcTagBinder binder;
+    protected final int serviceHandle;
 
     public MockTag(byte[] id, int[] techList, Bundle[] techListExtras, int serviceHandle, DefaultINFcTagBinder tagService) {
         super(id, techList, techListExtras, serviceHandle, tagService);
         this.binder = tagService;
+        this.serviceHandle = serviceHandle;
     }
 
     public void setBinder(DefaultINFcTagBinder binder) {
@@ -319,6 +325,10 @@ public class MockTag extends TagImpl {
     public void lost() {
         binder.lost();
         // TODO tag lost?
+    }
+
+    public int getServiceHandle() {
+        return serviceHandle;
     }
 
 }

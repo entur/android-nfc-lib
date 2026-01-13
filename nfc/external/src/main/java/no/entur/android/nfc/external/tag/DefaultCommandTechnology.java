@@ -1,5 +1,7 @@
 package no.entur.android.nfc.external.tag;
 
+import android.os.RemoteException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,6 +9,8 @@ import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
 public class DefaultCommandTechnology extends AbstractTagTechnology implements CommandTechnology {
@@ -58,4 +62,9 @@ public class DefaultCommandTechnology extends AbstractTagTechnology implements C
 			return exceptionMapper.mapException(e);
 		}
 	}
+
+    @Override
+    public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
+        throw new RuntimeException();
+    }
 }

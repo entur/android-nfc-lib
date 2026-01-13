@@ -1,6 +1,7 @@
 package no.entur.android.nfc.external.tag;
 
-import no.entur.android.nfc.external.service.tag.DefaultTagProxy;
+import android.os.Parcelable;
+
 import no.entur.android.nfc.external.service.tag.TagProxy;
 
 public abstract class AbstractReaderIsoDepWrapper {
@@ -22,4 +23,7 @@ public abstract class AbstractReaderIsoDepWrapper {
 	public abstract byte[] transceive(byte[] data) throws Exception;
 
 	public abstract byte[] transceiveRaw(byte[] data) throws Exception;
+
+    public abstract Parcelable transceive(Parcelable parcelable) throws Exception;
+
 }

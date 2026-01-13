@@ -52,4 +52,9 @@ public class MinovaReaderTechnology implements ReaderTechnology {
     public int reconnect(int handle) throws RemoteException {
         return 0;
     }
+
+    @Override
+    public boolean supportsTransceiveParcelable(String className) {
+        return false;
+    }
 }
