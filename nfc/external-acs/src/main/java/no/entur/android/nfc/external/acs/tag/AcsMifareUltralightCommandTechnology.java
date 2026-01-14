@@ -40,52 +40,61 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
 		// LOGGER.debug("transceive");
 
-		int command = data[0] & 0xFF;
-		if (command == 0x30) {
-			int pageOffset = data[1] & 0xFF;
+        if(raw) {
+            try {
+                byte[] transceive = readerWriter.transmit(data);
 
-			try {
-				MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 4);
+                return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
+            } catch (Exception e) {
+                return exceptionMapper.mapException(e);
+            }
+        } else {
+            int command = data[0] & 0xFF;
+            if (command == 0x30) {
+                int pageOffset = data[1] & 0xFF;
 
-				byte[] result = new byte[4 * PAGE_SIZE];
+                try {
+                    MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 4);
 
-				for (int i = 0; i < 4; i++) {
-					byte[] pageData = readBlock[i].getData();
+                    byte[] result = new byte[4 * PAGE_SIZE];
 
-					result[i * 4] = pageData[0];
-					result[i * 4 + 1] = pageData[1];
-					result[i * 4 + 2] = pageData[2];
-					result[i * 4 + 3] = pageData[3];
-				}
+                    for (int i = 0; i < 4; i++) {
+                        byte[] pageData = readBlock[i].getData();
 
-				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
-			} catch (Exception e) {
-				LOGGER.debug("Problem sending command", e);
-				return exceptionMapper.mapException(e);
-			}
-		} else if (command == 0xA2) {
-			int pageOffset = data[1] & 0xFF;
+                        result[i * 4] = pageData[0];
+                        result[i * 4 + 1] = pageData[1];
+                        result[i * 4 + 2] = pageData[2];
+                        result[i * 4 + 3] = pageData[3];
+                    }
 
-			try {
-				if (data.length != 6) {
-					LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 2));
+                    return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
+                } catch (Exception e) {
+                    LOGGER.debug("Problem sending command", e);
+                    return exceptionMapper.mapException(e);
+                }
+            } else if (command == 0xA2) {
+                int pageOffset = data[1] & 0xFF;
 
-					return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-				}
-				byte[] page = new byte[data.length - 2];
-				System.arraycopy(data, 2, page, 0, page.length);
+                try {
+                    if (data.length != 6) {
+                        LOGGER.debug("Problem writing block " + pageOffset + " - size too big: " + (data.length - 2));
 
-				readerWriter.writeBlock(pageOffset, new DataBlock(page));
+                        return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+                    }
+                    byte[] page = new byte[data.length - 2];
+                    System.arraycopy(data, 2, page, 0, page.length);
 
-				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, new byte[]{0x0A});
-			} catch (Exception e) {
-				LOGGER.debug("Problem writing block " + pageOffset);
+                    readerWriter.writeBlock(pageOffset, new DataBlock(page));
 
-				return exceptionMapper.mapException(e);
-			}
-		} else {
-			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
-		}
+                    return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, new byte[]{0x0A});
+                } catch (Exception e) {
+                    LOGGER.debug("Problem writing block " + pageOffset);
+
+                    return exceptionMapper.mapException(e);
+                }
+            }
+            return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+        }
 	}
 
     @Override
