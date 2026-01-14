@@ -90,6 +90,8 @@ public class Atr210CardService {
 
         if(tagType == TagType.ISO_DEP || tagType == TagType.DESFIRE_EV1 || tagType == TagType.ISO_14443_TYPE_A) {
 
+            wrapper.setDesfire(tagType == TagType.DESFIRE_EV1);
+
             // broadcast tag present
             this.currentCard = isoDepTagServiceSupport.card(0, wrapper, cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
 

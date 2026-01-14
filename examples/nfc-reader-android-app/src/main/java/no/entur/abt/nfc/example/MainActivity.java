@@ -177,7 +177,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     .withTechnologyAnalyzer(new MifareUltralightTechnologyAnalyzer(MifareUltralight.TYPE_ULTRALIGHT, "ultralight"))
                     .withUidAnalyzer(new SevenByteNxpUidAnalyzer());
             })
-                /*
             .add( (c) -> {
                 c
                     .withId("NOD travelcard")
@@ -187,7 +186,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 ;
             })
 
-                 */
             .add( (c) -> {
                 c
                     .withId("HCE app")
