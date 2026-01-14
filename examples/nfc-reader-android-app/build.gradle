@@ -56,7 +56,7 @@ dependencies {
     implementation project(":nfc:wrapper-utils")
     implementation project(":nfc:external-acs")
     implementation project(":nfc:external-websocket")
-    implementation project(":nfc:external-hid")
+    implementation project(':nfc:external-mqtt-hid')
 
     implementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
 
@@ -85,7 +85,7 @@ dependencies {
 
     androidTestImplementation project(":nfc:wrapper-test")
     androidTestImplementation project(":nfc:external-test")
-    androidTestImplementation project(":nfc:external-hid-test")
+    androidTestImplementation project(':nfc:external-mqtt-hid-test')
 
     modules {
         module("org.checkerframework:checker-qual") {

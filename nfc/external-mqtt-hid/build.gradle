@@ -2,7 +2,11 @@ android {
     defaultConfig {
         minSdkVersion 24
     }
-    namespace "no.entur.android.nfc.external.hid.test"
+    namespace "no.entur.android.nfc.external.hwb"
+
+    buildFeatures {
+        aidl true
+    }
 
     packagingOptions {
         resources {
@@ -20,11 +24,16 @@ android {
 
 dependencies {
     api project(":nfc:external")
-    api project(":nfc:external-hid")
+    api project(":utilities:mqtt-messages-java-lib")
+    api project(":utilities:mqtt3-client-java-lib")
 
-    api project(":nfc:wrapper-test")
-    api project(":nfc:external-mqtt-test")
+    androidTestImplementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
+
     api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
+    api ("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    api ("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+
+    androidTestImplementation "junit:junit:${unitVersion}"
 
     androidTestImplementation("com.adevinta.android:barista:${baristaVersion}") {
         exclude group: "com.google.protobuf", module: "protobuf-lite"
@@ -41,10 +50,9 @@ dependencies {
     androidTestImplementation "junit:junit:${unitVersion}"
     androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
 
+    androidTestImplementation project(":nfc:external-mqtt-hid-test")
     androidTestImplementation project(":nfc:wrapper-test")
     androidTestImplementation project(":nfc:external-test")
-
-    androidTestImplementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
 }
 
 
