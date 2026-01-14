@@ -12,6 +12,12 @@ buildscript {
                 includeGroup "com.github.martinpaljak"
             }
         }
+       maven {
+           url "https://jitpack.io"
+           content {
+               includeGroup "com.github.moquette-io.moquette"
+           }
+       }
     }
 
     repositories repos
@@ -102,6 +108,10 @@ ext {
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.12'
+
+    hivemqMqttClientVersion = '1.2.1'
+    hwbMessagesVersion = "1.0.0-SNAPSHOT"
+    nettyVersion = '4.1.48.Final'
 }
 
 ext.commonDependencies = {

@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 
 import no.entur.android.nfc.external.test.MockExternalReader;
 import no.entur.android.nfc.wrapper.test.MockTag;
+import no.entur.android.nfc.wrapper.test.tech.transceive.ListMockParcelableTransceive;
 import no.entur.android.nfc.wrapper.test.tech.transceive.ListMockTransceive;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -31,7 +32,6 @@ public class MockTagTest {
 		chain = RuleChain.outerRule(rule);
 	}
 
-
 	@Test
 	public void testDesfireEV1DirectMethodInvocation() throws Exception {
 		rule.getScenario().onActivity(activity -> {
@@ -41,7 +41,7 @@ public class MockTagTest {
 					.withRandomTagId()
 					.withIsoDep( (isoDep) -> {
 								isoDep.withDesfireEV1(); // desfire
-								isoDep.withTransceive(ListMockTransceive.newBuilder()
+								isoDep.withTransceive(ListMockParcelableTransceive.newBuilder()
 										.withErrorResponse("63") // raw desfire response
 										.withTransceiveNativeDesfireEV1SelectApplication("008057", "00") // raw desfire command
 										.build());
@@ -73,7 +73,7 @@ public class MockTagTest {
 					.withRandomTagId()
 					.withIsoDep( (isoDep) -> {
 						isoDep.withDesfireEV1(); // desfire
-						isoDep.withTransceive(ListMockTransceive.newBuilder()
+						isoDep.withTransceive(ListMockParcelableTransceive.newBuilder()
 								.withErrorResponse("63") // raw desfire response
 								.withTransceiveNativeDesfireEV1SelectApplication("008057", "00") // raw desfire command
 								.build());

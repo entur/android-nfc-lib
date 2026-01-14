@@ -3,13 +3,17 @@ package no.entur.abt.nfc.example;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.nfctools.mf.ul.ntag.NfcNtag;
@@ -20,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import no.entur.android.nfc.NfcReaderCallbackSupport;
@@ -83,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private TextView tagDetailTechTypes;
     private TextView tagDetailIdentify;
 
+    private TextView tagDetailReaderValue;
+
     private NfcTargetAnalyzer nfcTargetAnalyzer;
     private boolean tagPresent = false;
 
@@ -127,7 +132,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         tagDetailsTitle = findViewById(R.id.tagDetailsTitle);
         tagDetailsTable = findViewById(R.id.tagDetailsTable);
-        tagDetailTechTypes =  findViewById(R.id.tagDetailTechTypes);
+        tagDetailTechTypes = findViewById(R.id.tagDetailTechTypes);
+
+        tagDetailReaderValue = findViewById(R.id.tagDetailReaderValue);
 
         tagDetailIdentify =  findViewById(R.id.tagDetailIdentifyValue);
 
@@ -170,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     .withTechnologyAnalyzer(new MifareUltralightTechnologyAnalyzer(MifareUltralight.TYPE_ULTRALIGHT, "ultralight"))
                     .withUidAnalyzer(new SevenByteNxpUidAnalyzer());
             })
+                /*
             .add( (c) -> {
                 c
                     .withId("NOD travelcard")
@@ -178,6 +186,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     .withSelectApplicationAnalyzer(new DesfireNativeSelectApplicationAnalyzer(new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0x57 }))
                 ;
             })
+
+                 */
             .add( (c) -> {
                 c
                     .withId("HCE app")
@@ -211,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onExternalNfcReaderOpened(Intent intent) {
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
-            AcrReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, AcrReader.class);
+            Parcelable reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, Parcelable.class);
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
 
@@ -225,15 +235,15 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     Acr1252UReader acr1252UReader = (Acr1252UReader) acrReader;
                     acr1252UReader.setAutomaticPICCPolling(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.ACTIVATE_PICC_WHEN_DETECTED);
 
-                    if(reader.getNumberOfSlots() == 2) {
+                    if(acrReader.getNumberOfSlots() == 2) {
                         try {
                             byte[] power = acrReader.power(1, 2);
                             LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
 
-                            reader.setProtocol(1, 1);
+                            acrReader.setProtocol(1, 1);
 
                             // try random command, expect response code 6986
-                            byte[] transmit = reader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
+                            byte[] transmit = acrReader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
 
                             LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
                         } catch (Exception e) {
@@ -248,7 +258,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             setReaderOpen(true);
         });
     }
-
 
     @Override
     public void onExternalNfcReaderClosed(Intent intent) {
@@ -438,6 +447,13 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             showTagDetails(true);
 
             setTagDetailTechTypes(tag);
+
+            String readerId = "-";
+            if(intent.hasExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID)) {
+                readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
+            }
+
+            tagDetailReaderValue.setText(readerId);
         } else {
             showTagDetails(false);
 
@@ -596,6 +612,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 }
 
                 mifareUltralight.close();
+
+                LOGGER.info("Tag id is " + ByteArrayHexStringConverter.toHexString(mifareUltralight.getTag().getId()));
             }
 
             byte[] buffer = bout.toByteArray();
@@ -661,6 +679,44 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         LOGGER.info("Start reader service");
 
         mainApplication.setExternalNfcReader(true);
+    }
+
+    public void stopHidReaderService(View view) {
+        LOGGER.info("Stop Hid reader service");
+
+        mainApplication.setExternalHidNfcReader(false);
+    }
+
+    public void startHidReaderService(View view) {
+        LOGGER.info("Start Hid reader service");
+
+        mainApplication.setExternalHidNfcReader(true);
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(@NonNull Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 }

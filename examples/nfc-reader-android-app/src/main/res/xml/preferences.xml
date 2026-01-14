@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.PreferenceCategory
+        app:summary="@string/preferences_network_summary"
+        app:title="@string/preferences_network_title">
+
+        <androidx.preference.EditTextPreference
+            android:defaultValue="192.168.3.30"
+            android:key="mqttBrokerHost"
+            android:title="@string/preferences_mqtt_broker_host" />
+    </androidx.preference.PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>
