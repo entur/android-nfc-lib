@@ -17,31 +17,19 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IsoDepCommandTechnology.class);
 
-	private DESFireAdapter adapter;
-	private boolean hostCardEmulation;
+	private AbstractReaderIsoDepWrapper isoDep;
 	private TransceiveResultExceptionMapper mapper;
 
-	public IsoDepCommandTechnology(AbstractReaderIsoDepWrapper isoDep, boolean hostCardEmulation, TransceiveResultExceptionMapper mapper) {
+	public IsoDepCommandTechnology(AbstractReaderIsoDepWrapper isoDep, TransceiveResultExceptionMapper mapper) {
 		super(TagTechnology.ISO_DEP);
-		this.adapter = new DESFireAdapter(isoDep, false);
-		this.hostCardEmulation = hostCardEmulation;
+		this.isoDep = isoDep;
 		this.mapper = mapper;
 	}
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
 
 		try {
-			byte[] transceive;
-			if (hostCardEmulation && data[0] == 0x00) {
-				transceive = adapter.transceive(data);
-			} else if (raw) {
-				// we use desfire ev1 native command set
-				// so do not wrap in an adpu here
-
-				transceive = adapter.transceive(data);
-			} else {
-				transceive = adapter.transceive(data);
-			}
+			byte[] transceive = isoDep.transceive(data);
 
 			return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, transceive);
 		} catch (Exception e) {
@@ -54,7 +42,7 @@ public class IsoDepCommandTechnology extends AbstractTagTechnology implements Co
     @Override
     public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
         try {
-            Parcelable result = adapter.transceive(parcelable.getRequestData());
+            Parcelable result = isoDep.transceive(parcelable.getRequestData());
 
             return new ParcelableTransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
         } catch (Exception e) {
