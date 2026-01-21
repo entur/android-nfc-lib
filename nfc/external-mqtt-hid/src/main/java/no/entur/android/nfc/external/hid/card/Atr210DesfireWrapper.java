@@ -50,7 +50,14 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         // wrapping the command in an ADPU might bump into max command/response length
         // so wrap both command and response with "additional frame" status
         // this is not optimal for all cases, but the only way to support native desfire commands
-        byte[] transcieve = transmitChain(data);
+
+        byte[] transcieve;
+        if(cls == 0x0A) { // AUTHENTICATE
+            // do not handle AF
+            transcieve = transmitRaw(data);
+        } else {
+            transcieve = transmitChain(data);
+        }
 
         Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(transcieve));
 
@@ -120,7 +127,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     public byte[] rawToRequestADPU(byte[] commandMessage) throws IOException {
-        return transceive(wrapMessage(commandMessage[0], commandMessage, 1, commandMessage.length - 1));
+        return transceiveImpl(wrapMessage(commandMessage[0], commandMessage, 1, commandMessage.length - 1));
     }
 
     public static byte[] wrapMessage(byte command) {
@@ -220,6 +227,8 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
 
     public byte[] sendRequestChain(byte[] commandMessage) throws IOException {
 
+        int parts = 0;
+
         int offset = 1; // data area of apdu
 
         byte nextCommand = commandMessage[0];
@@ -228,13 +237,20 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
 
             byte[] request = wrapMessage(nextCommand, commandMessage, offset, nextLength);
 
+            parts++;
             byte[] response = transceive(request);
             if (response[response.length - 2] != STATUS_OK) {
+                if(parts > 1) {
+                    Log.i(getClass().getName(), "Command completed in " + parts + " parts");
+                }
                 return response;
             }
 
             offset += nextLength;
             if (offset == commandMessage.length) {
+                if(parts > 1) {
+                    Log.i(getClass().getName(), "Command completed in " + parts + " parts");
+                }
                 return response;
             }
 
