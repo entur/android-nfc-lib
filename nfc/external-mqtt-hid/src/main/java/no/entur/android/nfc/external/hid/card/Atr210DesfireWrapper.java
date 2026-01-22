@@ -226,9 +226,6 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     public byte[] sendRequestChain(byte[] commandMessage) throws IOException {
-
-        int parts = 0;
-
         int offset = 1; // data area of apdu
 
         byte nextCommand = commandMessage[0];
@@ -237,20 +234,13 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
 
             byte[] request = wrapMessage(nextCommand, commandMessage, offset, nextLength);
 
-            parts++;
             byte[] response = transceive(request);
             if (response[response.length - 2] != STATUS_OK) {
-                if(parts > 1) {
-                    Log.i(getClass().getName(), "Command completed in " + parts + " parts");
-                }
                 return response;
             }
 
             offset += nextLength;
             if (offset == commandMessage.length) {
-                if(parts > 1) {
-                    Log.i(getClass().getName(), "Command completed in " + parts + " parts");
-                }
                 return response;
             }
 
