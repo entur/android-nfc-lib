@@ -3,7 +3,7 @@ on:
   workflow_dispatch
 
 jobs:
-  build:
+  snapshot:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -15,15 +15,6 @@ jobs:
           distribution: temurin
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: Build
-        run: |
-          ./gradlew build --info --stacktrace
-  publish:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: tag
-    steps:
-      - uses: actions/checkout@v4
       - name: Gradle publish snapshot artifacts
         run: |
           echo $SONATYPE_GPG_KEY | base64 --decode | gpg --batch --no-tty --import --yes
