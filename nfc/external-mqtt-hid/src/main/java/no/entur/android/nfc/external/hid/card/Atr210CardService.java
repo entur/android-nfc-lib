@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 
 import org.nfctools.api.TagType;
-import org.nfctools.api.detect.DefaultTagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

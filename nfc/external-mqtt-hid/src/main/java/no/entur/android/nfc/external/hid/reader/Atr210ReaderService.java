@@ -150,6 +150,7 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
     public void broadcastOpened() {
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+        intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION, ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION_TYPE_ETHERNET);
 
         intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, atr210Reader);
 
