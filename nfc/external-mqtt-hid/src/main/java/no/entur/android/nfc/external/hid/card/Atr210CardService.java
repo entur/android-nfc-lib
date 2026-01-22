@@ -16,6 +16,7 @@ import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitResponse;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
+import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 
@@ -70,7 +71,6 @@ public class Atr210CardService {
     }
 
     public void createTag() {
-        Atr210IsoDepWrapper wrapper = new Atr210IsoDepWrapper(commands);
 
         TagProxy currentCard = this.currentCard;
         if(currentCard != null) {
@@ -89,6 +89,12 @@ public class Atr210CardService {
         LOGGER.info("Got tag type " + tagType + " from " + cardContext.getAtr());
 
         if(tagType == TagType.ISO_DEP || tagType == TagType.DESFIRE_EV1 || tagType == TagType.ISO_14443_TYPE_A) {
+            AbstractReaderIsoDepWrapper wrapper;
+            if(tagType == TagType.DESFIRE_EV1) {
+                wrapper = new Atr210DesfireWrapper(commands);
+            } else {
+                wrapper = new Atr210IsoDepWrapper(commands);
+            }
 
             // broadcast tag present
             this.currentCard = isoDepTagServiceSupport.card(0, wrapper, cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
@@ -101,6 +107,7 @@ public class Atr210CardService {
                 return intent;
             });
         } else if(tagType == TagType.MIFARE_ULTRALIGHT) {
+            Atr210IsoDepWrapper wrapper = new Atr210IsoDepWrapper(commands);
 
             this.currentCard = ultralightTagServiceSupport.mifareUltralight(0, wrapper, cardContext.getAtr(), cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
 

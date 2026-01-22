@@ -33,7 +33,7 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
             List<TagTechnology> technologies = new ArrayList<>();
 
             technologies.add(new WrapNfcACommandTechnology(wrapper,  transceiveResultExceptionMapper, true));
-            technologies.add(new IsoDepCommandTechnology(wrapper, true,  transceiveResultExceptionMapper));
+            technologies.add(new IsoDepCommandTechnology(wrapper, transceiveResultExceptionMapper));
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 
@@ -57,7 +57,7 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
             List<TagTechnology> technologies = new ArrayList<>();
 
             technologies.add(new WrapNfcACommandTechnology(wrapper, transceiveResultExceptionMapper, false));
-            technologies.add(new IsoDepCommandTechnology(wrapper, false, transceiveResultExceptionMapper));
+            technologies.add(new IsoDepCommandTechnology(wrapper, transceiveResultExceptionMapper));
 
             TagProxy tagProxy = store.add(slotNumber, technologies);
 

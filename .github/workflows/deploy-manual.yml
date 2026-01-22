@@ -1,4 +1,4 @@
-name: Build Android libraries + example client and run android emulator tests
+name: Build, release and deploy to Maven Central
 on:
   workflow_dispatch
 

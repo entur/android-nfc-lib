@@ -190,11 +190,12 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
 
         MqttServiceClient mqttServiceClient = new MqttServiceClient(executor, mqtt3AsyncClient, timeout);
 
+        /*
         mqttServiceClient.subscribe("itxpt/#", (a) -> {
             byte[] payloadAsBytes = a.getPayloadAsBytes();
             System.out.println(" <- " + a.getTopic().toString() + " " + new String(payloadAsBytes, StandardCharsets.UTF_8));
         });
-
+*/
         return mqttServiceClient;
     }
 

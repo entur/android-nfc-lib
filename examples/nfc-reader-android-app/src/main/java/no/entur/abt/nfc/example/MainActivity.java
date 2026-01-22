@@ -31,6 +31,7 @@ import no.entur.android.nfc.detect.NfcTargetAnalyzeResult;
 import no.entur.android.nfc.detect.NfcTargetAnalyzer;
 import no.entur.android.nfc.detect.app.DefaultSelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.app.DesfireNativeSelectApplicationAnalyzer;
+import no.entur.android.nfc.detect.app.DesfireSelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.app.EmvSelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.technology.DesfireEv1TechnologyAnalyzer;
 import no.entur.android.nfc.detect.technology.IsodepTechnologyAnalyzer;
@@ -177,7 +178,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     .withTechnologyAnalyzer(new MifareUltralightTechnologyAnalyzer(MifareUltralight.TYPE_ULTRALIGHT, "ultralight"))
                     .withUidAnalyzer(new SevenByteNxpUidAnalyzer());
             })
-                /*
             .add( (c) -> {
                 c
                     .withId("NOD travelcard")
@@ -186,9 +186,25 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     .withSelectApplicationAnalyzer(new DesfireNativeSelectApplicationAnalyzer(new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0x57 }))
                 ;
             })
-
-                 */
-            .add( (c) -> {
+/*
+                .add( (c) -> {
+                    c
+                            .withId("NOD 1")
+                            .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                            .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                            .withSelectApplicationAnalyzer(new DesfireSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("008057")));
+                    ;
+                })
+                .add( (c) -> {
+                    c
+                            .withId("NOD 2")
+                            .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                            .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                            .withSelectApplicationAnalyzer(new DefaultSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("578000")));
+                    ;
+                })
+*/
+                .add( (c) -> {
                 c
                     .withId("HCE app")
                     .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
@@ -499,6 +515,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             LOGGER.info("Timeout: " + isoDep.getTimeout());
             LOGGER.info("Max transceive length: " + isoDep.getMaxTransceiveLength());
 
+            byte[] wrapped = new byte[] { 0x5A, (byte) 0x11, (byte) 0x81, (byte) 0x57 };
+
+            isoDep.transceive(wrapped);
         } else if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {

@@ -17,20 +17,6 @@ public class HidServiceConnector {
 
     public static class Builder {
 
-        public static final String MQTT_CLIENT_PORT = "PORT";
-        public static final String MQTT_CLIENT_HOST = "HOST";
-        public static final String MQTT_CLIENT_IDENTIFIER = "IDENTIFIER";
-
-        public static final String MQTT_CLIENT_DEFAULT_WEBSOCKET_CONFIGURATION = "DEFAULT_WEBSOCKET_CONFIGURATION";
-
-        public static final String MQTT_CLIENT_CONNECT_TIMEOUT = "CONNECT_TIMEOUT";
-        public static final String MQTT_CLIENT_TRANSCEIVE_TIMEOUT = "TRANSCEIVE_TIMEOUT";
-
-        public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
-
-        protected static final String MQTT_CLIENT_RECONNECT_INITIAL_DELAY = "RECONNECT_INITIAL_DELAY";
-        protected static final String MQTT_CLIENT_RECONNECT_MAX_DELAY = "RECONNECT_MAX_DELAY";
-
         protected int port = -1;
         protected String host;
         protected String identifier;

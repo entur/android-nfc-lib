@@ -8,6 +8,7 @@ import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitRequest;
 import no.entur.android.nfc.mqtt.messages.card.CardCommands;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessage;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.BulkTransceiveCommands;
 
 public class Atr210CardCommands extends CardCommands<String, Atr210CardContext> {
 
@@ -65,6 +66,8 @@ public class Atr210CardCommands extends CardCommands<String, Atr210CardContext> 
                 return result.getPayload();
             }
             throw new IOException();
+        } else if(parcelable instanceof BulkTransceiveCommands) {
+
         }
 
         throw new RuntimeException("Unsupported parcelable type " + parcelable.getClass().getName());
