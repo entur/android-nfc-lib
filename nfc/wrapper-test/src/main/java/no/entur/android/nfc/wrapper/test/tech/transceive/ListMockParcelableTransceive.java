@@ -51,17 +51,18 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
 
         private byte[] errorResponse;
 
-        private Predicate<String> supportedClass = (c) -> true ;
+        private Parcelable parcelableMetadata = null;
 
         public Builder withErrorResponse(byte[] errorResponse) {
             this.errorResponse = errorResponse;
             return this;
         }
 
-        public Builder withSupportedClass(Predicate<String> supportedClass) {
-            this.supportedClass = supportedClass;
+        public Builder withParcelableMetadata(Parcelable parcelableMetadata) {
+            this.parcelableMetadata = parcelableMetadata;
             return this;
         }
+
 
         public Builder withErrorResponse(String errorResponse) {
             this.errorResponse = MockBasicTagTechnologyImpl.hex(errorResponse);
@@ -151,7 +152,7 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
             if(errorResponse == null) {
                 throw new IllegalStateException();
             }
-            return new ListMockParcelableTransceive(transceiveList, errorResponse, supportedClass);
+            return new ListMockParcelableTransceive(transceiveList, errorResponse, parcelableMetadata);
         }
 
     }
@@ -161,12 +162,11 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
     private final List<Transceive> transceiveList;
     private int index = 0;
 
-    private Predicate<String> supportedClass;
-
-    public ListMockParcelableTransceive(List<Transceive> transceiveList, byte[] errorResponse, Predicate<String> supportedClass) {
+    private Parcelable parcelableMetadata;
+    public ListMockParcelableTransceive(List<Transceive> transceiveList, byte[] errorResponse, Parcelable parcelableMetadata) {
         this.transceiveList = transceiveList;
         this.errorResponse = errorResponse;
-        this.supportedClass = supportedClass;
+        this.parcelableMetadata = parcelableMetadata;
     }
 
     public byte[] transceive(byte[] data, boolean raw) throws IOException {
@@ -190,7 +190,7 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
     }
 
     @Override
-    public <T> T parcelableTranscieve(Parcelable data) throws IOException {
+    public <T> T transceive(Parcelable data) throws IOException {
         if (index >= transceiveList.size()) {
             index = 0;
             return null;
@@ -211,8 +211,8 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
     }
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) throws IOException {
-        return supportedClass.test(className);
+    public Parcelable transceiveMetadata(Parcelable data) {
+        return parcelableMetadata;
     }
 
 }

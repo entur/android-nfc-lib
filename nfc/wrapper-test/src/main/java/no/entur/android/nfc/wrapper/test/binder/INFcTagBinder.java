@@ -9,6 +9,8 @@ import android.util.Log;
 import java.util.List;
 
 import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadata;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadataResult;
 import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.test.tech.MockBasicTagTechnology;
 import no.entur.android.nfc.wrapper.test.tech.MockIsoDep;
@@ -315,20 +317,15 @@ public class INFcTagBinder {
         return new ParcelableTransceiveResult(TransceiveResult.RESULT_FAILURE, null);
     }
 
-    public boolean supportsTransceiveParcelable(String className) throws RemoteException {
-        if(connected == -1) {
-            throw new RemoteException("No connected tag technology");
-        }
-
+    public ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(ParcelableTransceiveMetadata data) {
         try {
-            if(connected == TagTechnology.ISO_DEP) {
-                return isoDep.supportsTransceiveParcelable(className);
-            }
+            Parcelable transceive = isoDep.transceiveMetadata(data.getRequestData());
+
+            return new ParcelableTransceiveMetadataResult(transceive);
         } catch (Exception e) {
             Log.d(LOG_TAG, "Transceive problem", e);
         }
-        return false;
+
+        return new ParcelableTransceiveMetadataResult();
     }
-
-
 }

@@ -60,8 +60,8 @@ public class ResponseAdpuProtocolIsoDep extends IsoDep {
     }
 
     @Override
-    public boolean supportsTransceive(Class c) throws IOException {
-        return false;
+    public <T> T transceiveMetadata(Parcelable c) throws IOException {
+        return null;
     }
 
     @Override

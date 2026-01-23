@@ -13,13 +13,13 @@ public class MockParcelableTransceiveAdapter implements MockParcelableTransceive
     }
 
     @Override
-    public <T> T parcelableTranscieve(Parcelable data) throws IOException {
+    public <T> T transceive(Parcelable data) throws IOException {
         throw new RuntimeException("Unexpected call");
     }
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) throws IOException {
-        return false;
+    public Parcelable transceiveMetadata(Parcelable data) {
+        return null;
     }
 
     @Override

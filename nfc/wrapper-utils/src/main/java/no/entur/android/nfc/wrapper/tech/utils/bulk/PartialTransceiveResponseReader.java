@@ -1,6 +1,6 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk;
 
-public interface PartialTranscieveResponseReader {
+public interface PartialTransceiveResponseReader {
 
     byte[] next(byte[] content);
 

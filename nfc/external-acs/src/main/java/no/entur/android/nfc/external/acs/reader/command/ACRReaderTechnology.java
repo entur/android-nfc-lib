@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.acs.reader.command;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import com.acs.smartcard.ReaderException;
@@ -73,8 +74,7 @@ public class ACRReaderTechnology implements ReaderTechnology {
 	}
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) {
-        return false;
+    public Parcelable transceiveMetadata(Parcelable parcelable) {
+        return null;
     }
-
 }
