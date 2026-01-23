@@ -16,6 +16,7 @@ public class ParcelableTransceiveMetadata implements Parcelable {
         mRequestData = data;
     }
 
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -27,8 +28,8 @@ public class ParcelableTransceiveMetadata implements Parcelable {
     public static final Creator<ParcelableTransceiveMetadata> CREATOR = new Creator<ParcelableTransceiveMetadata>() {
         @Override
         public ParcelableTransceiveMetadata createFromParcel(Parcel in) {
-            Parcelable responseData = in.readParcelable(this.getClass().getClassLoader());
-            return new ParcelableTransceiveMetadata(responseData);
+            Parcelable requestData = in.readParcelable(this.getClass().getClassLoader());
+            return new ParcelableTransceiveMetadata(requestData);
         }
 
         @Override

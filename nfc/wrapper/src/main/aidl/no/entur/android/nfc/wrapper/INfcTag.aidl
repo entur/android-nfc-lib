@@ -51,7 +51,7 @@ interface INfcTag
     int getMaxTransceiveLength(int technology);
     boolean getExtendedLengthApdusSupported();
 
-    // more complex transcieve (or other interaction with the card)
+    // more complex transceive (or other interaction with the card)
     ParcelableTransceiveResult parcelableTranscieve(int nativeHandle, in ParcelableTransceive data);
     ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(in ParcelableTransceiveMetadata data);
 }

@@ -38,6 +38,7 @@ public class ParcelableTransceiveMetadataResult implements Parcelable {
 		mResponseData = data;
 	}
 
+	@Override
 	public int describeContents() {
 		return 0;
 	}
