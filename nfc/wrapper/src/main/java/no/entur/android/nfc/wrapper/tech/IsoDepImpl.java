@@ -235,7 +235,7 @@ public class IsoDepImpl extends IsoDep {
     }
 
     @Override
-    public boolean supportsTransceive(Class c) throws IOException {
-        return delegate.supportsTransceiveParcelable(c);
+    public <T> T transceiveMetadata(Parcelable c) throws IOException {
+        return (T)delegate.transceiveMetadata(c);
     }
 }

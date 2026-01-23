@@ -21,6 +21,8 @@ import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadataResult;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadata;
 
 /**
  * @hide
@@ -49,8 +51,7 @@ interface INfcTag
     int getMaxTransceiveLength(int technology);
     boolean getExtendedLengthApdusSupported();
 
-    // more complex transcieve
-    // could be transcieve with an additional trace or multiple transcieve
+    // more complex transceive (or other interaction with the card)
     ParcelableTransceiveResult parcelableTranscieve(int nativeHandle, in ParcelableTransceive data);
-    boolean supportsTransceiveParcelable(String className);
+    ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(in ParcelableTransceiveMetadata data);
 }

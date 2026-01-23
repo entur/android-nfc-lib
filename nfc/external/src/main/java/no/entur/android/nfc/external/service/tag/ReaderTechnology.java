@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.service.tag;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 public interface ReaderTechnology {
@@ -18,5 +19,5 @@ public interface ReaderTechnology {
 
 	int reconnect(int handle) throws RemoteException;
 
-    boolean supportsTransceiveParcelable(String className);
+    Parcelable transceiveMetadata(Parcelable parcelable);
 }

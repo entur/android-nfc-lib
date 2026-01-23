@@ -5,10 +5,10 @@ import android.os.Parcelable;
 
 public class ParcelableTransceive implements Parcelable {
 
-    final Parcelable mRequestData;
+    final Parcelable requestData;
 
     public ParcelableTransceive(Parcelable data) {
-        mRequestData = data;
+        requestData = data;
     }
 
     public int describeContents() {
@@ -16,7 +16,7 @@ public class ParcelableTransceive implements Parcelable {
     }
 
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(mRequestData, 0);
+        dest.writeParcelable(requestData, 0);
     }
 
     public static final Creator<ParcelableTransceive> CREATOR = new Creator<ParcelableTransceive>() {
@@ -33,6 +33,6 @@ public class ParcelableTransceive implements Parcelable {
     };
 
     public Parcelable getRequestData() {
-        return mRequestData;
+        return requestData;
     }
 }

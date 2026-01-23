@@ -49,11 +49,6 @@ public class IsoDepWrapper extends IsoDep {
         throw new RuntimeException("This operation is not supported for native tags");
     }
 
-    @Override
-    public boolean supportsTransceive(Class c) throws IOException {
-        return false;
-    }
-
     public int getMaxTransceiveLength() {
 		return delegate.getMaxTransceiveLength();
 	}
@@ -86,4 +81,9 @@ public class IsoDepWrapper extends IsoDep {
 	public boolean isNative() {
 		return true;
 	}
+
+    @Override
+    public <T> T transceiveMetadata(Parcelable c) throws IOException {
+        return null;
+    }
 }

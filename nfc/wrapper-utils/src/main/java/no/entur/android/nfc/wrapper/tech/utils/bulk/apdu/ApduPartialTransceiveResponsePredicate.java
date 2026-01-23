@@ -3,19 +3,19 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponsePredicate;
 
-public class ApduPartialTranscieveResponsePredicate implements PartialTranscieveResponsePredicate {
+public class ApduPartialTransceiveResponsePredicate implements PartialTransceiveResponsePredicate {
 
     protected final int sw1;
 
     protected final int sw2;
 
-    public ApduPartialTranscieveResponsePredicate() {
+    public ApduPartialTransceiveResponsePredicate() {
         this(0x91, 0xAF);
     }
 
-    public ApduPartialTranscieveResponsePredicate(int sw1, int sw2) {
+    public ApduPartialTransceiveResponsePredicate(int sw1, int sw2) {
         this.sw1 = sw1;
         this.sw2 = sw2;
     }
@@ -43,15 +43,15 @@ public class ApduPartialTranscieveResponsePredicate implements PartialTranscieve
     public void writeToParcel(Parcel dest, int flags) {
     }
 
-    public static final Parcelable.Creator<ApduPartialTranscieveResponsePredicate> CREATOR = new Parcelable.Creator<ApduPartialTranscieveResponsePredicate>() {
+    public static final Parcelable.Creator<ApduPartialTransceiveResponsePredicate> CREATOR = new Parcelable.Creator<ApduPartialTransceiveResponsePredicate>() {
         @Override
-        public ApduPartialTranscieveResponsePredicate createFromParcel(Parcel in) {
-            return new ApduPartialTranscieveResponsePredicate();
+        public ApduPartialTransceiveResponsePredicate createFromParcel(Parcel in) {
+            return new ApduPartialTransceiveResponsePredicate();
         }
 
         @Override
-        public ApduPartialTranscieveResponsePredicate[] newArray(int size) {
-            return new ApduPartialTranscieveResponsePredicate[size];
+        public ApduPartialTransceiveResponsePredicate[] newArray(int size) {
+            return new ApduPartialTransceiveResponsePredicate[size];
         }
     };
 }

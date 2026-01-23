@@ -1,9 +1,9 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponseReader;
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponseReader;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponsePredicate;
 
-public class ApduPartialTranscieveResponseReader implements PartialTranscieveResponseReader {
+public class ApduPartialTransceiveResponseReader implements PartialTransceiveResponseReader {
 
     // Response ADPUs: Two status bytes at the end of the response
 
@@ -12,9 +12,9 @@ public class ApduPartialTranscieveResponseReader implements PartialTranscieveRes
     private byte[] response = new byte[1024];
     private int offset = 0;
 
-    private final PartialTranscieveResponsePredicate predicate;
+    private final PartialTransceiveResponsePredicate predicate;
 
-    public ApduPartialTranscieveResponseReader(byte[] nextPartCommand, PartialTranscieveResponsePredicate predicate) {
+    public ApduPartialTransceiveResponseReader(byte[] nextPartCommand, PartialTransceiveResponsePredicate predicate) {
         super();
 
         this.nextPartCommand = nextPartCommand;
