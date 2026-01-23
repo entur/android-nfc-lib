@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.minova.reader;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import no.entur.android.nfc.external.service.tag.ReaderTechnology;
@@ -53,7 +54,7 @@ public class MinovaReaderTechnology implements ReaderTechnology {
     }
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) {
-        return false;
+    public Parcelable transceiveMetadata(Parcelable parcelable) {
+        return null;
     }
 }

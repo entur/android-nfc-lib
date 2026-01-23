@@ -57,7 +57,7 @@ public abstract class IsoDep implements BasicTagTechnology {
 
     public abstract <T> T transceive(Parcelable data) throws IOException;
 
-    public abstract boolean supportsTransceive(Class c) throws IOException;
+    public abstract <T> T transceiveMetadata(Parcelable c) throws IOException;
 
     public abstract int getMaxTransceiveLength();
 

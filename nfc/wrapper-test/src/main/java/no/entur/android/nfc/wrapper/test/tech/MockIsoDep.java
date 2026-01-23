@@ -9,8 +9,6 @@ import no.entur.android.nfc.wrapper.tech.BasicTagTechnology;
 
 public class MockIsoDep extends MockBasicTagTechnologyImpl {
 
-    private static final String LOG_TAG = MockIsoDep.class.getName();
-
     private byte[] hiLayerResponse;
     private byte[] historicalBytes;
 
@@ -46,7 +44,7 @@ public class MockIsoDep extends MockBasicTagTechnologyImpl {
         return (T)this.mockParcelableTransceive.parcelableTranscieve(parcelable);
     }
 
-    public boolean supportsTransceiveParcelable(String cls) throws IOException {
-        return this.mockParcelableTransceive.supportsTransceiveParcelable(cls);
+    public <T> T  parcelableTransceiveMetadata(Parcelable parcelable) throws IOException {
+        return (T)this.mockParcelableTransceive.parcelableTranscieve(parcelable);
     }
 }

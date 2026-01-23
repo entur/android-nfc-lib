@@ -1,6 +1,7 @@
 package no.entur.android.nfc.external.service.tag;
 
 import android.nfc.NdefMessage;
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import org.slf4j.Logger;
@@ -13,6 +14,8 @@ import java.util.List;
 import no.entur.android.nfc.wrapper.ErrorCodes;
 import no.entur.android.nfc.wrapper.INfcTag;
 import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadata;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadataResult;
 import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
@@ -125,11 +128,14 @@ public class INFcTagBinder extends INfcTag.Stub {
     }
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) throws RemoteException {
+    public ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(ParcelableTransceiveMetadata data) throws RemoteException {
         if (readerTechnology == null) {
             throw new RemoteException(NO_READER_MSG);
         }
-        return readerTechnology.supportsTransceiveParcelable(className);
+
+        Parcelable parcelable = readerTechnology.transceiveMetadata(data.getRequestData());
+
+        return new ParcelableTransceiveMetadataResult(parcelable);
     }
 
     public int getMaxTransceiveLength(int technology) throws RemoteException {
