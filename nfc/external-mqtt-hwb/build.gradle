@@ -25,6 +25,7 @@ android {
 dependencies {
     api project(":nfc:external")
     api project(":utilities:mqtt-messages-java-lib")
+    api project(":nfc:wrapper-utils")
     androidTestImplementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
 
     api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"

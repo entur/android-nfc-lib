@@ -1,10 +1,17 @@
 package no.entur.android.nfc.external.hwb.intent.bind;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
+
+import java.util.Arrays;
+import java.util.List;
 
 import hwb.utilities.validators.nfc.apdu.deviceId.transmit.TransmitSchema;
 import no.entur.android.nfc.external.service.tag.ReaderTechnology;
 import no.entur.android.nfc.wrapper.ErrorCodes;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.metadata.BulkTransceiveMetadata;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.metadata.CommandMetadataRequest;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.metadata.CommandMetadataResponse;
 
 // this is mostly a dummy implementation
 // there is a bit of api disconnect between a service with one reader and a service with multiple readers.
@@ -55,7 +62,14 @@ public class HwbReaderTechnology implements ReaderTechnology {
     }
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) {
-        return supportsCommandTrain && className.equals(TransmitSchema.class.getName());
+    public Parcelable transceiveMetadata(Parcelable parcelable) {
+        if(parcelable instanceof CommandMetadataRequest) {
+            List<String> formats = Arrays.asList(CommandMetadataResponse.COMMAND_FORMAT_ISO7816, CommandMetadataResponse.COMMAND_FORMAT_NATIVE_MIFARE_DESFIRE);
+            if(supportsCommandTrain) {
+                return new CommandMetadataResponse(formats, new BulkTransceiveMetadata(true, true));
+            }
+            return new CommandMetadataResponse(formats);
+        }
+        return null;
     }
 }
