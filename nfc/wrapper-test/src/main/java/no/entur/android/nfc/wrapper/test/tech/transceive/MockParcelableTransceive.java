@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public interface MockParcelableTransceive extends MockTransceive {
 
-    <T> T parcelableTranscieve(Parcelable data) throws IOException;
+    <T> T transceive(Parcelable data) throws IOException;
 
-    Parcelable parcelableTransceiveMetadata(Parcelable data);
+    Parcelable transceiveMetadata(Parcelable data);
 }

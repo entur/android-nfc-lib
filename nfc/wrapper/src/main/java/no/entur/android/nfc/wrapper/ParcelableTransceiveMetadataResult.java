@@ -16,11 +16,8 @@
 
 package no.entur.android.nfc.wrapper;
 
-import android.nfc.TagLostException;
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import java.io.IOException;
 
 /**
  * Class used to pipe extended transceive result from the NFC service.
@@ -28,14 +25,14 @@ import java.io.IOException;
  */
 public class ParcelableTransceiveMetadataResult implements Parcelable {
 
-	final Parcelable mResponseData;
+	final Parcelable responseData;
 
     public ParcelableTransceiveMetadataResult() {
-        mResponseData = null;
+        responseData = null;
     }
 
     public ParcelableTransceiveMetadataResult(final Parcelable data) {
-		mResponseData = data;
+		responseData = data;
 	}
 
 	@Override
@@ -44,9 +41,9 @@ public class ParcelableTransceiveMetadataResult implements Parcelable {
 	}
 
 	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeInt(mResponseData != null ? 1 : 0);
-		if (mResponseData != null) {
-			dest.writeParcelable(mResponseData, 0);
+		dest.writeInt(responseData != null ? 1 : 0);
+		if (responseData != null) {
+			dest.writeParcelable(responseData, 0);
 		}
 	}
 
@@ -70,4 +67,7 @@ public class ParcelableTransceiveMetadataResult implements Parcelable {
 		}
 	};
 
+    public Parcelable getResponseData() {
+        return responseData;
+    }
 }

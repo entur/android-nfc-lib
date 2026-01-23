@@ -319,7 +319,9 @@ public class INFcTagBinder {
 
     public ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(ParcelableTransceiveMetadata data) {
         try {
-            return isoDep.parcelableTransceiveMetadata(data);
+            Parcelable transceive = isoDep.transceiveMetadata(data.getRequestData());
+
+            return new ParcelableTransceiveMetadataResult(transceive);
         } catch (Exception e) {
             Log.d(LOG_TAG, "Transceive problem", e);
         }

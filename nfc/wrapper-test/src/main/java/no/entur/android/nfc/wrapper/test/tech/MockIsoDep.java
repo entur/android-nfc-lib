@@ -39,12 +39,11 @@ public class MockIsoDep extends MockBasicTagTechnologyImpl {
         this.mockParcelableTransceive = mockParcelableTransceive;
     }
 
-
     public <T> T transceive(Parcelable parcelable) throws IOException {
-        return (T)this.mockParcelableTransceive.parcelableTranscieve(parcelable);
+        return (T)this.mockParcelableTransceive.transceive(parcelable);
     }
 
-    public <T> T  parcelableTransceiveMetadata(Parcelable parcelable) throws IOException {
-        return (T)this.mockParcelableTransceive.parcelableTranscieve(parcelable);
+    public <T> T transceiveMetadata(Parcelable parcelable) throws IOException {
+        return (T)this.mockParcelableTransceive.transceiveMetadata(parcelable);
     }
 }

@@ -47,7 +47,12 @@ public class ExtendedBasicTagTechnologyImpl extends BasicTagTechnologyImpl {
         try {
             ParcelableTransceiveMetadata transceive = new ParcelableTransceiveMetadata(metadata);
 
-            return mTag.getTagService().parcelableTransceiveMetadata(transceive);
+            ParcelableTransceiveMetadataResult result = mTag.getTagService().parcelableTransceiveMetadata(transceive);
+            if (result == null) {
+                throw new IOException("transceive failed");
+            }
+
+            return result.getResponseData();
         } catch (RemoteException e) {
             Log.e(TAG, NFC_SERVICE_DEAD_MSG, e);
             throw new IOException(NFC_SERVICE_DEAD_MSG);

@@ -79,4 +79,15 @@ public class CommandMetadataResponse implements Parcelable {
         }
     };
 
+    public List<String> getFormats() {
+        return formats;
+    }
+
+    public boolean isPartialTransceiveResponsePredicate() {
+        return partialTransceiveResponsePredicate;
+    }
+
+    public boolean isTransceiveResponsePredicate() {
+        return transceiveResponsePredicate;
+    }
 }

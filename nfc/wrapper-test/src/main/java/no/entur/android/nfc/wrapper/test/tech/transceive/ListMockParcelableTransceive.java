@@ -190,7 +190,7 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
     }
 
     @Override
-    public <T> T parcelableTranscieve(Parcelable data) throws IOException {
+    public <T> T transceive(Parcelable data) throws IOException {
         if (index >= transceiveList.size()) {
             index = 0;
             return null;
@@ -211,7 +211,7 @@ public class ListMockParcelableTransceive implements MockParcelableTransceive {
     }
 
     @Override
-    public Parcelable parcelableTransceiveMetadata(Parcelable data) {
+    public Parcelable transceiveMetadata(Parcelable data) {
         return parcelableMetadata;
     }
 

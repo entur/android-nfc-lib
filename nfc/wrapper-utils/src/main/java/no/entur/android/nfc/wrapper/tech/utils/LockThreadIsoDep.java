@@ -170,7 +170,7 @@ public class LockThreadIsoDep extends IsoDep {
 
     @Override
     public <T> T transceiveMetadata(Parcelable c) throws IOException {
-        verifyLock("supportsTransceive");
+        verifyLock("transceiveMetadata");
         return delegate.transceiveMetadata(c);
     }
 
