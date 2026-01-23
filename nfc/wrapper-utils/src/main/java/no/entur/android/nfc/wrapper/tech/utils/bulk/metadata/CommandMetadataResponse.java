@@ -44,7 +44,6 @@ public class CommandMetadataResponse implements Parcelable {
     }
 
     @Override
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
 
         dest.writeInt(formats.size());

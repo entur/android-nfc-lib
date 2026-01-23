@@ -12,7 +12,6 @@ public class CommandMetadataRequest implements Parcelable {
     }
 
     @Override
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
     }
 
