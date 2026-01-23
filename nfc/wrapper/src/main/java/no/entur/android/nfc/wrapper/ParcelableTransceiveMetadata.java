@@ -5,15 +5,16 @@ import android.os.Parcelable;
 
 /**
  *
+ * Wrapper for custom metadata enquiry.
  *
  */
 
 public class ParcelableTransceiveMetadata implements Parcelable {
 
-    final Parcelable mRequestData;
+    final Parcelable requestData;
 
     public ParcelableTransceiveMetadata(Parcelable data) {
-        mRequestData = data;
+        requestData = data;
     }
 
 
@@ -24,7 +25,7 @@ public class ParcelableTransceiveMetadata implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(mRequestData, 0);
+        dest.writeParcelable(requestData, 0);
     }
 
     public static final Creator<ParcelableTransceiveMetadata> CREATOR = new Creator<ParcelableTransceiveMetadata>() {
@@ -41,6 +42,6 @@ public class ParcelableTransceiveMetadata implements Parcelable {
     };
 
     public Parcelable getRequestData() {
-        return mRequestData;
+        return requestData;
     }
 }

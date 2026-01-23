@@ -20,9 +20,11 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Class used to pipe extended transceive result from the NFC service.
+ *
+ * Wrapper for custom metadata enquiry result.
  *
  */
+
 public class ParcelableTransceiveMetadataResult implements Parcelable {
 
 	final Parcelable responseData;
