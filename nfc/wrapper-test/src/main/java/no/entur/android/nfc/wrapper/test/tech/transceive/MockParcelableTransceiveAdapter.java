@@ -18,8 +18,8 @@ public class MockParcelableTransceiveAdapter implements MockParcelableTransceive
     }
 
     @Override
-    public boolean supportsTransceiveParcelable(String className) throws IOException {
-        return false;
+    public Parcelable parcelableTransceiveMetadata(Parcelable data) {
+        return null;
     }
 
     @Override

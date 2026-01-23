@@ -22,15 +22,15 @@ public class CommandMetadataResponse implements Parcelable {
     // frame formats
     private List<String> formats;
 
-    private boolean partialTranscieveResponsePredicate;
+    private boolean partialTransceiveResponsePredicate;
 
-    private boolean transcieveResponsePredicate;
+    private boolean transceiveResponsePredicate;
 
 
-    public CommandMetadataResponse(List<String> formats, boolean partialTranscieveResponsePredicate, boolean transcieveResponsePredicate) {
+    public CommandMetadataResponse(List<String> formats, boolean partialTransceiveResponsePredicate, boolean transceiveResponsePredicate) {
         this.formats = formats;
-        this.partialTranscieveResponsePredicate = partialTranscieveResponsePredicate;
-        this.transcieveResponsePredicate = transcieveResponsePredicate;
+        this.partialTransceiveResponsePredicate = partialTransceiveResponsePredicate;
+        this.transceiveResponsePredicate = transceiveResponsePredicate;
     }
 
     public CommandMetadataResponse() {
@@ -49,8 +49,8 @@ public class CommandMetadataResponse implements Parcelable {
             dest.writeString(format);
         }
 
-        dest.writeInt(transcieveResponsePredicate ? 1: 0 );
-        dest.writeInt(partialTranscieveResponsePredicate ? 1 : 0);
+        dest.writeInt(transceiveResponsePredicate ? 1: 0 );
+        dest.writeInt(partialTransceiveResponsePredicate ? 1 : 0);
 
     }
 
@@ -65,10 +65,10 @@ public class CommandMetadataResponse implements Parcelable {
                 formats.add(in.readString());
             }
 
-            boolean transcieveResponsePredicateType = in.readInt() == 1;
-            boolean partialTranscieveResponsePredicateType = in.readInt() == 1;
+            boolean transceiveResponsePredicateType = in.readInt() == 1;
+            boolean partialTransceiveResponsePredicateType = in.readInt() == 1;
 
-            return new CommandMetadataResponse(formats, partialTranscieveResponsePredicateType, transcieveResponsePredicateType);
+            return new CommandMetadataResponse(formats, partialTransceiveResponsePredicateType, transceiveResponsePredicateType);
         }
 
         @Override

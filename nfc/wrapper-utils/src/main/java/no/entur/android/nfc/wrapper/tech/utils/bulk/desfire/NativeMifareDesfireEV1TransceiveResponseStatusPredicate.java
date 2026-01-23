@@ -3,7 +3,7 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.desfire;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponsePredicate;
 
 /**
  *
@@ -12,11 +12,11 @@ import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePre
  * If negative, the expectation is that the remaining commands are discontinued.
  */
 
-public class NativeMifareDesfireEV1TranscieveResponseStatusPredicate implements PartialTranscieveResponsePredicate {
+public class NativeMifareDesfireEV1TransceiveResponseStatusPredicate implements PartialTransceiveResponsePredicate {
 
     protected final int status;
 
-    public NativeMifareDesfireEV1TranscieveResponseStatusPredicate(int status) {
+    public NativeMifareDesfireEV1TransceiveResponseStatusPredicate(int status) {
         this.status = status;
     }
 
@@ -40,18 +40,18 @@ public class NativeMifareDesfireEV1TranscieveResponseStatusPredicate implements 
         dest.writeInt(status);
     }
 
-    public static final Parcelable.Creator<NativeMifareDesfireEV1TranscieveResponseStatusPredicate> CREATOR = new Parcelable.Creator<NativeMifareDesfireEV1TranscieveResponseStatusPredicate>() {
+    public static final Parcelable.Creator<NativeMifareDesfireEV1TransceiveResponseStatusPredicate> CREATOR = new Parcelable.Creator<NativeMifareDesfireEV1TransceiveResponseStatusPredicate>() {
         @Override
-        public NativeMifareDesfireEV1TranscieveResponseStatusPredicate createFromParcel(Parcel in) {
+        public NativeMifareDesfireEV1TransceiveResponseStatusPredicate createFromParcel(Parcel in) {
 
             int status = in.readInt();
 
-            return new NativeMifareDesfireEV1TranscieveResponseStatusPredicate(status);
+            return new NativeMifareDesfireEV1TransceiveResponseStatusPredicate(status);
         }
 
         @Override
-        public NativeMifareDesfireEV1TranscieveResponseStatusPredicate[] newArray(int size) {
-            return new NativeMifareDesfireEV1TranscieveResponseStatusPredicate[size];
+        public NativeMifareDesfireEV1TransceiveResponseStatusPredicate[] newArray(int size) {
+            return new NativeMifareDesfireEV1TransceiveResponseStatusPredicate[size];
         }
     };
 

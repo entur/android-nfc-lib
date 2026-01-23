@@ -3,7 +3,7 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.apdu;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponsePredicate;
 
 /**
  *
@@ -12,13 +12,13 @@ import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePre
  * If negative, the expectation is that the remaining commands are discontinued.
  */
 
-public class ApduTranscieveReponseStatusPredicate implements PartialTranscieveResponsePredicate {
+public class ApduTransceiveReponseStatusPredicate implements PartialTransceiveResponsePredicate {
 
     protected final int sw1;
 
     protected final int sw2;
 
-    public ApduTranscieveReponseStatusPredicate(int sw1, int sw2) {
+    public ApduTransceiveReponseStatusPredicate(int sw1, int sw2) {
         this.sw1 = sw1;
         this.sw2 = sw2;
     }
@@ -48,19 +48,19 @@ public class ApduTranscieveReponseStatusPredicate implements PartialTranscieveRe
         dest.writeInt(sw2);
     }
 
-    public static final Parcelable.Creator<ApduTranscieveReponseStatusPredicate> CREATOR = new Parcelable.Creator<ApduTranscieveReponseStatusPredicate>() {
+    public static final Parcelable.Creator<ApduTransceiveReponseStatusPredicate> CREATOR = new Parcelable.Creator<ApduTransceiveReponseStatusPredicate>() {
         @Override
-        public ApduTranscieveReponseStatusPredicate createFromParcel(Parcel in) {
+        public ApduTransceiveReponseStatusPredicate createFromParcel(Parcel in) {
 
             int sw1 = in.readInt();
             int sw2 = in.readInt();
 
-            return new ApduTranscieveReponseStatusPredicate(sw1, sw2);
+            return new ApduTransceiveReponseStatusPredicate(sw1, sw2);
         }
 
         @Override
-        public ApduTranscieveReponseStatusPredicate[] newArray(int size) {
-            return new ApduTranscieveReponseStatusPredicate[size];
+        public ApduTransceiveReponseStatusPredicate[] newArray(int size) {
+            return new ApduTransceiveReponseStatusPredicate[size];
         }
     };
 }

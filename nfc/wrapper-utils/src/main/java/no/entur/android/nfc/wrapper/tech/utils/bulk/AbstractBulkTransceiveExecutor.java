@@ -16,9 +16,9 @@ public abstract class AbstractBulkTransceiveExecutor {
     }
 
     public void transceive(BulkTransceiveCommands commands, BulkTransceiveResponses responses) throws IOException {
-        List<PartialTranscieveResponseHandler> partialTranscieveResponseHandlers = commands.getPartialHandlers();
-        Map<String, PartialTranscieveResponseHandler> handlers = new HashMap<>();
-        for (PartialTranscieveResponseHandler h : partialTranscieveResponseHandlers) {
+        List<PartialTransceiveResponseHandler> partialTransceiveResponseHandlers = commands.getPartialHandlers();
+        Map<String, PartialTransceiveResponseHandler> handlers = new HashMap<>();
+        for (PartialTransceiveResponseHandler h : partialTransceiveResponseHandlers) {
             handlers.put(h.getId(), h);
         }
 
@@ -29,18 +29,18 @@ public abstract class AbstractBulkTransceiveExecutor {
 
             String handlerId = item.getPartialHandlerId();
             if(handlerId != null) {
-                PartialTranscieveResponseHandler handler = handlers.get(handlerId);
+                PartialTransceiveResponseHandler handler = handlers.get(handlerId);
                 if(handler == null) {
                     throw new IllegalStateException("Unknown partial response handler " + handlerId);
                 }
 
                 // is this a partial response?
-                PartialTranscieveResponsePredicate predicate = handler.getPredicate();
+                PartialTransceiveResponsePredicate predicate = handler.getPredicate();
                 if(predicate.test(response)) {
 
                     // create reader for partial response (can be command-specific)
-                    PartialTranscieveResponseReaderFactory factory = handler.getFactory();
-                    PartialTranscieveResponseReader partialReader = factory.create(command, predicate);
+                    PartialTransceiveResponseReaderFactory factory = handler.getFactory();
+                    PartialTransceiveResponseReader partialReader = factory.create(command, predicate);
 
                     // read untill no next command
                     do {
@@ -62,7 +62,7 @@ public abstract class AbstractBulkTransceiveExecutor {
 
             responses.add(bulkTransceiveResponse);
 
-            TranscieveResponsePredicate responsePredicate = item.getResponsePredicate();
+            TransceiveResponsePredicate responsePredicate = item.getResponsePredicate();
             if(responsePredicate != null) {
                 if(!responsePredicate.test(response)) {
                     break;
