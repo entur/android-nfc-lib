@@ -4,11 +4,11 @@ import android.os.Parcelable;
 
 /**
  *
- * Predicate for checking the transcieve response.
+ * Predicate for checking the transceive response.
  *
  */
 
-public interface TranscieveResponsePredicate extends Parcelable {
+public interface TransceiveResponsePredicate extends Parcelable {
 
     boolean test(byte[] response);
 

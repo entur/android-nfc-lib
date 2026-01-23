@@ -7,6 +7,8 @@ import android.util.Log;
 import java.io.IOException;
 
 import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadata;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadataResult;
 import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TagImpl;
 
@@ -41,9 +43,16 @@ public class ExtendedBasicTagTechnologyImpl extends BasicTagTechnologyImpl {
         }
     }
 
-    public boolean supportsTransceiveParcelable(Class cls) throws IOException {
+    public Parcelable transceiveMetadata(Parcelable metadata) throws IOException {
         try {
-            return mTag.getTagService().supportsTransceiveParcelable(cls.getName());
+            ParcelableTransceiveMetadata transceive = new ParcelableTransceiveMetadata(metadata);
+
+            ParcelableTransceiveMetadataResult result = mTag.getTagService().parcelableTransceiveMetadata(transceive);
+            if (result == null) {
+                throw new IOException("transceive failed");
+            }
+
+            return result.getResponseData();
         } catch (RemoteException e) {
             Log.e(TAG, NFC_SERVICE_DEAD_MSG, e);
             throw new IOException(NFC_SERVICE_DEAD_MSG);

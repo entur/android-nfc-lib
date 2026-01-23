@@ -1,9 +1,9 @@
 package no.entur.android.nfc.wrapper.tech.utils.bulk.desfire;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponseReader;
-import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTranscieveResponsePredicate;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponseReader;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.PartialTransceiveResponsePredicate;
 
-public class NativeMifareDesfireEV1PartialTranscieveResponseReader implements PartialTranscieveResponseReader {
+public class NativeMifareDesfireEV1PartialTransceiveResponseReader implements PartialTransceiveResponseReader {
 
     // Response ADPUs: One status byte at the start of the response
 
@@ -12,9 +12,9 @@ public class NativeMifareDesfireEV1PartialTranscieveResponseReader implements Pa
     private byte[] response = new byte[1024];
     private int offset = 1;
 
-    private final PartialTranscieveResponsePredicate predicate;
+    private final PartialTransceiveResponsePredicate predicate;
 
-    public NativeMifareDesfireEV1PartialTranscieveResponseReader(byte[] nextPartCommand, PartialTranscieveResponsePredicate predicate) {
+    public NativeMifareDesfireEV1PartialTransceiveResponseReader(byte[] nextPartCommand, PartialTransceiveResponsePredicate predicate) {
         super();
 
         this.nextPartCommand = nextPartCommand;

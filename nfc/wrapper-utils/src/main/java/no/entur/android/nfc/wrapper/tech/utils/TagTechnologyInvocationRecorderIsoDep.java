@@ -101,8 +101,8 @@ public class TagTechnologyInvocationRecorderIsoDep extends IsoDep {
     }
 
     @Override
-    public boolean supportsTransceive(Class c) throws IOException {
-        return delegate.supportsTransceive(c);
+    public <T> T transceiveMetadata(Parcelable c) throws IOException {
+        return delegate.transceiveMetadata(c);
     }
 
     @Override

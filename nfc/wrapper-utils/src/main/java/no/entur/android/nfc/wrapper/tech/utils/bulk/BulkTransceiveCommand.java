@@ -8,7 +8,7 @@ public class BulkTransceiveCommand {
     private byte[] command;
 
     // if present and the predicate fails, discontinue sending commands
-    private TranscieveResponsePredicate responsePredicate;
+    private TransceiveResponsePredicate responsePredicate;
 
     public int getId() {
         return id;
@@ -34,11 +34,11 @@ public class BulkTransceiveCommand {
         this.partialHandlerId = partialHandlerId;
     }
 
-    public TranscieveResponsePredicate getResponsePredicate() {
+    public TransceiveResponsePredicate getResponsePredicate() {
         return responsePredicate;
     }
 
-    public void setResponsePredicate(TranscieveResponsePredicate responsePredicate) {
+    public void setResponsePredicate(TransceiveResponsePredicate responsePredicate) {
         this.responsePredicate = responsePredicate;
     }
 
