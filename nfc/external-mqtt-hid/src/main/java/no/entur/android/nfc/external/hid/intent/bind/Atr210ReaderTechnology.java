@@ -3,13 +3,12 @@ package no.entur.android.nfc.external.hid.intent.bind;
 import android.os.Parcelable;
 import android.os.RemoteException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitRequest;
 import no.entur.android.nfc.external.service.tag.ReaderTechnology;
 import no.entur.android.nfc.wrapper.ErrorCodes;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.metadata.BulkTransceiveMetadata;
 import no.entur.android.nfc.wrapper.tech.utils.bulk.metadata.CommandMetadataRequest;
 import no.entur.android.nfc.wrapper.tech.utils.bulk.metadata.CommandMetadataResponse;
 
@@ -63,10 +62,12 @@ public class Atr210ReaderTechnology implements ReaderTechnology {
 
     @Override
     public Parcelable transceiveMetadata(Parcelable parcelable) {
-        if(supportsCommandTrain) {
-            if(parcelable instanceof CommandMetadataRequest) {
-                return new CommandMetadataResponse(Arrays.asList(CommandMetadataResponse.COMMAND_FORMAT_ISO7816), false, false);
+        if(parcelable instanceof CommandMetadataRequest) {
+            List<String> formats = Arrays.asList(CommandMetadataResponse.COMMAND_FORMAT_ISO7816);
+            if(supportsCommandTrain) {
+                return new CommandMetadataResponse(formats, new BulkTransceiveMetadata(false, false));
             }
+            return new CommandMetadataResponse(formats);
         }
         return null;
     }

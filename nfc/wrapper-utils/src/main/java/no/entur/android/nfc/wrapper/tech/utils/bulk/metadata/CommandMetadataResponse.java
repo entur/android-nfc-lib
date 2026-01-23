@@ -22,19 +22,19 @@ public class CommandMetadataResponse implements Parcelable {
     // frame formats
     private List<String> formats;
 
-    private boolean partialTransceiveResponsePredicate;
+    private BulkTransceiveMetadata bulkTransceiveMetadata;
 
-    private boolean transceiveResponsePredicate;
-
-
-    public CommandMetadataResponse(List<String> formats, boolean partialTransceiveResponsePredicate, boolean transceiveResponsePredicate) {
+    public CommandMetadataResponse(List<String> formats, BulkTransceiveMetadata bulkTransceiveMetadata) {
         this.formats = formats;
-        this.partialTransceiveResponsePredicate = partialTransceiveResponsePredicate;
-        this.transceiveResponsePredicate = transceiveResponsePredicate;
+        this.bulkTransceiveMetadata = bulkTransceiveMetadata;
     }
 
     public CommandMetadataResponse() {
         this.formats = new ArrayList<>();
+    }
+
+    public CommandMetadataResponse(List<String> formats) {
+        this.formats = formats;
     }
 
 
@@ -52,8 +52,15 @@ public class CommandMetadataResponse implements Parcelable {
             dest.writeString(format);
         }
 
-        dest.writeInt(transceiveResponsePredicate ? 1: 0 );
-        dest.writeInt(partialTransceiveResponsePredicate ? 1 : 0);
+        dest.writeInt(bulkTransceiveMetadata != null ? 1: 0 );
+        if(bulkTransceiveMetadata != null) {
+            dest.writeInt(1);
+            dest.writeInt(bulkTransceiveMetadata.isTransceiveResponsePredicate() ? 1: 0 );
+            dest.writeInt(bulkTransceiveMetadata.isPartialTransceiveResponsePredicate() ? 1 : 0);
+        } else {
+            dest.writeInt(0);
+        }
+
 
     }
 
@@ -68,10 +75,19 @@ public class CommandMetadataResponse implements Parcelable {
                 formats.add(in.readString());
             }
 
-            boolean transceiveResponsePredicateType = in.readInt() == 1;
-            boolean partialTransceiveResponsePredicateType = in.readInt() == 1;
+            BulkTransceiveMetadata bulkTransceiveMetadata = null;
 
-            return new CommandMetadataResponse(formats, partialTransceiveResponsePredicateType, transceiveResponsePredicateType);
+            if(in.readInt() == 1) {
+
+                boolean transceiveResponsePredicateType = in.readInt() == 1;
+                boolean partialTransceiveResponsePredicateType = in.readInt() == 1;
+
+                bulkTransceiveMetadata = new BulkTransceiveMetadata(partialTransceiveResponsePredicateType, transceiveResponsePredicateType);
+            } else {
+                bulkTransceiveMetadata = null;
+            }
+
+            return new CommandMetadataResponse(formats, bulkTransceiveMetadata);
         }
 
         @Override
@@ -84,11 +100,15 @@ public class CommandMetadataResponse implements Parcelable {
         return formats;
     }
 
-    public boolean isPartialTransceiveResponsePredicate() {
-        return partialTransceiveResponsePredicate;
+    public BulkTransceiveMetadata getBulkMetadata() {
+        return bulkTransceiveMetadata;
     }
 
-    public boolean isTransceiveResponsePredicate() {
-        return transceiveResponsePredicate;
+    public void setBulkMetadata(BulkTransceiveMetadata bulkTransceiveMetadata) {
+        this.bulkTransceiveMetadata = bulkTransceiveMetadata;
+    }
+
+    public void setFormats(List<String> formats) {
+        this.formats = formats;
     }
 }
