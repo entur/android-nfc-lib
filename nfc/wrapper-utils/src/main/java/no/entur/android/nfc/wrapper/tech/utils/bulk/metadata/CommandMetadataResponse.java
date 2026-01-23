@@ -37,11 +37,13 @@ public class CommandMetadataResponse implements Parcelable {
         this.formats = new ArrayList<>();
     }
 
+
     @Override
     public int describeContents() {
         return 0;
     }
 
+    @Override
     @Override
     public void writeToParcel(Parcel dest, int flags) {
 

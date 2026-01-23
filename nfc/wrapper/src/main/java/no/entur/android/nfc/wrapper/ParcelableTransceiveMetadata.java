@@ -16,11 +16,13 @@ public class ParcelableTransceiveMetadata implements Parcelable {
         mRequestData = data;
     }
 
+
     @Override
     public int describeContents() {
         return 0;
     }
 
+    @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(mRequestData, 0);
     }
