@@ -10,20 +10,20 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.metadata;
 
 public class BulkTransceiveMetadata {
 
-    private boolean partialTransceiveResponsePredicate;
+    private boolean partialResponsePredicate;
 
-    private boolean transceiveResponsePredicate;
+    private boolean responsePredicate;
 
-    public BulkTransceiveMetadata(boolean partialTransceiveResponsePredicate, boolean transceiveResponsePredicate) {
-        this.partialTransceiveResponsePredicate = partialTransceiveResponsePredicate;
-        this.transceiveResponsePredicate = transceiveResponsePredicate;
+    public BulkTransceiveMetadata(boolean partialResponsePredicate, boolean responsePredicate) {
+        this.partialResponsePredicate = partialResponsePredicate;
+        this.responsePredicate = responsePredicate;
     }
 
-    public boolean isPartialTransceiveResponsePredicate() {
-        return partialTransceiveResponsePredicate;
+    public boolean isPartialResponsePredicate() {
+        return partialResponsePredicate;
     }
 
-    public boolean isTransceiveResponsePredicate() {
-        return transceiveResponsePredicate;
+    public boolean isResponsePredicate() {
+        return responsePredicate;
     }
 }
