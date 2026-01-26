@@ -22,11 +22,11 @@ public class CardCommands<T, C extends CardContext> {
 		this.cardAdpuMessageConverter = cardAdpuMessageConverter;
     }
 
-	public void setAdpuTranscieveTimeout(long adpuTranscieveTimeout) {
-		this.adpuTranscieveTimeout = adpuTranscieveTimeout;
+	public void setAdpuTransceiveTimeout(long timeout) {
+		this.adpuTranscieveTimeout = timeout;
 	}
 
-	public byte[] transcieve(byte[] message) throws IOException  {
+	public byte[] transceive(byte[] message) throws IOException  {
 		CardAdpuSynchronizedRequestMessageRequest<T, ?> request = cardAdpuMessageConverter.createCardAdpuRequestMessage(message, cardContext);
 		SynchronizedResponseMessage<T> response = exchange.sendAndWaitForResponse(request, adpuTranscieveTimeout);
 		

@@ -30,8 +30,16 @@ public class BulkTransceiveCommand {
         return partialHandlerId;
     }
 
+    public boolean hasPartialHandlerId() {
+        return partialHandlerId != null;
+    }
+
     public void setPartialHandlerId(String partialHandlerId) {
         this.partialHandlerId = partialHandlerId;
+    }
+
+    public boolean hasResponsePredicate() {
+        return responsePredicate != null;
     }
 
     public TransceiveResponsePredicate getResponsePredicate() {

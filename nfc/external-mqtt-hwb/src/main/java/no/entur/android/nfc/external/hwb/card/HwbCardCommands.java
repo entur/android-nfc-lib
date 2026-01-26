@@ -5,13 +5,13 @@ import android.os.Parcelable;
 import java.io.IOException;
 import java.util.UUID;
 
-import hwb.utilities.validators.nfc.NfcSchema;
 import hwb.utilities.validators.nfc.apdu.deviceId.transmit.TransmitSchema;
-import no.entur.android.nfc.mqtt.messages.card.CardAdpuSynchronizedRequestMessageRequest;
-import no.entur.android.nfc.mqtt.messages.card.CardAdpuSynchronizedResponseMessage;
+import hwb.utilities.validators.nfc.apdu.receive.ReceiveSchema;
+import no.entur.android.nfc.external.hwb.card.bulk.HwbBulkConverter;
 import no.entur.android.nfc.mqtt.messages.card.CardCommands;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedResponseMessage;
+import no.entur.android.nfc.wrapper.tech.utils.bulk.BulkTransceiveCommands;
 
 public class HwbCardCommands extends CardCommands<UUID, HwbCardContext> {
 
@@ -56,14 +56,36 @@ public class HwbCardCommands extends CardCommands<UUID, HwbCardContext> {
         super(cardContext, adpuExchange, adpuTranscieveTimeout, cardAdpuMessageConverter);
     }
 
-    public Parcelable transcieve(Parcelable parcelable) throws IOException {
+    public Parcelable transceive(Parcelable parcelable) throws IOException {
         if(parcelable instanceof TransmitSchema) {
-            HwbCardAdpuSynchronizedRequestMessage request = new HwbCardAdpuSynchronizedRequestMessage((TransmitSchema) parcelable);
-            SynchronizedResponseMessage<UUID> response = exchange.sendAndWaitForResponse(request, adpuTranscieveTimeout);
+            TransmitSchema transmitSchema = (TransmitSchema) parcelable;
+
+            HwbCardAdpuSynchronizedRequestMessage request = new HwbCardAdpuSynchronizedRequestMessage(transmitSchema);
+            SynchronizedResponseMessage<UUID> response = exchange.sendAndWaitForResponse(request, adpuTranscieveTimeout * transmitSchema.getCommand().size());
 
             if(response != null) {
                 HwbCardAdpuSynchronizedResponseMessage result = (HwbCardAdpuSynchronizedResponseMessage) cardAdpuMessageConverter.createCardAdpuResponseMessage(response, cardContext);
                 return result.getPayload();
+            }
+            throw new IOException();
+        } else if(parcelable instanceof BulkTransceiveCommands) {
+            BulkTransceiveCommands bulkTransceiveCommands = (BulkTransceiveCommands)parcelable;
+
+            HwbBulkConverter converter = new HwbBulkConverter();
+
+            converter.setDeviceId(cardContext.getDeviceId());
+            converter.setTraceId(cardContext.getTraceId());
+
+            TransmitSchema transmitSchema = converter.convert(bulkTransceiveCommands);
+
+            HwbCardAdpuSynchronizedRequestMessage request = new HwbCardAdpuSynchronizedRequestMessage(transmitSchema);
+            SynchronizedResponseMessage<UUID> response = exchange.sendAndWaitForResponse(request, adpuTranscieveTimeout * transmitSchema.getCommand().size());
+
+            if(response != null) {
+                HwbCardAdpuSynchronizedResponseMessage result = (HwbCardAdpuSynchronizedResponseMessage) cardAdpuMessageConverter.createCardAdpuResponseMessage(response, cardContext);
+                ReceiveSchema payload = result.getPayload();
+
+                return converter.convert(payload);
             }
             throw new IOException();
         }

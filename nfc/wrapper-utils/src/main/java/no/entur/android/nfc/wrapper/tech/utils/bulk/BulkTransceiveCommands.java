@@ -121,4 +121,8 @@ public class BulkTransceiveCommands implements Parcelable {
     public void add(BulkTransceiveCommand item) {
         this.items.add(item);
     }
+
+    public int size() {
+        return items.size();
+    }
 }

@@ -16,16 +16,16 @@ public class HwbIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 	}
 
 	public byte[] transceive(byte[] data) throws IOException {
-		return cardCommands.transcieve(data);
+		return cardCommands.transceive(data);
 	}
 
 	public byte[] transceiveRaw(byte[] req) throws Exception {
-		return cardCommands.transcieve(req);
+		return cardCommands.transceive(req);
 	}
 
     @Override
     public Parcelable transceive(Parcelable parcelable) throws Exception {
-        return cardCommands.transcieve(parcelable);
+        return cardCommands.transceive(parcelable);
     }
 
 }

@@ -6,7 +6,6 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import no.entur.android.nfc.ResponseAPDU;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
@@ -39,7 +38,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
 
         if (data.length >= 4 && (cls == 0x00 || cls == 0x90 || cls == 0xFF) && isApduLength(data)) {
             Log.i(getClass().getName(), " => " + ByteArrayHexStringConverter.toHexString(data));
-            byte[] transcieve = cardCommands.transcieve(data);
+            byte[] transcieve = cardCommands.transceive(data);
             Log.i(getClass().getName(), " <= " + ByteArrayHexStringConverter.toHexString(transcieve));
 
             return transcieve;
@@ -51,17 +50,17 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         // so wrap both command and response with "additional frame" status
         // this is not optimal for all cases, but the only way to support native desfire commands
 
-        byte[] transcieve;
+        byte[] transceive;
         if(cls == 0x0A) { // AUTHENTICATE
             // do not handle AF
-            transcieve = transmitRaw(data);
+            transceive = transmitRaw(data);
         } else {
-            transcieve = transmitChain(data);
+            transceive = transmitChain(data);
         }
 
-        Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(transcieve));
+        Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(transceive));
 
-        return transcieve;
+        return transceive;
     }
 
     private boolean isApduLength(byte[] data) {
@@ -96,7 +95,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     public byte[] transceiveRaw(byte[] req) throws Exception {
-        return cardCommands.transcieve(req);
+        return cardCommands.transceive(req);
     }
 
     @Override
@@ -183,7 +182,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     public byte[] transceiveImpl(byte[] command) throws IOException {
 
         Log.i(getClass().getName(), " -> " + ByteArrayHexStringConverter.toHexString(command));
-        byte[] response = cardCommands.transcieve(command);
+        byte[] response = cardCommands.transceive(command);
         Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(response));
 
         return response;
