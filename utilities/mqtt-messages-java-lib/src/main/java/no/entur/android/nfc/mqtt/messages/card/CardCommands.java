@@ -26,7 +26,7 @@ public class CardCommands<T, C extends CardContext> {
 		this.adpuTranscieveTimeout = adpuTranscieveTimeout;
 	}
 
-	public byte[] transcieve(byte[] message) throws IOException  {
+	public byte[] transceive(byte[] message) throws IOException  {
 		CardAdpuSynchronizedRequestMessageRequest<T, ?> request = cardAdpuMessageConverter.createCardAdpuRequestMessage(message, cardContext);
 		SynchronizedResponseMessage<T> response = exchange.sendAndWaitForResponse(request, adpuTranscieveTimeout);
 		

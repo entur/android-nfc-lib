@@ -27,13 +27,13 @@ public class Atr210IsoDepWrapper extends AbstractReaderIsoDepWrapper {
 
 	public byte[] transceive(byte[] data) throws IOException {
         if(print) LOGGER.info(" -> " +  ByteArrayHexStringConverter.toHexString(data));
-        byte[] transcieve = cardCommands.transcieve(data);
+        byte[] transcieve = cardCommands.transceive(data);
         if(print) LOGGER.info(" <- " +  ByteArrayHexStringConverter.toHexString(transcieve));
         return transcieve;
     }
 
 	public byte[] transceiveRaw(byte[] req) throws Exception {
-		return cardCommands.transcieve(req);
+		return cardCommands.transceive(req);
 	}
 
     @Override

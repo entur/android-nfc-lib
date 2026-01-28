@@ -47,7 +47,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
 
         if (data.length >= 4 && (cls == 0x00 || cls == 0x90 || cls == 0xFF) && isApduLength(data)) {
             if(print) LOGGER.info( " => " + ByteArrayHexStringConverter.toHexString(data));
-            byte[] transcieve = cardCommands.transcieve(data);
+            byte[] transcieve = cardCommands.transceive(data);
             if(print) LOGGER.info(" <= " + ByteArrayHexStringConverter.toHexString(transcieve));
 
             return transcieve;
@@ -104,7 +104,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     public byte[] transceiveRaw(byte[] req) throws Exception {
-        return cardCommands.transcieve(req);
+        return cardCommands.transceive(req);
     }
 
     @Override
@@ -191,7 +191,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     public byte[] transceiveImpl(byte[] command) throws IOException {
 
         if(print) LOGGER.info(" -> " + ByteArrayHexStringConverter.toHexString(command));
-        byte[] response = cardCommands.transcieve(command);
+        byte[] response = cardCommands.transceive(command);
         if(print) LOGGER.info(" <- " + ByteArrayHexStringConverter.toHexString(response));
 
         return response;

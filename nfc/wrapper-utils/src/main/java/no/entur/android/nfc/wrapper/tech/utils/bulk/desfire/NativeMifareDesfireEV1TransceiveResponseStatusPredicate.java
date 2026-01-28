@@ -55,5 +55,7 @@ public class NativeMifareDesfireEV1TransceiveResponseStatusPredicate implements 
         }
     };
 
-
+    public int getStatus() {
+        return status;
+    }
 }
