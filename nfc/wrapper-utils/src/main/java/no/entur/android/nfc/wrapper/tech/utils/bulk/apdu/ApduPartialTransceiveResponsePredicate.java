@@ -54,4 +54,12 @@ public class ApduPartialTransceiveResponsePredicate implements PartialTransceive
             return new ApduPartialTransceiveResponsePredicate[size];
         }
     };
+
+    public int getSw1() {
+        return sw1;
+    }
+
+    public int getSw2() {
+        return sw2;
+    }
 }
