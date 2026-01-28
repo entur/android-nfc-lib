@@ -3,13 +3,19 @@ package no.entur.android.nfc.external.hid.card;
 import android.os.Parcelable;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import no.entur.android.nfc.ResponseAPDU;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Atr210DesfireWrapper.class);
 
     /* Status codes */
     public static final byte OPERATION_OK = (byte) 0x00;
@@ -21,9 +27,12 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
 
     private Atr210CardCommands cardCommands;
 
-    public Atr210DesfireWrapper(Atr210CardCommands cardCommands) {
+    private final boolean print;
+
+    public Atr210DesfireWrapper(Atr210CardCommands cardCommands, boolean print) {
         super(-1);
         this.cardCommands = cardCommands;
+        this.print = print && LOGGER.isInfoEnabled();
     }
 
     public byte[] transceive(byte[] data) throws IOException {
@@ -37,30 +46,30 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         int cls = data.length > 0 ? data[0] & 0xFF : -1;
 
         if (data.length >= 4 && (cls == 0x00 || cls == 0x90 || cls == 0xFF) && isApduLength(data)) {
-            Log.i(getClass().getName(), " => " + ByteArrayHexStringConverter.toHexString(data));
-            byte[] transcieve = cardCommands.transceive(data);
-            Log.i(getClass().getName(), " <= " + ByteArrayHexStringConverter.toHexString(transcieve));
+            if(print) LOGGER.info( " => " + ByteArrayHexStringConverter.toHexString(data));
+            byte[] transcieve = cardCommands.transcieve(data);
+            if(print) LOGGER.info(" <= " + ByteArrayHexStringConverter.toHexString(transcieve));
 
             return transcieve;
         }
 
-        Log.i(getClass().getName(), " -> " + ByteArrayHexStringConverter.toHexString(data));
+        //if(print) LOGGER.info(" -> " + ByteArrayHexStringConverter.toHexString(data));
 
         // wrapping the command in an ADPU might bump into max command/response length
         // so wrap both command and response with "additional frame" status
         // this is not optimal for all cases, but the only way to support native desfire commands
 
-        byte[] transceive;
+        byte[] transcieve;
         if(cls == 0x0A) { // AUTHENTICATE
             // do not handle AF
-            transceive = transmitRaw(data);
+            transcieve = transmitRaw(data);
         } else {
-            transceive = transmitChain(data);
+            transcieve = transmitChain(data);
         }
 
-        Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(transceive));
+        //if(print) LOGGER.info(" <- " + ByteArrayHexStringConverter.toHexString(transcieve));
 
-        return transceive;
+        return transcieve;
     }
 
     private boolean isApduLength(byte[] data) {
@@ -95,7 +104,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     public byte[] transceiveRaw(byte[] req) throws Exception {
-        return cardCommands.transceive(req);
+        return cardCommands.transcieve(req);
     }
 
     @Override
@@ -181,9 +190,9 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
      */
     public byte[] transceiveImpl(byte[] command) throws IOException {
 
-        Log.i(getClass().getName(), " -> " + ByteArrayHexStringConverter.toHexString(command));
-        byte[] response = cardCommands.transceive(command);
-        Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(response));
+        if(print) LOGGER.info(" -> " + ByteArrayHexStringConverter.toHexString(command));
+        byte[] response = cardCommands.transcieve(command);
+        if(print) LOGGER.info(" <- " + ByteArrayHexStringConverter.toHexString(response));
 
         return response;
     }

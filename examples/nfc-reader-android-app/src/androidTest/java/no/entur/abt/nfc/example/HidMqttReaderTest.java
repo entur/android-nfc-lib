@@ -106,6 +106,7 @@ public class HidMqttReaderTest {
                     .withHost(brokerConnection.getHost())
                     .withPort(brokerConnection.getPort())
                     .withDefaultWebsocketConfiguration()
+                    .withLogApdus(true)
                     .build();
 
             HidServiceConnection serviceConnection = serviceConnector.connect(true);

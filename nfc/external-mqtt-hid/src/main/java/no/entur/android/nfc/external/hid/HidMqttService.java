@@ -59,6 +59,8 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
 
     public static final String AUTO_NFC_READER_CONFIGURATION = "AUTO_NFC_READER_CONFIGURATION";
 
+    public static final String LOG_APDUS = "LOG_APDUS";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(HidMqttService.class);
 
     protected Atr210MqttHandler handler;
@@ -73,12 +75,16 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
     public int onStartCommand(Intent intent, int flags, int startId) {
         LOGGER.info("Starting " + HidMqttService.class.getName() + " service");
 
+        boolean logApdus = intent.getBooleanExtra(LOG_APDUS, false);
+
         if(handler == null) {
             MqttServiceClient mqttServiceClient = createMqttServiceClient(intent);
 
             long transceiveTimeout = intent.getLongExtra(MQTT_CLIENT_TRANSCEIVE_TIMEOUT, 1000);
 
-            handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout);
+            handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout, logApdus);
+        } else {
+            handler.setLogApdus(logApdus);
         }
 
         boolean autoConfigureReaders = intent.getBooleanExtra(AUTO_NFC_READER_CONFIGURATION, true);

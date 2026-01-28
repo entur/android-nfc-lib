@@ -56,11 +56,13 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
     protected Atr210ReaderConfiguration configuration;
     protected boolean connected = false;
+    protected boolean logApdus;
 
-    public Atr210MqttHandler(Context context, MqttServiceClient client, long transceiveTimeout) {
+    public Atr210MqttHandler(Context context, MqttServiceClient client, long transceiveTimeout, boolean logApdus) {
         this.context = context;
         this.client = client;
         this.transceiveTimeout = transceiveTimeout;
+        this.logApdus = logApdus;
 
         this.configuration = new Atr210ReaderConfiguration(transceiveTimeout);
 
@@ -115,7 +117,7 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         readerContext.setProviderId("itxpt.ticketreader." + heartbeat.getDeviceType() + "." + heartbeat.getDeviceId());
         readerContext.setHeartbeat(heartbeat);
 
-        Atr210ReaderService atr210ReaderService = new Atr210ReaderService(context, client, readerContext, transceiveTimeout, tagProxyStore);
+        Atr210ReaderService atr210ReaderService = new Atr210ReaderService(context, client, readerContext, transceiveTimeout, tagProxyStore, logApdus);
         readers.put(heartbeat.getDeviceId(), atr210ReaderService);
 
         atr210HeartbeatTimer.schedule();
@@ -124,8 +126,6 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
     }
 
     public void onHeartbeat(HeartbeatResponse heartbeat) {
-        LOGGER.info("Got heartbeat for " + heartbeat.getDeviceId());
-
         Atr210ReaderService atr210ReaderService = spawnReader(heartbeat);
 
         atr210ReaderService.setNextHeartbeatDeadline(System.currentTimeMillis() + heartbeat.getNextHeartbeatWithinSeconds().intValue() * 1000 + 1000);
@@ -218,5 +218,24 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
 
     public boolean isConnected() {
         return connected;
+    }
+
+    public void setLogApdus(boolean logApdus) {
+        if(logApdus != this.logApdus) {
+            if (logApdus) {
+                LOGGER.info("Enable APDU logging");
+            } else {
+                LOGGER.info("Disable APDU logging");
+            }
+
+            this.logApdus = logApdus;
+
+            synchronized (readers) {
+                for (Map.Entry<String, Atr210ReaderService> entry : readers.entrySet()) {
+                    Atr210ReaderService value = entry.getValue();
+                    value.setLogApdus(logApdus);
+                }
+            }
+        }
     }
 }

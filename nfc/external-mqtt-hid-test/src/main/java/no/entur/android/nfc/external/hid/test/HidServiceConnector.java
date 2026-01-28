@@ -33,8 +33,15 @@ public class HidServiceConnector {
 
         protected Context context;
 
+        protected boolean logApdus = false;
+
         public Builder withPort(int port) {
             this.port = port;
+            return this;
+        }
+
+        public Builder withLogApdus(boolean logApdus) {
+            this.logApdus = logApdus;
             return this;
         }
 
@@ -87,7 +94,7 @@ public class HidServiceConnector {
             if(host == null) {
                 throw new IllegalStateException("Expected host");
             }
-            return new HidServiceConnector(context, timeout, port, host, identifier, defaultWebsocketConfiguration, transceiveTimeout, connectTimeout, reconnectInitialDelay, reconnectMaxDelay);
+            return new HidServiceConnector(context, timeout, port, host, identifier, defaultWebsocketConfiguration, transceiveTimeout, connectTimeout, reconnectInitialDelay, reconnectMaxDelay, logApdus);
         }
 
     }
@@ -113,6 +120,7 @@ public class HidServiceConnector {
     protected final long reconnectInitialDelay;
     protected final long reconnectMaxDelay;
 
+    protected final boolean logApdus;
 
     /**
      * Class for interacting with the main interface of the service.
@@ -129,7 +137,7 @@ public class HidServiceConnector {
         }
     };
 
-    public HidServiceConnector(Context context, long timeout, int port, String host, String identifier, boolean defaultWebsocketConfiguration, long transceiveTimeout, long connectTimeout, long reconnectInitialDelay, long reconnectMaxDelay) {
+    public HidServiceConnector(Context context, long timeout, int port, String host, String identifier, boolean defaultWebsocketConfiguration, long transceiveTimeout, long connectTimeout, long reconnectInitialDelay, long reconnectMaxDelay, boolean logApdus) {
         this.context = context;
         this.timeout = timeout;
         this.port = port;
@@ -140,6 +148,7 @@ public class HidServiceConnector {
         this.connectTimeout = connectTimeout;
         this.reconnectInitialDelay = reconnectInitialDelay;
         this.reconnectMaxDelay = reconnectMaxDelay;
+        this.logApdus = logApdus;
     }
 
     public HidServiceConnection connect() {
@@ -186,6 +195,10 @@ public class HidServiceConnector {
 
         if(reconnectMaxDelay != -1L) {
             intent.putExtra(HidMqttService.MQTT_CLIENT_RECONNECT_MAX_DELAY, reconnectMaxDelay);
+        }
+
+        if(logApdus) {
+            intent.putExtra(HidMqttService.LOG_APDUS, true);
         }
 
         intent.putExtra(HidMqttService.MQTT_CLIENT_DEFAULT_WEBSOCKET_CONFIGURATION, defaultWebsocketConfiguration);

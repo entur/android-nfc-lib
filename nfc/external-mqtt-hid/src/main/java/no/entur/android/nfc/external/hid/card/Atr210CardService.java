@@ -18,6 +18,7 @@ import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.mqtt.messages.sync.SynchronizedRequestResponseMessages;
+import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class Atr210CardService {
 
@@ -42,13 +43,17 @@ public class Atr210CardService {
 
     protected TagProxy currentCard;
 
-    public Atr210CardService(Context context, SynchronizedRequestResponseMessages<String> adpuRequestResponseMessages, MqttServiceClient mqttClient, long transcieveTimeout, INFcTagBinder infcTagBinder, TagProxyStore tagProxyStore) {
+    protected boolean logApdus;
+
+    public Atr210CardService(Context context, SynchronizedRequestResponseMessages<String> adpuRequestResponseMessages, MqttServiceClient mqttClient, long transcieveTimeout, INFcTagBinder infcTagBinder, TagProxyStore tagProxyStore, boolean logApdus) {
         this.adpuRequestResponseMessages = adpuRequestResponseMessages;
         this.mqttClient = mqttClient;
         this.transcieveTimeout = transcieveTimeout;
 
         this.infcTagBinder = infcTagBinder;
         this.tagProxyStore = tagProxyStore;
+
+        this.logApdus = logApdus;
 
         this.isoDepTagServiceSupport = new IsoDepTagServiceSupport(context, infcTagBinder, tagProxyStore, new Atr210TransceiveResultExceptionMapper());
         this.ultralightTagServiceSupport = new Atr210MifareUltralightTagServiceSupport(context,  infcTagBinder, tagProxyStore, new Atr210TransceiveResultExceptionMapper());
@@ -85,14 +90,14 @@ public class Atr210CardService {
         Atr210TagTypeDetector detector = new Atr210TagTypeDetector();
         TagType tagType = detector.parseAtr(null, cardContext.getAtr());
 
-        LOGGER.info("Got tag type " + tagType + " from " + cardContext.getAtr());
+        LOGGER.info("Got tag type " + tagType + " from " + ByteArrayHexStringConverter.toHexString(cardContext.getAtr()));
 
         if(tagType == TagType.ISO_DEP || tagType == TagType.DESFIRE_EV1 || tagType == TagType.ISO_14443_TYPE_A) {
             AbstractReaderIsoDepWrapper wrapper;
             if(tagType == TagType.DESFIRE_EV1) {
-                wrapper = new Atr210DesfireWrapper(commands);
+                wrapper = new Atr210DesfireWrapper(commands, logApdus);
             } else {
-                wrapper = new Atr210IsoDepWrapper(commands);
+                wrapper = new Atr210IsoDepWrapper(commands, logApdus);
             }
 
             // broadcast tag present
@@ -106,7 +111,7 @@ public class Atr210CardService {
                 return intent;
             });
         } else if(tagType == TagType.MIFARE_ULTRALIGHT) {
-            Atr210IsoDepWrapper wrapper = new Atr210IsoDepWrapper(commands);
+            Atr210IsoDepWrapper wrapper = new Atr210IsoDepWrapper(commands, logApdus);
 
             this.currentCard = ultralightTagServiceSupport.mifareUltralight(0, wrapper, cardContext.getAtr(), cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
 
@@ -171,5 +176,9 @@ public class Atr210CardService {
 
     public boolean hasCardContext() {
         return currentCard != null;
+    }
+
+    public void setLogApdus(boolean logApdus) {
+        this.logApdus = logApdus;
     }
 }

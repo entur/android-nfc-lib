@@ -118,6 +118,7 @@ public class MainApplication extends Application {
             String host = preferences.getString(SettingsActivity.PREF_KEY_MQTT_HOST, null);
 
             bundle.putString(HidMqttService.MQTT_CLIENT_HOST, host);
+            bundle.putBoolean(HidMqttService.LOG_APDUS, true);
 
             hidAdapter.startService(bundle);
         } else {
