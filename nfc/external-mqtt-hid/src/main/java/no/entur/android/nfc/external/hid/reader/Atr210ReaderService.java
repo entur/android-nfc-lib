@@ -62,10 +62,13 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
 
     protected long nextHeartbeatDeadline = -1L;
 
-    public Atr210ReaderService(Context context, MqttServiceClient mqttClient, Atr210ReaderContext readerContext, long transcieveTimeout, TagProxyStore tagProxyStore) {
+    protected boolean logApdus;
+
+    public Atr210ReaderService(Context context, MqttServiceClient mqttClient, Atr210ReaderContext readerContext, long transcieveTimeout, TagProxyStore tagProxyStore, boolean logApdus) {
         this.context = context;
         this.mqttClient = mqttClient;
         this.readerContext = readerContext;
+        this.logApdus = logApdus;
 
         this.readerCommands = Atr210ReaderCommands.newBuilder()
                 .withReaderContext(readerContext)
@@ -82,7 +85,7 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
         infcTagBinder = new INFcTagBinder(tagProxyStore);
         infcTagBinder.setReaderTechnology(new Atr210ReaderTechnology(true));
 
-        this.atr210CardService = new Atr210CardService(context, requestResponseMessages, mqttClient, transcieveTimeout, infcTagBinder, tagProxyStore);
+        this.atr210CardService = new Atr210CardService(context, requestResponseMessages, mqttClient, transcieveTimeout, infcTagBinder, tagProxyStore, logApdus);
 
         requestResponseMessages.setRequestMessageListener(this);
     }
@@ -321,5 +324,9 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
     @Override
     public void onRequestMessage(SynchronizedRequestMessageRequest<String> message, SynchronizedResponseMessageListener<String> listener) throws IOException {
         mqttClient.publishAsJson(message.getTopic(), message.getPayload());
+    }
+
+    public void setLogApdus(boolean logApdus) {
+        atr210CardService.setLogApdus(logApdus);
     }
 }
