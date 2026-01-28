@@ -133,6 +133,9 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<Wrappe
 		intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, reader);
 		intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_STATUS_CODE, status);
 
+		// TODO could technically be bluetooth too for some readers
+		intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION, ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION_TYPE_USB);
+
 		sendBroadcastForNfcPermission(intent);
 
         this.lastReaderId = reader.getId();

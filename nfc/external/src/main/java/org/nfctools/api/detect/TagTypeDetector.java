@@ -26,6 +26,8 @@ public interface TagTypeDetector<R> {
 
         byte[] historicalBytes = atr.getHistoricalBytes();
 
+        System.out.println(ByteArrayHexStringConverter.toHexString(historicalBytes));
+
         return parseHistoricalBytes(reader, historicalBytes);
     }
 

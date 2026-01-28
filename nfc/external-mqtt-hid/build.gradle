@@ -1,0 +1,59 @@
+android {
+    defaultConfig {
+        minSdkVersion 24
+    }
+    namespace "no.entur.android.nfc.external.hwb"
+
+    buildFeatures {
+        aidl true
+    }
+
+    packagingOptions {
+        resources {
+            excludes = [
+                    "META-INF/io.netty.versions.properties",
+                    "META-INF/maven/**",
+                    "META-INF/MANIFEST.MF",
+                    "LICENSE",
+                    "META-INF/com.android.tools/proguard/coroutines.pro",
+                    "META-INF/proguard/coroutines.pro"
+            ]
+        }
+    }
+}
+
+dependencies {
+    api project(":nfc:external")
+    api project(":utilities:mqtt-messages-java-lib")
+    api project(":utilities:mqtt3-client-java-lib")
+    api project(":nfc:wrapper-utils")
+
+    androidTestImplementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
+
+    api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
+    api ("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    api ("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+
+    androidTestImplementation "junit:junit:${unitVersion}"
+
+    androidTestImplementation("com.adevinta.android:barista:${baristaVersion}") {
+        exclude group: "com.google.protobuf", module: "protobuf-lite"
+    }
+    androidTestImplementation "androidx.test.espresso:espresso-idling-resource:${androidxEspressoVersion}"
+    androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:${androidxEspressoVersion}"
+    androidTestImplementation "androidx.test:rules:${androidxTestRulesVersion}"
+    // UiAutomator Testing
+    androidTestImplementation("androidx.test.ext:junit:${androidxTestExtJunitVersion}")
+
+    androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${mockitoVersion}"
+    androidTestImplementation "net.bytebuddy:byte-buddy-android:${byteBuddyVersion}"
+    androidTestImplementation "junit:junit:${unitVersion}"
+    androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
+
+    androidTestImplementation project(":nfc:external-mqtt-hid-test")
+    androidTestImplementation project(":nfc:wrapper-test")
+    androidTestImplementation project(":nfc:external-test")
+}
+
+

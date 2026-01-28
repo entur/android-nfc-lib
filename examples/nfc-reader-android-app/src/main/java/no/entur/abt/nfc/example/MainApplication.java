@@ -16,12 +16,15 @@ import ch.qos.logback.classic.android.LogcatAppender;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import no.entur.android.nfc.external.ExternalNfcServiceAdapter;
 import no.entur.android.nfc.external.acs.service.AcsUsbService;
+import no.entur.android.nfc.external.hid.HidMqttService;
 
 public class MainApplication extends Application {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(MainApplication.class);
 
     public static final String PREF_KEY_EXTERNAL_NFC = "externalNfcService";
+
+    public static final String PREF_KEY_EXTERNAL_HID_NFC = "externalHidNfcService";
 
     static {
         configureLogbackDirectly();
@@ -50,7 +53,8 @@ public class MainApplication extends Application {
         root.addAppender(logcatAppender);
     }
 
-    private ExternalNfcServiceAdapter adapter;
+    private ExternalNfcServiceAdapter usbAdapter;
+    private ExternalNfcServiceAdapter hidAdapter;
 
     private ThreadPoolExecutor threadPoolExecutor;
 
@@ -58,20 +62,31 @@ public class MainApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        adapter = new ExternalNfcServiceAdapter(this, AcsUsbService.class, false);
+        usbAdapter = new ExternalNfcServiceAdapter(this, AcsUsbService.class, false);
+        hidAdapter = new ExternalNfcServiceAdapter(this, HidMqttService.class, false);
 
         threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> {
             LOGGER.error( "Rejected execution for " + r + " " + executor);
         });
+
+        androidx.preference.PreferenceManager.setDefaultValues(this, R.xml.preferences, true);
     }
 
-    public ExternalNfcServiceAdapter getAdapter() {
-        return adapter;
+    public ExternalNfcServiceAdapter getUsbAdapter() {
+        return usbAdapter;
     }
 
-    public boolean isExternalNfcReader() {
+    public ExternalNfcServiceAdapter getHidAdapter() {
+        return hidAdapter;
+    }
+
+    public boolean isExternalNfcUsbReader() {
         return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(PREF_KEY_EXTERNAL_NFC, false);
+    }
+
+    public boolean isExternalNfcHidReader() {
+        return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(PREF_KEY_EXTERNAL_HID_NFC, false);
     }
 
     public void setExternalNfcReader(boolean enabled) {
@@ -83,11 +98,34 @@ public class MainApplication extends Application {
         }
 
         if(enabled) {
-            adapter.startService(new Bundle());
+            usbAdapter.startService(new Bundle());
         } else {
-            adapter.stopService();
+            usbAdapter.stopService();
         }
     }
+
+
+    public void setExternalHidNfcReader(boolean enabled) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor edit = preferences.edit();
+        edit.putBoolean(PREF_KEY_EXTERNAL_HID_NFC, enabled);
+        if(!edit.commit()) {
+            throw new IllegalStateException();
+        }
+
+        if(enabled) {
+            Bundle bundle = new Bundle();
+            String host = preferences.getString(SettingsActivity.PREF_KEY_MQTT_HOST, null);
+
+            bundle.putString(HidMqttService.MQTT_CLIENT_HOST, host);
+            bundle.putBoolean(HidMqttService.LOG_APDUS, true);
+
+            hidAdapter.startService(bundle);
+        } else {
+            hidAdapter.stopService();
+        }
+    }
+
 
     public ThreadPoolExecutor getThreadPoolExecutor() {
         return threadPoolExecutor;
