@@ -190,9 +190,9 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
      */
     public byte[] transceiveImpl(byte[] command) throws IOException {
 
-        Log.i(getClass().getName(), " -> " + ByteArrayHexStringConverter.toHexString(command));
+        if(print) LOGGER.info(" -> " + ByteArrayHexStringConverter.toHexString(command));
         byte[] response = cardCommands.transcieve(command);
-        Log.i(getClass().getName(), " <- " + ByteArrayHexStringConverter.toHexString(response));
+        if(print) LOGGER.info(" <- " + ByteArrayHexStringConverter.toHexString(response));
 
         return response;
     }
