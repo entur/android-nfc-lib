@@ -3,13 +3,17 @@ package no.entur.abt.nfc.example;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.nfctools.mf.ul.ntag.NfcNtag;
@@ -20,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import no.entur.android.nfc.NfcReaderCallbackSupport;
@@ -28,12 +31,12 @@ import no.entur.android.nfc.detect.NfcTargetAnalyzeResult;
 import no.entur.android.nfc.detect.NfcTargetAnalyzer;
 import no.entur.android.nfc.detect.app.DefaultSelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.app.DesfireNativeSelectApplicationAnalyzer;
+import no.entur.android.nfc.detect.app.DesfireSelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.app.EmvSelectApplicationAnalyzer;
 import no.entur.android.nfc.detect.technology.DesfireEv1TechnologyAnalyzer;
 import no.entur.android.nfc.detect.technology.IsodepTechnologyAnalyzer;
 import no.entur.android.nfc.detect.technology.MifareUltralightTechnologyAnalyzer;
 import no.entur.android.nfc.detect.uid.AnyLengthUidAnalyzer;
-import no.entur.android.nfc.detect.uid.HostCardEmulationUidAnalyzer;
 import no.entur.android.nfc.detect.uid.SevenByteNxpUidAnalyzer;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcReaderCallbackSupport;
@@ -43,10 +46,14 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
+import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
+import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
+import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
 import no.entur.android.nfc.wrapper.Tag;
+import no.entur.android.nfc.wrapper.tech.IsoDep;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
 import no.entur.android.nfc.wrapper.tech.NfcA;
 
@@ -80,7 +87,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private TextView tagDetailTechTypes;
     private TextView tagDetailIdentify;
 
+    private TextView tagDetailReaderValue;
+
     private NfcTargetAnalyzer nfcTargetAnalyzer;
+    private boolean tagPresent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +133,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         tagDetailsTitle = findViewById(R.id.tagDetailsTitle);
         tagDetailsTable = findViewById(R.id.tagDetailsTable);
-        tagDetailTechTypes =  findViewById(R.id.tagDetailTechTypes);
+        tagDetailTechTypes = findViewById(R.id.tagDetailTechTypes);
+
+        tagDetailReaderValue = findViewById(R.id.tagDetailReaderValue);
 
         tagDetailIdentify =  findViewById(R.id.tagDetailIdentifyValue);
 
@@ -133,10 +145,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
 
     private void setupNfc() {
-        threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        threadPoolExecutor.setRejectedExecutionHandler((r, executor) -> {
-            LOGGER.error( "Rejected execution for " + r + " " + executor);
-        });
+        MainApplication mainApplication = (MainApplication) getApplication();
+        this.threadPoolExecutor = mainApplication.getThreadPoolExecutor();
 
         boolean receiverExported = true;
 
@@ -176,20 +186,30 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                     .withSelectApplicationAnalyzer(new DesfireNativeSelectApplicationAnalyzer(new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0x57 }))
                 ;
             })
-            .add( (c) -> {
+/*
+                .add( (c) -> {
+                    c
+                            .withId("NOD 1")
+                            .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                            .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                            .withSelectApplicationAnalyzer(new DesfireSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("008057")));
+                    ;
+                })
+                .add( (c) -> {
+                    c
+                            .withId("NOD 2")
+                            .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
+                            .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                            .withSelectApplicationAnalyzer(new DefaultSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("578000")));
+                    ;
+                })
+*/
+                .add( (c) -> {
                 c
                     .withId("HCE app")
                     .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
-                    .withUidAnalyzer(new HostCardEmulationUidAnalyzer())
-                    .withSelectApplicationAnalyzer(new DesfireNativeSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("D2760000850101")));
-                ;
-            })
-            .add( (c) -> {
-                c
-                    .withId("EMV mobile")
-                    .withTechnologyAnalyzer(new IsodepTechnologyAnalyzer())
-                    .withUidAnalyzer(new HostCardEmulationUidAnalyzer())
-                    .withSelectApplicationAnalyzer(new EmvSelectApplicationAnalyzer())
+                    .withUidAnalyzer(new AnyLengthUidAnalyzer())
+                    .withSelectApplicationAnalyzer(new DefaultSelectApplicationAnalyzer(ByteArrayHexStringConverter.hexStringToByteArray("D2760000850101")));
                 ;
             })
             .add( (c) -> {
@@ -217,24 +237,35 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onExternalNfcReaderOpened(Intent intent) {
         if (intent.hasExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL)) {
-            AcrReader reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, AcrReader.class);
+            Parcelable reader = ParcelableExtraUtils.getParcelableExtra(intent, ExternalNfcReaderCallback.EXTRA_READER_CONTROL, Parcelable.class);
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
 
             // example: attempt to talk to a SAM on ACR 1252
-            if(reader.getName().contains("1252") && reader.getNumberOfSlots() == 2) {
-                try {
-                    byte[] power = reader.power(1, 2);
-                    LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
+            if(reader instanceof AcrReader) {
+                AcrReader acrReader = (AcrReader)reader;
 
-                    reader.setProtocol(1, 1);
+                acrReader.setPICC(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B);
 
-                    // try random command, expect response code 6986
-                    byte[] transmit = reader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
+                if (acrReader.getName().contains("1252")) {
+                    Acr1252UReader acr1252UReader = (Acr1252UReader) acrReader;
+                    acr1252UReader.setAutomaticPICCPolling(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.ACTIVATE_PICC_WHEN_DETECTED);
 
-                    LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
-                } catch(Exception e) {
-                    LOGGER.error("Problem talking to SAM", e);
+                    if(acrReader.getNumberOfSlots() == 2) {
+                        try {
+                            byte[] power = acrReader.power(1, 2);
+                            LOGGER.info("Got power response " + ByteArrayHexStringConverter.toHexString(power));
+
+                            acrReader.setProtocol(1, 1);
+
+                            // try random command, expect response code 6986
+                            byte[] transmit = acrReader.transmit(1, new byte[]{0x00, (byte) 0xA4, 0x00, 0x00, 0x02, 0x41, 0x00});
+
+                            LOGGER.info("Got reader response " + ByteArrayHexStringConverter.toHexString(transmit));
+                        } catch (Exception e) {
+                            LOGGER.error("Problem talking to SAM", e);
+                        }
+                    }
                 }
             }
         }
@@ -244,7 +275,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         });
     }
 
-
     @Override
     public void onExternalNfcReaderClosed(Intent intent) {
         // do nothing
@@ -253,9 +283,16 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         });
     }
 
+    public boolean isTagPresent() {
+        return tagPresent;
+    }
+
     @Override
     public void onExternalTagDiscovered(Tag tag, Intent intent) {
         LOGGER.info("External Tag discovered in activity");
+
+        tagPresent = true;
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -277,6 +314,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     @Override
     public void onTagDiscovered(Tag tag, Intent intent) {
         LOGGER.info("Tag discovered in activity");
+
+        tagPresent = true;
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -297,6 +337,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onExternalTagLost(Intent intent) {
+        tagPresent = false;
+
         runOnUiThread(() -> {
             setTagPresent(false);
 
@@ -421,6 +463,13 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             showTagDetails(true);
 
             setTagDetailTechTypes(tag);
+
+            String readerId = "-";
+            if(intent.hasExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID)) {
+                readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
+            }
+
+            tagDetailReaderValue.setText(readerId);
         } else {
             showTagDetails(false);
 
@@ -446,6 +495,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 }
                 builder.append(result.getId());
             }
+            LOGGER.info(builder.toString());
 
             runOnUiThread(() -> {
                 tagDetailIdentify.setText(builder.toString());
@@ -456,7 +506,19 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     private void setContents(Tag tag, Intent intent) throws IOException {
 
-        if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
+        if(isTechType(tag, android.nfc.tech.IsoDep.class.getName())) {
+
+            IsoDep isoDep = IsoDep.get(tag);
+
+            LOGGER.info("Hi-layer response: " + ByteArrayHexStringConverter.toHexString(isoDep.getHiLayerResponse()));
+            LOGGER.info("Historical bytes: " + ByteArrayHexStringConverter.toHexString(isoDep.getHistoricalBytes()));
+            LOGGER.info("Timeout: " + isoDep.getTimeout());
+            LOGGER.info("Max transceive length: " + isoDep.getMaxTransceiveLength());
+
+            byte[] wrapped = new byte[] { 0x5A, (byte) 0x11, (byte) 0x81, (byte) 0x57 };
+
+            isoDep.transceive(wrapped);
+        } else if(isTechType(tag, android.nfc.tech.MifareUltralight.class.getName())) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             if(intent != null && intent.hasExtra(NfcNtag.EXTRA_ULTRALIGHT_TYPE)) {
                 // handle NTAG21x types
@@ -465,8 +527,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
                 NfcA nfcA = NfcA.get(tag);
                 if(nfcA == null) {
-                    throw new IllegalArgumentException("No NTAG");
+                    throw new IllegalArgumentException("No NfcA");
                 }
+                LOGGER.info("Timeout: " + nfcA.getTimeout());
+                LOGGER.info("Max transceive length: " + nfcA.getMaxTransceiveLength());
 
                 int size;
                 switch(type) {
@@ -539,6 +603,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 }
                 mifareUltralight.connect();
 
+                LOGGER.info("Timeout: " + mifareUltralight.getTimeout());
+                LOGGER.info("Max transceive length: " + mifareUltralight.getMaxTransceiveLength());
+
                 int length;
 
                 int type = mifareUltralight.getType();
@@ -554,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                         break;
                     }
                     default:
-                        throw new IllegalArgumentException("Unknown mifare ultralight tag " + type);
+                        throw new IllegalArgumentException("Unknown mifare ultralight tag type " + type);
                 }
 
                 // android read 4 and 4 pages of 4 bytes
@@ -564,6 +631,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 }
 
                 mifareUltralight.close();
+
+                LOGGER.info("Tag id is " + ByteArrayHexStringConverter.toHexString(mifareUltralight.getTag().getId()));
             }
 
             byte[] buffer = bout.toByteArray();
@@ -629,6 +698,44 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         LOGGER.info("Start reader service");
 
         mainApplication.setExternalNfcReader(true);
+    }
+
+    public void stopHidReaderService(View view) {
+        LOGGER.info("Stop Hid reader service");
+
+        mainApplication.setExternalHidNfcReader(false);
+    }
+
+    public void startHidReaderService(View view) {
+        LOGGER.info("Start Hid reader service");
+
+        mainApplication.setExternalHidNfcReader(true);
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(@NonNull Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 }

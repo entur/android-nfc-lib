@@ -17,9 +17,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light"
-
+        android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true"
-
         >
 
         <activity
@@ -63,6 +62,12 @@
 
         </activity>
 
+        <activity
+            android:screenOrientation="portrait"
+            android:name=".SettingsActivity"
+            android:label="@string/activity_title_preferences"
+            />
+
         <service
             android:name="no.entur.android.nfc.external.acs.service.AcsUsbService"
             android:label="AcsUsbService"
@@ -86,6 +91,12 @@
         </service>
 
         <service android:name="no.entur.android.nfc.websocket.android.WebSocketNfcService" />
+
+        <service android:name="no.entur.android.nfc.external.hid.HidMqttService"
+            android:label="HidMqttService"
+            android:exported="false"
+            >
+        </service>
 
     </application>
 

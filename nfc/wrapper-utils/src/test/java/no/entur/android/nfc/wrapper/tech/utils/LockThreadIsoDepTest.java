@@ -22,7 +22,8 @@ public class LockThreadIsoDepTest {
         // check that does not blow up for a single thread
         isoDep.connect();
         isoDep.setTimeout(123);
-        isoDep.transceive(null);
+        byte[] c = null;
+        isoDep.transceive(c);
         isoDep.close();
     }
 
@@ -47,7 +48,8 @@ public class LockThreadIsoDepTest {
         thread.join();
 
         try {
-            isoDep.transceive(null);
+            byte[] c = null;
+            isoDep.transceive(c);
             fail();
         } catch(Exception e) {
             // pass

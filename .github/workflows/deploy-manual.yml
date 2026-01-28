@@ -1,0 +1,89 @@
+name: Build, release and deploy to Maven Central
+on:
+  workflow_dispatch
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: |
+          ./gradlew build --info --stacktrace
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      snapshot: ${{ steps.snapshot.outputs.snapshotHash }}
+    needs: build
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Configure git user
+        run: |
+          git config pull.rebase false
+          # to make sure merge to master works with shallow clone
+          git fetch --deepen=10
+          git config --global user.email "github@entur.no"
+          git config --global user.name "github"
+      - name: Create release tag (without pushing)
+        id: tag
+        run: |
+          # https://github.com/gradle/gradle/issues/29747
+          ./gradlew -b version.gradle toReleaseVersion --info --stacktrace --no-build-cache
+          # burn current version into java lib
+          git add gradle.properties build.gradle
+          GRADLE_VERSION=$(cat ./gradle.properties | grep "version=" | cut -d'=' -f2)
+          git commit -m "Release $GRADLE_VERSION [ci skip]"
+          git tag -a release-$GRADLE_VERSION -m "Tagging current version"
+          # output tag from step
+          echo "tag=release-$GRADLE_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Prepare for next development version (without pushing)
+        id: snapshot
+        run: |
+          ./gradlew -b version.gradle nextPatchSnapshotVersion --info --stacktrace --no-build-cache
+          git add gradle.properties build.gradle
+          git commit -m "Prepare next development version [ci skip]"
+          snapshotHash=$(git rev-parse HEAD)
+          echo "snapshotHash=$snapshotHash" >> "$GITHUB_OUTPUT"
+      - name: Push all changes (as one)
+        run: |
+          git push --atomic origin master --tags
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{needs.tag.outputs.tag}}
+      - name: Gradle publish artifacts
+        run: |
+          echo $SONATYPE_GPG_KEY | base64 --decode | gpg --batch --no-tty --import --yes
+          ./gradlew build publishToSonatype closeAndReleaseSonatypeStagingRepository -x test -Psigning.gnupg.passphrase=$SONATYPE_GPG_KEY_PASSWORD -Psigning.gnupg.keyName=$SONATYPE_GPG_KEY_NAME -PsonatypeUsername=$SONATYPE_AUTH_USER -PsonatypePassword=$SONATYPE_AUTH_TOKEN  --info --stacktrace
+        env:
+          SONATYPE_GPG_KEY: ${{ secrets.SONATYPE_GPG_KEY }}
+          SONATYPE_GPG_KEY_PASSWORD: ${{ secrets.SONATYPE_GPG_KEY_PASSWORD }}
+          SONATYPE_GPG_KEY_NAME: ${{ secrets.SONATYPE_GPG_KEY_NAME }}
+          SONATYPE_AUTH_USER: ${{ secrets.SONATYPE_AUTH_USER }}
+          SONATYPE_AUTH_TOKEN: ${{ secrets.SONATYPE_AUTH_TOKEN }}
+
+

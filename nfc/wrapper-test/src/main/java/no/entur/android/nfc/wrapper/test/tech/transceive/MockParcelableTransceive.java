@@ -1,0 +1,12 @@
+package no.entur.android.nfc.wrapper.test.tech.transceive;
+
+import android.os.Parcelable;
+
+import java.io.IOException;
+
+public interface MockParcelableTransceive extends MockTransceive {
+
+    <T> T transceive(Parcelable data) throws IOException;
+
+    Parcelable transceiveMetadata(Parcelable data);
+}

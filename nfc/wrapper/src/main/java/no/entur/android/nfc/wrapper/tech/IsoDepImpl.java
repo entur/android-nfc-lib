@@ -17,6 +17,7 @@
 package no.entur.android.nfc.wrapper.tech;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -52,10 +53,10 @@ public class IsoDepImpl extends IsoDep {
 	private byte[] mHiLayerResponse = null;
 	private byte[] mHistBytes = null;
 
-	private BasicTagTechnologyImpl delegate;
+	private ExtendedBasicTagTechnologyImpl delegate;
 
 	public IsoDepImpl(TagImpl tag) throws RemoteException {
-		this.delegate = new BasicTagTechnologyImpl(tag, TagTechnology.ISO_DEP);
+		this.delegate = new ExtendedBasicTagTechnologyImpl(tag, TagTechnology.ISO_DEP);
 		Bundle extras = tag.getTechExtras(TagTechnology.ISO_DEP);
 		if (extras != null) {
 			mHiLayerResponse = extras.getByteArray(EXTRA_HI_LAYER_RESP);
@@ -228,4 +229,13 @@ public class IsoDepImpl extends IsoDep {
 		return delegate.isConnected();
 	}
 
+    @Override
+    public <T> T transceive(Parcelable data) throws IOException {
+        return (T)delegate.transceive(data);
+    }
+
+    @Override
+    public <T> T transceiveMetadata(Parcelable c) throws IOException {
+        return (T)delegate.transceiveMetadata(c);
+    }
 }

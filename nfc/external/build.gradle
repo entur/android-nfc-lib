@@ -2,13 +2,17 @@ android {
     defaultConfig {
         minSdkVersion 23
     }
+
+    buildFeatures {
+        aidl true
+    }
+
+
     namespace "no.entur.android.nfc.external"
 }
 
 dependencies {
     api project(":nfc:core")
-
-    implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
 }
 
 

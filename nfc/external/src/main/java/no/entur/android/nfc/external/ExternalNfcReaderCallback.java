@@ -3,7 +3,6 @@ package no.entur.android.nfc.external;
 import android.content.Intent;
 
 import no.entur.android.nfc.wrapper.ReaderCallback;
-import no.entur.android.nfc.wrapper.Tag;
 
 public interface ExternalNfcReaderCallback extends ReaderCallback {
 
@@ -18,7 +17,14 @@ public interface ExternalNfcReaderCallback extends ReaderCallback {
 	/** Optional status message for {@linkplain #ACTION_READER_OPENED} or {@linkplain #ACTION_READER_CLOSED} actions */
 	public static final String EXTRA_READER_STATUS_MESSAGE = ExternalNfcReaderCallback.class.getName() + ".extra.READER_STATUS_MESSAGE";
 
-	public static final int READER_STATUS_OK = 0;
+    public static final String EXTRAS_READER_ID = ExternalNfcReaderCallback.class.getName() + ".extra.EXTRAS_READER_ID";
+    public static final String EXTRAS_READER_CONNECTION = ExternalNfcReaderCallback.class.getName() + ".extra.EXTRAS_READER_CONNECTION";
+
+    public static final String EXTRAS_READER_CONNECTION_TYPE_USB = "USB";
+    public static final String EXTRAS_READER_CONNECTION_TYPE_ETHERNET = "ETHERNET";
+    public static final String EXTRAS_READER_CONNECTION_TYPE_BLUETOOTH = "BLUETOOTH";
+
+    public static final int READER_STATUS_OK = 0;
 	/** generic error */
 	public static final int READER_STATUS_ERROR = 1;
 	public static final int READER_STATUS_ERROR_UNABLE_TO_CLAIM_USB_INTERFACE = 2;

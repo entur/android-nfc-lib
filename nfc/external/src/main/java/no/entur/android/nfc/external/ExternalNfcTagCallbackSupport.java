@@ -33,6 +33,7 @@ public class ExternalNfcTagCallbackSupport {
 
 	private final BroadcastReceiver tagReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
+            LOGGER.debug("Action " + intent.getAction());
 		if (intent.getAction().equals(ExternalNfcTagCallback.ACTION_TAG_DISCOVERED)) {
 			Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 

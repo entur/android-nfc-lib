@@ -1,0 +1,19 @@
+android {
+    defaultConfig {
+        minSdkVersion 24
+    }
+    namespace "no.entur.android.nfc.external.hwb.test"
+}
+
+dependencies {
+    api project(":nfc:external")
+    api project(":utilities:mqtt3-broker-java-lib")
+
+    api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
+    api ("org.java-websocket:Java-WebSocket:${javaWebSocketVersion}") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+
+}
+
+

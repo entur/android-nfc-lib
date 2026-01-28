@@ -1,6 +1,7 @@
 package no.entur.android.nfc.external.service.tag;
 
 import android.nfc.NdefMessage;
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import org.slf4j.Logger;
@@ -12,6 +13,10 @@ import java.util.List;
 
 import no.entur.android.nfc.wrapper.ErrorCodes;
 import no.entur.android.nfc.wrapper.INfcTag;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadata;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveMetadataResult;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TagImpl;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
@@ -20,8 +25,6 @@ public class INFcTagBinder extends INfcTag.Stub {
 	private static final Logger LOGGER = LoggerFactory.getLogger(INFcTagBinder.class);
 
 	private static final String NO_READER_MSG = "No reader";
-
-	private static final String UNSUPPORTED_OPERATION_MSG = "Unsupported operation";
 
 	protected TagProxyStore store;
 
@@ -101,19 +104,41 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean getExtendedLengthApdusSupported() throws RemoteException {
-		// LOGGER.debug("getExtendedLengthApdusSupported");
-
 		if (readerTechnology == null) {
-
 			throw new RemoteException(NO_READER_MSG);
 		}
 
 		return readerTechnology.getExtendedLengthApdusSupported();
 	}
 
-	public int getMaxTransceiveLength(int technology) throws RemoteException {
-		// LOGGER.debug("getMaxTransceiveLength");
+    @Override
+    public ParcelableTransceiveResult parcelableTranscieve(int nativeHandle, ParcelableTransceive data) throws RemoteException {
+        TagTechnology adapter = getConnected(nativeHandle);
+        if (adapter != null) {
+            if (adapter instanceof CommandTechnology) {
+                CommandTechnology technology = (CommandTechnology) adapter;
 
+                return technology.transceive(data);
+            } else {
+                throw new RemoteException("Tag technology " + adapter.getClass().getName() + " does not support transceive(..)");
+            }
+        }
+
+        return new ParcelableTransceiveResult(TransceiveResult.RESULT_TAGLOST, null);
+    }
+
+    @Override
+    public ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(ParcelableTransceiveMetadata data) throws RemoteException {
+        if (readerTechnology == null) {
+            throw new RemoteException(NO_READER_MSG);
+        }
+
+        Parcelable parcelable = readerTechnology.transceiveMetadata(data.getRequestData());
+
+        return new ParcelableTransceiveMetadataResult(parcelable);
+    }
+
+    public int getMaxTransceiveLength(int technology) throws RemoteException {
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}

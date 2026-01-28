@@ -9,6 +9,8 @@ import java.io.IOException;
 
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.android.nfc.wrapper.ParcelableTransceive;
+import no.entur.android.nfc.wrapper.ParcelableTransceiveResult;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 import no.entur.android.nfc.wrapper.tech.NfcA;
 import no.entur.android.nfc.wrapper.tech.TagTechnology;
@@ -69,7 +71,12 @@ public class WrapNfcACommandTechnology extends AbstractTagTechnology implements 
 
 	}
 
-	public byte[] transmitRaw(byte[] apdu) throws Exception {
+    @Override
+    public ParcelableTransceiveResult transceive(ParcelableTransceive parcelable) throws RemoteException {
+        throw new RuntimeException();
+    }
+
+    public byte[] transmitRaw(byte[] apdu) throws Exception {
 		return DESFireAdapter.responseAPDUToRaw(rawToRequestAPDU(apdu));
 	}
 

@@ -43,11 +43,5 @@ dependencies {
     api "io.github.jnasmartcardio:jnasmartcardio:${jnasmartcardioVersion}"
 
     api project(":utilities:websocket-client-java-lib")
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
     testImplementation "org.slf4j:slf4j-simple:$slf4jVersion"
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
 }

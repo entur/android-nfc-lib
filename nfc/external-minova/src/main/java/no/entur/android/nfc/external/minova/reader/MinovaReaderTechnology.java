@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.minova.reader;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import no.entur.android.nfc.external.service.tag.ReaderTechnology;
@@ -18,7 +19,6 @@ public class MinovaReaderTechnology implements ReaderTechnology {
 
     @Override
     public int setTimeout(int technology, int timeout) throws RemoteException {
-        // TODO Auto-generated method stub
         return ErrorCodes.SUCCESS;
     }
 
@@ -51,5 +51,10 @@ public class MinovaReaderTechnology implements ReaderTechnology {
     @Override
     public int reconnect(int handle) throws RemoteException {
         return 0;
+    }
+
+    @Override
+    public Parcelable transceiveMetadata(Parcelable parcelable) {
+        return null;
     }
 }

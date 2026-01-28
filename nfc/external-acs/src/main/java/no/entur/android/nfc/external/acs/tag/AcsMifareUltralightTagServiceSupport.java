@@ -23,6 +23,7 @@ import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
+import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.MifareUltralightTagFactory;
 import no.entur.android.nfc.external.tag.NfcADefaultCommandTechnology;
 import no.entur.android.nfc.external.tag.TechnologyType;
@@ -44,7 +45,7 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
     }
 
     @SuppressWarnings("java:S3776")
-    public TagProxy mifareUltralight(int slotNumber, byte[] atr, TagType tagType, ApduTag acsTag, ACSIsoDepWrapper wrapper, String readerName) {
+    public TagProxy mifareUltralight(int slotNumber, byte[] atr, TagType tagType, ApduTag acsTag, ACSIsoDepWrapper wrapper, String readerName, IntentEnricher extras) {
         List<TagTechnology> technologies = new ArrayList<>();
 
         Boolean canReadBlocks = null;
@@ -168,9 +169,13 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
                 return i;
             });
 
+            intent = extras.enrich(intent);
+
             LOGGER.debug("Broadcast mifare ultralight");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
+
+            tagProxy.setUid(uid);
 
             return tagProxy;
         } catch (Exception e) {

@@ -1,0 +1,12 @@
+{
+  "hf_readers": [
+    {
+      "cardATR": "3B8180018080",
+      "cardCSN": "040E317A7C4480",
+      "id": "HF0",
+      "status": "CHANGED,PRESENT"
+    }
+  ],
+  "sequence": 18324,
+  "timestamp": "1970-01-02T01:25:06Z"
+}

@@ -97,9 +97,5 @@ public class WebsocketReaderTest {
 				applicationContext.unbindService(connection);
 			}
 		}
-
-
-
-
 	}
 }

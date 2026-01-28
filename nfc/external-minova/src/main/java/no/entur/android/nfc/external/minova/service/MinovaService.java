@@ -20,6 +20,7 @@ public class MinovaService extends AbstractMinovaTcpService {
     public static final String EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG = "NEW_TAG";
     public static final String EXTRA_TAG_LEFT_FIELD_REASON_TRANSCEIVE_FAILED = "TRANSCEIVE_FAILED";
 
+    @Deprecated
     public static final String EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE = AbstractMinovaTcpService.class.getName() + ".extra.EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE";
 
     protected IsoDepTagServiceSupport isoDepTagServiceSupport;
@@ -49,6 +50,8 @@ public class MinovaService extends AbstractMinovaTcpService {
             intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
             intent.putExtra(EXTRA_TAG_LEFT_FIELD_REASON, EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG);
             intent.putExtra(EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE, currentTagProxy.getHandle());
+
+            intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, currentTagProxy.getHandle());
 
             sendBroadcast(intent, "android.permission.NFC");
 

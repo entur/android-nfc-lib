@@ -14,7 +14,6 @@ import okio.ByteString;
 public class WebSocketNfcMessageReader extends WebSocketListener {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcMessageReader.class);
-    private static final String LOG_TAG = WebSocketNfcMessageReader.class.getName();
 
     private final NfcMessageListener delegate;
 

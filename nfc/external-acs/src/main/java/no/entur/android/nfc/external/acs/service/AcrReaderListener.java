@@ -28,6 +28,7 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<Wrappe
 
 	private final Context context;
 	private Intent lastIntent;
+    private String lastReaderId;
 
 	public AcrReaderListener(Context context) {
 		this.context = context;
@@ -46,7 +47,13 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<Wrappe
 			intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_STATUS_MESSAGE, statusMessage);
 		}
 
-		sendBroadcastForNfcPermission(intent);
+        if(lastReaderId != null) {
+            intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, lastReaderId);
+        }
+
+        sendBroadcastForNfcPermission(intent);
+
+        this.lastReaderId = null;
 		this.lastIntent = intent;
 	}
 
@@ -124,10 +131,14 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<Wrappe
 
 		intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
 		intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, reader);
-
 		intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_STATUS_CODE, status);
 
+		// TODO could technically be bluetooth too for some readers
+		intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION, ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION_TYPE_USB);
+
 		sendBroadcastForNfcPermission(intent);
+
+        this.lastReaderId = reader.getId();
 		this.lastIntent = intent;
 	}
 

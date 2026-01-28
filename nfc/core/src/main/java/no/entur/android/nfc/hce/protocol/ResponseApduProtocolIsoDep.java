@@ -1,5 +1,6 @@
 package no.entur.android.nfc.hce.protocol;
 
+import android.os.Parcelable;
 import android.util.Log;
 
 import org.slf4j.Logger;
@@ -53,7 +54,17 @@ public class ResponseApduProtocolIsoDep extends IsoDep {
 		return target.handleCommandApdu(new CommandAPDU(data)).getBytes();
 	}
 
-	@Override
+    @Override
+    public <T> T transceive(Parcelable data) throws IOException {
+        throw new RuntimeException();
+    }
+
+    @Override
+    public <T> T transceiveMetadata(Parcelable c) throws IOException {
+        return null;
+    }
+
+    @Override
 	public int getMaxTransceiveLength() {
 		return 256;
 	}

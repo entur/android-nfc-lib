@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.acs.reader.command;
 
+import android.os.Parcelable;
 import android.os.RemoteException;
 
 import no.entur.android.nfc.external.service.tag.ReaderTechnology;
@@ -52,4 +53,8 @@ public class ACRReaderBluetoothTechnology implements ReaderTechnology {
 		return 0;
 	}
 
+    @Override
+    public Parcelable transceiveMetadata(Parcelable parcelable) {
+        return null;
+    }
 }

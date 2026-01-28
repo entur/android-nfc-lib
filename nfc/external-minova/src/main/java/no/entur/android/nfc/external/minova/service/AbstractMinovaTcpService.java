@@ -111,6 +111,7 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
         intent.putExtra(ExternalNfcReaderCallback.EXTRA_READER_CONTROL, mcrReader);
+        intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION, ExternalNfcReaderCallback.EXTRAS_READER_CONNECTION_TYPE_ETHERNET);
 
         sendBroadcast(intent);
     }
