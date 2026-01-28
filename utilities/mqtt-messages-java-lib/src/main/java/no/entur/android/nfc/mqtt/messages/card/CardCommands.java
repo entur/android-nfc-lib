@@ -22,8 +22,8 @@ public class CardCommands<T, C extends CardContext> {
 		this.cardAdpuMessageConverter = cardAdpuMessageConverter;
     }
 
-	public void setAdpuTransceiveTimeout(long timeout) {
-		this.adpuTranscieveTimeout = timeout;
+	public void setAdpuTranscieveTimeout(long adpuTranscieveTimeout) {
+		this.adpuTranscieveTimeout = adpuTranscieveTimeout;
 	}
 
 	public byte[] transceive(byte[] message) throws IOException  {
