@@ -304,10 +304,10 @@ public class ACR1222Commands extends ACRCommands {
 
 		// int length = (in[4] & 0xff) + 5;
 
-		byte[] adpu = new byte[responseLength];
-		System.arraycopy(in, 0, adpu, 0, adpu.length);
+		byte[] apdu = new byte[responseLength];
+		System.arraycopy(in, 0, apdu, 0, apdu.length);
 
-		CommandAPDU response = new CommandAPDU(adpu);
+		CommandAPDU response = new CommandAPDU(apdu);
 
 		if (response.getCLA() == 0xE1 && response.getP1() == 0x00 && response.getP2() == 0x00) {
 			String firmware = new String(response.getData(), Charset.forName("ASCII"));

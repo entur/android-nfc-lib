@@ -4,8 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import no.entur.android.nfc.websocket.messages.card.CardAdpuRequestMessage;
-import no.entur.android.nfc.websocket.messages.card.CardAdpuResponseMessage;
+import no.entur.android.nfc.websocket.messages.card.CardApduRequestMessage;
+import no.entur.android.nfc.websocket.messages.card.CardApduResponseMessage;
 import no.entur.android.nfc.websocket.messages.card.broadcast.CardLostMessage;
 import no.entur.android.nfc.websocket.messages.card.broadcast.CardPresentMessage;
 import no.entur.android.nfc.websocket.messages.reader.ReaderBeginPollingRequestMessage;
@@ -65,8 +65,8 @@ public class NfcMessageReader {
             case ReaderDisconnectedMessage.TYPE: return new ReaderDisconnectedMessage(id);
 
             // card
-            case CardAdpuRequestMessage.TYPE: return new CardAdpuRequestMessage(id);
-            case CardAdpuResponseMessage.TYPE: return new CardAdpuResponseMessage(id);
+            case CardApduRequestMessage.TYPE: return new CardApduRequestMessage(id);
+            case CardApduResponseMessage.TYPE: return new CardApduResponseMessage(id);
 
             // broadcast
             case CardLostMessage.TYPE: return new CardLostMessage(id);

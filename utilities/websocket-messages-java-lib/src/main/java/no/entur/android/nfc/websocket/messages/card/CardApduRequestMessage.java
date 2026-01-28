@@ -6,39 +6,39 @@ import java.io.IOException;
 
 import no.entur.android.nfc.websocket.messages.NfcMessage;
 
-public class CardAdpuRequestMessage extends NfcMessage {
+public class CardApduRequestMessage extends NfcMessage {
 
     public static final int TYPE = 103;
     
-    private byte[] adpu;
+    private byte[] apdu;
 
-	public CardAdpuRequestMessage(byte[] adpu) {
+	public CardApduRequestMessage(byte[] apdu) {
 		this(nextId());
-        this.adpu = adpu;
+        this.apdu = apdu;
 	}
 
-	public CardAdpuRequestMessage(int id) {
+	public CardApduRequestMessage(int id) {
 		super(TYPE, id);
 	}
 
-	public CardAdpuRequestMessage() {
+	public CardApduRequestMessage() {
 		this(nextId());
     }
 
 
-	public void setAdpu(byte[] adpu) {
-		this.adpu = adpu;
+	public void setApdu(byte[] apdu) {
+		this.apdu = apdu;
 	}
     
-    public byte[] getAdpu() {
-		return adpu;
+    public byte[] getApdu() {
+		return apdu;
 	}
     
     @Override
     public void write(DataOutputStream dout) throws IOException {
     	super.write(dout);
-    	dout.writeInt(adpu.length);
-    	dout.write(adpu);
+    	dout.writeInt(apdu.length);
+    	dout.write(apdu);
     }
     
     @Override
@@ -46,8 +46,8 @@ public class CardAdpuRequestMessage extends NfcMessage {
     	super.read(din);
     	
     	int count = din.readInt();
-    	adpu = new byte[count];
-    	din.readFully(adpu);
+    	apdu = new byte[count];
+    	din.readFully(apdu);
     }
 
 }
