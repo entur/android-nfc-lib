@@ -5,10 +5,10 @@ name: CodeQL Scan
 on:
   pull_request:
     branches:
-      - "main"
+      - "master"
   push:
     branches:
-      - "main"
+      - "master"
   schedule:
     - cron: "0 2 * * MON" # Run Monday at 2AM UTC
 
