@@ -111,7 +111,7 @@ ext {
 
     hivemqMqttClientVersion = '1.2.1'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
-    nettyVersion = '4.1.48.Final'
+    nettyVersion = '4.1.129.Final'
 }
 
 ext.commonDependencies = {
