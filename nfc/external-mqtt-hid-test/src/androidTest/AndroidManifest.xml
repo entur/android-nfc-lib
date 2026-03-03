@@ -11,12 +11,6 @@
         android:usesCleartextTraffic="true"
         >
 
-        <service android:name="no.entur.android.nfc.external.mqtt.test.MqttBrokerService"
-            android:label="WebSocketNfcService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice"
-            />
-
         <service android:name="no.entur.android.nfc.external.hid.HidMqttService"
             android:label="HidMqttService"
             android:exported="false"

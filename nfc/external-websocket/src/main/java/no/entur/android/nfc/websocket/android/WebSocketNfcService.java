@@ -15,7 +15,7 @@ import java.util.List;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
-import no.entur.android.nfc.external.service.AbstractService;
+import no.entur.android.nfc.external.service.AbstractForegroundService;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.tag.DefaultTransceiveResultExceptionMapper;
 import no.entur.android.nfc.external.tag.IntentEnricher;
@@ -25,7 +25,7 @@ import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
 import no.entur.android.nfc.websocket.client.WebSocketClientListener;
 import no.entur.android.nfc.websocket.messages.card.CardClient;
 
-public class WebSocketNfcService extends AbstractService implements CardClient.Listener, WebSocketClientListener {
+public class WebSocketNfcService extends AbstractForegroundService implements CardClient.Listener, WebSocketClientListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcService.class);
 

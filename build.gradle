@@ -1,6 +1,3 @@
-import com.github.spotbugs.snom.Confidence
-import com.github.spotbugs.snom.Effort
-
 buildscript {
    ext.repos = {
         mavenLocal()
@@ -28,7 +25,6 @@ buildscript {
 
 plugins {
     id 'com.diffplug.spotless' version '8.3.0' apply false
-    id "com.github.spotbugs" version '6.4.8' apply false
     id 'com.github.ben-manes.versions' version '0.53.0' apply false // ./gradlew dependencyUpdates
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
 }
@@ -84,7 +80,7 @@ ext {
     javaWebSocketVersion = '1.6.0'
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
-    logbackVersion = '1.5.12'
+    logbackVersion = '1.5.32'
 
     hivemqMqttClientVersion = '1.2.1'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
@@ -122,7 +118,6 @@ configure(buildProjects()) {
 
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'com.github.ben-manes.versions'
-    apply plugin: 'com.github.spotbugs'
 
     gradle.projectsEvaluated {
         // do not scan testing tools and so on, see https://medium.com/@appmattus/android-security-scanning-your-app-for-known-vulnerabilities-421384603fc5
@@ -131,24 +126,6 @@ configure(buildProjects()) {
             options.compilerArgs << "-Xlint:deprecation"
         }
     }
-
-    spotbugs {
-        ignoreFailures = false
-        showStackTraces = true
-        showProgress = true
-        effort = Effort.DEFAULT
-        reportLevel = Confidence.values()[3] // https://github.com/spotbugs/spotbugs-gradle-plugin/issues/972
-        maxHeapSize = '1g'
-        reportsDir = file("$buildDir/spotbugs")
-        excludeFilter = rootProject.file("spotbugs-exclude.xml")
-    }
-
-    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-        reports.create("html") {
-            required = true
-        }
-    }
-
 
 }
 

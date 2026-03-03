@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.mqtt.test;
 
+import android.app.Notification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,8 @@ import android.os.Build;
 import android.os.IBinder;
 
 import java.util.Properties;
+
+import no.entur.android.nfc.external.service.AbstractForegroundService;
 
 public class MqttBrokerServiceConnector {
 
@@ -21,6 +24,10 @@ public class MqttBrokerServiceConnector {
         private int port = -1;
 
         private Context context;
+
+        protected int notificationId;
+        protected Notification notification;
+        protected int serviceType;
 
         public Builder withTimeout(long timeout) {
             this.timeout = timeout;
@@ -37,13 +44,21 @@ public class MqttBrokerServiceConnector {
             return this;
         }
 
+        public Builder withForegroundService(int id, Notification notification, int serviceType) {
+            this.notificationId = id;
+            this.notification = notification;
+            this.serviceType = serviceType;
+            return this;
+        }
+
+
         public MqttBrokerServiceConnector build() {
             Properties properties = new Properties();
             if(port != -1) {
                 properties.put(MqttBrokerService.PORT, port);
             }
 
-            return new MqttBrokerServiceConnector(context, properties, timeout);
+            return new MqttBrokerServiceConnector(context, properties, timeout, notificationId, notification, serviceType);
         }
 
     }
@@ -57,6 +72,11 @@ public class MqttBrokerServiceConnector {
     protected MqttBrokerService.LocalBinder service;
 
     protected long timeout;
+
+    protected final int notificationId;
+    protected final Notification notification;
+    protected final int serviceType;
+
     /**
      * Class for interacting with the main interface of the service.
      */
@@ -72,14 +92,17 @@ public class MqttBrokerServiceConnector {
         }
     };
 
-    public MqttBrokerServiceConnector(Context context, long timeout) {
-        this(context, null, timeout);
+    public MqttBrokerServiceConnector(Context context, long timeout, int notificationId, Notification notification, int serviceType) {
+        this(context, null, timeout, serviceType, notification, notificationId);
     }
 
-    public MqttBrokerServiceConnector(Context context, Properties configuration, long timeout) {
+    public MqttBrokerServiceConnector(Context context, Properties configuration, long timeout, int notificationId, Notification notification, int serviceType) {
         this.context = context;
         this.configuration = configuration;
         this.timeout = timeout;
+        this.notificationId = notificationId;
+        this.notification = notification;
+        this.serviceType = serviceType;
     }
 
     public MqttBrokerServiceConnection connect() {
@@ -104,6 +127,13 @@ public class MqttBrokerServiceConnector {
         if (configuration != null && !configuration.isEmpty()) {
             intent.putExtra(MqttBrokerService.EXTRA_CONFIGURATION, configuration);
         }
+
+        if(notification != null) {
+            intent.putExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION_ID, notificationId);
+            intent.putExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION, notification);
+            intent.putExtra(AbstractForegroundService.FOREGROUND_SERVICE_TYPE, serviceType);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {

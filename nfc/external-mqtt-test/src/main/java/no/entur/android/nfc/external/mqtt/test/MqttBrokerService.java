@@ -1,23 +1,18 @@
 package no.entur.android.nfc.external.mqtt.test;
 
-import android.app.Service;
 import android.content.Intent;
-import android.content.pm.ServiceInfo;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-
-import androidx.core.app.ServiceCompat;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
-import no.entur.android.nfc.external.service.AbstractService;
+import no.entur.android.nfc.external.service.AbstractForegroundService;
 
-public class MqttBrokerService extends AbstractService {
+public class MqttBrokerService extends AbstractForegroundService {
 
     private static final String LOG_TAG = MqttBrokerService.class.getName();
 

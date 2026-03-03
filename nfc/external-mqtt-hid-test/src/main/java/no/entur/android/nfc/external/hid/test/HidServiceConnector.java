@@ -1,5 +1,6 @@
 package no.entur.android.nfc.external.hid.test;
 
+import android.app.Notification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.os.IBinder;
 
 import no.entur.android.nfc.external.hid.HidMqttService;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerService;
+import no.entur.android.nfc.external.service.AbstractForegroundService;
 
 public class HidServiceConnector {
 
@@ -34,6 +36,10 @@ public class HidServiceConnector {
         protected Context context;
 
         protected boolean logApdus = false;
+
+        protected int notificationId;
+        protected Notification notification;
+        protected int serviceType;
 
         public Builder withPort(int port) {
             this.port = port;
@@ -90,11 +96,18 @@ public class HidServiceConnector {
             return this;
         }
 
+        public Builder withForegroundService(int id, Notification notification, int serviceType) {
+            this.notificationId = id;
+            this.notification = notification;
+            this.serviceType = serviceType;
+            return this;
+        }
+
         public HidServiceConnector build() {
             if(host == null) {
                 throw new IllegalStateException("Expected host");
             }
-            return new HidServiceConnector(context, timeout, port, host, identifier, defaultWebsocketConfiguration, transceiveTimeout, connectTimeout, reconnectInitialDelay, reconnectMaxDelay, logApdus);
+            return new HidServiceConnector(context, timeout, port, host, identifier, defaultWebsocketConfiguration, transceiveTimeout, connectTimeout, reconnectInitialDelay, reconnectMaxDelay, logApdus, notificationId, notification, serviceType);
         }
 
     }
@@ -122,6 +135,10 @@ public class HidServiceConnector {
 
     protected final boolean logApdus;
 
+    protected final int notificationId;
+    protected final Notification notification;
+    protected final int serviceType;
+
     /**
      * Class for interacting with the main interface of the service.
      */
@@ -137,7 +154,7 @@ public class HidServiceConnector {
         }
     };
 
-    public HidServiceConnector(Context context, long timeout, int port, String host, String identifier, boolean defaultWebsocketConfiguration, long transceiveTimeout, long connectTimeout, long reconnectInitialDelay, long reconnectMaxDelay, boolean logApdus) {
+    public HidServiceConnector(Context context, long timeout, int port, String host, String identifier, boolean defaultWebsocketConfiguration, long transceiveTimeout, long connectTimeout, long reconnectInitialDelay, long reconnectMaxDelay, boolean logApdus, int notificationId, Notification notification, int serviceType) {
         this.context = context;
         this.timeout = timeout;
         this.port = port;
@@ -149,6 +166,9 @@ public class HidServiceConnector {
         this.reconnectInitialDelay = reconnectInitialDelay;
         this.reconnectMaxDelay = reconnectMaxDelay;
         this.logApdus = logApdus;
+        this.notificationId = notificationId;
+        this.notification = notification;
+        this.serviceType = serviceType;
     }
 
     public HidServiceConnection connect() {
@@ -199,6 +219,12 @@ public class HidServiceConnector {
 
         if(logApdus) {
             intent.putExtra(HidMqttService.LOG_APDUS, true);
+        }
+
+        if(notification != null) {
+            intent.putExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION_ID, notificationId);
+            intent.putExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION, notification);
+            intent.putExtra(AbstractForegroundService.FOREGROUND_SERVICE_TYPE, serviceType);
         }
 
         intent.putExtra(HidMqttService.MQTT_CLIENT_DEFAULT_WEBSOCKET_CONFIGURATION, defaultWebsocketConfiguration);

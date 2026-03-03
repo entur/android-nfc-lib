@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
-import no.entur.android.nfc.external.service.AbstractService;
+import no.entur.android.nfc.external.service.AbstractForegroundService;
 
 /**
  *
@@ -40,7 +40,7 @@ import no.entur.android.nfc.external.service.AbstractService;
  *
  */
 
-public class HidMqttService extends AbstractService implements MqttClientConnectedListener, MqttClientDisconnectedListener {
+public class HidMqttService extends AbstractForegroundService implements MqttClientConnectedListener, MqttClientDisconnectedListener {
 
     public static final String ACTION_MQTT_CONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_CONNECTED";
     public static final String ACTION_MQTT_DISCONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_DISCONNECTED";
