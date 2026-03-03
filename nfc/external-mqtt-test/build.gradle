@@ -13,8 +13,6 @@ dependencies {
     api ("org.java-websocket:Java-WebSocket:${javaWebSocketVersion}") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    //api "androidx.test:rules:${androidxTestRulesVersion}"
-
 }
 
 
