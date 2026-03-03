@@ -8,13 +8,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ServiceTestRule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
@@ -44,7 +40,6 @@ import no.entur.android.nfc.external.hid.test.configuration.DefaultAtr210Configu
 import no.entur.android.nfc.external.hid.test.heartbeat.Atr210HeartbeatEmulator;
 import no.entur.android.nfc.external.hid.test.tag.Atr210MqttTag;
 import no.entur.android.nfc.external.hid.test.tag.Atr210TagEmulator;
-import no.entur.android.nfc.external.mqtt.test.MqttBrokerService;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnection;
 import no.entur.android.nfc.external.mqtt.test.MqttBrokerServiceConnector;
 import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
@@ -59,9 +54,6 @@ public class HidMqttReaderTest {
 
     @Rule
     public RuleChain chain;
-
-    @Rule
-    public ServiceTestRule serviceTestRule = new ServiceTestRule();
 
     public HidMqttReaderTest() {
         chain = RuleChain.outerRule(rule);
@@ -104,15 +96,6 @@ public class HidMqttReaderTest {
         Context applicationContext = ApplicationProvider.getApplicationContext();
 
         MqttBrokerServiceConnector brokerConnector = MqttBrokerServiceConnector.newBuilder().withContext(applicationContext).build();
-
-        Intent intent = new Intent(
-                InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                MqttBrokerService.class
-        );
-
-        MqttBrokerService.LocalBinder binder = (MqttBrokerService.LocalBinder) serviceTestRule.bindService(intent);
-
-        System.out.println("Got " + binder);
 
         MqttBrokerServiceConnection brokerConnection = brokerConnector.connect(true);
         try {
