@@ -1,6 +1,3 @@
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
-}
 include ":nfc:wrapper", ":nfc:wrapper-utils", ":nfc:wrapper-test"
 include ":nfc:core", ":nfc:external", ":utilities:tcp-server-java-lib", ":nfc:external-acs", ":nfc:external-minova", ":nfc:external-test", ':nfc:external-mqtt-hid', ":nfc:external-mqtt-test", ':nfc:external-mqtt-hid-test'
 include ":utilities:websocket-messages-java-lib", ":nfc:external-websocket", ":utilities:websocket-server-java-lib", ":utilities:websocket-client-java-lib", ":utilities:mqtt-messages-java-lib", ":utilities:mqtt3-client-java-lib", ":utilities:mqtt3-broker-java-lib"
