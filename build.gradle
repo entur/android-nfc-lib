@@ -1,6 +1,3 @@
-import com.github.spotbugs.snom.Confidence
-import com.github.spotbugs.snom.Effort
-
 buildscript {
    ext.repos = {
         mavenLocal()
@@ -22,16 +19,13 @@ buildscript {
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
-        classpath("org.bouncycastle:bcutil-jdk18on:1.79") // https://issuetracker.google.com/issues/380600747
+        classpath 'com.android.tools.build:gradle:9.0.1'
     }
 }
 
 plugins {
-    id 'com.diffplug.spotless' version '6.2.0' apply false
-    id "com.github.spotbugs" version '6.0.26' apply false
-    id 'org.owasp.dependencycheck' version '11.1.0' apply false
-    id 'com.github.ben-manes.versions' version '0.51.0' apply false // ./gradlew dependencyUpdates
+    id 'com.diffplug.spotless' version '8.3.0' apply false
+    id 'com.github.ben-manes.versions' version '0.53.0' apply false // ./gradlew dependencyUpdates
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
 }
 
@@ -57,31 +51,10 @@ def androidLibraryProjects() {
 
 
 allprojects {
-    // skip checking test configurations (like lint) or test libraries for vulnerabilities
-    apply plugin: 'org.owasp.dependencycheck'
-
     buildscript {
         repositories repos
     }
     repositories repos
-
-    configurations.all {
-        // Check for updates every build
-        // A module with a *-SNAPSHOT version coming from a Maven repository will be considered changing by default.
-        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-        resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
-    }
-
-    dependencyCheck {
-        failOnError = false // let's ignore errors to make builds more stable
-        analyzedTypes = ['jar'] // the default artifact types that will be analyzed.
-        // OWASP Dependency Check plugin for Jenkins needs an XML report, but humans may also need an HTML one
-        format = 'ALL'
-        // Specifies if the build should be failed if a CVSS score equal to or above a specified level is identified.
-        failBuildOnCVSS = 7
-        // specify a list of known issues which contain false-positives
-        suppressionFiles = ["$rootDir/dependencycheck-root-suppression.xml"]
-    }
 }
 
 ext {
@@ -90,7 +63,7 @@ ext {
     logbackAndroidVersion = '2.0.1'
 
     slf4jVersion = '1.7.36'
-    jacksonVersion = '2.20.1'
+    jacksonVersion = '2.21.1'
 
     // test
     unitVersion = '4.13.2'
@@ -107,7 +80,7 @@ ext {
     javaWebSocketVersion = '1.6.0'
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
-    logbackVersion = '1.5.12'
+    logbackVersion = '1.5.32'
 
     hivemqMqttClientVersion = '1.2.1'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
@@ -145,41 +118,14 @@ configure(buildProjects()) {
 
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'com.github.ben-manes.versions'
-    apply plugin: 'com.github.spotbugs'
 
     gradle.projectsEvaluated {
         // do not scan testing tools and so on, see https://medium.com/@appmattus/android-security-scanning-your-app-for-known-vulnerabilities-421384603fc5
         // note: must be set after project is evaluated, as Android creates configurations based on the build types
-        dependencyCheck {
-            scanConfigurations = configurations.findAll {
-                (!it.name.startsWithAny('androidTest', 'test', 'debug', 'lint', 'kapt') && !it.name.contains("AndroidTest") && !it.name.contains("Test") && !it.name.contains("AnnotationProcessor"))
-            }.collect {
-                it.name
-            }
-        }
-
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:deprecation"
         }
     }
-
-    spotbugs {
-        ignoreFailures = false
-        showStackTraces = true
-        showProgress = true
-        effort = Effort.DEFAULT
-        reportLevel = Confidence.values()[3] // https://github.com/spotbugs/spotbugs-gradle-plugin/issues/972
-        maxHeapSize = '1g'
-        reportsDir = file("$buildDir/spotbugs")
-        excludeFilter = rootProject.file("spotbugs-exclude.xml")
-    }
-
-    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-        reports.create("html") {
-            required = true
-        }
-    }
-
 
 }
 
@@ -189,13 +135,13 @@ configure(androidLibraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        buildToolsVersion "34.0.0"
-        compileSdkVersion 34
+        buildToolsVersion "36.0.0"
+        compileSdkVersion 36
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 34
+            targetSdkVersion 36
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')

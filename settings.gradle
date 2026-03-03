@@ -25,7 +25,5 @@ gradle.ext.xmlReportPaths = findJacocoReports(rootProject, "")
 buildCache {
     local {
         directory = new File(rootDir, 'build-cache')
-        removeUnusedEntriesAfterDays = 1
     }
 }
-include ':utilities:example'

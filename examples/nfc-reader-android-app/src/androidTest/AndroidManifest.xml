@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
+
     <application>
-        <service android:name="no.entur.android.nfc.external.mqtt.test.MqttBrokerService" />
+        <service android:name="no.entur.android.nfc.external.mqtt.test.MqttBrokerService"
+            android:label="MqttBrokerService"
+            android:exported="true"
+            android:enabled="true"
+            android:foregroundServiceType="connectedDevice"
+        />
     </application>
 
 </manifest>
