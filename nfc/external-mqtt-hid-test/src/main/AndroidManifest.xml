@@ -3,11 +3,22 @@
 
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
 
     <application >
 
-        <service android:name="no.entur.android.nfc.external.mqtt.test.MqttBrokerService" />
-        <service android:name="no.entur.android.nfc.external.hid.HidMqttService" />
+        <service android:name="no.entur.android.nfc.external.mqtt.test.MqttBrokerService"
+            android:label="WebSocketNfcService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"
+            />
+
+        <service android:name="no.entur.android.nfc.external.hid.HidMqttService"
+            android:label="HidMqttService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"
+            />
 
     </application>
 

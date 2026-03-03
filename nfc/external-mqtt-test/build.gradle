@@ -2,7 +2,7 @@ android {
     defaultConfig {
         minSdkVersion 24
     }
-    namespace "no.entur.android.nfc.external.hwb.test"
+    namespace "no.entur.android.nfc.external.mqtt.test"
 }
 
 dependencies {
@@ -13,6 +13,7 @@ dependencies {
     api ("org.java-websocket:Java-WebSocket:${javaWebSocketVersion}") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
+    //api "androidx.test:rules:${androidxTestRulesVersion}"
 
 }
 

@@ -16,6 +16,8 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.*;
 import static androidx.test.espresso.matcher.ViewMatchers.*;
 
+import android.content.Intent;
+
 import java.util.concurrent.ThreadPoolExecutor;
 
 @RunWith(androidx.test.ext.junit.runners.AndroidJUnit4.class)
@@ -49,7 +51,7 @@ public class MockTagTest {
 					)
 					.build();
 
-			activity.onExternalTagDiscovered(mockTag, null);
+			activity.onExternalTagDiscovered(mockTag, new Intent("mock"));
 		});
 
 		waitForThreadExecutor();

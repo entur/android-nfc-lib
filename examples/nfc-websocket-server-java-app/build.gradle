@@ -16,7 +16,7 @@ ext.javaMainClass = "no.entur.android.nfc.websocket.example.server.Main"
 
 
 application {
-    mainClassName = javaMainClass
+    mainClass.set(javaMainClass)
 }
 
 

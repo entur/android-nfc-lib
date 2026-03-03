@@ -2,17 +2,22 @@ package no.entur.android.nfc.external.mqtt.test;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.core.app.ServiceCompat;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import no.entur.android.nfc.external.mqtt3.broker.Mqtt3WebSocketBroker;
+import no.entur.android.nfc.external.service.AbstractService;
 
-public class MqttBrokerService extends Service {
+public class MqttBrokerService extends AbstractService {
 
     private static final String LOG_TAG = MqttBrokerService.class.getName();
 
@@ -39,7 +44,7 @@ public class MqttBrokerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "Starting " + MqttBrokerService.class.getName() + " service");
+        super.onStartCommand(intent, flags, startId);
 
         createBroker(intent);
         return START_STICKY;

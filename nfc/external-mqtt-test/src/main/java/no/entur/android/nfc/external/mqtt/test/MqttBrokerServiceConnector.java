@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
 
 import java.util.Properties;
@@ -103,7 +104,11 @@ public class MqttBrokerServiceConnector {
         if (configuration != null && !configuration.isEmpty()) {
             intent.putExtra(MqttBrokerService.EXTRA_CONFIGURATION, configuration);
         }
-        context.startService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
     }
 
     public void stop() {
