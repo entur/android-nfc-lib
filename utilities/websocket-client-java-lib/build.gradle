@@ -2,7 +2,7 @@
 repositories repos
 
 ext {
-    junitJupiterVersion = '5.8.2'
+    junitJupiterVersion = '6.0.3'
 }
 
 dependencies {
