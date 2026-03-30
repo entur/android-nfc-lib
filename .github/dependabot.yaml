@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directories:
+      - "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: "github-actions"
+    directory: ".github/workflows"
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: "daily"
+

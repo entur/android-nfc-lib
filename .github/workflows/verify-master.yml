@@ -12,6 +12,9 @@ jobs:
         runs-on:
             labels: ubuntu-latest
         timeout-minutes: 30
+        # no secrets necessary
+        permissions:
+          contents: read
         steps:
             - uses: actions/checkout@v4
             - name: Set up JDK 21
