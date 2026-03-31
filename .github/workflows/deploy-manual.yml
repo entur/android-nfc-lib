@@ -19,7 +19,7 @@ jobs:
           java-version: 21
           distribution: temurin
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Build
         run: |
           ./gradlew build --info --stacktrace
@@ -40,7 +40,7 @@ jobs:
           java-version: 21
           distribution: temurin
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Configure git user
         run: |
           git config pull.rebase false
