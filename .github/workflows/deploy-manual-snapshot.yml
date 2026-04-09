@@ -16,7 +16,7 @@ jobs:
           java-version: 21
           distribution: temurin
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Gradle publish snapshot artifacts
         run: |
           echo $SONATYPE_GPG_KEY | base64 --decode | gpg --batch --no-tty --import --yes
