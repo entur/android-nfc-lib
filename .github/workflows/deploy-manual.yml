@@ -52,7 +52,7 @@ jobs:
         id: tag
         run: |
           # https://github.com/gradle/gradle/issues/29747
-          ./gradlew -b version.gradle toReleaseVersion --info --stacktrace --no-build-cache
+          ./gradlew toReleaseVersion --info --stacktrace --no-build-cache
           # burn current version into java lib
           git add gradle.properties build.gradle
           GRADLE_VERSION=$(cat ./gradle.properties | grep "version=" | cut -d'=' -f2)
@@ -63,7 +63,7 @@ jobs:
       - name: Prepare for next development version (without pushing)
         id: snapshot
         run: |
-          ./gradlew -b version.gradle nextPatchSnapshotVersion --info --stacktrace --no-build-cache
+          ./gradlew nextPatchSnapshotVersion --info --stacktrace --no-build-cache
           git add gradle.properties build.gradle
           git commit -m "Prepare next development version [ci skip]"
           snapshotHash=$(git rev-parse HEAD)
