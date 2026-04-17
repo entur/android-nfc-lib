@@ -84,7 +84,7 @@ ext {
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.32'
 
-    hivemqMqttClientVersion = '1.2.1'
+    hivemqMqttClientVersion = '1.3.12'
     hwbMessagesVersion = "1.0.0-SNAPSHOT"
     nettyVersion = '4.1.48.Final'
 }
