@@ -62,7 +62,7 @@ allprojects {
 ext {
     // note: see abt alignment rule
     androidxAppcompatVersion = '1.7.0'
-    logbackAndroidVersion = '2.0.1'
+    logbackAndroidVersion = '3.0.0'
 
     slf4jVersion = '1.7.36'
     jacksonVersion = '2.21.1'
