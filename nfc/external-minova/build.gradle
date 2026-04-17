@@ -1,6 +1,6 @@
 android {
     defaultConfig {
-        minSdk 23
+        minSdkVersion 23
     }
     namespace "no.entur.android.nfc.external.minova"
 

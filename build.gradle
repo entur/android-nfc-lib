@@ -19,7 +19,7 @@ buildscript {
 
     repositories repos
     dependencies {
-        classpath 'com.android.tools.build:gradle:9.0.1'
+        classpath 'com.android.tools.build:gradle:9.1.1'
     }
 }
 
@@ -137,13 +137,13 @@ configure(androidLibraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        buildToolsVersion "36.0.0"
-        compileSdkVersion 36
+        buildToolsVersion "34.0.0"
+        compileSdkVersion 34
         testOptions.unitTests.includeAndroidResources = true
 
         defaultConfig {
             // set minSdkVersion per subproject
-            targetSdkVersion 36
+            targetSdkVersion 34
             // versions are copied here from the properties to improve build time. See the version.gradle script.
             versionCode Integer.parseInt(project.findProperty('versionCode'))
             versionName project.findProperty('version')
@@ -222,10 +222,38 @@ configure(androidLibraryProjects()) {
     }
 
     afterEvaluate {
+
+        tasks.named("sourceReleaseJar") {
+            dependsOn "deleteEmptyAidlJavaFiles"
+
+        }
+
+        tasks.register('deleteEmptyAidlJavaFiles') {
+            group = 'Custom'
+            description = 'Workaround for empty aidl files crash in sources task'
+            doLast {
+                def subfolderName = "generated/aidl_source_output_dir"
+
+                def targetDir = file("${layout.buildDirectory.asFile.get()}/$subfolderName")
+                if (targetDir.exists()) {
+                    fileTree(targetDir).visit { FileVisitDetails details ->
+                        if (!details.directory && details.file.length() == 0) {
+                            println "Deleting empty file: ${details.file.absolutePath}"
+                            details.file.delete()
+                        }
+                    }
+                }
+            }
+            // lets hope this does not break anything in the jar, try running the important stuff first
+            dependsOn("createFullJarRelease")
+        }
+
         publishing {
             publications {
                 release(MavenPublication) {
-                    from components.release
+                    afterEvaluate {
+                        from components.release
+                    }
 
                     groupId 'no.entur.android.nfc'
                     artifactId "$project.ext.artifactId"
