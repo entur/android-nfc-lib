@@ -9,6 +9,12 @@ public class WrappedAcrReader {
     private final AcrReader acrReader;
 
     public WrappedAcrReader(ReaderWrapper readerWrapper, AcrReader acrReader) {
+        if(readerWrapper == null) {
+            throw new IllegalArgumentException("ReaderWrapper must not be null");
+        }
+        if(acrReader == null) {
+            throw new IllegalArgumentException("ACR reader must not be null");
+        }
         this.readerWrapper = readerWrapper;
         this.acrReader = acrReader;
     }
