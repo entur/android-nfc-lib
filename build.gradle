@@ -225,10 +225,10 @@ configure(androidLibraryProjects()) {
 
         tasks.named("sourceReleaseJar") {
             dependsOn "deleteEmptyAidlJavaFiles"
+
         }
 
         tasks.register('deleteEmptyAidlJavaFiles') {
-            // lets hope this does not break anything in the jar
             group = 'Custom'
             description = 'Workaround for empty aidl files crash in sources task'
             doLast {
@@ -244,6 +244,8 @@ configure(androidLibraryProjects()) {
                     }
                 }
             }
+            // lets hope this does not break anything in the jar, try running the important stuff first
+            dependsOn("createFullJarRelease")
         }
 
         publishing {
