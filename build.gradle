@@ -78,7 +78,7 @@ ext {
     mockitoVersion = '5.6.0'
     byteBuddyVersion = '1.14.10'
 
-    okHttp3Version = '4.12.0'
+    okHttp3Version = '5.3.2'
     javaWebSocketVersion = '1.6.0'
     junitJupiterVersion = '5.11.3'
     jnasmartcardioVersion = '0.2.7'
