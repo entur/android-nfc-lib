@@ -1,16 +1,37 @@
 version: 2
 updates:
-  - package-ecosystem: "gradle"
+  - package-ecosystem: gradle
     directories:
       - "/"
-    schedule:
-      interval: "daily"
     cooldown:
       default-days: 7
+      exclude:
+        - "no.entur.*"
+        - "org.entur.*"
+        - "io.entur.*"
+    groups:
+      entur-dependencies:
+        patterns:
+          - "no.entur*"
+          - "org.entur*"
+        update-types:
+          - "patch"
+          - "minor"
+    schedule:
+      interval: "daily"
+
   - package-ecosystem: "github-actions"
     directory: ".github/workflows"
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "entur/*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "actions/*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     schedule:
       interval: "daily"
-

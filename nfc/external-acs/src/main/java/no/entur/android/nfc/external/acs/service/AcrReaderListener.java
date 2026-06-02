@@ -65,7 +65,7 @@ public class AcrReaderListener implements ExternalNfcReaderStatusListener<Wrappe
 		try {
 			String name = reader.getName();
 
-			String firmware = "unkown";
+			String firmware = "unknown";
 			try {
 				firmware = reader.getFirmware();
 			} catch (Exception e) {

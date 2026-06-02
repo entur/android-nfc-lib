@@ -34,7 +34,7 @@ public abstract class AbstractForegroundService extends Service {
 	}
 
 	public void handleForegroundService(Intent intent) {
-		if (intent.hasExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION)) {
+		if (intent != null && intent.hasExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION)) {
 			Notification notification;
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 				notification = intent.getParcelableExtra(AbstractForegroundService.FOREGROUND_NOTIFICATION, Notification.class);

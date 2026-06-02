@@ -22,10 +22,13 @@ public class ReaderWrapper {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReaderWrapper.class);
 
-	private Reader reader;
+	private final Reader reader;
 
-	public ReaderWrapper(UsbManager mManager) {
-		this.reader = new Reader(mManager);
+	public ReaderWrapper(UsbManager manager) {
+		if(manager == null) {
+			throw new IllegalArgumentException("UsbManager must not be null");
+		}
+		this.reader = new Reader(manager);
 	}
 
 	public boolean isSupported(UsbDevice device) {
