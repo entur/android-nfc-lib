@@ -65,7 +65,7 @@ ext {
     logbackAndroidVersion = '2.0.1'
 
     slf4jVersion = '1.7.36'
-    jacksonVersion = '2.21.3'
+    jacksonVersion = '2.21.4'
 
     // test
     unitVersion = '4.13.2'
