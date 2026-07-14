@@ -96,7 +96,9 @@ public final class NdefImpl extends Ndef {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 mNdefMsg = extras.getParcelable(EXTRA_NDEF_MSG, NdefMessage.class);
             } else {
-                mNdefMsg = extras.getParcelable(EXTRA_NDEF_MSG);
+                @SuppressWarnings("deprecation")
+                NdefMessage msg = extras.getParcelable(EXTRA_NDEF_MSG);
+                mNdefMsg = msg;
             }
             mNdefType = extras.getInt(EXTRA_NDEF_TYPE);
         } else {
