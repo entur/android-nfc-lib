@@ -62,9 +62,9 @@ allprojects {
 ext {
     // note: see abt alignment rule
     androidxAppcompatVersion = '1.7.0'
-    logbackAndroidVersion = '2.0.1'
+    logbackAndroidVersion = '3.0.0'
 
-    slf4jVersion = '1.7.36'
+    slf4jVersion = '2.0.18'
     jacksonVersion = '2.22.0'
 
     // test
@@ -80,12 +80,11 @@ ext {
 
     okHttp3Version = '4.12.0'
     javaWebSocketVersion = '1.6.0'
-    junitJupiterVersion = '5.11.3'
+    junitJupiterVersion = '5.14.4'
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.34'
 
     hivemqMqttClientVersion = '1.3.14'
-    hwbMessagesVersion = "1.0.0-SNAPSHOT"
     nettyVersion = '4.1.133.Final'
 }
 
@@ -137,7 +136,7 @@ configure(androidLibraryProjects()) {
     apply plugin: 'com.android.library'
 
     android {
-        buildToolsVersion "34.0.0"
+        buildToolsVersion "36.0.0"
         compileSdkVersion 34
         testOptions.unitTests.includeAndroidResources = true
 
@@ -225,7 +224,6 @@ configure(androidLibraryProjects()) {
 
         tasks.named("sourceReleaseJar") {
             dependsOn "deleteEmptyAidlJavaFiles"
-
         }
 
         tasks.register('deleteEmptyAidlJavaFiles') {
