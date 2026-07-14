@@ -25,6 +25,7 @@ import no.entur.android.nfc.wrapper.TagImpl;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.TagLostException;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -92,7 +93,11 @@ public final class NdefImpl extends Ndef {
         if (extras != null) {
             mMaxNdefSize = extras.getInt(EXTRA_NDEF_MAXLENGTH);
             mCardState = extras.getInt(EXTRA_NDEF_CARDSTATE);
-            mNdefMsg = extras.getParcelable(EXTRA_NDEF_MSG);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mNdefMsg = extras.getParcelable(EXTRA_NDEF_MSG, NdefMessage.class);
+            } else {
+                mNdefMsg = extras.getParcelable(EXTRA_NDEF_MSG);
+            }
             mNdefType = extras.getInt(EXTRA_NDEF_TYPE);
         } else {
             throw new NullPointerException("NDEF tech extras are null.");
