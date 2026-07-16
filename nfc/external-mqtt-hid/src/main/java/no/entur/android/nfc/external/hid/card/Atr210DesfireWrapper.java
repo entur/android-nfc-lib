@@ -243,7 +243,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
             byte[] request = wrapMessage(nextCommand, commandMessage, offset, nextLength);
 
             byte[] response = transceive(request);
-            if (response[response.length - 2] != STATUS_OK) {
+            if (response.length <= 1 || response[response.length - 2] != STATUS_OK) {
                 return response;
             }
 

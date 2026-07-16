@@ -1,11 +1,15 @@
 package no.entur.android.nfc.external.hid;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ServiceCompat;
 
 import com.hivemq.client.mqtt.lifecycle.MqttClientConnectedContext;
 import com.hivemq.client.mqtt.lifecycle.MqttClientConnectedListener;
@@ -28,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
+import no.entur.android.nfc.external.service.AbstractForegroundService;
 
 /**
  *
@@ -35,7 +40,7 @@ import no.entur.android.nfc.external.ExternalNfcServiceCallback;
  *
  */
 
-public class HidMqttService extends Service implements MqttClientConnectedListener, MqttClientDisconnectedListener {
+public class HidMqttService extends AbstractForegroundService implements MqttClientConnectedListener, MqttClientDisconnectedListener {
 
     public static final String ACTION_MQTT_CONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_CONNECTED";
     public static final String ACTION_MQTT_DISCONNECTED = ExternalNfcServiceCallback.class.getName() + ".action.MQTT_DISCONNECTED";
@@ -73,29 +78,38 @@ public class HidMqttService extends Service implements MqttClientConnectedListen
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        LOGGER.info("Starting " + HidMqttService.class.getName() + " service");
-
-        boolean logApdus = intent.getBooleanExtra(LOG_APDUS, false);
-
-        if(handler == null) {
-            MqttServiceClient mqttServiceClient = createMqttServiceClient(intent);
-
-            long transceiveTimeout = intent.getLongExtra(MQTT_CLIENT_TRANSCEIVE_TIMEOUT, 1000);
-
-            handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout, logApdus);
-        } else {
-            handler.setLogApdus(logApdus);
+        if(intent == null && handler == null) {
+            LOGGER.error("Unable to start " + getClass().getName() + ", no input intent and no existing handler");
+            Intent i = new Intent();
+            i.setAction(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
+            sendBroadcast(i, HidMqttService.ANDROID_PERMISSION_NFC);
+            stopSelf(startId);
+            return START_NOT_STICKY;
         }
+        super.onStartCommand(intent, flags, startId);
 
-        boolean autoConfigureReaders = intent.getBooleanExtra(AUTO_NFC_READER_CONFIGURATION, true);
-        if(autoConfigureReaders) {
-            boolean autoEnableHfReader = intent.getBooleanExtra(NFC_HF_READER, true);
-            boolean autoEnableSamReader = intent.getBooleanExtra(NFC_SAM_READER, false);
-            handler.enableNfcAutoNfcConfiguration(autoEnableHfReader, autoEnableSamReader);
-        } else {
-            handler.disableNfcAutoNfcConfiguration();
+        if(intent != null) {
+            boolean logApdus = intent.getBooleanExtra(LOG_APDUS, false);
+
+            if (handler == null) {
+                MqttServiceClient mqttServiceClient = createMqttServiceClient(intent);
+
+                long transceiveTimeout = intent.getLongExtra(MQTT_CLIENT_TRANSCEIVE_TIMEOUT, 1000);
+
+                handler = new Atr210MqttHandler(this, mqttServiceClient, transceiveTimeout, logApdus);
+            } else {
+                handler.setLogApdus(logApdus);
+            }
+
+            boolean autoConfigureReaders = intent.getBooleanExtra(AUTO_NFC_READER_CONFIGURATION, true);
+            if (autoConfigureReaders) {
+                boolean autoEnableHfReader = intent.getBooleanExtra(NFC_HF_READER, true);
+                boolean autoEnableSamReader = intent.getBooleanExtra(NFC_SAM_READER, false);
+                handler.enableNfcAutoNfcConfiguration(autoEnableHfReader, autoEnableSamReader);
+            } else {
+                handler.disableNfcAutoNfcConfiguration();
+            }
         }
-
         connectInBackground();
 
         handler.broadcastStarted();

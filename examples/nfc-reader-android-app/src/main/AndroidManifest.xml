@@ -4,6 +4,8 @@
     <uses-feature android:name="android.hardware.usb.host" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
 
     <uses-feature
         android:name="android.hardware.nfc"
@@ -51,6 +53,7 @@
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
 -->
+            <!--
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
@@ -59,7 +62,7 @@
             <meta-data
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/accessory_filter" />
-
+-->
         </activity>
 
         <activity
@@ -90,13 +93,17 @@
             -->
         </service>
 
-        <service android:name="no.entur.android.nfc.websocket.android.WebSocketNfcService" />
+        <service android:name="no.entur.android.nfc.websocket.android.WebSocketNfcService"
+            android:label="WebSocketNfcService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"
+        />
 
         <service android:name="no.entur.android.nfc.external.hid.HidMqttService"
             android:label="HidMqttService"
             android:exported="false"
-            >
-        </service>
+            android:foregroundServiceType="connectedDevice"
+            />
 
     </application>
 

@@ -105,6 +105,7 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		super.onStartCommand(intent, flags, startId);
 
 		broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
 
