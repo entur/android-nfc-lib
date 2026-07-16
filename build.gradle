@@ -80,7 +80,7 @@ ext {
 
     okHttp3Version = '4.12.0'
     javaWebSocketVersion = '1.6.0'
-    junitJupiterVersion = '5.14.4'
+    junitJupiterVersion = '6.1.1'
     jnasmartcardioVersion = '0.2.7'
     logbackVersion = '1.5.38'
 
