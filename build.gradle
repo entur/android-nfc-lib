@@ -82,7 +82,7 @@ ext {
     javaWebSocketVersion = '1.6.0'
     junitJupiterVersion = '5.14.4'
     jnasmartcardioVersion = '0.2.7'
-    logbackVersion = '1.5.37'
+    logbackVersion = '1.5.38'
 
     hivemqMqttClientVersion = '1.3.16'
     nettyVersion = '4.1.135.Final'
