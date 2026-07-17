@@ -50,26 +50,6 @@ public class AcrMfUlReaderWriter implements MfUlReaderWriter {
 	public MfBlock[] readBlock(int startPage, int pagesToRead) throws Exception {
 		MfBlock[] returnBlocks = new MfBlock[pagesToRead];
 
-		/*
-		 * // max 4 pages per read using this command int reads = pagesToRead / 4; if(pagesToRead % 4 != 0) { reads++; } Log.d(TAG, "Read " + pagesToRead +
-		 * " pages in " + reads + " reads"); for (int i = 0; i < reads; i++) { int range = Math.min(4, pagesToRead - (i * 4)); //Command readBlock = new
-		 * Command(Apdu.INS_READ_BINARY, 0x00, startPage + i * 4, range * 4);
-		 * 
-		 * Log.d(TAG, "Read from page " + (startPage + i * 4) + " for " + (range * 4) + " bytes");
-		 * 
-		 * CommandAPDU readBlock = new CommandAPDU(Apdu.CLS_PTS, Apdu.INS_READ_BINARY, 0x00, startPage + i * 4, range * 4);
-		 * 
-		 * ResponseAPDU readBlockResponse = new ResponseAPDU(tag.transmit(readBlock.getBytes()));
-		 * 
-		 * if (readBlockResponse.isFailure()) { throw new MfException("Reading " + range + " blocks failed. Page: " + (startPage + i * 4) + ", Response: " +
-		 * readBlockResponse); }
-		 * 
-		 * byte[] data = readBlockResponse.getData();
-		 * 
-		 * for(int k = 0; k < range; k++) { byte[] block = new byte[4]; System.arraycopy(data, k * 4, block, 0, 4); returnBlocks[(i * 4) + k] = new
-		 * DataBlock(block); } }
-		 */
-
 		for (int currentPage = 0; currentPage < pagesToRead; currentPage++) {
 			int pageNumber = startPage + currentPage;
 
