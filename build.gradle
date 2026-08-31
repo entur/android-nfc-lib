@@ -25,7 +25,7 @@ buildscript {
 
 plugins {
     id 'com.diffplug.spotless' version '8.9.0' apply false
-    id 'com.github.ben-manes.versions' version '0.60.0' apply false // ./gradlew dependencyUpdates
+    id 'com.github.ben-manes.versions' version '0.61.0' apply false // ./gradlew dependencyUpdates
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
 }
 
@@ -65,7 +65,7 @@ ext {
     logbackAndroidVersion = '3.0.0'
 
     slf4jVersion = '2.0.18'
-    jacksonVersion = '2.22.1'
+    jacksonVersion = '2.22.2'
 
     // test
     unitVersion = '4.13.2'
@@ -76,15 +76,15 @@ ext {
     googleTruthVersion = '1.4.5'
     baristaVersion = '4.3.0'
     mockitoVersion = '5.6.0'
-    byteBuddyVersion = '1.18.11'
+    byteBuddyVersion = '1.18.12'
 
     okHttp3Version = '4.12.0'
     javaWebSocketVersion = '1.6.0'
     junitJupiterVersion = '5.14.4'
     jnasmartcardioVersion = '0.2.7'
-    logbackVersion = '1.6.1'
+    logbackVersion = '1.6.2'
 
-    hivemqMqttClientVersion = '1.3.17'
+    hivemqMqttClientVersion = '1.4.0'
     nettyVersion = '4.1.135.Final'
 }
 
