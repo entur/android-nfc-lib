@@ -85,7 +85,7 @@ ext {
     logbackVersion = '1.6.2'
 
     hivemqMqttClientVersion = '1.4.0'
-    nettyVersion = '4.1.135.Final'
+    nettyVersion = '4.1.137.Final'
 }
 
 ext.commonDependencies = {
