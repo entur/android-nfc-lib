@@ -9,6 +9,9 @@ updates:
         - "no.entur.*"
         - "org.entur.*"
         - "io.entur.*"
+    ignore:
+      - dependency-name: "io.netty:*"
+      - dependency-name: "io.netty.*:*"
     groups:
       entur-dependencies:
         patterns:
