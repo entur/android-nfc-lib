@@ -1,0 +1,37 @@
+android {
+    defaultConfig {
+        minSdkVersion 24
+    }
+    namespace "no.entur.android.nfc.external.mqtt.hwb.test"
+}
+
+dependencies {
+    api project(":nfc:external")
+    api project(':nfc:external-mqtt-hwb')
+
+    api project(":nfc:wrapper-test")
+    api project(":nfc:external-mqtt-test")
+    api "com.hivemq:hivemq-mqtt-client:${hivemqMqttClientVersion}"
+
+    androidTestImplementation("com.adevinta.android:barista:${baristaVersion}") {
+        exclude group: "com.google.protobuf", module: "protobuf-lite"
+    }
+    androidTestImplementation "androidx.test.espresso:espresso-idling-resource:${androidxEspressoVersion}"
+    androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:${androidxEspressoVersion}"
+    androidTestImplementation "androidx.test:rules:${androidxTestRulesVersion}"
+    // UiAutomator Testing
+    androidTestImplementation("androidx.test.ext:junit:${androidxTestExtJunitVersion}")
+
+    androidTestImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${mockitoVersion}"
+    androidTestImplementation "net.bytebuddy:byte-buddy-android:${byteBuddyVersion}"
+    androidTestImplementation "junit:junit:${unitVersion}"
+    androidTestImplementation "com.google.truth:truth:${googleTruthVersion}"
+
+    androidTestImplementation project(":nfc:wrapper-test")
+    androidTestImplementation project(":nfc:external-test")
+
+    androidTestImplementation "com.github.tony19:logback-android:${logbackAndroidVersion}"
+}
+
+
