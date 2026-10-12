@@ -10,7 +10,7 @@ jobs:
     if: >
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.repository == 'entur/android-nfc-lib'
-    uses: entur/abt-gha-public/.github/workflows/auto-merge.yml@v2
+    uses: entur/abt-gha-public/.github/workflows/auto-merge.yml@393bf5603dc3507c0fc84c3d3387bd529169058c # v2.0
     with:
       # Semver gate: patch and minor are auto-merged, major needs manual review.
       auto-merge-patch: true
@@ -21,8 +21,9 @@ jobs:
       auto-merge-dependencies: true
       auto-merge-docker: false
       auto-merge-github-actions: false
-      channel-id: ${{ vars.ALERT_CHANNEL_ID }}
-    secrets: inherit
+      # Slack failure notification is disabled: the reusable workflow skips it for
+      # NO_ID, so no secrets are passed to it (no `secrets: inherit`).
+      channel-id: NO_ID
     permissions:
       pull-requests: write
       contents: write

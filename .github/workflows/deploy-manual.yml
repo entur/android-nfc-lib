@@ -12,14 +12,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up JDK 21
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           java-version: 21
           distribution: temurin
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - name: Build
         run: |
           ./gradlew build --info --stacktrace
@@ -33,14 +35,18 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Do not leave the write-scoped token in .git/config while Gradle runs;
+          # it is supplied explicitly for the push step only.
+          persist-credentials: false
       - name: Set up JDK 21
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           java-version: 21
           distribution: temurin
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - name: Configure git user
         run: |
           git config pull.rebase false
@@ -69,8 +75,12 @@ jobs:
           snapshotHash=$(git rev-parse HEAD)
           echo "snapshotHash=$snapshotHash" >> "$GITHUB_OUTPUT"
       - name: Push all changes (as one)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          git push --atomic origin master --tags
+          AUTH=$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push --atomic origin master --tags
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -78,9 +88,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{needs.tag.outputs.tag}}
+          persist-credentials: false
       - name: Gradle publish artifacts
         run: |
           echo $SONATYPE_GPG_KEY | base64 --decode | gpg --batch --no-tty --import --yes

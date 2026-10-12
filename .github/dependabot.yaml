@@ -27,11 +27,6 @@ updates:
     directory: ".github/workflows"
     cooldown:
       default-days: 7
-    ignore:
-      - dependency-name: "entur/*"
-        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
-      - dependency-name: "actions/*"
-        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
     groups:
       github-actions:
         patterns:
