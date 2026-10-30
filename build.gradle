@@ -76,7 +76,7 @@ ext {
     googleTruthVersion = '1.4.5'
     baristaVersion = '4.3.0'
     mockitoVersion = '5.24.0'
-    byteBuddyVersion = '1.18.15'
+    byteBuddyVersion = '1.18.16'
 
     okHttp3Version = '4.12.0'
     javaWebSocketVersion = '1.6.0'
