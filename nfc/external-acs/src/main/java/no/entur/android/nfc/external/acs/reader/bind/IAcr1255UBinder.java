@@ -42,7 +42,10 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getSerialNumber() throws RemoteException {
-		return new byte[0];
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.getSerialNumber();
 	}
 
 	private byte[] noReaderException() {

@@ -38,6 +38,21 @@ public class IAcr1255UCommandWrapper extends AcrRemoteCommandWriter {
 		return returnValue(firmware, exception);
 	}
 
+	public byte[] getSerialNumber() {
+
+		String serialNumber = null;
+		Exception exception = null;
+		try {
+			serialNumber = commands.getSerialNumber(0);
+		} catch (Exception e) {
+			LOGGER.debug("Problem reading serial number", e);
+
+			exception = e;
+		}
+
+		return returnValue(serialNumber, exception);
+	}
+
 	public byte[] getPICC() {
 		Integer picc = null;
 		Exception exception = null;
