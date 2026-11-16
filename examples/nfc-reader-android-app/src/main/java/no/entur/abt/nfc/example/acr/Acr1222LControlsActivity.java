@@ -1,6 +1,7 @@
 package no.entur.abt.nfc.example.acr;
 
 import java.util.Arrays;
+import java.util.List;
 
 import no.entur.abt.nfc.example.R;
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
@@ -42,6 +43,19 @@ public class Acr1222LControlsActivity extends AbstractAcrControlsActivity<Acr122
 				return reader.lightDisplayBacklight(on);
 			}
 		}, null);
+	}
+
+	@Override
+	protected List<String> getEscapeCommandPresets() {
+		return Arrays.asList(
+				// read default LED and buzzer behaviour
+				"E0 00 00 21 00",
+				// set default LED and buzzer behaviour: factory default, then without bit 0, without bit 3, bit 4 instead of bit 3
+				"E0 00 00 21 01 8F", "E0 00 00 21 01 8E", "E0 00 00 21 01 87", "E0 00 00 21 01 97",
+				// buzzer on for 100 ms
+				"E0 00 00 28 01 0A",
+				// all LEDs on, all LEDs off
+				"FF 00 44 0F 00", "FF 00 44 00 00");
 	}
 
 	private String statusLabel(AcrLED led) {

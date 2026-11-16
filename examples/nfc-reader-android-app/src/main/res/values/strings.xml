@@ -46,6 +46,8 @@
     <string name="acr_controls_backlight">Backlight</string>
     <string name="acr_controls_contrast">Contrast (0–15)</string>
     <string name="acr_controls_apply">Apply</string>
+    <string name="acr_controls_escape">Escape command (hex)</string>
+    <string name="acr_controls_send">Send</string>
     <string name="acr_controls_antenna">Antenna</string>
     <string name="acr_controls_antenna_field">Antenna field on</string>
     <string name="acr_controls_bluetooth">Bluetooth</string>

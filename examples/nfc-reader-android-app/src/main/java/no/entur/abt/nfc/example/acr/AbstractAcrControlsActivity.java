@@ -64,6 +64,9 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 
 	private static final String LOG_TAG = "AcrControls";
 
+	// com.acs.smartcard.Reader.IOCTL_CCID_ESCAPE
+	private static final int IOCTL_CCID_ESCAPE = 3500;
+
 	protected static final List<AcrAutomaticPICCPolling> POLLING_INTERVALS = Arrays.asList(AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_250,
 			AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_500, AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_1000, AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_2500);
 
@@ -235,6 +238,78 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		addReaderDetails(reader);
 
 		addControls(reader);
+
+		addEscapeCommand(reader);
+	}
+
+	/**
+	 * @return escape commands (hex) to offer as shortcuts
+	 */
+
+	protected List<String> getEscapeCommandPresets() {
+		return Collections.emptyList();
+	}
+
+	/**
+	 * Send an escape command (hex) to the reader, and log the response.
+	 */
+
+	private void addEscapeCommand(T reader) {
+		addSection(getString(R.string.acr_controls_escape));
+
+		EditText command = editText("", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+		command.setHint("E0 00 00 18 00");
+		command.setTypeface(Typeface.MONOSPACE);
+		card.addView(command, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+		addRow(button(getString(R.string.acr_controls_send), (v) -> sendEscapeCommand(reader, command.getText().toString())));
+
+		for (String preset : getEscapeCommandPresets()) {
+			Button button = button(preset, (v) -> {
+				command.setText(preset);
+				sendEscapeCommand(reader, preset);
+			});
+			button.setTypeface(Typeface.MONOSPACE);
+			button.setAllCaps(false);
+			card.addView(button);
+		}
+	}
+
+	private void sendEscapeCommand(T reader, String hex) {
+		byte[] command;
+		try {
+			command = fromHex(hex);
+		} catch (IllegalArgumentException e) {
+			log("escape " + hex + " failed: " + e.getMessage());
+			return;
+		}
+		run("escape " + toHex(command), () -> toHex(reader.control(0, IOCTL_CCID_ESCAPE, command)));
+	}
+
+	private static byte[] fromHex(String hex) {
+		String digits = hex.replaceAll("\\s", "");
+		if (digits.isEmpty() || digits.length() % 2 != 0) {
+			throw new IllegalArgumentException("expected an even number of hex digits");
+		}
+		byte[] bytes = new byte[digits.length() / 2];
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) Integer.parseInt(digits.substring(i * 2, i * 2 + 2), 16);
+		}
+		return bytes;
+	}
+
+	private static String toHex(byte[] bytes) {
+		if (bytes == null) {
+			return "null";
+		}
+		StringBuilder builder = new StringBuilder();
+		for (byte b : bytes) {
+			if (builder.length() > 0) {
+				builder.append(' ');
+			}
+			builder.append(String.format(Locale.ROOT, "%02X", b & 0xFF));
+		}
+		return builder.toString();
 	}
 
 	// sections and settings
@@ -444,7 +519,8 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 
 	protected void addDisplay(Display display, Setter<Integer> contrast) {
 		RadioGroup fonts = addRadioGroup(Arrays.asList(AcrFont.values()), AcrFont::name, null);
-		setSelected(fonts, AcrFont.FONT_C);
+		// font A has all of ÆØÅæøå, font C has no Ø / ø
+		setSelected(fonts, AcrFont.FONT_A);
 
 		SwitchCompat bold = addSwitchRow(getString(R.string.acr_controls_bold), null);
 		EditText line = editText("0", InputType.TYPE_CLASS_NUMBER);
