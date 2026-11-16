@@ -296,8 +296,12 @@ public class ACR1255BluetoothCommands
 		}
 	}
 
+	/**
+	 * Read Tx power: E0 00 00 51 00, firmware 2.03.xx and later.
+	 */
+
 	public byte getBluetoothTransmissionPower(int slot) throws ReaderException {
-		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x00, 0x50, 0x00 };
+		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x00, 0x51, 0x00 };
 
 		CommandAPDU response = control(slot, Reader.IOCTL_CCID_ESCAPE, new CommandAPDU(command));
 
@@ -313,9 +317,10 @@ public class ACR1255BluetoothCommands
 	}
 
 	public boolean setBluetoothTransmissionPower(int slot, byte power) throws ReaderException {
-		CommandAPDU command = new CommandAPDU(0xE0, 0x00, 0x00, 0x49, new byte[] { power });
+		// E0 00 00 49 <power> (5 bytes, the value is in the Lc position)
+		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x00, 0x49, power };
 
-		CommandAPDU response = control(slot, Reader.IOCTL_CCID_ESCAPE, command);
+		CommandAPDU response = new CommandAPDU(control(slot, Reader.IOCTL_CCID_ESCAPE, command));
 
 		if (!isSuccess(response)) {
 			throw new IllegalArgumentException("Card responded with error code");
@@ -348,9 +353,9 @@ public class ACR1255BluetoothCommands
 	}
 
 	public byte[] getAutoPPS(int slot) throws ReaderException {
-		CommandAPDU command = new CommandAPDU(0xE0, 0x00, 0x00, 0x24);
+		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x00, 0x24, 0x00 };
 
-		CommandAPDU response = control(slot, Reader.IOCTL_CCID_ESCAPE, command);
+		CommandAPDU response = new CommandAPDU(control(slot, Reader.IOCTL_CCID_ESCAPE, command));
 
 		if (!isSuccess(response)) {
 			throw new IllegalArgumentException("Card responded with error code");

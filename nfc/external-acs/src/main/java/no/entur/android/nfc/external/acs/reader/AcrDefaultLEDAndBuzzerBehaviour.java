@@ -7,13 +7,11 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 
 	/**
 	 * 1252: PICC Activation Status LED: To show the activation status of the PICC interface. <br/>
+	 * 1255: PICC Activation Status LED: To show the activation status of the PICC interface. <br/>
 	 * 1552: PICC Activation Status LED
 	 */
 	PICC_ACTIVATION_STATUS_LED,
 
-	/**
-	 * 1255: ICC Activation Status LED: To show the activations status of the ICC interface. <br/>
-	 */
 	/**
 	 * 1281: ICC Activation Status LED: To show the activations status of the ICC interface. <br/>
 	 */
@@ -27,19 +25,22 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	PICC_POLLING_STATUS_LED,
 
 	/**
-	 * 1255: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC). <br/>
+	 * 1255: Card insertion and removal events buzzers. <br/>
 	 * 1252: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC). <br/>
 	 * 1252: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC). <br/>
 	 */
 	CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER,
 
 	/**
+	 * 1255: Card Insertion Events Buzzer: To make a beep whenever a card insertion event is detected. <br/>
 	 * 1552: Presence Event (Short Buzzer Beep)
 	 */
 
 	CARD_INSERTION_EVENT_BUZZER,
 
 	/**
+	 * 1255: Card Removal Events Buzzer: To make a beep whenever a card removal event is detected; needs the card insertion events
+	 * buzzer (firmware 2.04.xx and later). <br/>
 	 * 1552: Card Removal Event (Short Buzzer Beep)
 	 */
 
@@ -74,6 +75,11 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	/**
 	 * 1252: Color Select (RED): RED LED for status change. <br/>
 	 */
-	COLOR_SELECT_LED_RED;
+	COLOR_SELECT_LED_RED,
+	/**
+	 * 1255: Reader Power ON Buzzer: To make a beep when the reader is powered on (firmware 2.04.xx and later). <br/>
+	 * 1552: Power Up Event (Short Buzzer Beep) <br/>
+	 */
+	READER_POWER_ON_BUZZER;
 
 }

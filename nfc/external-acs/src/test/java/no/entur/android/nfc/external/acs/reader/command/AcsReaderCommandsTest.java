@@ -150,11 +150,35 @@ public class AcsReaderCommandsTest {
     }
 
     @Test
-    public void testAcr1255Buzzer() {
-        // the buzzer beeps with bit 3 on an ACR1255U-J1, the library had bit 4: set both, read either
+    public void testAcr1255Behaviour() {
+        // per the ACR1255U-J1 reference manual 1.13; default BF
+        assertEquals(Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED,
+                AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER,
+                AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER,
+                AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), Acr1255UReader.parseBehaviour(0xBF));
+
+        // card insertion is bit 3 (checked on a reader), removal bit 4
+        assertEquals(0x08, Acr1255UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER));
         assertEquals(0x18, Acr1255UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER));
-        assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER), Acr1255UReader.parseBehaviour(0x08));
-        assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER), Acr1255UReader.parseBehaviour(0x10));
+        assertEquals(0x01, Acr1255UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED));
+    }
+
+    @Test
+    public void testAcr1255UsbCommands() throws Exception {
+        // read Tx power is E0 00 00 51 00 (0x50 reads the sleep mode)
+        ReaderWrapper reader = reader("E10000000101");
+        assertEquals(1, new ACR1255UsbCommands("ACS ACR1255U-J1", reader).getBluetoothTransmissionPower(0));
+        assertArrayEquals(hex("E000005100"), command(reader));
+
+        // set Tx power has the value in the Lc position
+        reader = reader("E10000000102");
+        assertTrue(new ACR1255UsbCommands("ACS ACR1255U-J1", reader).setBluetoothTransmissionPower(0, (byte) 2));
+        assertArrayEquals(hex("E000004902"), command(reader));
+
+        // read auto PPS: E0 00 00 24 00
+        reader = reader("E10000000400000000");
+        new ACR1255UsbCommands("ACS ACR1255U-J1", reader).getAutoPPS(0);
+        assertArrayEquals(hex("E000002400"), command(reader));
     }
 
     @Test
@@ -176,6 +200,10 @@ public class AcsReaderCommandsTest {
         ReaderWrapper reader = reader("E100004001");
         assertTrue(new ACR1255UsbCommands("ACS ACR1255U-J1", reader).setAutomaticPolling(0, true));
         assertArrayEquals(hex("E000004001"), command(reader));
+
+        // an ACR1255U-J1 over USB accepts the command without echo or state
+        assertTrue(new ACR1255UsbCommands("ACS ACR1255U-J1", reader("E100000000")).setAutomaticPolling(0, true));
+        assertTrue(new ACR1255UsbCommands("ACS ACR1255U-J1", reader("E100000000")).setAutomaticPolling(0, false));
     }
 
     @Test

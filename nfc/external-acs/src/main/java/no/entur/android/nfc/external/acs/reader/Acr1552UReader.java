@@ -56,6 +56,7 @@ public class Acr1552UReader extends AcrReader {
 	private static final int UI_PICC_ACTIVATION_STATUS_LED = 1 << 2;
 	private static final int UI_PRESENCE_EVENT_BUZZER = 1 << 3;
 	private static final int UI_REMOVAL_EVENT_BUZZER = 1 << 4;
+	private static final int UI_POWER_UP_EVENT_BUZZER = 1 << 5;
 
 	protected IAcr1552UReaderControl readerControl;
 
@@ -79,6 +80,8 @@ public class Acr1552UReader extends AcrReader {
 				operation |= UI_PRESENCE_EVENT_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER) {
 				operation |= UI_REMOVAL_EVENT_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER) {
+				operation |= UI_POWER_UP_EVENT_BUZZER;
 			} else {
 				throw new IllegalArgumentException("Behaviour " + type + " not supported");
 			}
@@ -107,6 +110,10 @@ public class Acr1552UReader extends AcrReader {
 
 		if ((operation & UI_REMOVAL_EVENT_BUZZER) != 0) {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER);
+		}
+
+		if ((operation & UI_POWER_UP_EVENT_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER);
 		}
 
 		return behaviours;
