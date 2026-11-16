@@ -153,6 +153,7 @@ public class Acr122UReader extends AcrReader {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(name);
+		dest.writeString(id);
 		dest.writeStrongBinder(readerControl.asBinder());
 	}
 

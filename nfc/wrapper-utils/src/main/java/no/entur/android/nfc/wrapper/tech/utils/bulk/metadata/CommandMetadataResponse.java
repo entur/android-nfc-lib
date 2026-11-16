@@ -54,11 +54,8 @@ public class CommandMetadataResponse implements Parcelable {
 
         dest.writeInt(bulkTransceiveMetadata != null ? 1: 0 );
         if(bulkTransceiveMetadata != null) {
-            dest.writeInt(1);
             dest.writeInt(bulkTransceiveMetadata.isResponsePredicate() ? 1: 0 );
             dest.writeInt(bulkTransceiveMetadata.isPartialResponsePredicate() ? 1 : 0);
-        } else {
-            dest.writeInt(0);
         }
 
 
