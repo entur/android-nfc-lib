@@ -1,6 +1,8 @@
 package no.entur.android.nfc.external.acs.reader.command;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -45,5 +47,16 @@ public class ACSIsoDepWrapperTest {
             // expected
         }
         verify(reader, never()).transmitPassThrough(anyInt(), any(byte[].class));
+    }
+
+    @Test
+    public void testPassThroughReaders() {
+        assertTrue(ReaderWrapper.supportsPassThrough("ACS ACR122U PICC Interface"));
+        assertTrue(ReaderWrapper.supportsPassThrough("ACS ACR1222 3S PICC Reader"));
+        // these answer 63 00 or are not PN53x based
+        assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1252 1S CL Reader PICC"));
+        assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1255U-J1 PICC"));
+        assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1283U"));
+        assertFalse(ReaderWrapper.supportsPassThrough(null));
     }
 }

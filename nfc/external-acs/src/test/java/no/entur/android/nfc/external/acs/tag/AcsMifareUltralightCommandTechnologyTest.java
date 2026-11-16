@@ -27,6 +27,8 @@ public class AcsMifareUltralightCommandTechnologyTest {
 
         private byte[] passthroughRequest;
         private int readStartPage = -1;
+        private Command command;
+        private Response response;
 
         @Override
         public byte[] transmit(byte[] data) {
@@ -35,7 +37,11 @@ public class AcsMifareUltralightCommandTechnologyTest {
 
         @Override
         public Response transmit(Command command) {
-            throw new UnsupportedOperationException();
+            this.command = command;
+            if (response == null) {
+                throw new UnsupportedOperationException();
+            }
+            return response;
         }
 
         @Override
@@ -93,6 +99,39 @@ public class AcsMifareUltralightCommandTechnologyTest {
             // expected
         }
         assertNull(readerWriter.passthroughRequest);
+    }
+
+    @Test
+    public void testReadFourPagesAtOnce() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        // NTAG203 has 42 pages, so reading from page 40 rolls over to page 0
+        byte[] rollover = ByteArrayHexStringConverter.hexStringToByteArray("28282828292929290000000001010101");
+        readerWriter.response = new Response(0x90, 0x00, rollover);
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> new TransceiveResult(TransceiveResult.RESULT_FAILURE, null), true);
+
+        TransceiveResult result = technology.transceive(new byte[] { 0x30, 0x28 }, true);
+
+        assertArrayEquals(rollover, result.getResponseOrThrow());
+        // READ BINARY of 16 bytes from page 40, no reading one page at a time
+        assertEquals(0xB0, readerWriter.command.getInstruction());
+        assertEquals(0x28, readerWriter.command.getP2());
+        assertEquals(16, readerWriter.command.getLength());
+        assertEquals(-1, readerWriter.readStartPage);
+    }
+
+    @Test
+    public void testReadFallsBackToOnePageAtATime() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        // reader does not support reading 16 bytes
+        readerWriter.response = new Response(0x67, 0x00, new byte[0]);
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> new TransceiveResult(TransceiveResult.RESULT_FAILURE, null), true);
+
+        byte[] response = technology.transceive(new byte[] { 0x30, 0x04 }, true).getResponseOrThrow();
+
+        assertEquals(16, response.length);
+        assertEquals(4, response[0]);
+        assertEquals(7, response[15]);
+        assertEquals(4, readerWriter.readStartPage);
     }
 
     @Test

@@ -60,11 +60,11 @@ public class ReaderWrapper {
 	 * (see {@link #transmitPassThrough(int, byte[])}) for a reader.
 	 *
 	 * @param readerName reader name
-	 * @return true if pass-through commands are supported (i.e. not for ACR1252 and ACR1255)
+	 * @return true if pass-through commands are supported (i.e. not for ACR1252, ACR1255 and ACR1283, the ACR1283 answers 63 00)
 	 */
 
 	public static boolean supportsPassThrough(String readerName) {
-		return readerName != null && !(readerName.contains("1255") || readerName.contains("1252"));
+		return readerName != null && !(readerName.contains("1255") || readerName.contains("1252") || readerName.contains("1283"));
 	}
 
 	public String getReaderName() {
