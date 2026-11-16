@@ -219,6 +219,11 @@ public class AcsReaderCommandsTest {
         assertEquals(Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED,
                 AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED),
                 Acr1283LReader.parseBehaviour(0x8E));
+
+        // the buzzer is bit 3 per the manual, bit 4 on an ACR1283U: set both, read either
+        assertEquals(0x18, Acr1283LReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER));
+        assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER), Acr1283LReader.parseBehaviour(0x08));
+        assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER), Acr1283LReader.parseBehaviour(0x10));
     }
 
     @Test
