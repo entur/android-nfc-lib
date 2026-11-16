@@ -60,9 +60,10 @@ public class Acr1283LControlsActivity extends AbstractAcrControlsActivity<Acr128
 		}, reader::setDisplayContrast);
 	}
 
-	// per the ACR1283L manual
+	// per the ACR1283L manual, and bit 4 as seen on an ACR1283U
 	private static final String[] BEHAVIOUR_BITS = { "Bit 0 (RFU)", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
-			"Bit 3 card insertion / removal buzzer", "Bit 4 (RFU)", "Bit 5 (RFU)", "Bit 6 (RFU)", "Bit 7 card operation blink LED" };
+			"Bit 3 card insertion / removal buzzer (manual)", "Bit 4 card insertion / removal buzzer (ACR1283U)", "Bit 5 (RFU)", "Bit 6 (RFU)",
+			"Bit 7 card operation blink LED" };
 
 	private String statusLabel(AcrLED led) {
 		switch (led) {
