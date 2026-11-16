@@ -33,6 +33,7 @@
     <string name="acr_controls_led_complete">Orange (complete)</string>
     <string name="acr_controls_led_error">Red (error)</string>
     <string name="acr_controls_default_behaviour">Default LED and buzzer behaviour</string>
+    <string name="acr_controls_default_behaviour_bits">Default LED and buzzer behaviour (bits)</string>
     <string name="acr_controls_buzzer">Buzzer</string>
     <string name="acr_controls_card_detection_beep">Beep on card detection</string>
     <string name="acr_controls_duration">ms</string>

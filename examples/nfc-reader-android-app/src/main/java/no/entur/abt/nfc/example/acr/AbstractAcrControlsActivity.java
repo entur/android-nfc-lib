@@ -434,6 +434,53 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 	}
 
 	/**
+	 * A switch per bit of a byte setting, written together when one of them is changed.
+	 *
+	 * @param labels label per bit, from bit 0
+	 * @param getter getter
+	 * @param setter setter
+	 */
+
+	protected void addBits(String[] labels, Getter<Integer> getter, Setter<Integer> setter) {
+		String title = currentTitle();
+		SwitchCompat[] switches = new SwitchCompat[labels.length];
+		Runnable[] reload = new Runnable[1];
+		Runnable apply = () -> {
+			int value = 0;
+			for (int i = 0; i < switches.length; i++) {
+				if (switches[i].isChecked()) {
+					value |= 1 << i;
+				}
+			}
+			int finalValue = value;
+			run(title + " = " + String.format(Locale.ROOT, "%02X", value), () -> setter.set(finalValue));
+			reload[0].run();
+		};
+		for (int i = 0; i < labels.length; i++) {
+			switches[i] = addSwitchRow(labels[i], apply);
+		}
+		reload[0] = load("read " + title, () -> {
+			int value = getter.get();
+			return String.format(Locale.ROOT, "%02X", value);
+		}, (hex) -> {
+			int value = Integer.parseInt(hex, 16);
+			for (int i = 0; i < switches.length; i++) {
+				switches[i].setChecked((value & (1 << i)) != 0);
+			}
+		}, Arrays.<View>asList(switches));
+	}
+
+	/**
+	 * Send an escape command to the reader.
+	 *
+	 * @return the response
+	 */
+
+	protected byte[] escape(T reader, String hex) {
+		return reader.control(0, IOCTL_CCID_ESCAPE, fromHex(hex));
+	}
+
+	/**
 	 * A setting with a switch.
 	 *
 	 * @param label label
