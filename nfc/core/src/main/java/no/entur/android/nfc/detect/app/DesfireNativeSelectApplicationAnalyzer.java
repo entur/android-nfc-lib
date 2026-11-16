@@ -42,12 +42,9 @@ public class DesfireNativeSelectApplicationAnalyzer implements SelectApplication
         return null;
     }
 
-    private static boolean isSuccess(byte[] responseApdu) {
-        if(responseApdu.length >= 1) {
-            int status = responseApdu[responseApdu.length - 1] & 0xFF;
-
-            return status == 0x00;
-        }
-        return false;
+    static boolean isSuccess(byte[] responseApdu) {
+        // the native SelectApplication response is a single status byte (00 for success, i.e. A0 for application not found).
+        // A card which only speaks ISO 7816 answers with SW1 SW2 instead, i.e. 6D 00 or 67 00, which must not be read as success.
+        return responseApdu != null && responseApdu.length == 1 && responseApdu[0] == 0x00;
     }
 }

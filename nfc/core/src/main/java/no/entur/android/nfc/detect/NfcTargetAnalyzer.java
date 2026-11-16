@@ -148,7 +148,7 @@ public class NfcTargetAnalyzer {
                 return technologyAnalyzeResult;
             }
 
-            int uidAnalyzeResult = result.getUidAnalyzeResult().compareTo(o.result.getUidAnalyzeResult());
+            int uidAnalyzeResult = compareUidAnalyzeResult(result.getUidAnalyzeResult(), o.result.getUidAnalyzeResult());
             if(uidAnalyzeResult != 0) {
                 return uidAnalyzeResult;
             }
@@ -156,9 +156,24 @@ public class NfcTargetAnalyzer {
             // preserve natural order if everything else is equal
             return Integer.compare(target.order, o.target.order);
         }
+
+        private static int compareUidAnalyzeResult(UidAnalyzeResult a, UidAnalyzeResult b) {
+            // targets without a UID analyzer are less specific
+            if(a == null) {
+                return b == null ? 0 : 1;
+            }
+            if(b == null) {
+                return -1;
+            }
+            return a.compareTo(b);
+        }
     }
 
+    // by id, for enabling / disabling targets
     protected final Map<String, Target> targets;
+
+    // all targets, also those without an id
+    protected final List<Target> targetList;
 
     // technologies to parse
     protected final Set<String> technologies;
@@ -168,8 +183,11 @@ public class NfcTargetAnalyzer {
     public NfcTargetAnalyzer(List<Target> targets, TagTechnologiesFactory tagTechnologiesFactory) {
         this.targets = new HashMap<>();
         for (Target target : targets) {
-            this.targets.put(target.id, target);
+            if(target.id != null && this.targets.put(target.id, target) != null) {
+                throw new IllegalStateException("Duplicate target id " + target.id);
+            }
         }
+        this.targetList = new ArrayList<>(targets);
         this.technologies = toTechnologies(targets);
 
         this.tagTechnologiesFactory = tagTechnologiesFactory;
@@ -201,8 +219,7 @@ public class NfcTargetAnalyzer {
 
         List<TargetCandidate> candidates = new ArrayList<>();
 
-        for (Map.Entry<String, Target> entry : targets.entrySet()) {
-            Target target = entry.getValue();
+        for (Target target : targetList) {
             if(!target.isEnabled()) {
                 continue;
             }
@@ -262,15 +279,24 @@ public class NfcTargetAnalyzer {
             if(selectApplicationAnalyzer != null) {
                 SelectApplicationAnalyzeResult result = selectApplicationAnalyzer.processApplication(tagTechnologies, tag, intent);
 
-                if(result.isSuccess()) {
+                // null i.e. if the tag does not have the required technology
+                if(result != null && result.isSuccess()) {
                     technologyTarget.result.setSelectApplicationAnalyzeResult(result);
                     results.add(technologyTarget);
 
-                    break;
+                    return results;
                 }
 
             }
+        }
 
+        // no application matched, fall back to the (first) target which does not require an application
+        for (TargetCandidate technologyTarget : candidates) {
+            if(technologyTarget.target.selectApplicationAnalyzer == null) {
+                results.add(technologyTarget);
+
+                break;
+            }
         }
         return results;
     }
@@ -307,6 +333,9 @@ public class NfcTargetAnalyzer {
                     technologyTarget.result.setUidAnalyzeResult(result);
                     results.add(technologyTarget);
                 }
+            } else {
+                // no UID requirements
+                results.add(technologyTarget);
             }
 
         }
@@ -320,7 +349,8 @@ public class NfcTargetAnalyzer {
             TechnologyAnalyzer technologyAnalyzer = technologyTarget.target.technologyAnalyzer;
             TechnologyAnalyzeResult technologyAnalyzeResult = technologyAnalyzer.processTechnology(tagTechnologies, tag, intent);
 
-            if(technologyAnalyzeResult.hasType()) {
+            // null if the tag is guaranteed not to match
+            if(technologyAnalyzeResult != null && technologyAnalyzeResult.hasType()) {
                 technologyTarget.result.setTechnologyAnalyzeResult(technologyAnalyzeResult);
                 results.add(technologyTarget);
             }
@@ -329,20 +359,20 @@ public class NfcTargetAnalyzer {
     }
 
     public void enableExclusively(Set<String> ids) {
-        for (Map.Entry<String, Target> entry : targets.entrySet()) {
-            entry.getValue().enabled = ids.contains(entry.getKey());
+        for (Target target : targetList) {
+            target.enabled = target.id != null && ids.contains(target.id);
         }
     }
 
     public void enableAll() {
-        for (Map.Entry<String, Target> entry : targets.entrySet()) {
-            entry.getValue().enabled = true;
+        for (Target target : targetList) {
+            target.enabled = true;
         }
     }
 
     public void disableAll() {
-        for (Map.Entry<String, Target> entry : targets.entrySet()) {
-            entry.getValue().enabled = false;
+        for (Target target : targetList) {
+            target.enabled = false;
         }
     }
 
