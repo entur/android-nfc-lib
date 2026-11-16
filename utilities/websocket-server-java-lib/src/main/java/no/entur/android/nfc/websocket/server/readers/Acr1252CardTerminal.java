@@ -34,25 +34,29 @@ public class Acr1252CardTerminal extends AcsExtendedCardTerminal {
         // https://stackoverflow.com/questions/31131569/unable-to-claim-usb-interface-device-or-resource-busy
         // https://github.com/intarsys/smartcard-io
 
-        LOGGER.debug("Get exclusive lock");
-        ca.beginExclusive();
-        LOGGER.debug("Got exclusive lock");
         try {
-            // https://stackoverflow.com/questions/12265807/javax-smartcardio-transmit-to-nfc-usb-reader-without-card/12346874#12346874
-            int SCARD_CTL_CODE = 0x310000 + 3500 * 4;
+            LOGGER.debug("Get exclusive lock");
+            ca.beginExclusive();
+            LOGGER.debug("Got exclusive lock");
+            try {
+                // https://stackoverflow.com/questions/12265807/javax-smartcardio-transmit-to-nfc-usb-reader-without-card/12346874#12346874
+                int SCARD_CTL_CODE = 0x310000 + 3500 * 4;
 
-            byte[] pseudo = new byte[]{(byte) 0xFF, 0x00, 0x48, 0x00, 0x00};
+                byte[] pseudo = new byte[]{(byte) 0xFF, 0x00, 0x48, 0x00, 0x00};
 
-            byte[] bytes = ca.transmitControlCommand(SCARD_CTL_CODE, pseudo);
+                byte[] bytes = ca.transmitControlCommand(SCARD_CTL_CODE, pseudo);
 
-            String firmware = new String(bytes, Charset.forName("ASCII"));
+                String firmware = new String(bytes, Charset.forName("ASCII"));
 
-            LOGGER.info("Read firmware " + firmware);
+                LOGGER.info("Read firmware " + firmware);
 
-            return firmware;
+                return firmware;
+            } finally {
+                ca.endExclusive();
+                LOGGER.debug("Released exclusive lock");
+            }
         } finally {
-            ca.endExclusive();
-            LOGGER.debug("Released exclusive lock");
+            disconnect(ca);
         }
     }
 

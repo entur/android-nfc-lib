@@ -29,7 +29,7 @@ public class CardClient implements NfcMessageListener {
 
 	private long timeout;
 
-	private Listener listener;
+	private volatile Listener listener;
 
 	public CardClient(RequestResponseMessages messages, long timeout) {
 		this.messages = messages;
@@ -58,6 +58,10 @@ public class CardClient implements NfcMessageListener {
 
 	@Override
 	public void onMessage(NfcMessage message) {
+		Listener listener = this.listener; // defensive copy, might be removed when polling ends
+		if(listener == null) {
+			return;
+		}
 		if(message instanceof CardLostMessage) {
 			listener.onCardLost();
 		} else if(message instanceof CardPresentMessage) {

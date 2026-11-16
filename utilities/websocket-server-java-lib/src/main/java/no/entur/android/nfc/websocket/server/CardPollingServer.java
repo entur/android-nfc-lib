@@ -12,11 +12,11 @@ public class CardPollingServer implements Runnable {
 
     private Thread thread;
 
-    private boolean closed = true;
+    private volatile boolean closed = true;
 
     private final CardTerminal cardTerminal;
 
-    private CardListener listener;
+    private volatile CardListener listener;
 
     public CardPollingServer(CardTerminal cardTerminal) {
         this.cardTerminal = cardTerminal;
@@ -40,27 +40,43 @@ public class CardPollingServer implements Runnable {
                 if(cardTerminal.isCardPresent()) {
                     LOGGER.info("Card is present");
                     Card card = cardTerminal.connect("*");
+                    try {
+                        CardListener listener = this.listener; // defensive copy
 
-                    CardListener listener = this.listener; // defensive copy
-                    listener.cardConnected(card);
-
-                    while(!closed) {
+                        // a problem with a single card must not stop polling
+                        boolean connected = false;
                         try {
-                            Thread.sleep(100);
-                            if(!cardTerminal.isCardPresent()) {
-                                listener.cardDisconnected(card);
+                            listener.cardConnected(card);
 
-                                break;
-                            }
-                        } catch (InterruptedException e) {
-                            Thread.interrupted();
-                            if(!cardTerminal.isCardPresent()) {
-                                listener.cardDisconnected(card);
-
-                                break;
-                            }
-                            break main;
+                            connected = true;
+                        } catch (Exception e) {
+                            LOGGER.warn("Problem handling card, wait for it to be removed", e);
                         }
+
+                        while(!closed) {
+                            try {
+                                Thread.sleep(100);
+                                if(!cardTerminal.isCardPresent()) {
+                                    if(connected) {
+                                        listener.cardDisconnected(card);
+                                    }
+
+                                    break;
+                                }
+                            } catch (InterruptedException e) {
+                                Thread.interrupted();
+                                if(!cardTerminal.isCardPresent()) {
+                                    if(connected) {
+                                        listener.cardDisconnected(card);
+                                    }
+
+                                    break;
+                                }
+                                break main;
+                            }
+                        }
+                    } finally {
+                        disconnect(card);
                     }
                 }
                 Thread.sleep(10);
@@ -74,13 +90,30 @@ public class CardPollingServer implements Runnable {
             } catch (Exception e) {
                 LOGGER.error("Problem running", e);
 
+                // mark as closed so that polling can be started again
+                synchronized (this) {
+                    if(thread == Thread.currentThread()) {
+                        closed = true;
+                        thread = null;
+                    }
+                }
+
                 break;
             }
         }
         LOGGER.info("Stop polling for card");
     }
 
-    public void start() {
+    private void disconnect(Card card) {
+        try {
+            card.disconnect(false);
+        } catch (Exception e) {
+            // i.e. already disconnected when polling was ended
+            LOGGER.debug("Problem disconnecting card", e);
+        }
+    }
+
+    public synchronized void start() {
         if(closed) {
             closed = false;
 
@@ -93,7 +126,7 @@ public class CardPollingServer implements Runnable {
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         LOGGER.info("Stop background thread");
 
         closed = true;

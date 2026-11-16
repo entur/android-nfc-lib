@@ -78,7 +78,8 @@ public class WebSocketNfcServer extends WebSocketServer {
 
             LOGGER.info("Got technologies " + technologies);
 
-            byte[] uid = null;
+            // empty if the UID could not be read
+            byte[] uid = new byte[0];
 
             card.beginExclusive();
             try {
@@ -90,6 +91,8 @@ public class WebSocketNfcServer extends WebSocketServer {
                 } else {
                     LOGGER.info("Unable to read UID");
                 }
+            } catch (CardException e) {
+                LOGGER.info("Unable to read UID", e);
             } finally {
                 card.endExclusive();
             }
@@ -131,6 +134,14 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         @Override
         public boolean onConnect(List<String> tags) {
+            PooledCardTerminal current = this.pooledCardTerminal;
+            if(current != null && !current.isClosed() && current.matches(tags)) {
+                // already connected, do not borrow another reader
+                LOGGER.info("Already connected to reader " + current.getCardTerminal().getName());
+
+                return true;
+            }
+
             PooledCardTerminal borrow = cardTerminalsPollingPool.borrow(tags);
             if(borrow != null) {
                 LOGGER.info("Connected reader " + borrow.getCardTerminal().getName() );

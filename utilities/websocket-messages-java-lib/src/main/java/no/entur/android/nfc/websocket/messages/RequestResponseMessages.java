@@ -35,7 +35,9 @@ public class RequestResponseMessages implements NfcMessageListener, Closeable {
 	
 	@Override
 	public void onMessage(NfcMessage message) {
-		RequestResponseMessageLock lock = inflight.remove(message.getId());
+		// Only responses can complete an in-flight request. Broadcasts (card present / lost, reader disconnected)
+		// get their ids from the server's own id sequence, so they can collide with the ids of our requests.
+		RequestResponseMessageLock lock = message instanceof NfcStatusResponseMessage ? inflight.remove(message.getId()) : null;
 		if(lock != null) {
 			// i.e. request-response
 			lock.onMessage(message);
@@ -47,10 +49,7 @@ public class RequestResponseMessages implements NfcMessageListener, Closeable {
 
 	public void close() {
 		for (Map.Entry<Integer, RequestResponseMessageLock> entry : inflight.entrySet()) {
-			RequestResponseMessageLock value = entry.getValue();
-			synchronized (value) {
-				value.notifyAll();
-			}
+			entry.getValue().close();
 		}
 
 	}

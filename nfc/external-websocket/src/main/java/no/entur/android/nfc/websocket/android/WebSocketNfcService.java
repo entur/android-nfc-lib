@@ -3,6 +3,7 @@ package no.entur.android.nfc.websocket.android;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.nfc.NfcAdapter;
 import android.os.Binder;
 import android.os.IBinder;
 
@@ -17,6 +18,7 @@ import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.AbstractForegroundService;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
+import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.tag.DefaultTransceiveResultExceptionMapper;
 import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
@@ -32,17 +34,46 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     public static final String ANDROID_PERMISSION_NFC = "android.permission.NFC";
 
     protected WebsocketTagProxyStore store = new WebsocketTagProxyStore();
-    protected INFcTagBinder infcTagBinder;
+    // note: the same binder instance must be used for the tags and the reader technology
+    protected INFcTagBinder infcTagBinder = new INFcTagBinder(store);
 
     //binder given to client
     private final IBinder binder = new LocalBinder();
 
     private WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
 
-    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, new INFcTagBinder(store), store, new DefaultTransceiveResultExceptionMapper());
-    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, new INFcTagBinder(store), store, new DefaultTransceiveResultExceptionMapper());
+    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
+    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
 
-    private WebSocketClient client = null;
+    private volatile WebSocketClient client = null;
+
+    // tag currently in the field, if any
+    private volatile TagProxy currentTagProxy = null;
+
+    /**
+     * Listener for a single client, so that a late close of a previous client does not clear the current client.
+     */
+
+    private class ClientListener implements WebSocketClientListener {
+
+        private WebSocketClient client;
+        private boolean closed;
+
+        public synchronized void setClient(WebSocketClient client) {
+            this.client = client;
+            if(closed) {
+                onClientClosed(client);
+            }
+        }
+
+        @Override
+        public synchronized void onClosed() {
+            closed = true;
+            if(client != null) {
+                onClientClosed(client);
+            }
+        }
+    }
 
     public class LocalBinder extends Binder {
         public boolean connect(String uri) {
@@ -77,7 +108,7 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
 
         LOGGER.info("onCreate");
 
-        this.infcTagBinder = new INFcTagBinder(store);
+        this.infcTagBinder.setReaderTechnology(new WebsocketReaderTechnology());
     }
 
     @Override
@@ -88,7 +119,22 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     public boolean connect(String uri) {
         try {
             LOGGER.warn("Connect to " + uri);
-            client = factory.connect(uri, this);
+
+            // close any previous client, so that it does not linger
+            WebSocketClient previous = this.client;
+            if(previous != null) {
+                onClientClosed(previous);
+                try {
+                    previous.close();
+                } catch(Exception e) {
+                    LOGGER.warn("Problem closing previous connection", e);
+                }
+            }
+
+            ClientListener listener = new ClientListener();
+            WebSocketClient c = factory.connect(uri, listener);
+            this.client = c;
+            listener.setClient(c);
 
             broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
         } catch(Exception e) {
@@ -104,6 +150,8 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
             try {
                 if (c.getReaderClient().connect(tags)) {
                     broadcast(ExternalNfcReaderCallback.ACTION_READER_OPENED);
+
+                    return true;
                 } else {
                     LOGGER.warn("Unable to connect reader");
                 }
@@ -119,6 +167,8 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
         if(c != null) {
             if(c.getReaderClient().disconnect()) {
                 broadcast(ExternalNfcReaderCallback.ACTION_READER_CLOSED);
+
+                return true;
             } else {
                 LOGGER.warn("Unable to disconnect reader");
             }
@@ -129,6 +179,8 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     public void disconnect() throws IOException {
         WebSocketClient c = this.client;
         if(c != null) {
+            onClientClosed(c);
+
             c.close();
         }
         broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
@@ -158,12 +210,33 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
         this.client = null;
     }
 
+    protected synchronized void onClientClosed(WebSocketClient c) {
+        // a previous client might close after a new client was connected
+        if(this.client == c) {
+            this.client = null;
+        }
+    }
+
     @Override
     public void onCardLost() {
         LOGGER.info("onCardLost");
 
         Intent intent = new Intent();
         intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+
+        TagProxy proxy = this.currentTagProxy;
+        if(proxy != null) {
+            this.currentTagProxy = null;
+
+            // mark tag as no longer present
+            proxy.close();
+
+            byte[] uid = proxy.getUid();
+            if(uid != null) {
+                intent.putExtra(NfcAdapter.EXTRA_ID, uid);
+            }
+            intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, proxy.getHandle());
+        }
 
         sendBroadcast(intent, ANDROID_PERMISSION_NFC);
     }
@@ -174,14 +247,25 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
 
         // TODO add reader id
 
+        TagProxy previous = this.currentTagProxy;
+        if(previous != null) {
+            // card lost was not received
+            this.currentTagProxy = null;
+            previous.close();
+        }
+
         if(technologies.contains("IsoDep")) {
             WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
 
-            isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
+            this.currentTagProxy = isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
         } else if(technologies.contains("MifareUltralight")) {
             WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
 
-            mifareUltralightTagServiceSupport.mifareUltralight(-1, wrapper, atr, uid, historicalBytes, IntentEnricher.identity());
+            TagProxy proxy = mifareUltralightTagServiceSupport.mifareUltralight(-1, wrapper, atr, uid, historicalBytes, IntentEnricher.identity());
+            if(proxy != null) {
+                proxy.setUid(uid);
+            }
+            this.currentTagProxy = proxy;
         } else {
 
             broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);

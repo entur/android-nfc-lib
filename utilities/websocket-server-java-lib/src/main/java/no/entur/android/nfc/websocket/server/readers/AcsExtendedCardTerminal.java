@@ -37,37 +37,47 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
         }
 
         Card ca = delegate.connect("DIRECT");
-
-        LOGGER.debug("Get exclusive lock");
-        ca.beginExclusive();
-        LOGGER.debug("Got exclusive lock");
         try {
-            byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x51, (byte) picc, 0x00 };
+            LOGGER.debug("Get exclusive lock");
+            ca.beginExclusive();
+            LOGGER.debug("Got exclusive lock");
+            try {
+                byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x51, (byte) picc, 0x00 };
 
-            byte[] bytes = ca.transmitControlCommand(SCARD_CTL_CODE, pseudo);
+                byte[] bytes = ca.transmitControlCommand(SCARD_CTL_CODE, pseudo);
 
-            if (!isSuccessControl(bytes)) {
-                LOGGER.debug("Unable to set PICC: " + Integer.toHexString(picc));
+                if (!isSuccessControl(bytes)) {
+                    LOGGER.debug("Unable to set PICC: " + Integer.toHexString(picc));
 
-                throw new AcsCardException("Card responded with error code");
-            }
+                    throw new AcsCardException("Card responded with error code");
+                }
 
-            final int operation = bytes[1] & 0xFF;
+                final int operation = bytes[1] & 0xFF;
 
-            if (operation != picc) {
-                LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
+                if (operation != picc) {
+                    LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
-                return false;
-            } else {
-                LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
+                    return false;
+                } else {
+                    LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
 
-                return true;
+                    return true;
+                }
+            } finally {
+                ca.endExclusive();
+                LOGGER.debug("Released exclusive lock");
             }
         } finally {
-            ca.endExclusive();
-            LOGGER.debug("Released exclusive lock");
+            disconnect(ca);
         }
+    }
 
+    protected static void disconnect(Card card) {
+        try {
+            card.disconnect(false);
+        } catch (Exception e) {
+            LOGGER.debug("Problem disconnecting DIRECT connection", e);
+        }
     }
 
     public static boolean isSuccessControl(byte[] in) {
@@ -83,31 +93,41 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
         CommandAPDU command = new CommandAPDU(0xE0, 0x00, 0x00, 0x23, new byte[] { (byte)value});
 
         Card ca = delegate.connect("DIRECT");
-
-        LOGGER.debug("Get exclusive lock");
-        ca.beginExclusive();
-        LOGGER.debug("Got exclusive lock");
         try {
-            byte[] response = ca.transmitControlCommand(SCARD_CTL_CODE, command.getBytes());
+            LOGGER.debug("Get exclusive lock");
+            ca.beginExclusive();
+            LOGGER.debug("Got exclusive lock");
+            try {
+                byte[] response = ca.transmitControlCommand(SCARD_CTL_CODE, command.getBytes());
 
-            CommandAPDU responseAPDU = new CommandAPDU(response);
-            if (!isSuccess(responseAPDU)) {
-                throw new AcsCardException("Card responded with error " + ByteArrayHexStringConverter.toHexString(response));
+                CommandAPDU responseAPDU = new CommandAPDU(response);
+                if (!isSuccess(responseAPDU)) {
+                    throw new AcsCardException("Card responded with error " + ByteArrayHexStringConverter.toHexString(response));
+                }
+
+                // i.e. E1 00 00 00 01 <value>
+                byte[] data = responseAPDU.getData();
+                if (data.length == 0) {
+                    LOGGER.warn("Unable to properly update automatic polling: Unexpected response " + ByteArrayHexStringConverter.toHexString(response));
+
+                    return false;
+                }
+                final int operation = data[0] & 0xFF;
+
+                if (operation != value) {
+                    LOGGER.warn("Unable to properly update automatic polling: Expected " + Integer.toHexString(value) + " got " + Integer.toHexString(operation));
+
+                    return false;
+                } else {
+                    LOGGER.debug("Updated automatic polling " + Integer.toHexString(operation) + " (" + Integer.toHexString(value) + ")");
+                }
+                return true;
+            } finally {
+                ca.endExclusive();
+                LOGGER.debug("Released exclusive lock");
             }
-
-            final int operation = responseAPDU.getBytes()[0] & 0xFF;
-
-            if (operation != value) {
-                LOGGER.warn("Unable to properly update automatic polling: Expected " + Integer.toHexString(value) + " got " + Integer.toHexString(operation));
-
-                return false;
-            } else {
-                LOGGER.debug("Updated automatic polling " + Integer.toHexString(operation) + " (" + Integer.toHexString(value) + ")");
-            }
-            return true;
         } finally {
-            ca.endExclusive();
-            LOGGER.debug("Released exclusive lock");
+            disconnect(ca);
         }
     }
 
