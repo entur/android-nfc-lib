@@ -78,7 +78,7 @@ public class ACRCommands {
 	}
 
 	public static boolean is(byte[] in, int index, int value) {
-		return (in[index] & 0xFF) == value;
+		return (in[1] & 0xFF) == 0x90;
 	}
 
 	public ResponseAPDU control(int slotnum, CommandAPDU command) throws ReaderException {

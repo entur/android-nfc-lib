@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import com.acs.bluetooth.BluetoothReader;
 import com.acs.smartcard.Reader;
@@ -31,11 +30,8 @@ public class ACR1255BluetoothCommands
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1255BluetoothCommands.class);
 
-	private static final long RESPONSE_TIMEOUT_MILLIS = 10000L;
-
 	private volatile CountDownLatch latch;
 	private volatile byte[] in;
-	private volatile int errorCode;
 
 	private BluetoothReader reader;
 	private String name;
@@ -394,25 +390,30 @@ public class ACR1255BluetoothCommands
 	}
 
 	@Override
-	public synchronized byte[] control(int slotNum, int controlCode, byte[] request) throws ReaderException {
-		// synchronized: the response fields are shared between requests
+	public byte[] control(int slotNum, int controlCode, byte[] request) throws ReaderException {
 		LOGGER.debug("Raw control request: " + ByteArrayHexStringConverter.toHexString(request));
 		try {
 
 			long time = System.currentTimeMillis();
 
-			CountDownLatch latch = prepareForResponse();
+			this.in = null;
+			this.latch = new CountDownLatch(1);
 
 			reader.setOnEscapeResponseAvailableListener(this);
 			if (!reader.transmitEscapeCommand(request)) {
 				throw new ReaderException("Unable to transmit escape command");
 			}
 
-			byte[] response = awaitResponse(latch);
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new ReaderException("Problem waiting for response", e);
+			}
 
-			LOGGER.debug("Raw control response: " + ByteArrayHexStringConverter.toHexString(response) + " in " + (System.currentTimeMillis() - time) + " millis");
+			LOGGER.debug("Raw control response: " + ByteArrayHexStringConverter.toHexString(in) + " in " + (System.currentTimeMillis() - time) + " millis");
 
-			return response;
+			return in;
 		} catch (Exception e) {
 			throw new ReaderException(e);
 		}
@@ -423,64 +424,31 @@ public class ACR1255BluetoothCommands
 		return transmit(command);
 	}
 
-	public synchronized byte[] transmit(byte[] request) {
-		// synchronized: the response fields are shared between requests
+	public byte[] transmit(byte[] request) {
 		LOGGER.debug("Raw transmit request: " + ByteArrayHexStringConverter.toHexString(request));
 		try {
 
-			CountDownLatch latch = prepareForResponse();
+			in = null;
+			latch = new CountDownLatch(1);
 
 			reader.setOnResponseApduAvailableListener(this);
 			if (!reader.transmitApdu(request)) {
 				throw new ReaderException("Unable to transmit APDU");
 			}
 
-			byte[] response = awaitResponse(latch);
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 
-			LOGGER.debug("Raw transmit response: " + ByteArrayHexStringConverter.toHexString(response));
+				throw new ReaderException("Problem waiting for response", e);
+			}
 
-			return response;
+			LOGGER.debug("Raw transmit response: " + ByteArrayHexStringConverter.toHexString(in));
+
+			return in;
 		} catch (Exception e) {
 			throw new ReaderCommandException(e);
-		}
-	}
-
-	private CountDownLatch prepareForResponse() {
-		this.in = null;
-		this.errorCode = BluetoothReader.ERROR_SUCCESS;
-
-		CountDownLatch latch = new CountDownLatch(1);
-		this.latch = latch;
-		return latch;
-	}
-
-	private byte[] awaitResponse(CountDownLatch latch) throws ReaderException {
-		try {
-			if (!latch.await(RESPONSE_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
-				throw new ReaderException("No response within " + RESPONSE_TIMEOUT_MILLIS + " millis");
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-
-			throw new ReaderException("Problem waiting for response", e);
-		}
-
-		byte[] response = this.in;
-		if (response == null) {
-			throw new ReaderException("Reader responded with error code " + errorCode);
-		}
-		return response;
-	}
-
-	private void onResponse(byte[] response, int errorCode) {
-		if (errorCode == BluetoothReader.ERROR_SUCCESS) {
-			this.in = response;
-		} else {
-			this.errorCode = errorCode;
-		}
-		CountDownLatch latch = this.latch;
-		if (latch != null) {
-			latch.countDown();
 		}
 	}
 
@@ -488,14 +456,22 @@ public class ACR1255BluetoothCommands
 	public void onResponseApduAvailable(BluetoothReader bluetoothReader, byte[] apdu, int errorCode) {
 		LOGGER.debug("onResponseApduAvailable: " + getResponseString(apdu, errorCode));
 
-		onResponse(apdu, errorCode);
+		if (errorCode == BluetoothReader.ERROR_SUCCESS) {
+			this.in = apdu;
+
+		}
+		latch.countDown();
 	}
 
 	@Override
 	public void onEscapeResponseAvailable(BluetoothReader bluetoothReader, byte[] bytes, int errorCode) {
 		LOGGER.debug("onEscapeResponseAvailable: " + getResponseString(bytes, errorCode));
 
-		onResponse(bytes, errorCode);
+		if (errorCode == BluetoothReader.ERROR_SUCCESS) {
+			this.in = bytes;
+
+		}
+		latch.countDown();
 	}
 
 	public String getName() {

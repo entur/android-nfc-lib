@@ -70,7 +70,7 @@ public class INFcTagBinder {
                 ids[i] = BasicTagTechnology.NDEF;
             } else if(b instanceof MockNdefFormatable) {
                 ndefFormatable = (MockNdefFormatable) b;
-                ids[i] = BasicTagTechnology.NDEF_FORMATABLE;
+                ids[i] = BasicTagTechnology.NDEF;
             } else if(b instanceof MockNfcA) {
                 nfcA = (MockNfcA) b;
                 ids[i] = BasicTagTechnology.NFC_A;
@@ -167,9 +167,7 @@ public class INFcTagBinder {
     }
 
     protected void checkConnected(int technology) throws RemoteException {
-        // note: NdefFormatable.format(..) calls ndefWrite(..) / ndefMakeReadOnly(..) while connected as NDEF_FORMATABLE,
-        // so do not require the connected technology to match
-        if(connected == -1) {
+        if(technology == -1) {
             throw new RemoteException("No connected tag technology");
         }
     }
