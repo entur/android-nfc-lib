@@ -109,6 +109,16 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 
 	@Override
 	public void closeReader(UsbDevice device) {
+		clearBinders();
+
+		WrappedAcrReader reader = this.reader;
+		if(reader != null) {
+			reader.getReaderWrapper().close();
+			this.reader = null;
+		}
+	}
+
+	private void clearBinders() {
 		acr122Binder.clearReader();
 		acr1222Binder.clearReader();
 		acr1251Binder.clearReader();
@@ -118,12 +128,6 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		acr1283Binder.clearReader();
 		acr1552Binder.clearReader();
 
-		WrappedAcrReader reader = this.reader;
-		if(reader != null) {
-			reader.getReaderWrapper().close();
-			this.reader = null;
-		}
-		
 		binder.setReaderTechnology(null);
 	}
 
@@ -141,26 +145,37 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		}
 		readerWrapper.open(device);
 
-		ACRCommands reader = getReaderCommands(readerWrapper);
-
+		boolean success = false;
 		try {
-			binder.setReaderTechnology(new ACRReaderTechnology(reader));
-		} catch (ReaderException e) {
-			LOGGER.debug("Problem initializing reader", e);
-			return null;
-		}
+			ACRCommands reader = getReaderCommands(readerWrapper);
 
-		AcrReader usbAcrReader = createUsbAcrReader(reader);
-		if(usbAcrReader == null) {
-			LOGGER.debug("Reader not supported by library");
-			return null;
-		}
+			try {
+				binder.setReaderTechnology(new ACRReaderTechnology(reader));
+			} catch (ReaderException e) {
+				LOGGER.debug("Problem initializing reader", e);
+				return null;
+			}
 
-		WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, usbAcrReader);
-		
-		this.reader = wrappedAcrReader;
-		
-		return wrappedAcrReader;
+			AcrReader usbAcrReader = createUsbAcrReader(reader);
+			if(usbAcrReader == null) {
+				LOGGER.debug("Reader not supported by library");
+				return null;
+			}
+
+			WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, usbAcrReader);
+
+			this.reader = wrappedAcrReader;
+
+			success = true;
+
+			return wrappedAcrReader;
+		} finally {
+			if(!success) {
+				// release the USB interface, otherwise the next attempt cannot claim it
+				clearBinders();
+				readerWrapper.close();
+			}
+		}
 	}
 
 	@Override

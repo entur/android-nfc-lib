@@ -105,13 +105,16 @@ public class ExternalUsbNfcServiceSupport {
 				if (device != null) {
 					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 
-						LOGGER.debug("Open reader: " + device.getDeviceName());
-
 						synchronized (ExternalUsbNfcServiceSupport.this) {
-							openDevices.add(device.getDeviceId());
-						}
+							// the scanner might already have opened the device, if permission was granted before this broadcast arrived
+							if (!destroyed && openDevices.add(device.getDeviceId())) {
+								LOGGER.debug("Open reader: " + device.getDeviceName());
 
-						new OpenReaderTask().execute(device);
+								openReader(device);
+							} else {
+								LOGGER.debug("Reader " + device.getDeviceName() + " already open");
+							}
+						}
 					} else {
 						LOGGER.debug("Permission denied for device " + device.getDeviceName() + " / " + device.getDeviceId() + ", resume scanning.");
 
@@ -147,7 +150,7 @@ public class ExternalUsbNfcServiceSupport {
 							// Close reader
 							LOGGER.debug("Closing reader " + device.getDeviceId());
 
-							new CloseTask().execute();
+							new CloseTask().execute(device);
 						}
 					}
 				}
@@ -209,7 +212,20 @@ public class ExternalUsbNfcServiceSupport {
 			}
 
 			if (reader != null) {
-				startReceivingUsbDeviceDetachBroadcasts();
+				boolean destroyed;
+				synchronized (ExternalUsbNfcServiceSupport.this) {
+					destroyed = ExternalUsbNfcServiceSupport.this.destroyed;
+					if (!destroyed) {
+						connectedDevice = params[0];
+					}
+				}
+				if (destroyed) {
+					LOGGER.debug("Service destroyed while opening reader " + params[0].getDeviceName() + ", closing it");
+
+					readerAdapter.closeReader(params[0]);
+
+					return result;
+				}
 
 				listener.onReaderOpen(reader, ExternalNfcReaderCallback.READER_STATUS_OK);
 			} else {
@@ -225,22 +241,23 @@ public class ExternalUsbNfcServiceSupport {
 		}
 	}
 
-	private class CloseTask extends AsyncTask<Void, Void, Exception> {
+	private class CloseTask extends AsyncTask<UsbDevice, Void, Exception> {
 
 		@Override
-		protected Exception doInBackground(Void... params) {
+		protected Exception doInBackground(UsbDevice... params) {
 
 			Exception result = null;
 
 			try {
-				UsbDevice device = ExternalUsbNfcServiceSupport.this.connectedDevice;
-				if (device != null) {
-					synchronized (ExternalUsbNfcServiceSupport.this) {
-						openDevices.remove(device.getDeviceId());
-					}
-					readerAdapter.closeReader(device);
-				}
+				UsbDevice device = params[0];
+				synchronized (ExternalUsbNfcServiceSupport.this) {
+					openDevices.remove(device.getDeviceId());
 
+					if (connectedDevice != null && connectedDevice.getDeviceId() == device.getDeviceId()) {
+						connectedDevice = null;
+					}
+				}
+				readerAdapter.closeReader(device);
 			} catch (Exception e) {
 				result = e;
 			} finally {
@@ -260,7 +277,7 @@ public class ExternalUsbNfcServiceSupport {
 
 	}
 
-	private static final String ACTION_USB_PERMISSION = ExternalUsbNfcServiceSupport.class.getPackage() + ".USB_PERMISSION";
+	static final String ACTION_USB_PERMISSION = ExternalUsbNfcServiceSupport.class.getPackage() + ".USB_PERMISSION";
 
 	protected static final String[] stateStrings = { "Unknown", "Absent", "Present", "Swallowed", "Powered", "Negotiable", "Specific" };
 
@@ -276,6 +293,8 @@ public class ExternalUsbNfcServiceSupport {
 	protected boolean recievingDetachBroadcasts = false;
 
 	protected boolean detectReader = false;
+
+	protected boolean destroyed = false;
 
 	protected Set<Integer> refusedPermissionDevices = new HashSet<Integer>();
 	protected Set<Integer> requestPermissionDevices = new HashSet<Integer>();
@@ -338,7 +357,7 @@ public class ExternalUsbNfcServiceSupport {
 
 				openDevices.add(deviceId);
 
-				new OpenReaderTask().execute(device);
+				openReader(device);
 
 				return true;
 			} else {
@@ -354,6 +373,14 @@ public class ExternalUsbNfcServiceSupport {
 			}
 		}
 		return false;
+	}
+
+	private void openReader(UsbDevice device) {
+		// Listen for detach before opening, so that a reader unplugged while being opened
+		// is closed afterwards (open and close tasks run on the same serial executor).
+		startReceivingUsbDeviceDetachBroadcasts();
+
+		new OpenReaderTask().execute(device);
 	}
 
 	protected boolean isDetectUSBDevice() {
@@ -405,6 +432,9 @@ public class ExternalUsbNfcServiceSupport {
 
 	public void scanForDevices() {
 		synchronized (this) {
+			if (destroyed) {
+				return;
+			}
 			if (openDevices.isEmpty()) {
 				startDetectingReader();
 			} else {
@@ -470,7 +500,10 @@ public class ExternalUsbNfcServiceSupport {
 	}
 
 	public void onDestroy() {
-		detectReader = false;
+		synchronized (this) {
+			destroyed = true;
+			detectReader = false;
+		}
 
 		stopReceivingPermissionBroadcasts();
 

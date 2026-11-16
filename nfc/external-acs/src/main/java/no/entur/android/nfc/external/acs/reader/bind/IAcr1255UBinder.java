@@ -19,7 +19,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr1255UBinder.class);
 
-	private IAcr1255UCommandWrapper wrapper;
+	private volatile IAcr1255UCommandWrapper wrapper;
 
 	public IAcr1255UBinder() {
 		attachInterface(this, IAcr1255UBinder.class.getName());
@@ -34,6 +34,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 	}
 
 	public byte[] getFirmware() {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -65,6 +66,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 	}
 
 	public byte[] getPICC() {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -72,6 +74,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 	}
 
 	public byte[] setPICC(int picc) {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -80,6 +83,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] control(int slotNum, int controlCode, byte[] command) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -89,6 +93,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] transmit(int slotNum, byte[] command) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -98,6 +103,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getAutoPPS() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -106,6 +112,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setAutoPPS(byte[] bytes) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -114,6 +121,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getAntennaFieldStatus() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -122,6 +130,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setAntennaField(boolean b) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -130,6 +139,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getBluetoothTransmissionPower() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -138,6 +148,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setBluetoothTransmissionPower(byte b) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -146,6 +157,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setSleepModeOption(byte b) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -154,6 +166,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getDefaultLEDAndBuzzerBehaviour() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -162,6 +175,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setDefaultLEDAndBuzzerBehaviour(int parameter) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -170,6 +184,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getAutomaticPICCPolling() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -178,6 +193,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setAutomaticPICCPolling(int picc) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -186,6 +202,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getLEDs() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -194,6 +211,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setLEDs(int leds) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -202,6 +220,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setAutomaticPolling(boolean b) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -210,6 +229,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getBatteryLevel() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -218,6 +238,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] power(int slotNum, int action) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -226,6 +247,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] setProtocol(int slotNum, int preferredProtocols) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -234,6 +256,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getState(int slotNum) throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
@@ -242,6 +265,7 @@ public class IAcr1255UBinder extends IAcr1255UReaderControl.Stub {
 
 	@Override
 	public byte[] getNumSlots() throws RemoteException {
+		IAcr1255UCommandWrapper wrapper = this.wrapper;
 		if (wrapper == null) {
 			return noReaderException();
 		}
