@@ -41,12 +41,17 @@ public class ApduPartialTransceiveResponsePredicate implements PartialTransceive
     }
 
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(sw1);
+        dest.writeInt(sw2);
     }
 
     public static final Parcelable.Creator<ApduPartialTransceiveResponsePredicate> CREATOR = new Parcelable.Creator<ApduPartialTransceiveResponsePredicate>() {
         @Override
         public ApduPartialTransceiveResponsePredicate createFromParcel(Parcel in) {
-            return new ApduPartialTransceiveResponsePredicate();
+            int sw1 = in.readInt();
+            int sw2 = in.readInt();
+
+            return new ApduPartialTransceiveResponsePredicate(sw1, sw2);
         }
 
         @Override

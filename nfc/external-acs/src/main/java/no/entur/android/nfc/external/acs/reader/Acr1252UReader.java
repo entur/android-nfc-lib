@@ -301,12 +301,14 @@ public class Acr1252UReader extends AcrReader {
 			throw new AcrReaderException(e);
 		}
 
+		int operation = readInteger(response);
+
 		List<AcrLED> leds = new ArrayList<AcrLED>();
 
-		if ((response[0] & LED_RED) != 0) {
+		if ((operation & LED_RED) != 0) {
 			leds.add(AcrLED.RED);
 		}
-		if ((response[0] & LED_GREEN) != 0) {
+		if ((operation & LED_GREEN) != 0) {
 			leds.add(AcrLED.GREEN);
 		}
 

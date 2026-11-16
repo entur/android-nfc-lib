@@ -270,7 +270,7 @@ public class Acr1255UReader extends AcrReader {
 			throw new AcrReaderException(e);
 		}
 
-		int operation = response[0] & 0xFF;
+		int operation = readInteger(response);
 
 		Set<AcrLED> first = new HashSet<AcrLED>();
 		Set<AcrLED> second = new HashSet<AcrLED>();
@@ -402,7 +402,10 @@ public class Acr1255UReader extends AcrReader {
 			throw new AcrReaderException(e);
 		}
 
-		return readBoolean(response);
+		// response is the updated PPS settings; failure is signalled via exception
+		readByteArray(response);
+
+		return true;
 	}
 
 	/**
