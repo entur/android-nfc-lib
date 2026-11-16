@@ -106,7 +106,8 @@ public class NfcNtag {
 
 		byte[] resp = transceive(req);
 
-		return resp[0] + resp[1] * 256 + resp[2] * 65536;
+		// 24-bit counter, LSB first
+		return (resp[0] & 0xFF) | (resp[1] & 0xFF) << 8 | (resp[2] & 0xFF) << 16;
 	}
 
 	// NTAG PWD_AUTH
