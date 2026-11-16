@@ -661,6 +661,8 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		SwitchCompat view = new SwitchCompat(this);
 		view.setText(label);
 		view.setTextColor(Color.BLACK);
+		view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+		view.setMinHeight(dp(56));
 		view.setPadding(0, dp(4), 0, dp(4));
 		if (onToggle != null) {
 			view.setOnCheckedChangeListener((button, checked) -> {
@@ -687,6 +689,9 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 			button.setId(View.generateViewId());
 			button.setText(labeler.label(value));
 			button.setTextColor(Color.BLACK);
+			button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+			button.setMinHeight(dp(56));
+			button.setPadding(button.getPaddingLeft(), 0, dp(16), 0);
 			button.setTag(value);
 			group.addView(button);
 		}
