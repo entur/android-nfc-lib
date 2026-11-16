@@ -39,6 +39,9 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
 
             Intent intent = isoDepTagFactory.getTag(tagProxy.getHandle(), null, uid, true, historicalBytes, tagService, extras);
 
+            wrapper.setTagProxy(tagProxy);
+            tagProxy.setUid(uid);
+
             if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast hce");
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
@@ -64,12 +67,11 @@ public class IsoDepTagServiceSupport extends AbstractTagServiceSupport {
             Intent intent = isoDepTagFactory.getTag(tagProxy.getHandle(), null, uid, false, historicalBytes, tagService, extras);
 
             wrapper.setTagProxy(tagProxy);
+            tagProxy.setUid(uid);
 
             if(LOGGER.isDebugEnabled()) LOGGER.debug("Broadcast IsoDep tag: " + intent.getAction());
 
             context.sendBroadcast(intent, ANDROID_PERMISSION_NFC);
-
-            tagProxy.setUid(uid);
 
             return tagProxy;
         } catch (Exception e) {

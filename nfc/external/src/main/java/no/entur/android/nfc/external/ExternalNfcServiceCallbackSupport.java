@@ -32,7 +32,6 @@ public class ExternalNfcServiceCallbackSupport {
 		String action = intent.getAction();
 		if (ExternalNfcServiceCallback.ACTION_SERVICE_STARTED.equals(action)) {
 			LOGGER.debug("Service started");
-			callback.onExternalNfcServiceStarted(intent);
 
 			if(executor != null) {
 				executor.execute(() -> {
@@ -43,7 +42,6 @@ public class ExternalNfcServiceCallbackSupport {
 			}
 		} else if (ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED.equals(action)) {
 			LOGGER.debug("Service stopped");
-			callback.onExternalNfcServiceStopped(intent);
 
 			if(executor != null) {
 				executor.execute(() -> {
@@ -71,11 +69,15 @@ public class ExternalNfcServiceCallbackSupport {
 	}
 
 	public void onResume() {
-		startReceivingServiceBroadcasts();
+		if (enabled) {
+			startReceivingServiceBroadcasts();
+		}
 	}
 
 	public void onPause() {
-		stopReceivingServiceBroadcasts();
+		if (enabled) {
+			stopReceivingServiceBroadcasts();
+		}
 	}
 
 	private void startReceivingServiceBroadcasts() {
