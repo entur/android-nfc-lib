@@ -55,7 +55,7 @@ public class Acr1283LReader extends AcrReader {
 	public static List<AcrDefaultLEDAndBuzzerBehaviour> parseBehaviour(int operation) {
 		List<AcrDefaultLEDAndBuzzerBehaviour> behaviours = new ArrayList<AcrDefaultLEDAndBuzzerBehaviour>();
 
-		if ((operation & PICC_ACTIVATION_STATUS_LED) != 0) {
+		if ((operation & PICC_POLLING_STATUS_LED) != 0) {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED);
 		}
 

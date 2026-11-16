@@ -285,7 +285,7 @@ public class ACR1255BluetoothCommands
 
 		boolean result = response.getData()[0] == 0x01;
 
-		if (result == on) {
+		if (result != on) {
 			LOGGER.warn("Unable to properly update antenna field: Expected " + on + " got " + result);
 
 			return Boolean.FALSE;
@@ -321,7 +321,7 @@ public class ACR1255BluetoothCommands
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		if (response.getData()[0] == power) {
+		if (response.getData()[0] != power) {
 			LOGGER.warn("Unable to update bluetoth transmission power: Expected " + Integer.toHexString(power & 0xFF) + " got "
 					+ Integer.toHexString(response.getData()[0] & 0xFF));
 
@@ -373,7 +373,7 @@ public class ACR1255BluetoothCommands
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		if (response.getData()[0] == option) {
+		if (response.getData()[0] != option) {
 			LOGGER.warn("Unable to set sleep mode option: Expected " + Integer.toHexString(option & 0xFF) + " got "
 					+ Integer.toHexString(response.getData()[0] & 0xFF));
 

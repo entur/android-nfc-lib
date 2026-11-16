@@ -359,11 +359,12 @@ public class ACR1222Commands extends ACRCommands {
 	public byte[] readSerialNumber(int slot) throws AcrReaderException {
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x49, 0x00, 0x00 };
 
-		byte[] in = new byte[300];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -453,11 +454,12 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[6];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -465,7 +467,7 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read " + ByteArrayHexStringConverter.toHexString(in));
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set buzzer control");
 
 			return true;
@@ -492,17 +494,18 @@ public class ACR1222Commands extends ACRCommands {
 
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x41, (byte) (parameter), 0x00 };
 
-		byte[] in = new byte[8];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set timeout parameter");
 
 			return true;
@@ -551,17 +554,23 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[6];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 		LOGGER.debug("Read data " + ByteArrayHexStringConverter.toHexString(in));
 
+		if (in.length < 2) {
+			LOGGER.debug("Unexpected response " + ByteArrayHexStringConverter.toHexString(in));
+
+			return false;
+		}
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (response.getSW1() == 0x90) {
@@ -589,11 +598,12 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[10];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -601,6 +611,11 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read data " + ByteArrayHexStringConverter.toHexString(in));
 
+		if (in.length < 2) {
+			LOGGER.debug("Unexpected response " + ByteArrayHexStringConverter.toHexString(in));
+
+			return false;
+		}
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (response.getSW1() != 0x90 || response.getSW2() != 0x00) {
@@ -644,11 +659,12 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[10];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -656,6 +672,11 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read data " + ByteArrayHexStringConverter.toHexString(in));
 
+		if (in.length < 2) {
+			LOGGER.debug("Unexpected response " + ByteArrayHexStringConverter.toHexString(in));
+
+			return false;
+		}
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (!isSuccessControl(response)) {

@@ -271,7 +271,7 @@ public class ACR1255UsbCommands extends ACRCommands implements ACR1255Commands {
 
 		boolean result = response.getData()[0] == 0x01;
 
-		if (result == on) {
+		if (result != on) {
 			LOGGER.warn("Unable to properly update antenna field: Expected " + on + " got " + result);
 
 			return Boolean.FALSE;
@@ -305,7 +305,7 @@ public class ACR1255UsbCommands extends ACRCommands implements ACR1255Commands {
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		if (response.getData()[0] == power) {
+		if (response.getData()[0] != power) {
 			LOGGER.warn("Unable to update bluetoth transmission power: Expected " + Integer.toHexString(power & 0xFF) + " got "
 					+ Integer.toHexString(response.getData()[0] & 0xFF));
 
@@ -357,7 +357,7 @@ public class ACR1255UsbCommands extends ACRCommands implements ACR1255Commands {
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		if (response.getData()[0] == option) {
+		if (response.getData()[0] != option) {
 			LOGGER.warn("Unable to set sleep mode option: Expected " + Integer.toHexString(option & 0xFF) + " got "
 					+ Integer.toHexString(response.getData()[0] & 0xFF));
 
@@ -377,11 +377,11 @@ public class ACR1255UsbCommands extends ACRCommands implements ACR1255Commands {
 
 		byte[] response = control(slot, Reader.IOCTL_CCID_ESCAPE, command);
 
-		if (!isSuccess(response)) {
+		// the response echoes the command in P2, i.e. e1 00 00 40 01
+		if (!isSuccessForP2(response, 0x40)) {
 			throw new IllegalArgumentException("Card responded with error code ");
 		}
 
-		// e1 00 00 40 01
 		boolean result = response[4] == 0x01;
 
 		if (result != on) {

@@ -61,7 +61,7 @@ public class ACR1552Commands extends ACRCommands {
 
 		byte[] data = response.getData();
 
-		return data[0] != byte1 || data[1] != byte0;
+		return data[0] == byte1 && data[1] == byte0;
 	}
 
 	public String getFirmware(int slot) throws ReaderException {

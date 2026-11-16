@@ -130,17 +130,17 @@ public class ACR122Commands extends ACRCommands {
 	public boolean setBuzzerForCardDetection(int slot, boolean enable) throws AcrReaderException {
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x52, (byte) (enable ? 0xFF : 0x00), 0x00 };
 
-		byte[] in = new byte[300];
-
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set buzzer for card detection to " + (enable ? "on" : "off"));
 
 			return true;
@@ -177,17 +177,17 @@ public class ACR122Commands extends ACRCommands {
 
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x41, (byte) (parameter), 0x00 };
 
-		byte[] in = new byte[8];
-
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set timeout parameter");
 
 			return true;
