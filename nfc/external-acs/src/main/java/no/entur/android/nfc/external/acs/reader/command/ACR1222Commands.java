@@ -11,6 +11,7 @@ import com.acs.smartcard.ReaderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
@@ -265,7 +266,7 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
-		return Acr1283LReader.parseBehaviour(operation);
+		return Acr1222LReader.parseBehaviour(operation);
 	}
 
 	public int getDefaultLEDAndBuzzerBehaviour2(int slot) throws ReaderException {

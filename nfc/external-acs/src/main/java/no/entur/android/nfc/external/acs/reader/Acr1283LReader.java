@@ -348,6 +348,28 @@ public class Acr1283LReader extends AcrReader {
 
 	}
 
+	/**
+	 * Turn the buzzer on for the given duration.
+	 *
+	 * @param durationInMillis duration in milliseconds, 10 to 2550, in steps of 10
+	 * @return true if successful
+	 */
+
+	public boolean setBuzzerControlSingle(int durationInMillis) {
+		int duration = durationInMillis / 10;
+		if (duration < 1 || duration > 0xFF) {
+			throw new IllegalArgumentException("Expected duration 10 to 2550 ms, got " + durationInMillis);
+		}
+		byte[] response;
+		try {
+			response = readerControl.setBuzzer(duration);
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readBoolean(response);
+	}
+
 	public boolean lightDisplayBacklight(boolean value) {
 		byte[] response;
 		try {

@@ -200,4 +200,13 @@ public class IAcr1222LBinder extends IAcr1222LReaderControl.Stub {
 		}
 		return wrapper.getNumSlots();
 	}
+
+	@Override
+	public byte[] setBuzzer(int duration) throws RemoteException {
+		IAcr1222LCommandWrapper wrapper = this.wrapper;
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.setBuzzer(duration);
+	}
 }

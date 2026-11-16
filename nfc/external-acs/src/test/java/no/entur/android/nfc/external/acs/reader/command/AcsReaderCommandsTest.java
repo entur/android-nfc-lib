@@ -23,6 +23,7 @@ import org.mockito.Mockito;
 import java.util.Arrays;
 import java.util.Collections;
 
+import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
@@ -89,6 +90,35 @@ public class AcsReaderCommandsTest {
     @Test(expected = IllegalArgumentException.class)
     public void testAcr1283SetLEDFails() throws Exception {
         new ACR1283Commands("ACS ACR1283L", reader("6300")).setLED(0, 0x0F);
+    }
+
+    @Test
+    public void testAcr1222BehaviourBits() {
+        // card insertion / removal buzzer is bit 4 on the ACR1222L (checked on a reader), not bit 3 as on the ACR1283L
+        assertEquals(0x10, Acr1222LReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER));
+        assertEquals(0x96, Acr1222LReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED,
+                AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER,
+                AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED));
+        // factory default 0x8F
+        assertEquals(Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED,
+                AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), Acr1222LReader.parseBehaviour(0x8F));
+    }
+
+    @Test
+    public void testAcr1222Buzzer() throws Exception {
+        // buzzer control E0 00 00 28 01 <duration in 10 ms>, response E1 00 00 00 01 <timer> (checked on a reader)
+        ReaderWrapper reader = mock(ReaderWrapper.class, withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
+        Mockito.doAnswer(invocation -> {
+            byte[] response = hex("E10000000100");
+            System.arraycopy(response, 0, invocation.getArgument(4), 0, response.length);
+            return response.length;
+        }).when(reader).control(anyInt(), anyInt(), any(byte[].class), anyInt(), any(byte[].class), anyInt());
+
+        assertTrue(new ACR1222Commands("ACS ACR1222L", reader).setBuzzerBeepDurationOnCardDetection(0, 10));
+
+        ArgumentCaptor<byte[]> command = ArgumentCaptor.forClass(byte[].class);
+        verify(reader).control(eq(0), eq(Reader.IOCTL_CCID_ESCAPE), command.capture(), anyInt(), any(byte[].class), anyInt());
+        assertArrayEquals(hex("E0000028010A"), command.getValue());
     }
 
     @Test

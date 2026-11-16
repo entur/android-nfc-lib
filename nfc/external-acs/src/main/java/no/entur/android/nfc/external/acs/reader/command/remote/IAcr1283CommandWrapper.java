@@ -226,4 +226,26 @@ public class IAcr1283CommandWrapper extends AcrRemoteCommandWriter {
 	public ACRCommands getCommands() {
 		return commands;
 	}
+
+	/**
+	 * Buzzer control: turn the buzzer on for the given duration.
+	 *
+	 * @param duration duration in units of 10 ms, 1 - 255
+	 * @return result
+	 */
+
+	public byte[] setBuzzer(int duration) {
+		Boolean result = null;
+		Exception exception = null;
+		try {
+			commands.setBuzzerBeepDurationOnCardDetection(0, duration);
+			result = Boolean.TRUE;
+		} catch (Exception e) {
+			LOGGER.debug("Problem controlling buzzer", e);
+
+			exception = e;
+		}
+
+		return returnValue(result, exception);
+	}
 }
