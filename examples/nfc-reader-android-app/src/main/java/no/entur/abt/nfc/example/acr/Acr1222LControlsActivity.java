@@ -5,7 +5,6 @@ import android.widget.EditText;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 import no.entur.abt.nfc.example.R;
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
@@ -30,15 +29,7 @@ public class Acr1222LControlsActivity extends AbstractAcrControlsActivity<Acr122
 		addSection(getString(R.string.acr_controls_default_behaviour));
 		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
-		// the raw default LED and buzzer behaviour byte, for finding out what the RFU bits do
-		addSection(getString(R.string.acr_controls_default_behaviour_bits));
-		addBits(BEHAVIOUR_BITS, () -> {
-			byte[] response = escape(reader, "E0 00 00 21 00");
-			return response[5] & 0xFF;
-		}, (value) -> {
-			byte[] response = escape(reader, String.format(Locale.ROOT, "E0 00 00 21 01 %02X", value));
-			return (response[5] & 0xFF) == value;
-		});
+		addDefaultBehaviourBits(reader, BEHAVIOUR_BITS);
 
 		addSection(getString(R.string.acr_controls_buzzer));
 		EditText duration = editText("100", InputType.TYPE_CLASS_NUMBER);

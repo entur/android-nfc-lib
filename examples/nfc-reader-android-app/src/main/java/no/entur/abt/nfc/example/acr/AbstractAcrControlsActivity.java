@@ -464,6 +464,23 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 	}
 
 	/**
+	 * The raw default LED and buzzer behaviour byte (E0 00 00 21), a switch per bit, for finding out what the bits do.
+	 *
+	 * @param labels label per bit, from bit 0
+	 */
+
+	protected void addDefaultBehaviourBits(T reader, String[] labels) {
+		addSection(getString(R.string.acr_controls_default_behaviour_bits));
+		addBits(labels, () -> {
+			byte[] response = escape(reader, "E0 00 00 21 00");
+			return response[5] & 0xFF;
+		}, (value) -> {
+			byte[] response = escape(reader, String.format(Locale.ROOT, "E0 00 00 21 01 %02X", value));
+			return (response[5] & 0xFF) == value;
+		});
+	}
+
+	/**
 	 * Send an escape command to the reader.
 	 *
 	 * @return the response

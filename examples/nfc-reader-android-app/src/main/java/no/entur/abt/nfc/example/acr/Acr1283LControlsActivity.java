@@ -32,6 +32,8 @@ public class Acr1283LControlsActivity extends AbstractAcrControlsActivity<Acr128
 		addSection(getString(R.string.acr_controls_default_behaviour));
 		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
+		addDefaultBehaviourBits(reader, BEHAVIOUR_BITS);
+
 		addSection(getString(R.string.acr_controls_buzzer));
 		EditText duration = editText("100", InputType.TYPE_CLASS_NUMBER);
 		addRow(text(getString(R.string.acr_controls_duration), false), duration, button(getString(R.string.acr_controls_beep), (v) -> {
@@ -57,6 +59,10 @@ public class Acr1283LControlsActivity extends AbstractAcrControlsActivity<Acr128
 			}
 		}, reader::setDisplayContrast);
 	}
+
+	// per the ACR1283L manual
+	private static final String[] BEHAVIOUR_BITS = { "Bit 0 (RFU)", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
+			"Bit 3 card insertion / removal buzzer", "Bit 4 (RFU)", "Bit 5 (RFU)", "Bit 6 (RFU)", "Bit 7 card operation blink LED" };
 
 	private String statusLabel(AcrLED led) {
 		switch (led) {
