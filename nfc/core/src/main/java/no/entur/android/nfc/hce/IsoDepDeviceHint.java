@@ -44,14 +44,15 @@ public class IsoDepDeviceHint {
 	}
 
 	public boolean isTag() {
-		if (historicalBytes.length != 1) {
+		// historical bytes are null for NFC-B (see getHiLayerResponse())
+		if (historicalBytes == null || historicalBytes.length != 1) {
 			return false;
 		}
 		if (historicalBytes[0] != (byte) 0x80) {
 			return false;
 		}
 
-		if (id.length != 7 || id[0] != (byte) 0x04) {
+		if (id == null || id.length != 7 || id[0] != (byte) 0x04) {
 			return false;
 		}
 
@@ -59,11 +60,12 @@ public class IsoDepDeviceHint {
 	}
 
 	public boolean isHostCardEmulation() {
-		if (historicalBytes.length > 0) {
+		// host card emulation is NFC-A with empty historical bytes; historical bytes are null for NFC-B
+		if (historicalBytes == null || historicalBytes.length > 0) {
 			return false;
 		}
 
-		if (id.length != 4 || id[0] != (byte) 0x08) {
+		if (id == null || id.length != 4 || id[0] != (byte) 0x08) {
 			return false;
 		}
 

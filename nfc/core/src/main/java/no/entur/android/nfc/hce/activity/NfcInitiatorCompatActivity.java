@@ -87,6 +87,9 @@ public abstract class NfcInitiatorCompatActivity extends NfcTargetCompatActivity
 
 	public void disableNfcReaderModeWithDelay(long delay) {
 		if (nfcReaderSupport != null) {
+			// cancel any previous delayed disable, so that it does not disable early
+			handler.removeCallbacksAndMessages(null); // i.e. all
+
 			nfcReaderSupport.setNfcReaderMode(true);
 
 			handler.postDelayed(new DisableNfcReaderMode(this), delay);
@@ -102,7 +105,9 @@ public abstract class NfcInitiatorCompatActivity extends NfcTargetCompatActivity
 	public void setNfcReaderMode(boolean enabled) {
 		handler.removeCallbacksAndMessages(null); // i.e. all
 
-		nfcReaderSupport.setNfcReaderMode(enabled);
+		if (nfcReaderSupport != null) {
+			nfcReaderSupport.setNfcReaderMode(enabled);
+		}
 	}
 
 	public boolean isNfcEnabled() {

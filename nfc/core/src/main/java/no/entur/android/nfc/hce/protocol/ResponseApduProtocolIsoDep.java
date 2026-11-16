@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.CommandAPDU;
+import no.entur.android.nfc.ResponseAPDU;
 import no.entur.android.nfc.hce.ResponseApduProtocol;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
@@ -51,7 +52,12 @@ public class ResponseApduProtocolIsoDep extends IsoDep {
 
 	@Override
 	public byte[] transceive(byte[] data) throws IOException {
-		return target.handleCommandApdu(new CommandAPDU(data)).getBytes();
+		ResponseAPDU response = target.handleCommandApdu(new CommandAPDU(data));
+		if (response == null) {
+			// no more commands expected, i.e. the other side stops responding
+			throw new IOException("No response");
+		}
+		return response.getBytes();
 	}
 
     @Override

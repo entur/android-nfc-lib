@@ -80,7 +80,7 @@ public abstract class AbstractNfcReaderCallbackHceSupport extends NfcReaderCallb
 
 				// simple detect
 				// must parse historical bytes
-				if (hint.getHistoricalBytes().length == 0) {
+				if (hint.getHistoricalBytes() != null && hint.getHistoricalBytes().length == 0) {
 					// assume HCE
 					return true;
 				}
