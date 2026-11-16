@@ -62,9 +62,9 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 				(seconds) -> seconds == -1 ? getString(R.string.acr_controls_sleep_never) : seconds + " s", null, reader::setSleepModeOption);
 	}
 
-	// as mapped by the library, not checked against the manual
-	private static final String[] BEHAVIOUR_BITS = { "Bit 0 ICC activation status LED", "Bit 1 PICC polling status LED", "Bit 2 (RFU)", "Bit 3 (RFU)",
-			"Bit 4 card insertion / removal buzzer", "Bit 5 contactless chip reset buzzer", "Bit 6 exclusive mode buzzer", "Bit 7 card operation blink LED" };
+	// as mapped by the library, not checked against the manual; bit 3 beeps on card insertion / removal on an ACR1255U-J1
+	private static final String[] BEHAVIOUR_BITS = { "Bit 0 ICC activation status LED", "Bit 1 PICC polling status LED", "Bit 2", "Bit 3 card insertion / removal buzzer",
+			"Bit 4 card insertion / removal buzzer (library)", "Bit 5 contactless chip reset buzzer", "Bit 6 exclusive mode buzzer", "Bit 7 card operation blink LED" };
 
 	@Override
 	protected List<String> getEscapeCommandPresets() {
