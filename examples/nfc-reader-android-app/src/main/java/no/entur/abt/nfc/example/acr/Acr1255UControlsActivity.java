@@ -50,6 +50,8 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.ICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.EXCLUSIVE_MODE_STATUS_BUZZER), null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
 
+		addDefaultBehaviourBits(reader, BEHAVIOUR_BITS);
+
 		addSection(getString(R.string.acr_controls_antenna));
 		addSwitch(getString(R.string.acr_controls_antenna_field), () -> reader.getAntennaFieldStatus() != AcrAntennaFieldStatus.PICC_POWER_OFF, reader::setAntennaField);
 
@@ -58,6 +60,23 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 				reader::setBluetoothTransmissionPower);
 		addChoice(getString(R.string.acr_controls_sleep), Arrays.asList(60, 90, 120, 180, -1),
 				(seconds) -> seconds == -1 ? getString(R.string.acr_controls_sleep_never) : seconds + " s", null, reader::setSleepModeOption);
+	}
+
+	// as mapped by the library, not checked against the manual
+	private static final String[] BEHAVIOUR_BITS = { "Bit 0 ICC activation status LED", "Bit 1 PICC polling status LED", "Bit 2 (RFU)", "Bit 3 (RFU)",
+			"Bit 4 card insertion / removal buzzer", "Bit 5 contactless chip reset buzzer", "Bit 6 exclusive mode buzzer", "Bit 7 card operation blink LED" };
+
+	@Override
+	protected List<String> getEscapeCommandPresets() {
+		return Arrays.asList(
+				// automatic polling on / off
+				"E0 00 00 40 01", "E0 00 00 40 00",
+				// read the LED status, all LEDs off
+				"E0 00 00 29 00", "E0 00 00 29 01 00",
+				// read the default LED and buzzer behaviour
+				"E0 00 00 21 00",
+				// buzzer on for 100 ms
+				"E0 00 00 28 01 0A");
 	}
 
 	private void addAutomaticPPS(Acr1255UReader reader) {
