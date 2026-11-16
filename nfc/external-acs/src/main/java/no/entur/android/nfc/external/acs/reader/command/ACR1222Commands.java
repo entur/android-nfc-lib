@@ -46,10 +46,6 @@ public class ACR1222Commands extends ACRCommands {
 	public static final int PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_B = 1 << 1;
 	public static final int PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_A = 1;
 
-	/** the bits besides the card types, as in the default FF: poll automatically, automatic ATS generation, 250 ms polling interval */
-	public static final int PICC_OPERATING_PARAMETER_DEFAULTS = PICC_OPERATING_PARAMETER_AUTO_PICC_POLLING | PICC_OPERATING_PARAMETER_AUTO_ATS_GENERATION
-			| PICC_OPERATING_PARAMETER_POLLING_INTERVAL;
-
 	public ACR1222Commands(String name, ReaderWrapper reader) {
 		super(reader);
 		this.name = name;

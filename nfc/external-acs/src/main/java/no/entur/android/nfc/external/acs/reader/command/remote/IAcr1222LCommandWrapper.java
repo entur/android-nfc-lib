@@ -57,9 +57,7 @@ public class IAcr1222LCommandWrapper extends AcrRemoteCommandWriter {
 		Boolean success = null;
 		Exception exception = null;
 		try {
-			// the PICC operating parameter also holds the automatic PICC polling bit, keep that (and auto ATS, polling interval)
-			// enabled, otherwise setting i.e. type A and B turns off detecting cards
-			success = commands.setACR122PICC(0, ACR1222Commands.PICC_OPERATING_PARAMETER_DEFAULTS | picc);
+			success = commands.setACR122PICC(0, picc);
 		} catch (Exception e) {
 			LOGGER.debug("Problem setting PICC", e);
 
