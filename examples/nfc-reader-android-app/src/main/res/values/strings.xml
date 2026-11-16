@@ -49,5 +49,32 @@
     <string name="tagDetailReaderTitle">From reader</string>
     <string name="action_settings">Settings</string>
     <string name="activity_title_preferences">Preferences</string>
+    <string name="action_ultralight_test">Ultralight / NTAG test</string>
+    <string name="ultralight_test_title">Ultralight / NTAG test</string>
+    <string name="ultralight_test_phone_ready">Phone: ready, tap a tag on the phone</string>
+    <string name="ultralight_test_external_ready">External: ready, tap a tag on an external reader</string>
+    <string name="ultralight_test_no_readers">External readers: none connected (start a reader service on the main screen)</string>
+    <string name="ultralight_test_readers">External readers:\n%1$s</string>
+    <string name="ultralight_test_reading">%1$s: reading %2$s, keep the tag still… %3$s</string>
+    <string name="ultralight_test_done">%1$s: done %2$s, %3$s</string>
+    <string name="ultralight_test_as_expected">all as expected</string>
+    <string name="ultralight_test_unexpected">%1$d not as expected</string>
+    <string name="ultralight_test_lost">tag lost, tap again</string>
+    <string name="ultralight_test_ignored">%1$s: ignored %2$s, not a MIFARE Ultralight / NTAG tag</string>
+    <string name="ultralight_test_dropped">%1$s: %2$s was dropped after a command it does not answer, keep it on the phone (or tap again)…</string>
+    <string name="ultralight_test_tech_discovered">%1$s: saw a tag but did not deliver it (TECH_DISCOVERED)</string>
+    <string name="ultralight_test_copy">Copy</string>
+    <string name="ultralight_test_clear">Clear</string>
+    <string name="ultralight_test_copied">Results copied</string>
+    <string name="ultralight_test_type">Tag type</string>
+    <string name="ultralight_test_phone">Phone</string>
+    <string name="ultralight_test_external">External</string>
+    <string name="ultralight_test_match">Match</string>
+    <string name="ultralight_test_not_tested">not tested</string>
+    <string name="ultralight_test_details">Details per tag</string>
+    <plurals name="ultralight_test_tags">
+        <item quantity="one">%d tag</item>
+        <item quantity="other">%d tags</item>
+    </plurals>
 
 </resources>
