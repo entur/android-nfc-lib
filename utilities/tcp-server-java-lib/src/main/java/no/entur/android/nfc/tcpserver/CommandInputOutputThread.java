@@ -1,10 +1,15 @@
 package no.entur.android.nfc.tcpserver;
 
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeUnit;
 
 public class CommandInputOutputThread<T, S> extends Thread implements Closeable {
+
+    public static final long DEFAULT_RESPONSE_TIMEOUT = 5000;
 
     public interface Listener<T, S> {
         void onReaderStart(CommandInputOutputThread<T, S> reader);
@@ -16,6 +21,7 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     public static class PendingInputConsumer<T> {
 
         private T in;
+        private IOException failure;
         private boolean closed;
         private final Object ioLock;
 
@@ -31,7 +37,27 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             }
         }
 
-        // TODO could add some kind of check that the input is indeed a response to the output
+        /**
+         * Wait for input (or failure).
+         *
+         * @param timeout timeout in milliseconds
+         * @return true if closed within the timeout
+         */
+
+        public boolean waitClosed(long timeout) throws InterruptedException {
+            synchronized (ioLock) {
+                long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout);
+                while(!closed) {
+                    long remaining = deadline - System.nanoTime();
+                    if(remaining <= 0) {
+                        return false;
+                    }
+                    TimeUnit.NANOSECONDS.timedWait(ioLock, remaining);
+                }
+                return true;
+            }
+        }
+
         public void close(T in) {
             synchronized (ioLock) {
                 this.in = in;
@@ -41,8 +67,21 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             }
         }
 
+        public void fail(IOException failure) {
+            synchronized (ioLock) {
+                this.failure = failure;
+
+                this.closed = true;
+                ioLock.notifyAll();
+            }
+        }
+
         public T getIn() {
             return in;
+        }
+
+        public IOException getFailure() {
+            return failure;
         }
     }
 
@@ -50,9 +89,10 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
     private final Socket clientSocket;
     private final CommandOutput<S> out;
     private final CommandInput<T> in;
-    private boolean closed;
-    private String readerId;
-    private String ip;
+    private volatile boolean closed;
+    private volatile String readerId;
+    private final String ip;
+    private volatile long responseTimeout = DEFAULT_RESPONSE_TIMEOUT;
 
     private final Object pendingInputLock = new Object();
 
@@ -73,49 +113,84 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
 
     public void run() {
         listener.onReaderStart(this);
+        Exception failure = null;
         try {
             while(!closed) {
                 T next = in.read();
-                PendingInputConsumer<T> pending;
 
+                boolean response;
                 synchronized(pendingInputLock) {
-                    pending = pendigInputConsumer;
+                    // deliver within the lock, so that the input goes either to the current consumer or the listener
+                    PendingInputConsumer<T> pending = pendigInputConsumer;
+                    response = pending != null && isResponse(next);
+                    if(response) {
+                        pending.close(next);
+                    }
                 }
-                if(pending == null) {
+                if(!response) {
                     if(next instanceof String && readerId == null) {
                         String r = (String) next;
-                        readerId = r.substring(0, r.indexOf(","));
+                        int index = r.indexOf(',');
+                        if(index > 0) {
+                            readerId = r.substring(0, index);
+                        }
                     }
                     listener.onReaderCommand(this, next);
-                } else {
-                    pending.close(next);
-                    // i.e. do not invoke listener for this
                 }
             }
-            listener.onReaderClosed(this, null);
         } catch (Exception e) {
-            if(closed) {
-                listener.onReaderClosed(this, null);
-            } else {
-                listener.onReaderClosed(this, e);
+            if(!closed) {
+                failure = e;
             }
+        } finally {
+            // close the socket and fail any pending consumer
+            close();
         }
+        listener.onReaderClosed(this, failure);
+    }
+
+    /**
+     * Check whether some input is a response to an output, or an unsolicited message from the client.
+     * Unsolicited messages are passed to the listener even if an output is waiting for a response.
+     *
+     * @param input input from client
+     * @return true if input could be a response
+     */
+
+    protected boolean isResponse(T input) {
+        return true;
     }
 
     public T outputInput(S output) throws IOException, InterruptedException {
+        return outputInput(output, responseTimeout);
+    }
+
+    public T outputInput(S output, long timeout) throws IOException, InterruptedException {
         PendingInputConsumer<T> consumer = new PendingInputConsumer<>(pendingInputLock);
         synchronized (readWriteLock) {
             synchronized (pendingInputLock) {
+                if(closed) {
+                    throw new EOFException("Connection closed");
+                }
                 try {
                     this.pendigInputConsumer = consumer;
 
                     out.write(output);
 
-                    consumer.waitClosed(); // releases pendingInputLock but holds on to readWriteLock
+                    // releases pendingInputLock but holds on to readWriteLock
+                    if(!consumer.waitClosed(timeout)) {
+                        throw new SocketTimeoutException("No response within " + timeout + "ms");
+                    }
                 } finally {
                     this.pendigInputConsumer = null;
                 }
             }
+        }
+        IOException failure = consumer.getFailure();
+        if(failure != null) {
+            EOFException e = new EOFException("Connection closed while waiting for response");
+            e.initCause(failure);
+            throw e;
         }
         return consumer.getIn();
     }
@@ -146,6 +221,12 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
                 // ignore
             }
         }
+        synchronized (pendingInputLock) {
+            PendingInputConsumer<T> pending = pendigInputConsumer;
+            if(pending != null) {
+                pending.fail(new EOFException("Connection closed"));
+            }
+        }
     }
 
     public void write(S command) throws IOException {
@@ -160,5 +241,23 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
 
     public String getIp() {
         return ip;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    /**
+     * Set the timeout for waiting for a response in {@link #outputInput(Object)}.
+     *
+     * @param responseTimeout timeout in milliseconds
+     */
+
+    public void setResponseTimeout(long responseTimeout) {
+        this.responseTimeout = responseTimeout;
+    }
+
+    public long getResponseTimeout() {
+        return responseTimeout;
     }
 }

@@ -106,7 +106,13 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
         IMcr0XBinder mcrBinder = new IMcr0XBinder();
         mcrBinder.setCommands(commands);
 
-        McrReader mcrReader = new McrReader(reader.getReaderId(), mcrBinder);
+        // the reader id is only known after the first message from the reader, so fall back to the IP address
+        String name = reader.getReaderId();
+        if(name == null) {
+            name = reader.getIp();
+        }
+
+        McrReader mcrReader = new McrReader(name, mcrBinder);
 
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_OPENED);
@@ -120,19 +126,21 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     public void onReaderCommand(CommandInputOutputThread<String, String> reader, String input) {
         LOGGER.debug("On reader command " + reader.getReaderId() + " " + input);
 
-        if (input.contains("UID=")) { // XXX rather parse commands
+        String uid = MinovaCommandInputOutputThread.parseUid(input);
+        if (uid != null) {
             // run in seperate thread
             executor.execute(() -> {
-                try {
-                    String uid = input.substring(input.lastIndexOf("=") + 1);
+                // handle tags for the same reader one at a time
+                synchronized (((MinovaCommandInputOutputThread) reader).getTagLock()) {
+                    try {
+                        MinovaCommands commands = new MinovaCommands(reader);
 
-                    MinovaCommands commands = new MinovaCommands(reader);
+                        MinovaTagType tagType = tagTypeDetector.getTagType(commands);
 
-                    MinovaTagType tagType = tagTypeDetector.getTagType(commands);
-
-                    handleTag(tagType, uid, reader);
-                } catch(Exception e) {
-                    LOGGER.debug("Problem getting tag type");
+                        handleTag(tagType, uid, reader);
+                    } catch(Exception e) {
+                        LOGGER.debug("Problem getting tag type", e);
+                    }
                 }
             });
         } else {
@@ -143,6 +151,10 @@ public abstract class AbstractMinovaTcpService extends AbstractService implement
     @Override
     public void onReaderClosed(CommandInputOutputThread<String, String> reader, Exception e) {
         LOGGER.debug("Reader " + reader.getReaderId() + " closed");
+
+        synchronized (clients) {
+            clients.remove(reader);
+        }
 
         Intent intent = new Intent();
         intent.setAction(ExternalNfcReaderCallback.ACTION_READER_CLOSED);

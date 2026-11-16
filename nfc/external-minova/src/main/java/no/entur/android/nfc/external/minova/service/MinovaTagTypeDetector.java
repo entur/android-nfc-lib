@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import org.nfctools.api.TagType;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import no.entur.android.nfc.external.minova.reader.MinovaCommands;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -124,15 +125,25 @@ public class MinovaTagTypeDetector {
         // - Historical bytes T1 to Tk.
         //
         // Number of bytes sent including the one telling number of bytes.
+        if(ats == null || ats.length == 0) {
+            return null;
+        }
         int length = ats[0] & 0xFF;
-        if(length != ats.length || length <= 5) {
+        if(length != ats.length) {
+            return null;
+        }
+        if(length == 1) {
+            // no format byte, so no historical bytes
+            return new byte[0];
+        }
+
+        // T0 bits 5, 6 and 7 tell whether TA(1), TB(1) and TC(1) are present
+        int t0 = ats[1] & 0xFF;
+        int historicalBytesOffset = 2 + Integer.bitCount(t0 & 0x70);
+        if(historicalBytesOffset > length) {
             return null;
         }
 
-        int numOfHistoricalBytes = (length - 1) - 4;
-        byte[] historicalBytes = new byte[numOfHistoricalBytes];
-        System.arraycopy(ats, length - numOfHistoricalBytes, historicalBytes, 0, numOfHistoricalBytes);
-
-        return historicalBytes;
+        return Arrays.copyOfRange(ats, historicalBytesOffset, length);
     }
 }

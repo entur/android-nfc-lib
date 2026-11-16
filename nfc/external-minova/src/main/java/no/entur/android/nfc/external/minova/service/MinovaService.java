@@ -42,20 +42,21 @@ public class MinovaService extends AbstractMinovaTcpService {
         // enforce that only one tag is present at the same time
         // there is no "tag lost", so invalidate the previous tag whenever a new tag is detected
         MinovaCommandInputOutputThread minovaCommandInputOutputThread = (MinovaCommandInputOutputThread) reader;
-        TagProxy currentTagProxy = minovaCommandInputOutputThread.getCurrentTagProxy();
+        TagProxy currentTagProxy = minovaCommandInputOutputThread.takeCurrentTagProxy();
         if(currentTagProxy != null) {
             currentTagProxy.close();
 
-            Intent intent = new Intent();
-            intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
-            intent.putExtra(EXTRA_TAG_LEFT_FIELD_REASON, EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG);
-            intent.putExtra(EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE, currentTagProxy.getHandle());
+            // skip if already sent, i.e. after a failed transceive
+            if(minovaCommandInputOutputThread.markTagLost(currentTagProxy)) {
+                Intent intent = new Intent();
+                intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
+                intent.putExtra(EXTRA_TAG_LEFT_FIELD_REASON, EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG);
+                intent.putExtra(EXTRA_TAG_LEFT_FIELD_SERVICE_HANDLE, currentTagProxy.getHandle());
 
-            intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, currentTagProxy.getHandle());
+                intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, currentTagProxy.getHandle());
 
-            sendBroadcast(intent, "android.permission.NFC");
-
-            minovaCommandInputOutputThread.setCurrentTagProxy(null);
+                sendBroadcast(intent, "android.permission.NFC");
+            }
         }
 
         if (tag.getTagType() == TagType.DESFIRE_EV1 || tag.getTagType() == TagType.ISO_DEP) {
