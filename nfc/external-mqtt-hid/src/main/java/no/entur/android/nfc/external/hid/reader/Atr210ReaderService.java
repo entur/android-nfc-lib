@@ -99,9 +99,23 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
     public void close() {
         try {
             unsubscribe();
+        } catch (Exception e) {
+            LOGGER.warn("Problem unsubscribing reader " + getReaderId(), e);
         } finally {
+            // close the current tag and stop waiting for responses
+            atr210CardService.close();
+            requestResponseMessages.close();
+
             broadcastClosed();
         }
+    }
+
+    /**
+     * @return reader id, as in {@link ExternalNfcReaderCallback#EXTRAS_READER_ID}
+     */
+
+    public String getReaderId() {
+        return atr210Reader.getId();
     }
 
     public void subscribe() {
@@ -266,9 +280,9 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
 
         NfcConfiguationResponse nfcReadersConfiguration = readerCommands.getNfcReadersConfiguration(timeout);
 
-        boolean enable = nfcReadersConfiguration.hasEnabled() && !nfcReadersConfiguration.getEnabled();
+        boolean enabled = nfcReadersConfiguration.hasEnabled() && nfcReadersConfiguration.getEnabled();
 
-        boolean updateEnabled = (hf || sam) != enable;
+        boolean updateEnabled = (hf || sam) != enabled;
 
         boolean updateHf = hf == "none".equals(nfcReadersConfiguration.getHfId());
         boolean updateSam = sam == "none".equals(nfcReadersConfiguration.getSamId());
@@ -310,12 +324,12 @@ public class Atr210ReaderService implements SynchronizedRequestMessageListener<S
                     || !Objects.equals(request.getHfId(), nfcConfiguationResponse.getHfId())
                     || !Objects.equals(request.getSamId(), nfcConfiguationResponse.getSamId())
             ) {
-                LOGGER.warn("Configuration update problem, wanted {}, got {}.", request, nfcReadersConfiguration);
+                LOGGER.warn("Configuration update problem, wanted {}, got {}.", request, nfcConfiguationResponse);
             } else {
                 LOGGER.warn("Configuration updated");
             }
         } else {
-            LOGGER.info("Reader configuration already up to date (enabled {}, HF {}, SAM {})", enable, nfcReadersConfiguration.getHfId(), nfcReadersConfiguration.getSamId());
+            LOGGER.info("Reader configuration already up to date (enabled {}, HF {}, SAM {})", enabled, nfcReadersConfiguration.getHfId(), nfcReadersConfiguration.getSamId());
         }
 
     }

@@ -87,6 +87,13 @@ public class Atr210CardService {
             }
         }
 
+        if(cardContext.getAtr() == null) {
+            // the tag type is detected from the ATR
+            LOGGER.info("No ATR for tag, broadcast tech discovered");
+            isoDepTagServiceSupport.broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+            return;
+        }
+
         Atr210TagTypeDetector detector = new Atr210TagTypeDetector();
         TagType tagType = detector.parseAtr(null, cardContext.getAtr());
 
@@ -174,8 +181,12 @@ public class Atr210CardService {
     }
 
 
+    /**
+     * @return true if a tag is present, also if it was not delivered (i.e. tech discovered), so it is only handled once
+     */
+
     public boolean hasCardContext() {
-        return currentCard != null;
+        return cardContext != null;
     }
 
     public void setLogApdus(boolean logApdus) {
