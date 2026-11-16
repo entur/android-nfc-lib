@@ -1,5 +1,8 @@
 package no.entur.abt.nfc.example.acr;
 
+import android.text.InputType;
+import android.widget.EditText;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +29,13 @@ public class Acr1222LControlsActivity extends AbstractAcrControlsActivity<Acr122
 		addSection(getString(R.string.acr_controls_default_behaviour));
 		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
+		addSection(getString(R.string.acr_controls_buzzer));
+		EditText duration = editText("100", InputType.TYPE_CLASS_NUMBER);
+		addRow(text(getString(R.string.acr_controls_duration), false), duration, button(getString(R.string.acr_controls_beep), (v) -> {
+			int millis = parseInt(duration, 100);
+			run("setBuzzerControlSingle(" + millis + ")", () -> reader.setBuzzerControlSingle(millis));
+		}));
+
 		addSection(getString(R.string.acr_controls_display));
 		addDisplay(new Display() {
 			@Override
