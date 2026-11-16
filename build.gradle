@@ -112,6 +112,14 @@ ext.commonDependencies = {
         module("org.checkerframework:checker-qual") {
             replacedBy("org.checkerframework:checker")
         }
+        // kotlin-stdlib-jdk7/jdk8 (pulled in transitively, e.g. by kotlinx-coroutines) were merged into kotlin-stdlib 1.8.0;
+        // without the Kotlin Gradle plugin nothing aligns their versions, resulting in duplicate classes.
+        module("org.jetbrains.kotlin:kotlin-stdlib-jdk7") {
+            replacedBy("org.jetbrains.kotlin:kotlin-stdlib", "kotlin-stdlib-jdk7 is part of kotlin-stdlib since 1.8.0")
+        }
+        module("org.jetbrains.kotlin:kotlin-stdlib-jdk8") {
+            replacedBy("org.jetbrains.kotlin:kotlin-stdlib", "kotlin-stdlib-jdk8 is part of kotlin-stdlib since 1.8.0")
+        }
     }
 }
 
