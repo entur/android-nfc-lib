@@ -15,7 +15,6 @@ import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
-import no.entur.android.nfc.external.acs.reader.bind.IAcr1283Binder;
 import no.entur.android.nfc.external.acs.reader.command.remote.FontSet;
 import no.entur.android.nfc.CommandAPDU;
 import no.entur.android.nfc.ResponseAPDU;
@@ -23,7 +22,7 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class ACR1222Commands extends ACRCommands {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IAcr1283Binder.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1222Commands.class);
 
 	public static final int DEFAULT_LED_AND_BUZZER_BEHAVIOUR_LED_PICC_POLLING_STATUS = 1 << 1;
 	public static final int DEFAULT_LED_AND_BUZZER_BEHAVIOUR_LED_PICC_ACTIVATION_STATUS_LED = 1 << 2;
@@ -190,23 +189,20 @@ public class ACR1222Commands extends ACRCommands {
 			throw new RuntimeException();
 		}
 
-		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x51, picc);
-		// byte[] pseudo = new byte[]{(byte) 0xFF, 0x00, 0x51, (byte) picc, 0x00};
+		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x51, (byte) picc, 0x00 };
 
-		byte[] pseudo = command.getBytes();
-
-		byte[] in = new byte[10];
-
+		// response is the PICC operating parameter followed by 90 00, i.e. E3 90 00
+		byte[] in;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (!isSuccessControl(in)) {
-			LOGGER.error("Unable to read PICC");
+		if (in.length < 3 || !isSuccessControl(in)) {
+			LOGGER.error("Unable to set PICC, response was " + ByteArrayHexStringConverter.toHexString(in));
 
 			throw newIllegalArgumentExceptionForCardErrorCode();
 		}

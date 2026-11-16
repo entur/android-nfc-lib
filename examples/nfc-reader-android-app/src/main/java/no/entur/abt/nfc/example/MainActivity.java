@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -46,8 +47,15 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallbackSupport;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallback;
 import no.entur.android.nfc.external.ExternalNfcTagLostCallbackSupport;
+import no.entur.android.nfc.external.acs.reader.Acr122UReader;
+import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
+import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
+import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
+import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
+import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
+import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -245,7 +253,23 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             if(reader instanceof AcrReader) {
                 AcrReader acrReader = (AcrReader)reader;
 
-                acrReader.setPICC(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B);
+                AcrPICC[] types;
+                if (acrReader instanceof Acr122UReader || acrReader instanceof Acr1222LReader) {
+                    // the PICC operating parameter also holds automatic PICC polling, without it the reader stops detecting cards
+                    types = new AcrPICC[] { AcrPICC.AUTO_PICC_POLLING, AcrPICC.AUTO_ATS_GENERATION, AcrPICC.POLLING_INTERVAL, AcrPICC.POLL_ISO14443_TYPE_A,
+                            AcrPICC.POLL_ISO14443_TYPE_B };
+                } else {
+                    types = new AcrPICC[] { AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B };
+                }
+                try {
+                    boolean picc = acrReader.setPICC(types);
+                    LOGGER.info("Set PICC for reader " + acrReader.getName() + ": " + picc);
+                } catch (Exception e) {
+                    // do not crash the app
+                    LOGGER.warn("Problem setting PICC for reader " + acrReader.getName(), e);
+                }
+
+                disableBuzzer(acrReader);
 
                 if (acrReader.getName().contains("1252")) {
                     Acr1252UReader acr1252UReader = (Acr1252UReader) acrReader;
@@ -273,6 +297,69 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         runOnUiThread(() -> {
             setReaderOpen(true);
         });
+    }
+
+    /**
+     * Turn off the reader beeping on card detection, keep the LED behaviour.
+     */
+
+    private void disableBuzzer(AcrReader acrReader) {
+        try {
+            if (acrReader instanceof Acr122UReader) {
+                boolean result = ((Acr122UReader) acrReader).setBuzzerForCardDetection(false);
+                LOGGER.info("Disabled buzzer for reader " + acrReader.getName() + ": " + result);
+                return;
+            }
+
+            List<AcrDefaultLEDAndBuzzerBehaviour> behaviours;
+            if (acrReader instanceof Acr1222LReader) {
+                behaviours = ((Acr1222LReader) acrReader).getDefaultLEDAndBuzzerBehaviour();
+            } else if (acrReader instanceof Acr1252UReader) {
+                behaviours = ((Acr1252UReader) acrReader).getDefaultLEDAndBuzzerBehaviour();
+            } else if (acrReader instanceof Acr1255UReader) {
+                behaviours = ((Acr1255UReader) acrReader).getDefaultLEDAndBuzzerBehaviour();
+            } else if (acrReader instanceof Acr1281UReader) {
+                behaviours = ((Acr1281UReader) acrReader).getDefaultLEDAndBuzzerBehaviour();
+            } else if (acrReader instanceof Acr1283LReader) {
+                behaviours = ((Acr1283LReader) acrReader).getDefaultLEDAndBuzzerBehaviour();
+            } else if (acrReader instanceof Acr1552UReader) {
+                behaviours = ((Acr1552UReader) acrReader).getDefaultLEDAndBuzzerBehaviour();
+            } else {
+                LOGGER.info("Unable to disable buzzer for reader " + acrReader.getName());
+                return;
+            }
+
+            List<AcrDefaultLEDAndBuzzerBehaviour> withoutBuzzer = new ArrayList<>();
+            for (AcrDefaultLEDAndBuzzerBehaviour behaviour : behaviours) {
+                if (!behaviour.name().endsWith("_BUZZER")) {
+                    withoutBuzzer.add(behaviour);
+                }
+            }
+            if (withoutBuzzer.size() == behaviours.size()) {
+                LOGGER.info("Buzzer already disabled for reader " + acrReader.getName() + ": " + behaviours);
+                return;
+            }
+
+            AcrDefaultLEDAndBuzzerBehaviour[] types = withoutBuzzer.toArray(new AcrDefaultLEDAndBuzzerBehaviour[0]);
+            boolean result;
+            if (acrReader instanceof Acr1222LReader) {
+                result = ((Acr1222LReader) acrReader).setDefaultLEDAndBuzzerBehaviour(types);
+            } else if (acrReader instanceof Acr1252UReader) {
+                result = ((Acr1252UReader) acrReader).setDefaultLEDAndBuzzerBehaviour(types);
+            } else if (acrReader instanceof Acr1255UReader) {
+                result = ((Acr1255UReader) acrReader).setDefaultLEDAndBuzzerBehaviour(types);
+            } else if (acrReader instanceof Acr1281UReader) {
+                result = ((Acr1281UReader) acrReader).setDefaultLEDAndBuzzerBehaviour(types);
+            } else if (acrReader instanceof Acr1283LReader) {
+                result = ((Acr1283LReader) acrReader).setDefaultLEDAndBuzzerBehaviour(types);
+            } else {
+                result = ((Acr1552UReader) acrReader).setDefaultLEDAndBuzzerBehaviour(types);
+            }
+            LOGGER.info("Disabled buzzer for reader " + acrReader.getName() + ": " + result + ", was " + behaviours + ", now " + withoutBuzzer);
+        } catch (Exception e) {
+            // do not crash the app
+            LOGGER.warn("Problem disabling buzzer for reader " + acrReader.getName(), e);
+        }
     }
 
     @Override
