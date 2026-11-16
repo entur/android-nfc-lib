@@ -4,10 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import android.os.Parcel;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.FakeParcel;
-
+@RunWith(AndroidJUnit4.class)
 public class ApduPartialTransceiveResponsePredicateTest {
 
     @Test
@@ -30,13 +34,18 @@ public class ApduPartialTransceiveResponsePredicateTest {
     }
 
     private ApduPartialTransceiveResponsePredicate roundTrip(ApduPartialTransceiveResponsePredicate predicate) {
-        FakeParcel parcel = new FakeParcel();
-        predicate.writeToParcel(parcel.getParcel(), 0);
+        Parcel parcel = Parcel.obtain();
+        try {
+            predicate.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
 
-        ApduPartialTransceiveResponsePredicate result = ApduPartialTransceiveResponsePredicate.CREATOR.createFromParcel(parcel.getParcel());
+            ApduPartialTransceiveResponsePredicate result = ApduPartialTransceiveResponsePredicate.CREATOR.createFromParcel(parcel);
 
-        assertEquals(0, parcel.remaining());
+            assertEquals(0, parcel.dataAvail());
 
-        return result;
+            return result;
+        } finally {
+            parcel.recycle();
+        }
     }
 }

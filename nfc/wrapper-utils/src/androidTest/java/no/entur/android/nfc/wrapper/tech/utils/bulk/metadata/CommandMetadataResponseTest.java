@@ -3,12 +3,16 @@ package no.entur.android.nfc.wrapper.tech.utils.bulk.metadata;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import android.os.Parcel;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
-import no.entur.android.nfc.wrapper.tech.utils.bulk.FakeParcel;
-
+@RunWith(AndroidJUnit4.class)
 public class CommandMetadataResponseTest {
 
     @Test
@@ -23,27 +27,35 @@ public class CommandMetadataResponseTest {
     public void testParcelWithoutBulkMetadata() {
         CommandMetadataResponse response = new CommandMetadataResponse(Arrays.asList(CommandMetadataResponse.COMMAND_FORMAT_ISO7816), null);
 
-        FakeParcel parcel = new FakeParcel();
-        response.writeToParcel(parcel.getParcel(), 0);
-
-        CommandMetadataResponse result = CommandMetadataResponse.CREATOR.createFromParcel(parcel.getParcel());
+        CommandMetadataResponse result = roundTrip(response);
 
         assertEquals(response.getFormats(), result.getFormats());
         assertNull(result.getBulkMetadata());
-        assertEquals(0, parcel.remaining());
     }
 
     private void assertRoundTrip(BulkTransceiveMetadata metadata) {
         CommandMetadataResponse response = new CommandMetadataResponse(Arrays.asList(CommandMetadataResponse.COMMAND_FORMAT_ISO7816, CommandMetadataResponse.COMMAND_FORMAT_NATIVE_MIFARE_DESFIRE), metadata);
 
-        FakeParcel parcel = new FakeParcel();
-        response.writeToParcel(parcel.getParcel(), 0);
-
-        CommandMetadataResponse result = CommandMetadataResponse.CREATOR.createFromParcel(parcel.getParcel());
+        CommandMetadataResponse result = roundTrip(response);
 
         assertEquals(response.getFormats(), result.getFormats());
         assertEquals(metadata.isResponsePredicate(), result.getBulkMetadata().isResponsePredicate());
         assertEquals(metadata.isPartialResponsePredicate(), result.getBulkMetadata().isPartialResponsePredicate());
-        assertEquals(0, parcel.remaining());
+    }
+
+    private CommandMetadataResponse roundTrip(CommandMetadataResponse response) {
+        Parcel parcel = Parcel.obtain();
+        try {
+            response.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            CommandMetadataResponse result = CommandMetadataResponse.CREATOR.createFromParcel(parcel);
+
+            assertEquals(0, parcel.dataAvail());
+
+            return result;
+        } finally {
+            parcel.recycle();
+        }
     }
 }

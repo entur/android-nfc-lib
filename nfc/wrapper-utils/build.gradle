@@ -11,6 +11,9 @@ dependencies {
     api project(":nfc:wrapper")
 
     implementation "androidx.appcompat:appcompat:${androidxAppcompatVersion}"
+
+    androidTestImplementation "androidx.test:runner:${androidxTestRunnerVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${androidxTestExtJunitVersion}"
 }
 
 
