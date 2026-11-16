@@ -253,7 +253,21 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             if(reader instanceof AcrReader) {
                 AcrReader acrReader = (AcrReader)reader;
 
-                acrReader.setPICC(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B);
+                AcrPICC[] types;
+                if (acrReader instanceof Acr122UReader || acrReader instanceof Acr1222LReader) {
+                    // the PICC operating parameter also holds automatic PICC polling, without it the reader stops detecting cards
+                    types = new AcrPICC[] { AcrPICC.AUTO_PICC_POLLING, AcrPICC.AUTO_ATS_GENERATION, AcrPICC.POLLING_INTERVAL, AcrPICC.POLL_ISO14443_TYPE_A,
+                            AcrPICC.POLL_ISO14443_TYPE_B };
+                } else {
+                    types = new AcrPICC[] { AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B };
+                }
+                try {
+                    boolean picc = acrReader.setPICC(types);
+                    LOGGER.info("Set PICC for reader " + acrReader.getName() + ": " + picc);
+                } catch (Exception e) {
+                    // do not crash the app
+                    LOGGER.warn("Problem setting PICC for reader " + acrReader.getName(), e);
+                }
 
                 disableBuzzer(acrReader);
 
