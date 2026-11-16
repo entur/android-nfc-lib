@@ -7,6 +7,7 @@ import java.util.Map;
 
 import no.entur.android.nfc.external.acs.reader.Acr122UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
+import no.entur.android.nfc.external.acs.reader.Acr1251UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
@@ -47,6 +48,8 @@ public class AcrReaders {
 			return Acr122UControlsActivity.class;
 		} else if (reader instanceof Acr1222LReader) {
 			return Acr1222LControlsActivity.class;
+		} else if (reader instanceof Acr1251UReader) {
+			return Acr1251UControlsActivity.class;
 		} else if (reader instanceof Acr1252UReader) {
 			return Acr1252UControlsActivity.class;
 		} else if (reader instanceof Acr1255UReader) {
