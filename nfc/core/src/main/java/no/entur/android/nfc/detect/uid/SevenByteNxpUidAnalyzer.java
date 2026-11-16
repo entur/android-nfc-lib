@@ -11,7 +11,7 @@ public class SevenByteNxpUidAnalyzer implements UidAnalyzer {
     public UidAnalyzeResult processUid(TagTechnologies tagTechnologies, Tag tag, Intent intent) {
 
         byte[] id = tag.getId();
-        if(id != null) {
+        if(id != null && id.length > 0) {
             UidManufacturerType uidManufacturerType;
 
             if( (id[0] & 0xFF) == 0x04) {

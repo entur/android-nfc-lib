@@ -28,6 +28,7 @@ public abstract class AbstractResponseApduProtocolHostApduService extends HostAp
 	public final static int SELECT_APPLICATION_COMMAND = 0xA4;//
 	protected static final byte[] RESPONSE_OK = new byte[] { (byte) 0x90, (byte) 0x00 };
 	protected static final byte[] FUNCTION_NOT_SUPPORTED_RESPONSE = new byte[] { (byte) 0x68, (byte) 0x00 }; // function not supported
+	protected static final byte[] WRONG_LENGTH_RESPONSE = new byte[] { (byte) 0x67, (byte) 0x00 }; // wrong length
 
 	protected final List<ResponseApduProtocol> protocols = new ArrayList<>();
 	protected ResponseApduProtocol protocol;
@@ -39,7 +40,13 @@ public abstract class AbstractResponseApduProtocolHostApduService extends HostAp
 	@Override
 	public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
 
-		CommandAPDU command = new CommandAPDU(commandApdu);
+		CommandAPDU command;
+		try {
+			command = new CommandAPDU(commandApdu);
+		} catch (IllegalArgumentException e) {
+			// malformed APDU, i.e. too short or Lc / Le does not match the length
+			return WRONG_LENGTH_RESPONSE;
+		}
 
 		int ins = command.getINS();
 
@@ -62,6 +69,10 @@ public abstract class AbstractResponseApduProtocolHostApduService extends HostAp
 
 		if (protocol != null) {
 			ResponseAPDU response = protocol.handleCommandApdu(command);
+			if (response == null) {
+				// no more commands expected
+				return FUNCTION_NOT_SUPPORTED_RESPONSE;
+			}
 
 			return response.getBytes();
 		}
@@ -87,7 +98,11 @@ public abstract class AbstractResponseApduProtocolHostApduService extends HostAp
 	}
 
 	protected void onApplicationSelected() {
-		this.protocol = null; // just to make sure
+		// a new session, close the previous protocol (if any)
+		if (protocol != null) {
+			protocol.close();
+			protocol = null;
+		}
 	}
 
 }

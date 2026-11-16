@@ -552,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             setTagDetailTechTypes(tag);
 
             String readerId = "-";
-            if(intent.hasExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID)) {
+            if(intent != null && intent.hasExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID)) { // intent is null for the built-in reader
                 readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
             }
 
