@@ -123,9 +123,9 @@ public class AcsReaderCommandsTest {
     }
 
     @Test
-    public void testAcr1552LEDs() throws Exception {
-        // writing: bit 0 lights green, bit 1 blue (seen on a reader); reading: bit 0 blue, bit 1 green
-        ReaderWrapper readerWrapper = reader("E10000000102");
+    public void testAcr1552SetLEDs() throws Exception {
+        // writing: bit 0 blue, bit 1 green, per the reference manual (checked on a reader)
+        ReaderWrapper readerWrapper = reader("E10000000101");
         IAcr1552UCommandWrapper wrapper = new IAcr1552UCommandWrapper(new ACR1552Commands("ACS ACR1552 1S CL Reader", readerWrapper));
         IAcr1552UReaderControl control = mock(IAcr1552UReaderControl.class);
         when(control.setLEDs(anyInt())).thenAnswer((i) -> wrapper.setLEDs(i.getArgument(0)));
@@ -133,7 +133,19 @@ public class AcsReaderCommandsTest {
         Acr1552UReader reader = new Acr1552UReader("ACS ACR1552 1S CL Reader", "acs-1", control);
 
         assertTrue(reader.setLEDs(AcrLED.BLUE));
-        assertArrayEquals(hex("E00000290102"), command(readerWrapper));
+        assertArrayEquals(hex("E00000290101"), command(readerWrapper));
+    }
+
+    @Test
+    public void testAcr1552GetLEDs() throws Exception {
+        // reading: bit 0 green, bit 1 blue (seen on a reader with firmware 1.01.01; the manual has them the other way around)
+        IAcr1552UCommandWrapper wrapper = new IAcr1552UCommandWrapper(new ACR1552Commands("ACS ACR1552 1S CL Reader", reader("E10000000102")));
+        IAcr1552UReaderControl control = mock(IAcr1552UReaderControl.class);
+        when(control.getLEDs()).thenAnswer((i) -> wrapper.getLEDs());
+
+        Acr1552UReader reader = new Acr1552UReader("ACS ACR1552 1S CL Reader", "acs-1", control);
+
+        assertEquals(Collections.singletonList(AcrLED.BLUE), reader.getLEDs());
     }
 
     @Test

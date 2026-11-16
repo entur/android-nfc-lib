@@ -40,14 +40,14 @@ public class Acr1552UReader extends AcrReader {
 	private static final int POWER_80_PERCENT = 0x04;
 	private static final int POWER_100_PERCENT = 0x05;
 
-	// LED status as read (E0 00 00 29 00), per the reference manual: bit 0 blue, bit 1 green
-	public static final int LED_GREEN = 1 << 1;
-	public static final int LED_BLUE = 1;
+	// LED status as read (E0 00 00 29 00). The reference manual has bit 0 blue, bit 1 green, as for writing, but on a reader
+	// (firmware 1.01.01) the green LED, lit by writing bit 1, reads back as bit 0.
+	public static final int LED_GREEN = 1;
+	public static final int LED_BLUE = 1 << 1;
 
-	// LED control as written (E0 00 00 29 01). The reference manual has the same bits as for reading, but on a reader (firmware
-	// 1.01.01) writing bit 0 lights the green LED, which then reads back as bit 1 (green).
-	private static final int LED_CONTROL_GREEN = 1;
-	private static final int LED_CONTROL_BLUE = 1 << 1;
+	// LED control as written (E0 00 00 29 01), per the reference manual (checked on a reader): bit 0 blue, bit 1 green
+	private static final int LED_CONTROL_BLUE = 1;
+	private static final int LED_CONTROL_GREEN = 1 << 1;
 
 	// UI behaviour (E0 00 00 21), per the ACR1552U reference manual 1.09: bits 1, 2, 5, 6 and 7 need ACR1552U-M firmware 1.06.00 or
 	// later; on older firmware, the reader leaves them unset (setDefaultLEDAndBuzzerBehaviour returns false)
