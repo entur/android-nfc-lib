@@ -2,6 +2,29 @@
 
     <string name="app_name">External NFC Reader Service</string>
 
+    <string name="acr_controls_title">ACR buzzer, LED and display</string>
+    <string name="acr_controls_no_reader">No ACS reader open. Start the USB reader service on the main screen and connect a reader.</string>
+    <string name="acr_controls_default_behaviour">Default LED and buzzer behaviour</string>
+    <string name="acr_controls_leds">LEDs</string>
+    <string name="acr_controls_light_led">Status LEDs</string>
+    <string name="acr_controls_display">Display</string>
+    <string name="acr_controls_buzzer">Buzzer</string>
+    <string name="acr_controls_read">Read</string>
+    <string name="acr_controls_apply">Apply</string>
+    <string name="acr_controls_on">On</string>
+    <string name="acr_controls_off">Off</string>
+    <string name="acr_controls_show">Show</string>
+    <string name="acr_controls_clear">Clear</string>
+    <string name="acr_controls_line">Line</string>
+    <string name="acr_controls_contrast">Contrast</string>
+    <string name="acr_controls_backlight_on">Backlight on</string>
+    <string name="acr_controls_backlight_off">Backlight off</string>
+    <string name="acr_controls_card_detection_on">Beep on card on</string>
+    <string name="acr_controls_card_detection_off">Beep on card off</string>
+    <string name="acr_controls_duration">ms</string>
+    <string name="acr_controls_beep">Beep</string>
+    <string name="acr_controls_beep_3">Beep 3x</string>
+
     <string name="mainActivityLabel">External NFC Reader Service</string>
 
     <string name="introductionTitle">Service controls</string>

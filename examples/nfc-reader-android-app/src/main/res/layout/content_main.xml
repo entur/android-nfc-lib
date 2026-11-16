@@ -17,6 +17,16 @@
             android:layout_gravity="center"
             />
 
+        <Button
+            android:id="@+id/openAcrControls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:onClick="openAcrControls"
+            android:text="@string/acr_controls_title"
+            android:textColor="@color/black"
+            />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

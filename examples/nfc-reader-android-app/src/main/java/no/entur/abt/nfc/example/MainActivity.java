@@ -60,6 +60,8 @@ import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
+import no.entur.abt.nfc.example.acr.AcrControlsActivity;
+import no.entur.abt.nfc.example.acr.AcrReaders;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
 import no.entur.android.nfc.wrapper.tech.MifareUltralight;
@@ -253,6 +255,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             if(reader instanceof AcrReader) {
                 AcrReader acrReader = (AcrReader)reader;
 
+                // for the ACR buzzer, LED and display test
+                AcrReaders.opened(acrReader);
+
                 AcrPICC[] types;
                 if (acrReader instanceof Acr122UReader || acrReader instanceof Acr1222LReader) {
                     // the PICC operating parameter also holds automatic PICC polling, without it the reader stops detecting cards
@@ -368,6 +373,11 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         runOnUiThread(() -> {
             setReaderOpen(false);
         });
+
+        String readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
+        if(readerId != null) {
+            AcrReaders.closed(readerId);
+        }
     }
 
     public boolean isTagPresent() {
@@ -773,6 +783,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
                 textView.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    public void openAcrControls(View view) {
+        startActivity(new Intent(this, AcrControlsActivity.class));
     }
 
     public void stopReaderService(View view) {
