@@ -31,10 +31,19 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 
 	private final MfUlReaderWriter readerWriter;
 	private final TransceiveResultExceptionMapper exceptionMapper;
+
+	// send commands other than READ and WRITE (i.e. GET_VERSION, READ_SIG) to the tag via the reader pass-through
+	private final boolean passthrough;
+
 	public AcsMifareUltralightCommandTechnology(MfUlReaderWriter readerWriter, TransceiveResultExceptionMapper exceptionMapper) {
+		this(readerWriter, exceptionMapper, false);
+	}
+
+	public AcsMifareUltralightCommandTechnology(MfUlReaderWriter readerWriter, TransceiveResultExceptionMapper exceptionMapper, boolean passthrough) {
 		super(TagTechnology.MIFARE_ULTRALIGHT);
 		this.readerWriter = readerWriter;
 		this.exceptionMapper = exceptionMapper;
+		this.passthrough = passthrough;
 	}
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
@@ -83,6 +92,8 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 
 				return exceptionMapper.mapException(e);
 			}
+		} else if (passthrough) {
+			return getRawTransceiveResult(data);
 		} else {
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 		}

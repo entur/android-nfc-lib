@@ -44,6 +44,18 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
         this.exceptionMapper = exceptionMapper;
     }
 
+    /**
+     * Whether raw tag commands can be sent via the (PN53x InCommunicateThru) pass-through for this reader.
+     * Also used for NTAG version detection, so that both stay in sync.
+     *
+     * @param readerName reader name
+     * @return true if pass-through commands are supported
+     */
+
+    protected static boolean supportsPassthrough(String readerName) {
+        return readerName != null && !(readerName.contains("1255") || readerName.contains("1252"));
+    }
+
     @SuppressWarnings("java:S3776")
     public TagProxy mifareUltralight(int slotNumber, byte[] atr, TagType tagType, ApduTag acsTag, ACSIsoDepWrapper wrapper, String readerName, IntentEnricher extras) {
         List<TagTechnology> technologies = new ArrayList<>();
@@ -57,7 +69,7 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
             Integer version = null;
             MfBlock[] initBlocks = null;
             if (ntag21xUltralights) {
-                if (!(readerName.contains("1255") || readerName.contains("1252"))) {
+                if (supportsPassthrough(readerName)) {
                     // detect via get version
                     try {
                         NfcNtag ntag = new NfcNtag(wrapper);
@@ -152,7 +164,7 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
             }
 
             if (canReadBlocks) {
-                technologies.add(new AcsMifareUltralightCommandTechnology(readerWriter, exceptionMapper));
+                technologies.add(new AcsMifareUltralightCommandTechnology(readerWriter, exceptionMapper, supportsPassthrough(readerName)));
             }
 
             if (TechnologyType.isNFCA(atr)) {

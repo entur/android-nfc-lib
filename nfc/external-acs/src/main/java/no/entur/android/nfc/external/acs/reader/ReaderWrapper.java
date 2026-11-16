@@ -206,7 +206,7 @@ public class ReaderWrapper {
 		// 0x42 InCommunicateThru from PN532
 
 		sub[0] = (byte) 0xD4;
-		sub[1] = (byte) 0x04;
+		sub[1] = (byte) 0x42;
 
 		System.arraycopy(req, 0, sub, 2, req.length);
 		// https://stackoverflow.com/questions/57609513/what-is-the-apdu-command-combination-for-ntag-213-tag
@@ -245,7 +245,7 @@ public class ReaderWrapper {
 		// 0x42 InCommunicateThru from PN532
 
 		sub[0] = (byte) 0xD4;
-		sub[1] = (byte) 0x04;
+		sub[1] = (byte) 0x42;
 
 		System.arraycopy(req, 0, sub, 2, req.length);
 		// https://stackoverflow.com/questions/57609513/what-is-the-apdu-command-combination-for-ntag-213-tag
