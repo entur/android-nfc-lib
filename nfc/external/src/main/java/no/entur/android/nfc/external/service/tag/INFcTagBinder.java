@@ -28,7 +28,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 
 	protected TagProxyStore store;
 
-	protected ReaderTechnology readerTechnology;
+	protected volatile ReaderTechnology readerTechnology;
 
 	public INFcTagBinder(TagProxyStore store) {
 		this.store = store;
@@ -50,6 +50,11 @@ public class INFcTagBinder extends INfcTag.Stub {
 
 	public boolean canMakeReadOnly(int ndefType) throws RemoteException {
 		// LOGGER.debug("canMakeReadOnly");
+
+		ReaderTechnology readerTechnology = this.readerTechnology;
+		if (readerTechnology == null) {
+			throw new RemoteException(NO_READER_MSG);
+		}
 
 		return readerTechnology.canMakeReadOnly(ndefType);
 	}
@@ -104,6 +109,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	}
 
 	public boolean getExtendedLengthApdusSupported() throws RemoteException {
+		ReaderTechnology readerTechnology = this.readerTechnology;
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}
@@ -129,6 +135,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 
     @Override
     public ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(ParcelableTransceiveMetadata data) throws RemoteException {
+        ReaderTechnology readerTechnology = this.readerTechnology;
         if (readerTechnology == null) {
             throw new RemoteException(NO_READER_MSG);
         }
@@ -139,6 +146,7 @@ public class INFcTagBinder extends INfcTag.Stub {
     }
 
     public int getMaxTransceiveLength(int technology) throws RemoteException {
+		ReaderTechnology readerTechnology = this.readerTechnology;
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}
@@ -169,6 +177,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	public int getTimeout(int technology) throws RemoteException {
 		// LOGGER.debug("getTimeout");
 
+		ReaderTechnology readerTechnology = this.readerTechnology;
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}
@@ -252,6 +261,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	public int reconnect(int nativehandle) throws RemoteException {
 		// LOGGER.debug("reconnect");
 
+		ReaderTechnology readerTechnology = this.readerTechnology;
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}
@@ -274,6 +284,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	public void resetTimeouts() throws RemoteException {
 		// LOGGER.debug("resetTimeouts");
 
+		ReaderTechnology readerTechnology = this.readerTechnology;
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}
@@ -284,6 +295,7 @@ public class INFcTagBinder extends INfcTag.Stub {
 	public int setTimeout(int technology, int timeout) throws RemoteException {
 		// LOGGER.debug("setTimeout");
 
+		ReaderTechnology readerTechnology = this.readerTechnology;
 		if (readerTechnology == null) {
 			throw new RemoteException(NO_READER_MSG);
 		}

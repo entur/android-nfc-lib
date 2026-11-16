@@ -41,6 +41,22 @@ public class DefaultTagTypeIdentifierTest {
 		assertEquals(TagType.ISO_DEP, result);
 	}
 
+	@Test
+	public void testAtrTruncatedTlv() {
+		// historical bytes 80 05 00 00: TLV parsing runs out of bytes when reading the length
+		TagType result = defaultTagTypeIdentifier.parseAtr(null, ByteArrayHexStringConverter.hexStringToByteArray("3B8480018005000080"));
+
+		assertEquals(TagType.ISO_DEP, result);
+	}
+
+	@Test
+	public void testAtrShortInitialAccessData() {
+		// historical bytes 80 4F 03 A0 00 00: initial access data too short to contain a card name
+		TagType result = defaultTagTypeIdentifier.parseAtr(null, ByteArrayHexStringConverter.hexStringToByteArray("3B868001804F03A000006B"));
+
+		assertEquals(TagType.ISO_DEP, result);
+	}
+
 
 
 
