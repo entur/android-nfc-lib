@@ -12,7 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -155,26 +158,37 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         onDisconnected();
     }
 
+    /**
+     * @return reader ids, as in the reader opened / closed broadcasts and {@link no.entur.android.nfc.external.ExternalNfcReaderCallback#EXTRAS_READER_ID}
+     */
+
     public Set<String> getReaderIds() {
-        return readers.keySet();
+        Set<String> ids = new HashSet<>();
+        for (Atr210ReaderService atr210ReaderService : readers.values()) {
+            ids.add(atr210ReaderService.getReaderId());
+        }
+        return ids;
     }
 
     public boolean verifyHeartbeats() {
+        List<Atr210ReaderService> removed = new ArrayList<>();
         synchronized (readers) {
-
-            Set<String> removed = new HashSet<>();
-            for (Map.Entry<String, Atr210ReaderService> entry : readers.entrySet()) {
-
-                Atr210ReaderService value = entry.getValue();
+            Iterator<Map.Entry<String, Atr210ReaderService>> iterator = readers.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Atr210ReaderService value = iterator.next().getValue();
                 if(!value.hasHeartbeat()) {
-                    removed.add(entry.getKey());
+                    iterator.remove();
 
-                    value.broadcastClosed();
+                    removed.add(value);
                 }
             }
-            for (String s : removed) {
-                readers.remove(s);
-            }
+        }
+
+        // unsubscribe, so that a new reader service for the same reader (when it is back) does not get duplicate messages
+        for (Atr210ReaderService atr210ReaderService : removed) {
+            LOGGER.info("No heartbeat from reader " + atr210ReaderService.getReaderId() + ", closing");
+
+            atr210ReaderService.close();
         }
 
         return !readers.isEmpty();
@@ -212,8 +226,22 @@ public class Atr210MqttHandler implements MqttClientDisconnectedListener {
         configuration.setAutoConfiguration(false);
     }
 
+    /**
+     * @param id reader id (see {@link #getReaderIds()}) or device id
+     * @return the reader, or null
+     */
+
     public Atr210ReaderService getReaderService(String id) {
-        return readers.get(id);
+        Atr210ReaderService atr210ReaderService = readers.get(id);
+        if(atr210ReaderService != null) {
+            return atr210ReaderService;
+        }
+        for (Atr210ReaderService readerService : readers.values()) {
+            if(readerService.getReaderId().equals(id)) {
+                return readerService;
+            }
+        }
+        return null;
     }
 
     public boolean isConnected() {

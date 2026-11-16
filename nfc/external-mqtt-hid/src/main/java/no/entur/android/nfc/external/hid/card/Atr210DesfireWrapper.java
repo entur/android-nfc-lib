@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import no.entur.android.nfc.ResponseAPDU;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
+import no.entur.android.nfc.external.tag.DESFireAdapter;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
@@ -45,7 +46,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         // is this already an APDU?
         int cls = data.length > 0 ? data[0] & 0xFF : -1;
 
-        if (data.length >= 4 && (cls == 0x00 || cls == 0x90 || cls == 0xFF) && isApduLength(data)) {
+        if (data.length >= 4 && isApduClass(cls) && isApduLength(data)) {
             if(print) LOGGER.info( " => " + ByteArrayHexStringConverter.toHexString(data));
             byte[] transcieve = cardCommands.transceive(data);
             if(print) LOGGER.info(" <= " + ByteArrayHexStringConverter.toHexString(transcieve));
@@ -60,8 +61,8 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         // this is not optimal for all cases, but the only way to support native desfire commands
 
         byte[] transcieve;
-        if(cls == 0x0A) { // AUTHENTICATE
-            // do not handle AF
+        if(isAuthenticate(cls)) {
+            // do not handle AF: the card answers AF with the challenge, the next frame is computed by the caller
             transcieve = transmitRaw(data);
         } else {
             transcieve = transmitChain(data);
@@ -70,6 +71,23 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         //if(print) LOGGER.info(" <- " + ByteArrayHexStringConverter.toHexString(transcieve));
 
         return transcieve;
+    }
+
+    /**
+     * ISO 7816-4 classes which are not native DESFire commands: interindustry (00), proprietary (80, 84 with secure messaging,
+     * 94 i.e. Calypso), DESFire wrapped native commands (90) and pseudo-APDUs (FF).
+     */
+
+    private static boolean isApduClass(int cls) {
+        return cls == 0x00 || cls == 0x80 || cls == 0x84 || cls == 0x90 || cls == 0x94 || cls == 0xFF;
+    }
+
+    /**
+     * Native authentication commands: legacy (0A), ISO (1A), AES (AA), EV2 first (71) and EV2 non-first (77).
+     */
+
+    private static boolean isAuthenticate(int command) {
+        return command == 0x0A || command == 0x1A || command == 0xAA || command == 0x71 || command == 0x77;
     }
 
     private boolean isApduLength(byte[] data) {
@@ -125,13 +143,8 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     public static byte[] responseADPUToRaw(byte[] response) {
-
-        byte[] result = new byte[response.length - 1];
-        result[0] = response[response.length - 1];
-
-        System.arraycopy(response, 0, result, 1, response.length - 2);
-
-        return result;
+        // the response itself if not a DESFire status (i.e. 67 00)
+        return DESFireAdapter.responseAPDUToRaw(response);
     }
 
     public byte[] rawToRequestADPU(byte[] commandMessage) throws IOException {
@@ -217,7 +230,15 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         output.write(0x00);
+        boolean first = true;
         do {
+            if (!DESFireAdapter.isDesfireResponse(response)) {
+                if (first) {
+                    // i.e. 67 00, do not mistake SW2 for a DESFire status (00 is OK)
+                    return response;
+                }
+                throw new IOException("Unexpected response while receiving response: " + ByteArrayHexStringConverter.toHexString(response));
+            }
 
             output.write(response, 0, response.length - 2);
 
@@ -230,6 +251,7 @@ public class Atr210DesfireWrapper extends AbstractReaderIsoDepWrapper {
             }
 
             response = transceiveImpl(wrapMessage(ADDITIONAL_FRAME));
+            first = false;
         } while (true);
     }
 
