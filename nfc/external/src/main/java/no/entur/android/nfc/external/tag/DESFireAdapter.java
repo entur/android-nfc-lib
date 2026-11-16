@@ -44,7 +44,27 @@ public class DESFireAdapter {
 		return responseAPDUToRaw(rawToRequestAPDU(apdu));
 	}
 
+	/**
+	 * @param response wrapped (ISO 7816-4) response
+	 * @return true if the response holds a DESFire status, i.e. SW1 is 91 and SW2 the status
+	 */
+
+	public static boolean isDesfireResponse(byte[] response) {
+		return response != null && response.length >= 2 && response[response.length - 2] == STATUS_OK;
+	}
+
+	/**
+	 * Convert a wrapped (ISO 7816-4) response to a native DESFire response, i.e. data + 91 XX to XX + data.
+	 *
+	 * @param response wrapped response
+	 * @return native response, or the response itself if it does not hold a DESFire status (i.e. an ISO 7816 error like 67 00)
+	 */
+
 	public static byte[] responseAPDUToRaw(byte[] response) {
+		if (!isDesfireResponse(response)) {
+			// i.e. 67 00, do not mistake SW2 for a DESFire status (00 is OK)
+			return response;
+		}
 
 		byte[] result = new byte[response.length - 1];
 		result[0] = response[response.length - 1];
@@ -143,7 +163,15 @@ public class DESFireAdapter {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 		output.write(0x00);
+		boolean first = true;
 		do {
+			if (!isDesfireResponse(response)) {
+				if (first) {
+					// i.e. 67 00, do not mistake SW2 for a DESFire status (00 is OK)
+					return response;
+				}
+				throw new Exception("Unexpected response while receiving response: " + getHexString(response, true));
+			}
 
 			output.write(response, 0, response.length - 2);
 
@@ -156,6 +184,7 @@ public class DESFireAdapter {
 			}
 
 			response = transceive(wrapMessage(ADDITIONAL_FRAME));
+			first = false;
 		} while (true);
 	}
 
@@ -170,7 +199,7 @@ public class DESFireAdapter {
 			byte[] request = wrapMessage(nextCommand, commandMessage, offset, nextLength);
 
 			byte[] response = transceive(request);
-			if (response[response.length - 2] != STATUS_OK) {
+			if (!isDesfireResponse(response)) {
 				return response;
 			}
 
