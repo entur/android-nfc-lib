@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.entur.android.nfc.CommandAPDU;
-import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
@@ -109,7 +108,7 @@ public class ACR1552Commands extends ACRCommands {
 	}
 
 	public List<AcrDefaultLEDAndBuzzerBehaviour> setDefaultLEDAndBuzzerBehaviour(int slot, AcrDefaultLEDAndBuzzerBehaviour... picc) throws ReaderException {
-		return Acr1252UReader.parseBehaviour(setDefaultLEDAndBuzzerBehaviour(slot, Acr1252UReader.serializeBehaviour(picc)));
+		return Acr1552UReader.parseBehaviour(setDefaultLEDAndBuzzerBehaviour(slot, Acr1552UReader.serializeBehaviour(picc)));
 	}
 
 	public int setDefaultLEDAndBuzzerBehaviour(int slot, int picc) throws ReaderException {
@@ -133,7 +132,7 @@ public class ACR1552Commands extends ACRCommands {
 
 		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
-		return Acr1252UReader.parseBehaviour(operation);
+		return Acr1552UReader.parseBehaviour(operation);
 	}
 
 	public int getDefaultLEDAndBuzzerBehaviour2(int slot) throws ReaderException {

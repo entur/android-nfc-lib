@@ -145,7 +145,7 @@ public class DefaultINFcTagBinder extends INfcTag.Stub {
 
     @Override
     public ParcelableTransceiveResult parcelableTranscieve(int nativeHandle, ParcelableTransceive data) throws RemoteException {
-        return delegate.parcelableTranscieve(data);
+        return get(nativeHandle).parcelableTranscieve(data);
     }
 
     @Override

@@ -55,7 +55,8 @@ public class MqttBrokerServiceConnector {
         public MqttBrokerServiceConnector build() {
             Properties properties = new Properties();
             if(port != -1) {
-                properties.put(MqttBrokerService.PORT, port);
+                // must be a String, Properties.getProperty(..) ignores other value types
+                properties.setProperty(MqttBrokerService.PORT, Integer.toString(port));
             }
 
             return new MqttBrokerServiceConnector(context, properties, timeout, notificationId, notification, serviceType);
@@ -66,8 +67,11 @@ public class MqttBrokerServiceConnector {
     protected final Properties configuration;
     protected final Context context;
 
-    /** Flag indicating whether we have called bind on the service. */
+    /** Flag indicating whether the service is bound. */
     protected boolean bound;
+
+    /** Flag indicating whether we have called bind on the service. */
+    protected boolean bindRequested;
 
     protected MqttBrokerService.LocalBinder service;
 
@@ -93,7 +97,7 @@ public class MqttBrokerServiceConnector {
     };
 
     public MqttBrokerServiceConnector(Context context, long timeout, int notificationId, Notification notification, int serviceType) {
-        this(context, null, timeout, serviceType, notification, notificationId);
+        this(context, null, timeout, notificationId, notification, serviceType);
     }
 
     public MqttBrokerServiceConnector(Context context, Properties configuration, long timeout, int notificationId, Notification notification, int serviceType) {
@@ -134,7 +138,8 @@ public class MqttBrokerServiceConnector {
             intent.putExtra(AbstractForegroundService.FOREGROUND_SERVICE_TYPE, serviceType);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // only promise a foreground service if there is a notification to call startForeground(..) with
+        if (notification != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {
             context.startService(intent);
@@ -148,14 +153,19 @@ public class MqttBrokerServiceConnector {
 
     public void bind() {
         if(!bound) {
+            bindRequested = true;
             context.bindService(new Intent(context, MqttBrokerService.class), connection, Context.BIND_AUTO_CREATE);
         }
     }
 
     public void unbind() {
-        if(connection != null) {
+        if(bindRequested) {
+            bindRequested = false;
             context.unbindService(connection);
         }
+        // onServiceDisconnected(..) is not called on unbind
+        bound = false;
+        service = null;
     }
 
     public boolean waitForBindToComplete() {

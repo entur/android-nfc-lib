@@ -31,7 +31,8 @@ public class IntentConverter {
 		}
 
 		if (input.hasExtra(NfcAdapter.EXTRA_AID)) {
-			output.putExtra(NfcAdapter.EXTRA_AID, (Parcelable) input.getParcelableExtra(NfcAdapter.EXTRA_AID));
+			// EXTRA_AID is a byte[]
+			output.putExtra(NfcAdapter.EXTRA_AID, input.getByteArrayExtra(NfcAdapter.EXTRA_AID));
 		}
 
 		if (input.hasExtra(NfcAdapter.EXTRA_ID)) {

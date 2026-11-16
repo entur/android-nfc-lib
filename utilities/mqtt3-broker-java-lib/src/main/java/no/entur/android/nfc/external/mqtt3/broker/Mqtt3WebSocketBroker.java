@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ServerSocketFactory;
@@ -147,20 +148,14 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
     }
 
     public class Subscriptions {
-        private List<Subscription> subscriptions = new ArrayList<>();
+        private List<Subscription> subscriptions = new CopyOnWriteArrayList<>();
 
         public void add(String topic, byte qos) {
             subscriptions.add(new Subscription(topic, qos));
         }
 
         public void remove(String topic) {
-            for(int i = 0; i < subscriptions.size(); i++) {
-                Subscription subscription = subscriptions.get(i);
-                if(subscription.topic.equals(topic)) {
-                    subscriptions.remove(i);
-                    i--;
-                }
-            }
+            subscriptions.removeIf(subscription -> subscription.topic.equals(topic));
         }
 
         public boolean matchesTopic(String[] topic) {
@@ -310,15 +305,20 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
 
                 String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
-                byte packetIdentifierMsb = message.get();
-                byte packetIdentifierLsb = message.get();
+                int qos = (flags >>> 1) & 0x3;
+
+                // packet identifier is only present for QoS 1 and 2
+                byte packetIdentifierMsb = 0;
+                byte packetIdentifierLsb = 0;
+                if (qos > 0) {
+                    packetIdentifierMsb = message.get();
+                    packetIdentifierLsb = message.get();
+                }
 
                 int payloadLength = message.remaining();
 
                 byte[] payload = new byte[payloadLength];
                 message.get(payload);
-
-                int qos = (flags >>> 1) & 0x3;
 
                 LOGGER.info("Broker publish to " + topic + " with QoS " + String.format("%02X", qos) + ":\n" + new String(payload, StandardCharsets.UTF_8));
 
@@ -347,8 +347,8 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
                 byte[] bytes = new byte[read];
                 message.get(bytes);
 
-                // clear dup flag
-                bytes[0] = (byte) (bytes[0] & ~0b11110111);
+                // clear dup flag (bit 3), keep message type, QoS and retain
+                bytes[0] = (byte) (bytes[0] & ~0b00001000);
 
                 publishToClients(conn, topic, bytes);
 
@@ -429,14 +429,22 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(payload.length + topicBytes.length + 5 + 2 + 2);
         DataOutputStream dout = new DataOutputStream(bout);
 
-        int header = 0b00111000 | encodeQos(qos) << 1;
+        int encodedQos = encodeQos(qos);
+
+        // PUBLISH, DUP = 0, retain = 0
+        int header = 0b00110000 | encodedQos << 1;
+
+        // packet identifier is only present for QoS 1 and 2
+        int packetIdentifierLength = encodedQos > 0 ? 2 : 0;
 
         dout.write(header);
-        encode(payload.length + 2 + 2 + topicBytes.length, dout);
+        encode(payload.length + 2 + packetIdentifierLength + topicBytes.length, dout);
         dout.writeShort(topicBytes.length);
         dout.write(topicBytes);
 
-        dout.writeShort(messageNumber.incrementAndGet());
+        if (encodedQos > 0) {
+            dout.writeShort(nextPacketIdentifier());
+        }
 
         dout.write(payload);
 
@@ -463,6 +471,11 @@ public class Mqtt3WebSocketBroker extends WebSocketServer {
         } while (value > 0);
     }
 
+
+    private static int nextPacketIdentifier() {
+        // packet identifiers are non-zero 16-bit values
+        return messageNumber.updateAndGet(i -> i >= 0xFFFF ? 1 : i + 1);
+    }
 
     private int encodeQos(int qos) { // bit 1 and 2
         switch (qos) {

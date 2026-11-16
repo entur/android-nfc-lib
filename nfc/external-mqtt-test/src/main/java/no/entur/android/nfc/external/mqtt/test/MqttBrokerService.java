@@ -5,7 +5,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -65,15 +64,17 @@ public class MqttBrokerService extends AbstractForegroundService {
 
     private void createBroker(Intent intent) {
         Properties config = new Properties();
-        if(intent.hasExtra(EXTRA_CONFIGURATION)) {
-            Map<String, String> map = (HashMap) intent.getSerializableExtra(EXTRA_CONFIGURATION);
+        // intent is null when the service is restarted by the system (START_STICKY)
+        if(intent != null && intent.hasExtra(EXTRA_CONFIGURATION)) {
+            Map<?, ?> map = (Map<?, ?>) intent.getSerializableExtra(EXTRA_CONFIGURATION);
             config.putAll(map);
         }
 
         int port = getPort(config);
 
         if(broker != null) {
-            if(broker.getPort() != port) {
+            // without an explicit port, the existing broker (on a random port) is reused
+            if(port != -1 && broker.getPort() != port) {
                 throw new IllegalStateException("Broker already configured on port " + broker.getPort() + ", please restart service to reset.");
             }
         }
