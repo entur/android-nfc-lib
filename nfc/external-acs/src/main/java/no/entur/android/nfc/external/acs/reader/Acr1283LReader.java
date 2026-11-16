@@ -351,14 +351,15 @@ public class Acr1283LReader extends AcrReader {
 	/**
 	 * Turn the buzzer on for the given duration.
 	 *
-	 * @param durationInMillis duration in milliseconds, 10 to 2550, in steps of 10
+	 * @param durationInMillis duration in milliseconds, 10 to 2540, in steps of 10
 	 * @return true if successful
 	 */
 
 	public boolean setBuzzerControlSingle(int durationInMillis) {
 		int duration = durationInMillis / 10;
-		if (duration < 1 || duration > 0xFF) {
-			throw new IllegalArgumentException("Expected duration 10 to 2550 ms, got " + durationInMillis);
+		// 0xFF turns the buzzer on (until turned off)
+		if (duration < 1 || duration > 0xFE) {
+			throw new IllegalArgumentException("Expected duration 10 to 2540 ms, got " + durationInMillis);
 		}
 		byte[] response;
 		try {
