@@ -22,7 +22,6 @@ public class IAcr1283Binder extends IAcr1283LReaderControl.Stub {
 	private volatile IAcr1283CommandWrapper wrapper;
 
 	public IAcr1283Binder() {
-		attachInterface(this, IAcr1283CommandWrapper.class.getName());
 	}
 
 	public void setCommands(ACR1283Commands reader) {

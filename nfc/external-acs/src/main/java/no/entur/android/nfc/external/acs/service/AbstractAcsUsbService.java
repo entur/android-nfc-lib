@@ -15,7 +15,6 @@ import org.nfctools.api.detect.TagTypeDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcServiceCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
@@ -94,7 +93,7 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 				} else if (currState == Reader.CARD_ABSENT) {
 					// Log.v(TAG, "Tag absent on reader");
 
-					onTagAbsent(slot);
+					onTagAbsent(reader, slot);
 				} else {
 					LOGGER.debug("Not action for state transition from " + STATE_STRINGS[prevState] + " to " + STATE_STRINGS[currState]);
 				}
@@ -134,6 +133,10 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 	}
 
 	public void onTagAbsent(int slot) {
+		onTagAbsent(null, slot);
+	}
+
+	public void onTagAbsent(ReaderWrapper reader, int slot) {
 		LOGGER.info("onTagAbsent");
 
         Intent intent = new Intent();
@@ -146,7 +149,10 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
                 intent.putExtra(NfcAdapter.EXTRA_ID, uid);
             }
             intent.putExtra(ExternalNfcTagCallback.EXTRAS_TAG_HANDLE, proxy.getHandle());
-            intent.putExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID, "mock");
+            if(reader != null) {
+                // same reader id as when the tag was discovered
+                new AcsIntentEnricher(reader).enrich(intent);
+            }
         }
 
 		sendBroadcast(intent, "android.permission.NFC");
@@ -210,7 +216,7 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 
 	public void handleTagInit(ReaderWrapper reader, int slotNumber, byte[] atr, TagType tagType) throws ReaderException {
 		int preferredProtocols = Reader.PROTOCOL_T0 | Reader.PROTOCOL_T1;
-		reader.setProtocol(0, preferredProtocols);
+		reader.setProtocol(slotNumber, preferredProtocols);
 
 		int state = reader.getState(slotNumber);
 		if (state != Reader.CARD_SPECIFIC) {

@@ -20,7 +20,6 @@ public class IAcr1222LBinder extends IAcr1222LReaderControl.Stub {
 	private volatile IAcr1222LCommandWrapper wrapper;
 
 	public IAcr1222LBinder() {
-		attachInterface(this, IAcr1222LReaderControl.class.getName());
 	}
 
 	public void setAcr1222LCommands(ACR1222Commands reader) {
