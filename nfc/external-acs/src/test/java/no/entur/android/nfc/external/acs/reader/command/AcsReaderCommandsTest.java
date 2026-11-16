@@ -30,6 +30,7 @@ import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
 import no.entur.android.nfc.external.acs.reader.AcrCommunicationSpeed;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrFont;
+import no.entur.android.nfc.external.acs.reader.AcrLED;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1281UReaderControl;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1552UReaderControl;
@@ -119,6 +120,20 @@ public class AcsReaderCommandsTest {
         ArgumentCaptor<byte[]> command = ArgumentCaptor.forClass(byte[].class);
         verify(reader).control(eq(0), eq(Reader.IOCTL_CCID_ESCAPE), command.capture(), anyInt(), any(byte[].class), anyInt());
         assertArrayEquals(hex("E0000028010A"), command.getValue());
+    }
+
+    @Test
+    public void testAcr1552LEDs() throws Exception {
+        // writing: bit 0 lights green, bit 1 blue (seen on a reader); reading: bit 0 blue, bit 1 green
+        ReaderWrapper readerWrapper = reader("E10000000102");
+        IAcr1552UCommandWrapper wrapper = new IAcr1552UCommandWrapper(new ACR1552Commands("ACS ACR1552 1S CL Reader", readerWrapper));
+        IAcr1552UReaderControl control = mock(IAcr1552UReaderControl.class);
+        when(control.setLEDs(anyInt())).thenAnswer((i) -> wrapper.setLEDs(i.getArgument(0)));
+
+        Acr1552UReader reader = new Acr1552UReader("ACS ACR1552 1S CL Reader", "acs-1", control);
+
+        assertTrue(reader.setLEDs(AcrLED.BLUE));
+        assertArrayEquals(hex("E00000290102"), command(readerWrapper));
     }
 
     @Test
