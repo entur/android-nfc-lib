@@ -29,12 +29,21 @@ public class Atr210CardAdpuSynchronizedRequestMessageTest {
 
     @Test
     public void testResponseMatchedByCommandId() {
+        Atr210CardAdpuSynchronizedRequestMessage earlier = request();
         Atr210CardAdpuSynchronizedRequestMessage request = request();
-        int commandId = request.getCommandId();
 
-        assertTrue(request.isResponse(response(commandId)));
-        // a late response to another request
-        assertFalse(request.isResponse(response(commandId + 1)));
+        assertTrue(request.isResponse(response(request.getCommandId())));
+        // a late response to the earlier request
+        assertFalse(request.isResponse(response(earlier.getCommandId())));
+    }
+
+    @Test
+    public void testResponseWithUnknownCommandIdIsAccepted() {
+        Atr210CardAdpuSynchronizedRequestMessage request = request();
+        // i.e. the reader does not echo the command id as is; never issued (ids are issued in sequence)
+        int unknown = (request.getCommandId() + 30000) & 0xFFFF;
+
+        assertTrue(request.isResponse(response(unknown)));
     }
 
     @Test

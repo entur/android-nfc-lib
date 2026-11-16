@@ -35,9 +35,12 @@ public class Atr210CardAdpuSynchronizedRequestMessage extends CardAdpuSynchroniz
             return true;
         }
         int responseCommandId = result.get(0).getCommandId();
-
-        // 0 if the reader does not echo the command id
-        return responseCommandId == 0 || responseCommandId == commandId;
+        if(responseCommandId == commandId) {
+            return true;
+        }
+        // Only ignore responses which are known to belong to an earlier request (i.e. which timed out). Accept other values
+        // (i.e. 0), so that a reader which does not echo the command id as is keeps working.
+        return !Atr210CardMessageConverter.isRecentCommandId(responseCommandId);
     }
 
     protected int getCommandId() {
