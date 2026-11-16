@@ -13,7 +13,10 @@ import no.entur.android.nfc.external.acs.reader.bind.IAcr1222LReaderControl;
 
 public class Acr1222LReader extends AcrReader {
 
-	// default LED and buzzer behaviour (E0 00 00 21), per the ACR1222L API: bits 0, 3, 5 and 6 are RFU
+	// default LED and buzzer behaviour (E0 00 00 21), per the ACR1222L API: bits 0, 3, 5 and 6 are RFU.
+	// Seen on a reader (firmware ACR1222L-U V312.05): the polling status LED (blinking blue / orange while no card is present)
+	// only shows when the activation status LED is also enabled. The activation status LED makes the card present indication
+	// (orange on, blue off) immediate; without it, the indication is slow. Bits 0 and 3 make no visible difference.
 	private static final int PICC_POLLING_STATUS_LED = 1 << 1;
 	private static final int PICC_ACTIVATION_STATUS_LED = 1 << 2;
 	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = 1 << 4;
