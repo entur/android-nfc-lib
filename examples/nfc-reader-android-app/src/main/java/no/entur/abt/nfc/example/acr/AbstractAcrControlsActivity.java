@@ -24,11 +24,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
 import java.lang.reflect.Array;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -53,7 +51,7 @@ import no.entur.android.nfc.wrapper.Tag;
  * <br>
  * Settings are applied as soon as they are changed. Settings which can be read from the reader are disabled until they have been
  * read, and are read again after every change, so the screen shows what the reader actually has. Reader calls run one at a time,
- * in order. Every call and its result is logged on screen and in logcat (tag AcrControls).
+ * in order. Every call and its result is logged to logcat (tag AcrControls).
  *
  * @param <T> reader type
  */
@@ -94,8 +92,6 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		boolean backlight(boolean on) throws Exception;
 	}
 
-	private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.ROOT);
-
 	// reader calls one at a time, in order
 	private final ExecutorService readerExecutor = Executors.newSingleThreadExecutor();
 
@@ -103,8 +99,6 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 
 	private LinearLayout container;
 	private LinearLayout card;
-	private TextView log;
-	private final List<String> logLines = new ArrayList<>();
 
 	// true while the controls are updated with values read from the reader
 	private boolean updating;
@@ -119,7 +113,6 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		setContentView(R.layout.activity_acr_controls);
 
 		container = findViewById(R.id.acrControls);
-		log = findViewById(R.id.acrControlsLog);
 
 		readerId = getIntent().getStringExtra(EXTRA_READER_ID);
 
@@ -771,20 +764,8 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		});
 	}
 
-	private void log(String line) {
+	private static void log(String line) {
 		Log.i(LOG_TAG, line);
-		String text = timeFormat.format(new Date()) + " " + line;
-		runOnUiThread(() -> {
-			logLines.add(0, text);
-			while (logLines.size() > 50) {
-				logLines.remove(logLines.size() - 1);
-			}
-			StringBuilder builder = new StringBuilder();
-			for (String l : logLines) {
-				builder.append(l).append('\n');
-			}
-			log.setText(builder);
-		});
 	}
 
 	private String currentTitle() {
