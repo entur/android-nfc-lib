@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
@@ -53,7 +54,40 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
      */
 
     protected static boolean supportsPassthrough(String readerName) {
-        return readerName != null && !(readerName.contains("1255") || readerName.contains("1252"));
+        return ReaderWrapper.supportsPassThrough(readerName);
+    }
+
+    /**
+     * Classify MIFARE Ultralight vs Ultralight C the same way as Android does for the built-in NFC reader
+     * (NativeNfcTag.isUltralightC(), based on NXP AN1303), so that both report the same type for the same tag.
+     *
+     * @param page2 page 2 (internal, internal, lock, lock)
+     * @param page3 page 3 (OTP, or NDEF capability container)
+     * @param page4 page 4 (version info if factory state), or null if not read
+     * @return true if Ultralight C
+     */
+
+    protected static boolean isUltralightC(byte[] page2, byte[] page3, byte[] page4) {
+        if (isBlank(page2, page3)) {
+            // very likely a blank card, look at version info in page 4
+            return page4 != null && page4[0] == (byte) 0x02 && page4[1] == (byte) 0x00;
+        }
+        if (page3[0] == (byte) 0xE1 && (page3[1] & 0xFF) < 0x20) {
+            // NDEF capability container, the size of the data area is 0x06 for Ultralight, anything above indicates Ultralight C
+            return (page3[2] & 0xFF) > 0x06;
+        }
+        // fall back to Ultralight
+        return false;
+    }
+
+    /**
+     * @param page2 page 2 (internal, internal, lock, lock)
+     * @param page3 page 3 (OTP, or NDEF capability container)
+     * @return true if lock bytes and OTP page are all zero, i.e. very likely a blank card
+     */
+
+    protected static boolean isBlank(byte[] page2, byte[] page3) {
+        return page2[2] == 0 && page2[3] == 0 && page3[0] == 0 && page3[1] == 0 && page3[2] == 0 && page3[3] == 0;
     }
 
     @SuppressWarnings("java:S3776")
@@ -119,8 +153,6 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
                 if (version > 0) {
                     // readerWriter = new AcrMfUlNTAGReaderWriter(acsTag, new NfcNtag(reader, slotNumber), version);
                     readerWriter = new AcrMfUlReaderWriter(acsTag);
-
-                    tagType = TagType.MIFARE_ULTRALIGHT_C;
                 } else {
                     readerWriter = new AcrMfUlReaderWriter(acsTag);
                 }
@@ -157,9 +189,21 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
                 uid = new byte[] { MifareUltralightTagFactory.NXP_MANUFACTURER_ID };
             }
 
-            int type = MifareUltralight.TYPE_UNKNOWN;
-
-            if (tagType == TagType.MIFARE_ULTRALIGHT_C || !canReadBlocks) {
+            int type;
+            if (canReadBlocks) {
+                // same classification as the built-in NFC reader (i.e. NTAG213, 215 and 216 with NDEF are Ultralight C)
+                byte[] page2 = initBlocks[2].getData();
+                byte[] page3 = initBlocks[3].getData();
+                byte[] page4 = null;
+                if (isBlank(page2, page3)) {
+                    try {
+                        page4 = readerWriter.readBlock(4, 1)[0].getData();
+                    } catch (Exception e) {
+                        LOGGER.debug("Unable to read page 4", e);
+                    }
+                }
+                type = isUltralightC(page2, page3, page4) ? MifareUltralight.TYPE_ULTRALIGHT_C : MifareUltralight.TYPE_ULTRALIGHT;
+            } else {
                 type = MifareUltralight.TYPE_ULTRALIGHT_C;
             }
 

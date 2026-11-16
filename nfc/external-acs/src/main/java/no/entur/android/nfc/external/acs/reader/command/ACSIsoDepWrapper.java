@@ -35,7 +35,11 @@ public class ACSIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 	}
 
 	public byte[] transceiveRaw(byte[] req) throws Exception {
-		throw new ReaderException();
+		// raw NFC-A commands, i.e. NfcA.transceive(..) for MIFARE Ultralight / NTAG (GET_VERSION, READ_SIG, ..)
+		if (ReaderWrapper.supportsPassThrough(isoDep.getReaderName())) {
+			return isoDep.transmitPassThrough(slotNum, req);
+		}
+		throw new ReaderException("Raw commands are not supported for this reader");
 	}
 
     @Override

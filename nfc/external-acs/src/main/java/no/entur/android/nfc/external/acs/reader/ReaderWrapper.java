@@ -55,6 +55,18 @@ public class ReaderWrapper {
 		reader.open(usbDevice);
 	}
 
+	/**
+	 * Whether raw tag commands can be sent via the PN53x InCommunicateThru pass-through
+	 * (see {@link #transmitPassThrough(int, byte[])}) for a reader.
+	 *
+	 * @param readerName reader name
+	 * @return true if pass-through commands are supported (i.e. not for ACR1252 and ACR1255)
+	 */
+
+	public static boolean supportsPassThrough(String readerName) {
+		return readerName != null && !(readerName.contains("1255") || readerName.contains("1252"));
+	}
+
 	public String getReaderName() {
 
 		String name = reader.getReaderName();
