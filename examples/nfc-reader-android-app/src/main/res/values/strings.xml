@@ -2,8 +2,9 @@
 
     <string name="app_name">External NFC Reader Service</string>
 
-    <string name="acr_controls_title">ACR buzzer, LED and display</string>
-    <string name="acr_controls_no_reader">No ACS reader open. Start the USB reader service on the main screen and connect a reader.</string>
+    <string name="acr_controls_title">ACR reader controls</string>
+    <string name="acr_controls_menu">%1$s controls</string>
+    <string name="acr_controls_no_reader">No %1$s open. Start the USB reader service on the main screen and connect the reader.</string>
     <string name="acr_controls_default_behaviour">Default LED and buzzer behaviour</string>
     <string name="acr_controls_leds">LEDs</string>
     <string name="acr_controls_light_led">Status LEDs</string>

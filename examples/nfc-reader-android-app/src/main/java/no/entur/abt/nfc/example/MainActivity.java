@@ -60,7 +60,7 @@ import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
-import no.entur.abt.nfc.example.acr.AcrControlsActivity;
+import no.entur.abt.nfc.example.acr.AbstractAcrControlsActivity;
 import no.entur.abt.nfc.example.acr.AcrReaders;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
@@ -70,6 +70,8 @@ import no.entur.android.nfc.wrapper.tech.NfcA;
 public class MainActivity extends AppCompatActivity implements ExternalNfcTagCallback, ExternalNfcReaderCallback, ExternalNfcServiceCallback, ExternalNfcTagLostCallback {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainActivity.class);
+
+    private static final int MENU_GROUP_ACR_CONTROLS = 1;
 
     private ExternalNfcTagCallbackSupport externalNfcTagCallbackSupport;
     private ExternalNfcServiceCallbackSupport externalNfcServiceCallbackSupport;
@@ -255,8 +257,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             if(reader instanceof AcrReader) {
                 AcrReader acrReader = (AcrReader)reader;
 
-                // for the ACR buzzer, LED and display test
+                // for the ACR reader controls (menu)
                 AcrReaders.opened(acrReader);
+                runOnUiThread(this::invalidateOptionsMenu);
 
                 AcrPICC[] types;
                 if (acrReader instanceof Acr122UReader || acrReader instanceof Acr1222LReader) {
@@ -377,6 +380,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         String readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
         if(readerId != null) {
             AcrReaders.closed(readerId);
+            runOnUiThread(this::invalidateOptionsMenu);
         }
     }
 
@@ -785,10 +789,6 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         });
     }
 
-    public void openAcrControls(View view) {
-        startActivity(new Intent(this, AcrControlsActivity.class));
-    }
-
     public void stopReaderService(View view) {
         LOGGER.info("Stop reader service");
 
@@ -823,6 +823,17 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        // one item per open ACS reader, for trying its buzzer, LED and display controls
+        menu.removeGroup(MENU_GROUP_ACR_CONTROLS);
+        for (AcrReader acrReader : AcrReaders.getReaders()) {
+            Class<?> activity = AcrReaders.getControlsActivity(acrReader);
+            if (activity != null) {
+                Intent intent = new Intent(this, activity);
+                intent.putExtra(AbstractAcrControlsActivity.EXTRA_READER_ID, acrReader.getId());
+                // started by the menu, as the item has an intent
+                menu.add(MENU_GROUP_ACR_CONTROLS, Menu.NONE, 50, getString(R.string.acr_controls_menu, acrReader.getName())).setIntent(intent);
+            }
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 

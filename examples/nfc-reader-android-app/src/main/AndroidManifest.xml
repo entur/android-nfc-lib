@@ -72,7 +72,37 @@
             />
 
         <activity
-            android:name=".acr.AcrControlsActivity"
+            android:name=".acr.Acr122UControlsActivity"
+            android:exported="false"
+            android:label="@string/acr_controls_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+        <activity
+            android:name=".acr.Acr1222LControlsActivity"
+            android:exported="false"
+            android:label="@string/acr_controls_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+        <activity
+            android:name=".acr.Acr1252UControlsActivity"
+            android:exported="false"
+            android:label="@string/acr_controls_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+        <activity
+            android:name=".acr.Acr1255UControlsActivity"
+            android:exported="false"
+            android:label="@string/acr_controls_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+        <activity
+            android:name=".acr.Acr1281UControlsActivity"
+            android:exported="false"
+            android:label="@string/acr_controls_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+        <activity
+            android:name=".acr.Acr1283LControlsActivity"
+            android:exported="false"
+            android:label="@string/acr_controls_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+        <activity
+            android:name=".acr.Acr1552UControlsActivity"
             android:exported="false"
             android:label="@string/acr_controls_title"
             android:theme="@style/Theme.AppCompat.Light" />
