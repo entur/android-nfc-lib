@@ -26,7 +26,9 @@ public class Acr1255UReader extends AcrReader {
 	private static final int PICC_POLLING_STATUS_LED = 1 << 1;
 	// bit 2 RFU
 	// bit 3 RFU
-	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = 1 << 4;
+	// An ACR1255U-J1 (firmware SWV 1.16.03) beeps on card insertion and removal with bit 3, not bit 4, and bits 4 - 6 make no
+	// sound. Set both bits 3 and 4, and read either as enabled.
+	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = (1 << 3) | (1 << 4);
 	private static final int CONTACTLESS_CHIP_RESET_INDICATION_BUZZER = 1 << 5;
 	private static final int EXCLUSIVE_MODE_STATUS_BUZZER = 1 << 6;
 	private static final int LED_CARD_OPERATION_BLINK = 1 << 7;

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
+import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
@@ -146,6 +147,14 @@ public class AcsReaderCommandsTest {
         Acr1552UReader reader = new Acr1552UReader("ACS ACR1552 1S CL Reader", "acs-1", control);
 
         assertEquals(Collections.singletonList(AcrLED.BLUE), reader.getLEDs());
+    }
+
+    @Test
+    public void testAcr1255Buzzer() {
+        // the buzzer beeps with bit 3 on an ACR1255U-J1, the library had bit 4: set both, read either
+        assertEquals(0x18, Acr1255UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER));
+        assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER), Acr1255UReader.parseBehaviour(0x08));
+        assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER), Acr1255UReader.parseBehaviour(0x10));
     }
 
     @Test
