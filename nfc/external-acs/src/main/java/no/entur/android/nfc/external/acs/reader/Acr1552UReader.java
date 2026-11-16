@@ -43,6 +43,8 @@ public class Acr1552UReader extends AcrReader {
 	public static final int LED_GREEN = 1 << 1;
 	public static final int LED_BLUE = 1;
 
+	// UI behaviour (E0 00 00 21), per the ACR1552U reference manual 1.09: bits 1, 2, 5, 6 and 7 need ACR1552U-M firmware 1.06.00 or
+	// later; on older firmware, the reader leaves them unset (setDefaultLEDAndBuzzerBehaviour returns false)
 	private static final int UI_ACCESSING_LED = 1;
 	private static final int UI_PICC_POLLING_STATUS_LED = 1 << 1;
 	private static final int UI_PICC_ACTIVATION_STATUS_LED = 1 << 2;
@@ -328,7 +330,8 @@ public class Acr1552UReader extends AcrReader {
 
 	/**
 	 *
-	 * Set RF power
+	 * Set RF power. Needs ACR1552U-M firmware 1.03.03 or later, older firmware fails with a CCID error. The reader resets after
+	 * the power is set.
 	 *
 	 * @param percent power in percent
 	 * @return true if power was updated
@@ -347,7 +350,7 @@ public class Acr1552UReader extends AcrReader {
 	}
 
 	/**
-	 * Get RF power
+	 * Get RF power. Needs ACR1552U-M firmware 1.03.03 or later, older firmware fails with a CCID error.
 	 *
 	 * @return power in percent
 	 */
