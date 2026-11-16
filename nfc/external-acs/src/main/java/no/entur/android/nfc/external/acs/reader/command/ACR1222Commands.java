@@ -796,17 +796,29 @@ public class ACR1222Commands extends ACRCommands {
 		return true;
 	}
 
+	/**
+	 * 4 LEDs control: FF 00 44 bLEDsState 00, response SW1 SW2.
+	 *
+	 * @param slot slot
+	 * @param state LED states, bit 0 green, bit 1 blue, bit 2 orange, bit 3 red
+	 * @return true if successful
+	 */
+
 	public boolean setLED(int slot, int state) throws ReaderException {
+		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x44, (byte) state, 0x00 };
 
-		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x00, 0x44, new byte[] { (byte) (state) });
+		byte[] in;
+		synchronized (reader) {
+			in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
+		}
 
-		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
+		if (in.length < 2 || !isSuccessControl(new ResponseAPDU(in))) {
+			LOGGER.debug("Unable to set LED state " + ByteArrayHexStringConverter.toHexString(in));
 
-		if (!isSuccess(response, 1)) {
 			return false;
 		}
 
-		LOGGER.debug("Set LED state to " + (0xFF & response.getData()[0]));
+		LOGGER.debug("Set LED state to " + Integer.toHexString(state));
 
 		return true;
 	}

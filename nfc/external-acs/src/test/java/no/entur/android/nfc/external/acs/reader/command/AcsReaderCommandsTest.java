@@ -28,6 +28,7 @@ import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1552UReader;
 import no.entur.android.nfc.external.acs.reader.AcrCommunicationSpeed;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
+import no.entur.android.nfc.external.acs.reader.AcrFont;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1281UReaderControl;
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1552UReaderControl;
@@ -66,6 +67,41 @@ public class AcsReaderCommandsTest {
 
         assertTrue(new ACR1255UsbCommands("ACS ACR1255U-J1", reader("E10000000101")).setSleepModeOption(0, (byte) 1));
         assertFalse(new ACR1255UsbCommands("ACS ACR1255U-J1", reader("E10000000102")).setSleepModeOption(0, (byte) 1));
+    }
+
+    @Test
+    public void testAcr1222SetLED() throws Exception {
+        // 4 LEDs control: FF 00 44 bLEDsState 00, response SW1 SW2
+        ReaderWrapper reader = reader("9000");
+        assertTrue(new ACR1222Commands("ACS ACR1222L", reader).setLED(0, 0x05));
+        assertArrayEquals(hex("FF00440500"), command(reader));
+
+        assertFalse(new ACR1222Commands("ACS ACR1222L", reader("6300")).setLED(0, 0x05));
+    }
+
+    @Test
+    public void testAcr1283SetLED() throws Exception {
+        ReaderWrapper reader = reader("9000");
+        assertTrue(new ACR1283Commands("ACS ACR1283L", reader).setLED(0, 0x0F));
+        assertArrayEquals(hex("FF00440F00"), command(reader));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAcr1283SetLEDFails() throws Exception {
+        new ACR1283Commands("ACS ACR1283L", reader("6300")).setLED(0, 0x0F);
+    }
+
+    @Test
+    public void testFontNordicCharacters() {
+        // font A: ISO 8859-1
+        assertArrayEquals(hex("C6D8C5E6F8E5"), AcrFont.FONT_A.mapString("ÆØÅæøå"));
+        // font C: code page 437
+        assertArrayEquals(hex("92918F86"), AcrFont.FONT_C.mapString("ÆæÅå"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFontCHasNoSlashedO() {
+        AcrFont.FONT_C.mapString("Ø");
     }
 
     @Test
