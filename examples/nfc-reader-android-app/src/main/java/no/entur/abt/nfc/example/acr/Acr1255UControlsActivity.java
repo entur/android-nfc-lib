@@ -47,7 +47,8 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 		addLEDs(reader);
 
 		addSection(getString(R.string.acr_controls_default_behaviour));
-		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.ICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.EXCLUSIVE_MODE_STATUS_BUZZER), null, reader::getDefaultLEDAndBuzzerBehaviour,
+		addNote(getString(R.string.acr_controls_1255_behaviour_note));
+		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
 
 		addDefaultBehaviourBits(reader, BEHAVIOUR_BITS);
@@ -62,9 +63,9 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 				(seconds) -> seconds == -1 ? getString(R.string.acr_controls_sleep_never) : seconds + " s", null, reader::setSleepModeOption);
 	}
 
-	// as mapped by the library, not checked against the manual; bit 3 beeps on card insertion / removal on an ACR1255U-J1
-	private static final String[] BEHAVIOUR_BITS = { "Bit 0 ICC activation status LED", "Bit 1 PICC polling status LED", "Bit 2", "Bit 3 card insertion / removal buzzer",
-			"Bit 4 card insertion / removal buzzer (library)", "Bit 5 contactless chip reset buzzer", "Bit 6 exclusive mode buzzer", "Bit 7 card operation blink LED" };
+	// per the ACR1255U-J1 reference manual 1.13
+	private static final String[] BEHAVIOUR_BITS = { "Bit 0 battery charging status LED", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
+			"Bit 3 card insertion buzzer", "Bit 4 card removal buzzer", "Bit 5 reader power on buzzer", "Bit 6 (RFU)", "Bit 7 card operation blink LED" };
 
 	@Override
 	protected List<String> getEscapeCommandPresets() {

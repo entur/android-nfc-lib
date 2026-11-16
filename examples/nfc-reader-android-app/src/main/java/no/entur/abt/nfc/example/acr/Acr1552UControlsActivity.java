@@ -41,7 +41,7 @@ public class Acr1552UControlsActivity extends AbstractAcrControlsActivity<Acr155
 		addFlags(AcrLED.class, Arrays.asList(AcrLED.GREEN, AcrLED.BLUE), null, reader::getLEDs, reader::setLEDs);
 		addSection(getString(R.string.acr_controls_default_behaviour));
 		addNote(getString(R.string.acr_controls_1552_behaviour_firmware));
-		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER), null, reader::getDefaultLEDAndBuzzerBehaviour,
+		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER), null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
 		addSection(getString(R.string.acr_controls_buzzer));
 		EditText duration = editText("200", InputType.TYPE_CLASS_NUMBER);

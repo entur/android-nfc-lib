@@ -58,6 +58,7 @@ public class AcrLabels {
 		LABELS.put(AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER, "Beep on card removal");
 		LABELS.put(AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER, "Beep on contactless chip reset");
 		LABELS.put(AcrDefaultLEDAndBuzzerBehaviour.EXCLUSIVE_MODE_STATUS_BUZZER, "Beep on exclusive mode change");
+		LABELS.put(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER, "Beep on power on");
 
 		LABELS.put(AcrLED.GREEN, "Green");
 		LABELS.put(AcrLED.BLUE, "Blue");
