@@ -43,9 +43,9 @@ public class ExtendedCardTerminalFactory {
      * @return terminal, or null if the reader is not supported
      */
 
-    private static final Pattern PCSC_LITE_SLOT = Pattern.compile(".* \\d{2} (\\d{2})$");
+    private static final Pattern PCSC_LITE_SLOT = Pattern.compile(".* [0-9A-F]{2} ([0-9A-F]{2})$");
 
-    // pcsc-lite reader names end with the reader index and the slot number
+    // pcsc-lite reader names end with the reader index and the slot number, both as hex (%02X)
     private static boolean isNonZeroSlot(String name) {
         return isOtherSlot(name, "00");
     }

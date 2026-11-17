@@ -42,7 +42,7 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     protected void restoreAfterTransparentSession() throws CardException {
-        redetectCardByTogglingAutomaticPolling(AUTOMATIC_PICC_POLLING);
+        redetectCardByTogglingAutomaticPolling();
     }
 
     /**

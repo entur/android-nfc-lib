@@ -45,6 +45,9 @@ public class ExtendedCardTerminalFactoryTest {
         assertEquals(null, factory.createTerminal(new FakeCardTerminal("ACS ACR1222 3S PICC Reader 00 03")));
         // second reader, PICC slot
         assertModel("ACS ACR1222 3S PICC Reader 01 00", Acr1222LCardTerminal.class);
+        // pcsc-lite formats the reader index and slot number as hex (%02X)
+        assertModel("ACS ACR1222 3S PICC Reader 0A 00", Acr1222LCardTerminal.class);
+        assertEquals(null, factory.createTerminal(new FakeCardTerminal("ACS ACR1222 3S PICC Reader 0A 01")));
     }
 
     @Test

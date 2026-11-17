@@ -39,6 +39,15 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
     public static final int AUTOMATIC_PICC_POLLING = 1;
     public static final int AUTOMATIC_PICC_POLLING_ENFORCE_ISO14443A_PART_4 = 1 << 7;
 
+    private static final long CARD_ABSENT_TIMEOUT = 1000;
+
+    // guards the automatic PICC polling setting, so that detecting a card again does not turn polling back on
+    // after polling was stopped
+    private final Object automaticPollingLock = new Object();
+
+    // automatic PICC polling as last set, i.e. when starting or stopping polling; -1 if not set
+    private int automaticPolling = -1;
+
     public AcsExtendedCardTerminal(CardTerminal delegate) {
         super(delegate);
     }
@@ -222,11 +231,18 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
      */
 
     public boolean setAutomaticPICCPolling(int value, int mask) throws CardException {
-        LOGGER.info("Set automatic polling " + Integer.toHexString(value));
-
         if ((value & 0xFF) != value) {
             throw new RuntimeException("Unexpected automatic polling value " + Integer.toHexString(value));
         }
+        synchronized (automaticPollingLock) {
+            this.automaticPolling = value;
+
+            return writeAutomaticPICCPolling(value, mask);
+        }
+    }
+
+    private boolean writeAutomaticPICCPolling(int value, int mask) throws CardException {
+        LOGGER.info("Set automatic polling " + Integer.toHexString(value));
 
         // i.e. E1 00 00 00 01 <value>
         byte[] data = transmitEscapeCommand(0x00, 0x23, new byte[]{(byte) value});
@@ -303,19 +319,28 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
     protected void restoreAfterTransparentSession() throws CardException {
     }
 
-    private static final long CARD_ABSENT_TIMEOUT = 1000;
-
     /**
      * Have the reader detect the card again by toggling automatic polling, i.e. after a transparent session
      * which leaves the card in a state where card commands (i.e. READ BINARY) do not work.
-     *
-     * @param automaticPolling automatic polling value while polling for cards
+     * <br>
+     * Automatic polling is turned on again as last set, unless polling was stopped meanwhile.
      */
 
-    protected void redetectCardByTogglingAutomaticPolling(int automaticPolling) throws CardException {
-        setAutomaticPICCPolling(0);
-        delegate.waitForCardAbsent(CARD_ABSENT_TIMEOUT);
-        setAutomaticPICCPolling(automaticPolling);
+    protected void redetectCardByTogglingAutomaticPolling() throws CardException {
+        writeAutomaticPICCPolling(0, 0xFF);
+        try {
+            delegate.waitForCardAbsent(CARD_ABSENT_TIMEOUT);
+        } finally {
+            synchronized (automaticPollingLock) {
+                // if not set (polling was not started via this instance), assume automatic polling was on, as the card was detected
+                int value = automaticPolling == -1 ? AUTOMATIC_PICC_POLLING : automaticPolling;
+                if((value & AUTOMATIC_PICC_POLLING) != 0) {
+                    writeAutomaticPICCPolling(value, 0xFF);
+                } else {
+                    LOGGER.info("Polling was stopped, leave automatic polling off");
+                }
+            }
+        }
     }
 
     private List<byte[]> transceiveTransparentSession(List<byte[]> commands) throws CardException {

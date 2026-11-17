@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import javax.smartcardio.ATR;
@@ -234,6 +235,72 @@ public class AcsCardTerminalsTest {
         assertEquals(null, responses.get(0));
         assertEquals(null, responses.get(1));
         assertEquals(Arrays.asList("FF00000003D44260", "FF00000004D44A0100", "FF00000004D4423C00", "FF00000004D44A0100"), takeCommands(ultralight));
+    }
+
+    /**
+     * ACR1552U with an NTAG216 for GET_VERSION; other reader commands are confirmed by echoing them.
+     */
+
+    private static Function<byte[], byte[]> ntagAcr1552() {
+        Function<byte[], byte[]> reader = fakeAcsReader("ACR1552 R FW 1.01.01");
+        return command -> {
+            switch (toHex(command)) {
+                case "FFC20000028100": // start session
+                case "FFC20000028200": // end session
+                    return fromHex("C0030090009000");
+                case "FFC20002048F020003": // switch protocol
+                    return fromHex("C0030090008F01009000");
+                case "FFC2000103950160": // GET_VERSION
+                    return fromHex("C00300900092010096020000" + "9708" + NTAG216_VERSION + "9000");
+                default:
+                    return reader.apply(command);
+            }
+        };
+    }
+
+    private static final List<String> GET_VERSION_SESSION = Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20000028200");
+
+    @Test
+    public void testTransceiveTransparentWhilePollingIsStopped() throws CardException {
+        // the client ends polling while the card is detected again after the session
+        AtomicReference<Acr1552CardTerminal> reader = new AtomicReference<>();
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(ntagAcr1552())) {
+            @Override
+            public boolean waitForCardAbsent(long timeout) throws CardException {
+                reader.get().stopPolling();
+                return true;
+            }
+        };
+        reader.set(new Acr1552CardTerminal(terminal));
+        reader.get().startPolling();
+        takeCommands(terminal);
+
+        assertEquals(NTAG216_VERSION, toHex(reader.get().transceiveTransparent(Arrays.asList(new byte[]{0x60})).get(0)));
+
+        // automatic polling off to detect the card again, then off when stopped, and not turned on again
+        List<String> expected = new ArrayList<>(GET_VERSION_SESSION);
+        expected.addAll(Arrays.asList("E00000230100", "E00000230100"));
+        assertEquals(expected, takeCommands(terminal));
+    }
+
+    @Test
+    public void testTransceiveTransparentRestoresPollingOnError() throws CardException {
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(ntagAcr1552())) {
+            @Override
+            public boolean waitForCardAbsent(long timeout) throws CardException {
+                throw new CardException("Reader problem");
+            }
+        };
+        Acr1552CardTerminal reader = new Acr1552CardTerminal(terminal);
+        reader.startPolling();
+        takeCommands(terminal);
+
+        assertEquals(NTAG216_VERSION, toHex(reader.transceiveTransparent(Arrays.asList(new byte[]{0x60})).get(0)));
+
+        // automatic polling is turned on again
+        List<String> expected = new ArrayList<>(GET_VERSION_SESSION);
+        expected.addAll(Arrays.asList("E00000230100", "E00000230101"));
+        assertEquals(expected, takeCommands(terminal));
     }
 
     @Test
