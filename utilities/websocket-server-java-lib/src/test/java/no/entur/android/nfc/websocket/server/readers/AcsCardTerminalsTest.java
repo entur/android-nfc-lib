@@ -160,6 +160,26 @@ public class AcsCardTerminalsTest {
     }
 
     @Test
+    public void testTransceiveTransparentAcr1252() throws CardException {
+        // the ACR1252 needs no restore after the session
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1252 1S CL Reader [ACR1252 Dual Reader PICC]", () -> new FakeCard(command -> {
+            String hex = toHex(command);
+            if(hex.equals("FFC20002048F020003")) {
+                return fromHex("C0030090008F01009000");
+            }
+            if(hex.equals("FFC2000103950160")) {
+                return fromHex("C00300900092010096020000" + "9708" + NTAG216_VERSION + "9000");
+            }
+            return fromHex("C0030090009000");
+        }));
+
+        List<byte[]> responses = new Acr1252CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60}));
+
+        assertEquals(NTAG216_VERSION, toHex(responses.get(0)));
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20000028200"), takeCommands(terminal));
+    }
+
+    @Test
     public void testTransceiveTransparentEndsSessionOnError() {
         FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(command -> {
             if(toHex(command).equals("FFC20000028100")) {

@@ -3,8 +3,8 @@ Server which offers up websocket traffic to locally connected external NFC reade
 
 Supported readers (ACS):
 
- * ACR 1252U
- * ACR 122U, ACR 1222L, ACR 1251U, ACR 1255U-J1 (USB), ACR 1281U, ACR 1283L, ACR 1552U - untested with actual hardware
+ * ACR 1252U, ACR 1552U
+ * ACR 122U, ACR 1222L, ACR 1251U, ACR 1255U-J1 (USB), ACR 1281U, ACR 1283L - untested with actual hardware
 
 Other readers can be added by overriding `ExtendedCardTerminalFactory.createTerminal(..)`.
 
@@ -12,7 +12,7 @@ Supported Andorid tag types:
 
  * `IsoDep`
  * `MifareUltralight` (and `NfcA`), including NTAG - READ, WRITE and FAST_READ commands, translated to PC/SC storage card commands. 
-   GET_VERSION and READ_SIG are read once when the card is detected (ACR 1552U only, using a PC/SC transparent session), and only for cards which support them.
+   GET_VERSION and READ_SIG are read once when the card is detected (ACR 1252U and ACR 1552U only, using a PC/SC transparent session), and only for cards which support them.
 
 ## Usage
 Run command
