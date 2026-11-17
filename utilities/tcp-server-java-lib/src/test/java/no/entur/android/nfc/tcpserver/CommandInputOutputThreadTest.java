@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -222,5 +223,84 @@ public class CommandInputOutputThreadTest {
         client.write("MCR04G-50F2,UID=807644D24E2904");
         assertEquals("MCR04G-50F2,UID=807644D24E2904", listener.commands.poll(5, TimeUnit.SECONDS));
         assertEquals("MCR04G-50F2", thread.getReaderId());
+    }
+
+    @Test
+    public void testPendingInputConsumerKeepsFirstCompletion() {
+        CommandInputOutputThread.PendingInputConsumer<String> consumer = new CommandInputOutputThread.PendingInputConsumer<>(new Object());
+        consumer.close("RESPONSE");
+
+        // disconnect or more input before the waiting thread picked up the response
+        consumer.fail(new EOFException("Connection closed"));
+        consumer.close("OTHER");
+
+        assertTrue(consumer.isClosed());
+        assertEquals("RESPONSE", consumer.getIn());
+        assertNull(consumer.getFailure());
+
+        CommandInputOutputThread.PendingInputConsumer<String> failed = new CommandInputOutputThread.PendingInputConsumer<>(new Object());
+        failed.fail(new EOFException("Connection closed"));
+        failed.close("RESPONSE");
+
+        assertNull(failed.getIn());
+        assertNotNull(failed.getFailure());
+    }
+
+    @Test
+    public void testDisconnectRightAfterResponse() throws Exception {
+        // the reader thread hits EOF immediately after delivering the response,
+        // racing with the waiting thread picking up the response
+        for(int i = 0; i < 200; i++) {
+            CountDownLatch written = new CountDownLatch(1);
+
+            CommandOutput<String> output = new CommandOutput<String>() {
+                @Override
+                public void write(String command) {
+                    written.countDown();
+                }
+
+                @Override
+                public void close() {
+                }
+            };
+
+            CommandInput<String> input = new CommandInput<String>() {
+                private boolean responded;
+
+                @Override
+                public String read() throws IOException {
+                    if(!responded) {
+                        responded = true;
+                        try {
+                            written.await();
+                        } catch (InterruptedException e) {
+                            throw new IOException(e);
+                        }
+                        return "RESPONSE";
+                    }
+                    throw new EOFException();
+                }
+
+                @Override
+                public void close() {
+                }
+            };
+
+            Socket socket = new Socket() {
+                @Override
+                public InetAddress getInetAddress() {
+                    return InetAddress.getLoopbackAddress();
+                }
+            };
+
+            CommandInputOutputThread<String, String> disconnecting = new CommandInputOutputThread<>(new RecordingListener(), socket, output, input);
+            disconnecting.start();
+            try {
+                assertEquals("RESPONSE", disconnecting.outputInput("COMMAND", 5000), "Iteration " + i);
+            } finally {
+                disconnecting.close();
+                disconnecting.join(5000);
+            }
+        }
     }
 }

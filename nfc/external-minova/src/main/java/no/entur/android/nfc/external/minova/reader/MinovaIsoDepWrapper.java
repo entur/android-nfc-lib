@@ -50,18 +50,21 @@ public class MinovaIsoDepWrapper extends AbstractReaderIsoDepWrapper {
     }
 
     private void onTransceiveFailed() {
-        tagProxy.close();
-
+        // mark before closing, as closing also clears the present flag
+        boolean lost = true;
         if(reader instanceof MinovaCommandInputOutputThread) {
             MinovaCommandInputOutputThread minovaReader = (MinovaCommandInputOutputThread) reader;
 
             minovaReader.clearCurrentTagProxy(tagProxy);
-            if(!minovaReader.markTagLost(tagProxy)) {
-                // already sent
-                return;
-            }
+            lost = minovaReader.markTagLost(tagProxy);
         }
-        sendTagLeftFieldBroadcast();
+
+        tagProxy.close();
+
+        // skip if already sent, i.e. by a new tag or a previous failed transceive
+        if(lost) {
+            sendTagLeftFieldBroadcast();
+        }
     }
 
     private void sendTagLeftFieldBroadcast() {

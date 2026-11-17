@@ -58,8 +58,17 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             }
         }
 
+        /**
+         * Complete with input. Ignored if already completed.
+         *
+         * @param in input
+         */
+
         public void close(T in) {
             synchronized (ioLock) {
+                if(closed) {
+                    return;
+                }
                 this.in = in;
 
                 this.closed = true;
@@ -67,12 +76,28 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
             }
         }
 
+        /**
+         * Complete with a failure. Ignored if already completed, so that a disconnect right after
+         * the response does not overwrite the response.
+         *
+         * @param failure failure
+         */
+
         public void fail(IOException failure) {
             synchronized (ioLock) {
+                if(closed) {
+                    return;
+                }
                 this.failure = failure;
 
                 this.closed = true;
                 ioLock.notifyAll();
+            }
+        }
+
+        public boolean isClosed() {
+            synchronized (ioLock) {
+                return closed;
             }
         }
 
@@ -122,7 +147,8 @@ public class CommandInputOutputThread<T, S> extends Thread implements Closeable 
                 synchronized(pendingInputLock) {
                     // deliver within the lock, so that the input goes either to the current consumer or the listener
                     PendingInputConsumer<T> pending = pendigInputConsumer;
-                    response = pending != null && isResponse(next);
+                    // a completed consumer might not yet be cleared by the waiting thread; pass further input to the listener
+                    response = pending != null && !pending.isClosed() && isResponse(next);
                     if(response) {
                         pending.close(next);
                     }

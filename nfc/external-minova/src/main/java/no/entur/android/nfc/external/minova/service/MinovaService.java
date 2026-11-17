@@ -44,10 +44,13 @@ public class MinovaService extends AbstractMinovaTcpService {
         MinovaCommandInputOutputThread minovaCommandInputOutputThread = (MinovaCommandInputOutputThread) reader;
         TagProxy currentTagProxy = minovaCommandInputOutputThread.takeCurrentTagProxy();
         if(currentTagProxy != null) {
+            // mark before closing, as closing also clears the present flag
+            boolean lost = minovaCommandInputOutputThread.markTagLost(currentTagProxy);
+
             currentTagProxy.close();
 
             // skip if already sent, i.e. after a failed transceive
-            if(minovaCommandInputOutputThread.markTagLost(currentTagProxy)) {
+            if(lost) {
                 Intent intent = new Intent();
                 intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
                 intent.putExtra(EXTRA_TAG_LEFT_FIELD_REASON, EXTRA_TAG_LEFT_FIELD_REASON_NEW_TAG);
