@@ -1,8 +1,11 @@
 package no.entur.android.nfc.external.acs.tag;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import android.nfc.tech.MifareUltralight;
+import org.nfctools.api.TagType;
 import org.junit.Test;
 
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
@@ -48,6 +51,16 @@ public class AcsMifareUltralightTypeTest {
     @Test
     public void testOtherOtpContent() {
         assertFalse(AcsMifareUltralightTagServiceSupport.isUltralightC(UNLOCKED, hex("01020304"), hex("02000000")));
+    }
+
+    @Test
+    public void testUltralightCFromAtr() {
+        // personalised Ultralight C (OTP set, no NDEF): the reader identified it, the page contents cannot
+        assertEquals(MifareUltralight.TYPE_ULTRALIGHT_C, AcsMifareUltralightTagServiceSupport.getType(TagType.MIFARE_ULTRALIGHT_C, hex("4800F00F"), hex("01020304"), null));
+        assertEquals(MifareUltralight.TYPE_ULTRALIGHT, AcsMifareUltralightTagServiceSupport.getType(TagType.MIFARE_ULTRALIGHT, hex("4800F00F"), hex("01020304"), null));
+        // otherwise from the page contents
+        assertEquals(MifareUltralight.TYPE_ULTRALIGHT_C, AcsMifareUltralightTagServiceSupport.getType(TagType.MIFARE_ULTRALIGHT, UNLOCKED, hex("E1101200"), null));
+        assertEquals(MifareUltralight.TYPE_ULTRALIGHT, AcsMifareUltralightTagServiceSupport.getType(TagType.MIFARE_ULTRALIGHT, UNLOCKED, hex("E1100600"), null));
     }
 
     @Test

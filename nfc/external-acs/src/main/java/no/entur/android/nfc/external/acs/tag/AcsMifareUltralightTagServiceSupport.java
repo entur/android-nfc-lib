@@ -81,6 +81,27 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
     }
 
     /**
+     * Get the MIFARE Ultralight type: Ultralight C if the reader identified the tag as Ultralight C (from the ATR, PC/SC card name
+     * 00 3A), otherwise classified like Android does for the built-in NFC reader, see {@link #isUltralightC(byte[], byte[], byte[])}.
+     * <br>
+     * The ATR is checked first, because the page contents cannot identify an Ultralight C which is neither blank nor NDEF formatted
+     * (i.e. a personalised ticket), where Android reports Ultralight.
+     *
+     * @param tagType tag type from the ATR
+     * @param page2 page 2 (internal, internal, lock, lock)
+     * @param page3 page 3 (OTP, or NDEF capability container)
+     * @param page4 page 4 (version info if factory state), or null if not read
+     * @return MifareUltralight.TYPE_ULTRALIGHT_C or MifareUltralight.TYPE_ULTRALIGHT
+     */
+
+    protected static int getType(TagType tagType, byte[] page2, byte[] page3, byte[] page4) {
+        if (tagType == TagType.MIFARE_ULTRALIGHT_C || isUltralightC(page2, page3, page4)) {
+            return MifareUltralight.TYPE_ULTRALIGHT_C;
+        }
+        return MifareUltralight.TYPE_ULTRALIGHT;
+    }
+
+    /**
      * @param page2 page 2 (internal, internal, lock, lock)
      * @param page3 page 3 (OTP, or NDEF capability container)
      * @return true if lock bytes and OTP page are all zero, i.e. very likely a blank card
@@ -191,18 +212,19 @@ public class AcsMifareUltralightTagServiceSupport extends AbstractAcsMifareUltra
 
             int type;
             if (canReadBlocks) {
-                // same classification as the built-in NFC reader (i.e. NTAG213, 215 and 216 with NDEF are Ultralight C)
+                // same classification as the built-in NFC reader (i.e. NTAG213, 215 and 216 with NDEF are Ultralight C),
+                // unless the reader identified an Ultralight C
                 byte[] page2 = initBlocks[2].getData();
                 byte[] page3 = initBlocks[3].getData();
                 byte[] page4 = null;
-                if (isBlank(page2, page3)) {
+                if (tagType != TagType.MIFARE_ULTRALIGHT_C && isBlank(page2, page3)) {
                     try {
                         page4 = readerWriter.readBlock(4, 1)[0].getData();
                     } catch (Exception e) {
                         LOGGER.debug("Unable to read page 4", e);
                     }
                 }
-                type = isUltralightC(page2, page3, page4) ? MifareUltralight.TYPE_ULTRALIGHT_C : MifareUltralight.TYPE_ULTRALIGHT;
+                type = getType(tagType, page2, page3, page4);
             } else {
                 type = MifareUltralight.TYPE_ULTRALIGHT_C;
             }
