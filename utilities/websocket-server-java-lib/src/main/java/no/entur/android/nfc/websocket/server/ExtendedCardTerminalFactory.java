@@ -1,5 +1,8 @@
 package no.entur.android.nfc.websocket.server;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
@@ -40,6 +43,14 @@ public class ExtendedCardTerminalFactory {
      * @return terminal, or null if the reader is not supported
      */
 
+    private static final Pattern PCSC_LITE_SLOT = Pattern.compile(".* \\d{2} (\\d{2})$");
+
+    // pcsc-lite reader names end with the reader index and the slot number
+    private static boolean isNonZeroSlot(String name) {
+        Matcher matcher = PCSC_LITE_SLOT.matcher(name);
+        return matcher.matches() && !matcher.group(1).equals("00");
+    }
+
     protected ExtendedCardTerminal createTerminal(CardTerminal cardTerminal) {
         String name = cardTerminal.getName();
         if(name == null) {
@@ -48,6 +59,10 @@ public class ExtendedCardTerminalFactory {
 
         // check ACR1222 before ACR122(U)
         if(name.contains("ACR1222")) {
+            if(isNonZeroSlot(name)) {
+                // SAM slots, which pcsc-lite names like the PICC slot (i.e. ACS ACR1222 3S PICC Reader 00 01)
+                return null;
+            }
             return new Acr1222LCardTerminal(cardTerminal);
         }
         if(name.contains("ACR122")) {

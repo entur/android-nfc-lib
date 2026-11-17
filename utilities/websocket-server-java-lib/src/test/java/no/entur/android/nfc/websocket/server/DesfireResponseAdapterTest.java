@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import no.entur.android.nfc.websocket.server.readers.Acr1222LCardTerminal;
 import no.entur.android.nfc.websocket.server.readers.Acr122UCardTerminal;
 import no.entur.android.nfc.websocket.server.readers.Acr1252CardTerminal;
 import no.entur.android.nfc.websocket.server.readers.Acr1552CardTerminal;
@@ -48,6 +49,7 @@ public class DesfireResponseAdapterTest {
     public void testReaders() {
         assertTrue(new Acr1252CardTerminal(new FakeCardTerminal("ACS ACR1252 Dual Reader PICC")).isStatusWordAppendedToSingleByteResponses());
         assertTrue(new Acr122UCardTerminal(new FakeCardTerminal("ACS ACR122U 00 00")).isStatusWordAppendedToSingleByteResponses());
+        assertTrue(new Acr1222LCardTerminal(new FakeCardTerminal("ACS ACR1222 3S PICC Reader 00 00")).isStatusWordAppendedToSingleByteResponses());
         assertFalse(new Acr1552CardTerminal(new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC")).isStatusWordAppendedToSingleByteResponses());
     }
 

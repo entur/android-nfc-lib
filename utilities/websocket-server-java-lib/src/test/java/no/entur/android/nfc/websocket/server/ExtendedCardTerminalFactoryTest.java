@@ -38,6 +38,16 @@ public class ExtendedCardTerminalFactoryTest {
     }
 
     @Test
+    public void testAcr1222LSamSlots() {
+        // pcsc-lite names the SAM slots like the PICC slot
+        assertModel("ACS ACR1222 3S PICC Reader 00 00", Acr1222LCardTerminal.class);
+        assertEquals(null, factory.createTerminal(new FakeCardTerminal("ACS ACR1222 3S PICC Reader 00 01")));
+        assertEquals(null, factory.createTerminal(new FakeCardTerminal("ACS ACR1222 3S PICC Reader 00 03")));
+        // second reader, PICC slot
+        assertModel("ACS ACR1222 3S PICC Reader 01 00", Acr1222LCardTerminal.class);
+    }
+
+    @Test
     public void testUnsupportedReader() {
         FakeCardTerminal terminal = new FakeCardTerminal("Yubico YubiKey OTP+FIDO+CCID 00 00");
 
