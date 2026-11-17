@@ -75,11 +75,14 @@ public class MifareUltralightMockTransceive implements MockTransceive {
                     throw new IOException("Page offset not within page count " + pageCount);
                 }
 
+                // always 4 pages: like a real tag, roll over to page 0 at the end of the memory
+                // (i.e. pages 40, 41, 0, 1 for a 42 page NTAG203)
                 int memoryOffset = pageOffset * PAGE_SIZE;
-                int length = Math.min(memory.length - memoryOffset, PAGE_SIZE * PAGE_READS);
 
-                byte[] response = new byte[length];
-                System.arraycopy(memory, memoryOffset, response, 0, length);
+                byte[] response = new byte[PAGE_SIZE * PAGE_READS];
+                for (int i = 0; i < response.length; i++) {
+                    response[i] = memory[(memoryOffset + i) % memory.length];
+                }
                 return response;
             } else if ((data[0] & 0xFF) == 0xA2) {
                 int pageOffset = data[1] & 0xFF;

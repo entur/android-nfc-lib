@@ -150,6 +150,10 @@ public class DefaultINFcTagBinder extends INfcTag.Stub {
 
     @Override
     public ParcelableTransceiveMetadataResult parcelableTransceiveMetadata(ParcelableTransceiveMetadata data) throws RemoteException {
+        // no handle, but the same lost check as the other methods
+        if(lost) {
+            throw new RemoteException("Test class closed");
+        }
         return delegate.parcelableTransceiveMetadata(data);
     }
 
