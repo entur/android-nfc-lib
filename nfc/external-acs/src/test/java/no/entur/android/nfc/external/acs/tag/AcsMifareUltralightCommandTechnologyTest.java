@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
+import com.acs.smartcard.UnresponsiveCardException;
+
 import org.junit.Test;
 import org.nfctools.mf.block.DataBlock;
 import org.nfctools.mf.block.MfBlock;
@@ -32,7 +34,10 @@ public class AcsMifareUltralightCommandTechnologyTest {
         private RuntimeException passthroughException;
         private int readStartPage = -1;
         private Command command;
+        private int commands;
         private Response response;
+        private Exception transmitException;
+        private int blockReads;
 
         @Override
         public byte[] transmit(byte[] data) {
@@ -40,8 +45,12 @@ public class AcsMifareUltralightCommandTechnologyTest {
         }
 
         @Override
-        public Response transmit(Command command) {
+        public Response transmit(Command command) throws Exception {
             this.command = command;
+            this.commands++;
+            if (transmitException != null) {
+                throw transmitException;
+            }
             if (response == null) {
                 throw new UnsupportedOperationException();
             }
@@ -51,6 +60,7 @@ public class AcsMifareUltralightCommandTechnologyTest {
         @Override
         public MfBlock[] readBlock(int startPage, int pagesToRead) {
             this.readStartPage = startPage;
+            this.blockReads++;
 
             MfBlock[] blocks = new MfBlock[pagesToRead];
             for (int i = 0; i < pagesToRead; i++) {
@@ -186,8 +196,63 @@ public class AcsMifareUltralightCommandTechnologyTest {
     }
 
     @Test
+    public void testReadProblemIsNotRetriedOnePageAtATime() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        // i.e. the tag was removed
+        UnresponsiveCardException removed = new UnresponsiveCardException("The card is not responding.");
+        readerWriter.transmitException = removed;
+        AtomicReference<Exception> mapped = new AtomicReference<>();
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> {
+            mapped.set(e);
+            return new TransceiveResult(TransceiveResult.RESULT_TAGLOST, null);
+        }, true);
+
+        technology.transceive(new byte[] { 0x30, 0x04 }, true);
+
+        assertSame(removed, mapped.get());
+        assertEquals(0, readerWriter.blockReads);
+    }
+
+    @Test
+    public void testReadFailureAfterFourPageReadIsFromTag() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> new TransceiveResult(TransceiveResult.RESULT_FAILURE, null), true);
+
+        readerWriter.response = new Response(0x90, 0x00, new byte[16]);
+        technology.transceive(new byte[] { 0x30, 0x04 }, true).getResponseOrThrow();
+
+        // i.e. a protected page
+        readerWriter.response = new Response(0x63, 0x00, new byte[0]);
+        try {
+            technology.transceive(new byte[] { 0x30, 0x10 }, true).getResponseOrThrow();
+            fail();
+        } catch (IOException e) {
+            // expected
+        }
+        // not retried one page at a time
+        assertEquals(0, readerWriter.blockReads);
+    }
+
+    @Test
+    public void testReadOnePageAtATimeAfterRejection() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        // reader does not support reading 16 bytes
+        readerWriter.response = new Response(0x67, 0x00, new byte[0]);
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> new TransceiveResult(TransceiveResult.RESULT_FAILURE, null), true);
+
+        technology.transceive(new byte[] { 0x30, 0x04 }, true).getResponseOrThrow();
+        technology.transceive(new byte[] { 0x30, 0x08 }, true).getResponseOrThrow();
+
+        // reading 16 bytes is not tried again
+        assertEquals(1, readerWriter.commands);
+        assertEquals(2, readerWriter.blockReads);
+        assertEquals(8, readerWriter.readStartPage);
+    }
+
+    @Test
     public void testReadDoesNotUsePassthrough() throws Exception {
         FakeReaderWriter readerWriter = new FakeReaderWriter();
+        readerWriter.response = new Response(0x67, 0x00, new byte[0]);
         AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> new TransceiveResult(TransceiveResult.RESULT_FAILURE, null), true);
 
         TransceiveResult result = technology.transceive(new byte[] { 0x30, 0x04 }, true);

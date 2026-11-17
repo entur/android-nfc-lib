@@ -4,6 +4,7 @@ import android.os.RemoteException;
 
 import com.acs.smartcard.UnresponsiveCardException;
 
+import org.nfctools.mf.MfException;
 import org.nfctools.mf.block.DataBlock;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
@@ -39,6 +40,9 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 
 	// send commands other than READ and WRITE (i.e. GET_VERSION, READ_SIG) to the tag via the reader pass-through
 	private final boolean passthrough;
+
+	// whether the reader reads 4 pages (16 bytes) at once, or null if not known yet
+	private volatile Boolean fourPageReads;
 
 	public AcsMifareUltralightCommandTechnology(MfUlReaderWriter readerWriter, TransceiveResultExceptionMapper exceptionMapper) {
 		this(readerWriter, exceptionMapper, false);
@@ -94,24 +98,36 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 	/**
 	 * Read 4 pages, like the READ command. Near the end of the memory, the tag rolls over to page 0 (i.e. pages 40, 41, 0, 1 for a 42 page
 	 * NTAG203), so read all 4 pages in one go, so that the tag (not the reader) handles the end of the memory.
+	 * <br>
+	 * If the reader rejects reading 16 bytes, read one page at a time instead. A failed read cannot tell whether the reader or the tag
+	 * failed, so decide by what worked before: once reading 16 bytes worked, a failure is from the tag, and once reading one page at a time
+	 * worked after a failure, the reader does not read 16 bytes. Exceptions (i.e. the tag was removed) are not retried.
 	 *
 	 * @param pageOffset first page
 	 * @return 16 bytes
 	 */
 
 	private byte[] readFourPages(int pageOffset) throws Exception {
-		try {
+		Boolean fourPageReads = this.fourPageReads;
+		if (fourPageReads != Boolean.FALSE) {
 			Response response = readerWriter.transmit(new Command(Apdu.INS_READ_BINARY, 0x00, pageOffset, 4 * PAGE_SIZE));
 			if (response != null && response.isSuccess() && response.getData() != null && response.getData().length == 4 * PAGE_SIZE) {
+				this.fourPageReads = Boolean.TRUE;
+
 				return response.getData();
 			}
+			if (fourPageReads == Boolean.TRUE) {
+				throw new MfException("Unable to read 4 pages from page " + pageOffset + ": " + response);
+			}
 			LOGGER.debug("Unable to read 4 pages at once from page " + pageOffset + ": " + response);
-		} catch (Exception e) {
-			LOGGER.debug("Unable to read 4 pages at once from page " + pageOffset, e);
 		}
 
 		// fall back to reading one page at a time, this fails at the end of the memory
 		MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 4);
+		if (fourPageReads == null) {
+			// the reader does not read 16 bytes
+			this.fourPageReads = Boolean.FALSE;
+		}
 
 		byte[] result = new byte[4 * PAGE_SIZE];
 		for (int i = 0; i < 4; i++) {
