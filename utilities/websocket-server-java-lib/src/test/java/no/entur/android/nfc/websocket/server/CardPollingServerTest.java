@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.smartcardio.Card;
@@ -93,6 +94,47 @@ public class CardPollingServerTest {
             waitForDisconnected(terminal.getConnected().get(0));
             assertTrue(listener.disconnected.isEmpty());
 
+            terminal.setCardPresent(true);
+            assertTrue(listener.connectedLatch.await(5, TimeUnit.SECONDS));
+
+            terminal.setCardPresent(false);
+            assertTrue(listener.disconnectedLatch.await(5, TimeUnit.SECONDS));
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testConnectProblemDoesNotStopPolling() throws Exception {
+        // i.e. the card is removed between the presence check and connect
+        AtomicInteger connects = new AtomicInteger();
+        FakeCardTerminal terminal = new FakeCardTerminal("Reader") {
+            @Override
+            public Card connect(String protocol) throws CardException {
+                if(connects.incrementAndGet() == 1) {
+                    throw new CardException("Card removed");
+                }
+                return super.connect(protocol);
+            }
+        };
+
+        TestCardListener listener = new TestCardListener(0, 1, 1);
+
+        CardPollingServer server = new CardPollingServer(terminal);
+        server.setListener(listener);
+        server.start();
+        try {
+            terminal.setCardPresent(true);
+            Thread.sleep(300);
+
+            // not retried while the card is still present
+            assertEquals(1, connects.get());
+            assertTrue(listener.connected.isEmpty());
+
+            terminal.setCardPresent(false);
+            Thread.sleep(200);
+
+            // still polling
             terminal.setCardPresent(true);
             assertTrue(listener.connectedLatch.await(5, TimeUnit.SECONDS));
 

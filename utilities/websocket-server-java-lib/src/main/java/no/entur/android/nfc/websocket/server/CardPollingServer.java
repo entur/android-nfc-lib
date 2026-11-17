@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.smartcardio.Card;
+import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
 public class CardPollingServer implements Runnable {
@@ -56,7 +57,18 @@ public class CardPollingServer implements Runnable {
             try {
                 if(cardTerminal.isCardPresent()) {
                     LOGGER.info("Card is present");
-                    Card card = cardTerminal.connect("*");
+                    Card card;
+                    try {
+                        card = cardTerminal.connect("*");
+                    } catch (CardException e) {
+                        // i.e. the card was removed after the presence check. A problem with a single card must not
+                        // stop polling, but do not retry while the same card is present.
+                        LOGGER.warn("Unable to connect to card, wait for it to be removed", e);
+
+                        waitForCardAbsent();
+
+                        continue;
+                    }
                     try {
                         CardListener listener = this.listener; // defensive copy
 
@@ -119,6 +131,22 @@ public class CardPollingServer implements Runnable {
             }
         }
         LOGGER.info("Stop polling for card");
+    }
+
+    /**
+     * Wait for the card to be removed, or polling to be stopped. Reader problems are thrown,
+     * so that they stop polling like elsewhere.
+     */
+
+    private void waitForCardAbsent() throws CardException {
+        while(isActive() && cardTerminal.isCardPresent()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // stopped (checked by isActive), or a spurious interrupt
+                Thread.interrupted();
+            }
+        }
     }
 
     private static void awaitTermination(Thread previous) {
