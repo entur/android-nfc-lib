@@ -1,7 +1,6 @@
 package no.entur.abt.nfc.example.acr;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -9,7 +8,6 @@ import java.util.Locale;
 import no.entur.abt.nfc.example.R;
 import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
-import no.entur.android.nfc.external.acs.reader.AcrCommunicationSpeed;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrLED;
 import no.entur.android.nfc.external.acs.reader.AcrPICC;
@@ -26,10 +24,6 @@ public class Acr1252UControlsActivity extends AbstractAcrControlsActivity<Acr125
 	private static final String[] BEHAVIOUR_BITS = { "Bit 0 card operation blink LED", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
 			"Bit 3 card insertion buzzer", "Bit 4 card removal buzzer (needs bit 3)", "Bit 5 reader power on buzzer", "Bit 6 green LED for status",
 			"Bit 7 red LED for status" };
-
-	// automatic PPS speed codes
-	private static final List<AcrCommunicationSpeed> SPEEDS = Arrays.asList(AcrCommunicationSpeed.RATE_106_KBPS, AcrCommunicationSpeed.RATE_212_KBPS,
-			AcrCommunicationSpeed.RATE_424_KBPS);
 
 	@Override
 	protected Class<Acr1252UReader> getReaderType() {
@@ -57,18 +51,7 @@ public class Acr1252UControlsActivity extends AbstractAcrControlsActivity<Acr125
 		addSection(getString(R.string.acr_controls_polling_bits));
 		addBits(POLLING_BITS, () -> escape(reader, "E0 00 00 23 00")[5] & 0xFF, (value) -> (escape(reader, String.format(Locale.ROOT, "E0 00 00 23 01 %02X", value))[5] & 0xFF) == value);
 
-		addAutomaticPPS(() -> {
-			// E1 00 00 00 04 max Tx, current Tx, max Rx, current Rx
-			byte[] response = escape(reader, "E0 00 00 24 00");
-			List<AcrCommunicationSpeed> speeds = new ArrayList<>();
-			for (int i = 5; i < 9; i++) {
-				speeds.add(SPEEDS.get(response[i] & 0xFF));
-			}
-			return speeds;
-		}, (tx, rx) -> {
-			byte[] response = escape(reader, String.format(Locale.ROOT, "E0 00 00 24 02 %02X %02X", SPEEDS.indexOf(tx), SPEEDS.indexOf(rx)));
-			return response.length >= 9 && response[5] == SPEEDS.indexOf(tx) && response[7] == SPEEDS.indexOf(rx);
-		});
+		addAutomaticPPS(reader);
 
 		addSection(getString(R.string.acr_controls_leds));
 		addFlags(AcrLED.class, Arrays.asList(AcrLED.GREEN, AcrLED.RED), null, reader::getLEDs, reader::setLEDs);

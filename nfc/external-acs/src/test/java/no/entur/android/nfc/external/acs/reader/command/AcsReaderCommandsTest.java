@@ -278,6 +278,19 @@ public class AcsReaderCommandsTest {
     }
 
     @Test
+    public void testAcr1251PICC() throws Exception {
+        // E0 00 00 20, not the ACR122U compatible FF 00 50 / 51, which has another bit layout
+        ReaderWrapper reader = reader("E1000000011F");
+        assertEquals(Integer.valueOf(0x1F), new ACR1251Commands("ACS ACR1251 1S CL Reader", reader).getPICC(0));
+        assertArrayEquals(hex("E000002000"), command(reader));
+
+        // Topaz is bit 4
+        reader = reader("E10000000111");
+        assertTrue(new ACR1251Commands("ACS ACR1251 1S CL Reader", reader).setPICC(0, true, false, true, false, false, true, true, true));
+        assertArrayEquals(hex("E00000200111"), command(reader));
+    }
+
+    @Test
     public void testAcr1283Behaviour() {
         // bit 1 polling LED, bit 2 activation LED
         assertEquals(Collections.singletonList(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED), Acr1283LReader.parseBehaviour(0x02));

@@ -10,20 +10,37 @@ import com.acs.smartcard.ReaderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.entur.android.nfc.CommandAPDU;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 
 public class ACR1251Commands extends ACRCommands {
 
+	// the ACR122U compatible layout (FF 00 50 / 51), not the one of getPICC and setPICC
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_AUTO_PICC_POLLING = 1 << 7;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_AUTO_ATS_GENERATION = 1 << 6;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_POLLING_INTERVAL = 1 << 5;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_POLL_FELICA_424K = 1 << 4;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_POLL_FELICA_212K = 1 << 3;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_POLL_TOPAZ = 1 << 2;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_B = 1 << 1;
+	@Deprecated
 	public static final int PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_A = 1;
+
+	// PICC operating parameter (E0 00 00 20), per the ACR1251U API manual 1.14; default 1F
+	private static final int POLL_ISO14443_TYPE_A = 1;
+	private static final int POLL_ISO14443_TYPE_B = 1 << 1;
+	private static final int POLL_FELICA_212K = 1 << 2;
+	private static final int POLL_FELICA_424K = 1 << 3;
+	private static final int POLL_TOPAZ = 1 << 4;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ACR1251Commands.class);
 
@@ -32,95 +49,97 @@ public class ACR1251Commands extends ACRCommands {
 		this.name = name;
 	}
 
+	/**
+	 * Read the PICC operating parameter (E0 00 00 20 00). Not the ACR122U compatible FF 00 50, which has another bit layout
+	 * (auto polling, ATS generation and polling interval in bits 5 to 7, and the card types in another order).
+	 */
+
 	public Integer getPICC(int slot) throws AcrReaderException {
-		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x50, 0x00, 0x00 };
+		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x00, 0x20, 0x00 };
 
-		byte[] in = new byte[2];
-
-		// reader.transmit(slot, out, out.length, in, in.length);
+		CommandAPDU response;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
-		if (!isSuccessControl(in)) {
-			LOGGER.error("Unable to read PICC");
+		if (!isSuccess(response, 1)) {
+			LOGGER.error("Unable to read PICC: " + ByteArrayHexStringConverter.toHexString(response.getBytes()));
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		final int operation = in[1] & 0xFF;
+		final int operation = response.getData()[0] & 0xFF;
 
 		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
 		return operation;
 	}
 
+	/**
+	 * Set the card types to detect. The polling interval, ATS generation and automatic PICC polling are not part of the ACR1251U PICC
+	 * operating parameter, and are ignored; see the automatic PICC polling command (E0 00 00 23).
+	 */
+
 	public Boolean setPICC(int slot, boolean iso14443TypeA, boolean iso14443TypeB, boolean topaz, boolean feliCa212K, boolean feliCa424K, boolean polling,
 			boolean autoATSGeneration, boolean autoPICCPolling) {
 		int picc = 0;
 
 		if (iso14443TypeA) {
-			picc |= PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_A;
+			picc |= POLL_ISO14443_TYPE_A;
 		}
 		if (iso14443TypeB) {
-			picc |= PICC_OPERATING_PARAMETER_POLL_ISO14443_TYPE_B;
+			picc |= POLL_ISO14443_TYPE_B;
 		}
 		if (topaz) {
-			picc |= PICC_OPERATING_PARAMETER_POLL_TOPAZ;
+			picc |= POLL_TOPAZ;
 		}
 		if (feliCa212K) {
-			picc |= PICC_OPERATING_PARAMETER_POLL_FELICA_212K;
+			picc |= POLL_FELICA_212K;
 		}
 		if (feliCa424K) {
-			picc |= PICC_OPERATING_PARAMETER_POLL_FELICA_424K;
-		}
-		if (polling) {
-			picc |= PICC_OPERATING_PARAMETER_POLLING_INTERVAL;
-		}
-		if (autoATSGeneration) {
-			picc |= PICC_OPERATING_PARAMETER_AUTO_ATS_GENERATION;
-		}
-		if (autoPICCPolling) {
-			picc |= PICC_OPERATING_PARAMETER_AUTO_PICC_POLLING;
+			picc |= POLL_FELICA_424K;
 		}
 
 		return setPICC(slot, picc);
 	}
 
+	/**
+	 * Set the PICC operating parameter (E0 00 00 20 01 [parameter]), see {@link #getPICC(int)}.
+	 */
+
 	public Boolean setPICC(int slot, int picc) throws AcrReaderException {
 		if ((picc & 0xFF) != picc) {
-			throw new RuntimeException();
+			throw new IllegalArgumentException("Unexpected PICC " + Integer.toHexString(picc));
 		}
 
-		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x51, (byte) picc, 0x00 };
+		CommandAPDU command = new CommandAPDU(0xE0, 0x00, 0x00, 0x20, new byte[] { (byte) picc });
 
-		byte[] in;
-
+		CommandAPDU response;
 		synchronized (reader) {
 			try {
-				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
+				response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (!isSuccessControl(in)) {
-			LOGGER.debug("Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(in));
+		if (!isSuccess(response, 1)) {
+			LOGGER.debug("Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(response.getBytes()));
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		final int operation = in[1] & 0xFF;
+		final int operation = response.getData()[0] & 0xFF;
 
 		if (operation != picc) {
-			LOGGER.warn("Unable to properly update PICC for ACR 1222: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
+			LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
 			return Boolean.FALSE;
 		} else {
-			LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
+			LOGGER.debug("Updated PICC " + Integer.toHexString(operation));
 
 			return Boolean.TRUE;
 		}

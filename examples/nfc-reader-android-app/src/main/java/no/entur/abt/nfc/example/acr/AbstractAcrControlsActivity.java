@@ -575,6 +575,29 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		});
 	}
 
+	// automatic PPS speed codes (E0 00 00 24)
+	private static final List<AcrCommunicationSpeed> PPS_SPEEDS = Arrays.asList(AcrCommunicationSpeed.RATE_106_KBPS, AcrCommunicationSpeed.RATE_212_KBPS,
+			AcrCommunicationSpeed.RATE_424_KBPS);
+
+	/**
+	 * Automatic PPS through escape commands: read E0 00 00 24 00, set E0 00 00 24 02 [max Tx] [max Rx]; the response is E1 00 00 00 04
+	 * [max Tx] [current Tx] [max Rx] [current Rx].
+	 */
+
+	protected void addAutomaticPPS(T reader) {
+		addAutomaticPPS(() -> {
+			byte[] response = escape(reader, "E0 00 00 24 00");
+			List<AcrCommunicationSpeed> speeds = new ArrayList<>();
+			for (int i = 5; i < 9; i++) {
+				speeds.add(PPS_SPEEDS.get(response[i] & 0xFF));
+			}
+			return speeds;
+		}, (tx, rx) -> {
+			byte[] response = escape(reader, String.format(Locale.ROOT, "E0 00 00 24 02 %02X %02X", PPS_SPEEDS.indexOf(tx), PPS_SPEEDS.indexOf(rx)));
+			return response.length >= 9 && response[5] == PPS_SPEEDS.indexOf(tx) && response[7] == PPS_SPEEDS.indexOf(rx);
+		});
+	}
+
 	/**
 	 * Automatic PPS: the maximum Tx and Rx speeds (106, 212 or 424 kbps), and the current speeds.
 	 *
