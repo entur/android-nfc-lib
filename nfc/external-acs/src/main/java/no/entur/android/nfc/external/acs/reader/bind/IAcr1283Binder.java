@@ -22,7 +22,6 @@ public class IAcr1283Binder extends IAcr1283LReaderControl.Stub {
 	private volatile IAcr1283CommandWrapper wrapper;
 
 	public IAcr1283Binder() {
-		attachInterface(this, IAcr1283CommandWrapper.class.getName());
 	}
 
 	public void setCommands(ACR1283Commands reader) {
@@ -214,5 +213,12 @@ public class IAcr1283Binder extends IAcr1283LReaderControl.Stub {
 		return wrapper.getNumSlots();
 	}
 
-
+	@Override
+	public byte[] setBuzzer(int duration) throws RemoteException {
+		IAcr1283CommandWrapper wrapper = this.wrapper;
+		if (wrapper == null) {
+			return noReaderException();
+		}
+		return wrapper.setBuzzer(duration);
+	}
 }

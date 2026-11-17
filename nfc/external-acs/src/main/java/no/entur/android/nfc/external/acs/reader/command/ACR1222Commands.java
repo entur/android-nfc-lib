@@ -11,6 +11,7 @@ import com.acs.smartcard.ReaderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrReaderException;
@@ -265,7 +266,7 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read default LED and buzzer behaviour " + Integer.toHexString(operation));
 
-		return Acr1283LReader.parseBehaviour(operation);
+		return Acr1222LReader.parseBehaviour(operation);
 	}
 
 	public int getDefaultLEDAndBuzzerBehaviour2(int slot) throws ReaderException {
@@ -359,11 +360,12 @@ public class ACR1222Commands extends ACRCommands {
 	public byte[] readSerialNumber(int slot) throws AcrReaderException {
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x49, 0x00, 0x00 };
 
-		byte[] in = new byte[300];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -453,11 +455,12 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[6];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -465,7 +468,7 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read " + ByteArrayHexStringConverter.toHexString(in));
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set buzzer control");
 
 			return true;
@@ -492,17 +495,18 @@ public class ACR1222Commands extends ACRCommands {
 
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x41, (byte) (parameter), 0x00 };
 
-		byte[] in = new byte[8];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set timeout parameter");
 
 			return true;
@@ -551,17 +555,23 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[6];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 		LOGGER.debug("Read data " + ByteArrayHexStringConverter.toHexString(in));
 
+		if (in.length < 2) {
+			LOGGER.debug("Unexpected response " + ByteArrayHexStringConverter.toHexString(in));
+
+			return false;
+		}
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (response.getSW1() == 0x90) {
@@ -589,11 +599,12 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[10];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -601,6 +612,11 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read data " + ByteArrayHexStringConverter.toHexString(in));
 
+		if (in.length < 2) {
+			LOGGER.debug("Unexpected response " + ByteArrayHexStringConverter.toHexString(in));
+
+			return false;
+		}
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (response.getSW1() != 0x90 || response.getSW2() != 0x00) {
@@ -644,11 +660,12 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Write data " + ByteArrayHexStringConverter.toHexString(pseudo));
 
-		byte[] in = new byte[10];
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
@@ -656,6 +673,11 @@ public class ACR1222Commands extends ACRCommands {
 
 		LOGGER.debug("Read data " + ByteArrayHexStringConverter.toHexString(in));
 
+		if (in.length < 2) {
+			LOGGER.debug("Unexpected response " + ByteArrayHexStringConverter.toHexString(in));
+
+			return false;
+		}
 		ResponseAPDU response = new ResponseAPDU(in);
 
 		if (!isSuccessControl(response)) {
@@ -775,17 +797,29 @@ public class ACR1222Commands extends ACRCommands {
 		return true;
 	}
 
+	/**
+	 * 4 LEDs control: FF 00 44 bLEDsState 00, response SW1 SW2.
+	 *
+	 * @param slot slot
+	 * @param state LED states, bit 0 green, bit 1 blue, bit 2 orange, bit 3 red
+	 * @return true if successful
+	 */
+
 	public boolean setLED(int slot, int state) throws ReaderException {
+		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x44, (byte) state, 0x00 };
 
-		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x00, 0x44, new byte[] { (byte) (state) });
+		byte[] in;
+		synchronized (reader) {
+			in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
+		}
 
-		CommandAPDU response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
+		if (in.length < 2 || !isSuccessControl(new ResponseAPDU(in))) {
+			LOGGER.debug("Unable to set LED state " + ByteArrayHexStringConverter.toHexString(in));
 
-		if (!isSuccess(response, 1)) {
 			return false;
 		}
 
-		LOGGER.debug("Set LED state to " + (0xFF & response.getData()[0]));
+		LOGGER.debug("Set LED state to " + Integer.toHexString(state));
 
 		return true;
 	}

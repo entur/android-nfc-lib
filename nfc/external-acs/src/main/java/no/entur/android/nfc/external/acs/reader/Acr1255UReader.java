@@ -13,6 +13,18 @@ import java.util.Set;
 
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1255UReaderControl;
 
+/**
+ * ACR1255U-J1, per the reference manual 1.13. Firmware dependent (as reported by the reader, for example SWV 1.16.03):
+ * <ul>
+ * <li>2.01.00 and later: extended APDUs over Bluetooth.</li>
+ * <li>2.03.xx and later: the default LED and buzzer behaviour, automatic PICC polling, PICC operating parameter, automatic PPS and
+ * Tx power are saved in non-volatile memory; with older firmware they are reset when the reader is powered off. Reading the sleep
+ * mode option and the Tx power, and the battery level (Bluetooth only).</li>
+ * <li>2.04.xx and later: the card removal and power on buzzers of the default LED and buzzer behaviour, read PICC type and get
+ * PICC data.</li>
+ * </ul>
+ */
+
 public class Acr1255UReader extends AcrReader {
 
 	private static final String TAG = Acr1255UReader.class.getName();
@@ -22,13 +34,16 @@ public class Acr1255UReader extends AcrReader {
 	public static final int LED_2_BLUE = 4;
 	public static final int LED_2_RED = 8;
 
-	private static final int ICC_ACTIVATION_STATUS_LED = 1 << 0;
+	// LED and buzzer status indicator behavior (E0 00 00 21), per the ACR1255U-J1 reference manual 1.13. An ACR1255U-J1 with
+	// firmware SWV 1.16.03 beeps on both card insertion and removal with bit 3.
+	private static final int BATTERY_CHARGING_STATUS_LED = 1 << 0;
 	private static final int PICC_POLLING_STATUS_LED = 1 << 1;
-	// bit 2 RFU
-	// bit 3 RFU
-	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = 1 << 4;
-	private static final int CONTACTLESS_CHIP_RESET_INDICATION_BUZZER = 1 << 5;
-	private static final int EXCLUSIVE_MODE_STATUS_BUZZER = 1 << 6;
+	private static final int PICC_ACTIVATION_STATUS_LED = 1 << 2;
+	private static final int CARD_INSERTION_EVENTS_BUZZER = 1 << 3;
+	// firmware 2.04.xx and later, needs the card insertion events buzzer
+	private static final int CARD_REMOVAL_EVENTS_BUZZER = 1 << 4;
+	// firmware 2.04.xx and later
+	private static final int READER_POWER_ON_BUZZER = 1 << 5;
 	private static final int LED_CARD_OPERATION_BLINK = 1 << 7;
 
 	private static final int POLL_ISO14443_TYPE_A = 1;
@@ -36,6 +51,8 @@ public class Acr1255UReader extends AcrReader {
 	private static final int POLL_FELICA_212K = 1 << 2;
 	private static final int POLL_FELICA_424K = 1 << 3;
 	private static final int POLL_TOPAZ = 1 << 4;
+	private static final int POLL_CALYPSO = 1 << 5;
+	private static final int POLL_SRIX = 1 << 6;
 
 	private static final int RATE_106K = 0;
 	private static final int RATE_212K = 1;
@@ -56,16 +73,20 @@ public class Acr1255UReader extends AcrReader {
 		int operation = 0;
 
 		for (AcrDefaultLEDAndBuzzerBehaviour type : types) {
-			if (type == AcrDefaultLEDAndBuzzerBehaviour.ICC_ACTIVATION_STATUS_LED) {
-				operation |= ICC_ACTIVATION_STATUS_LED;
+			if (type == AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED) {
+				operation |= BATTERY_CHARGING_STATUS_LED;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED) {
 				operation |= PICC_POLLING_STATUS_LED;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED) {
+				operation |= PICC_ACTIVATION_STATUS_LED;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER) {
+				operation |= CARD_INSERTION_EVENTS_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER) {
+				operation |= CARD_REMOVAL_EVENTS_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER) {
-				operation |= CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER;
-			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER) {
-				operation |= CONTACTLESS_CHIP_RESET_INDICATION_BUZZER;
-			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.EXCLUSIVE_MODE_STATUS_BUZZER) {
-				operation |= EXCLUSIVE_MODE_STATUS_BUZZER;
+				operation |= CARD_INSERTION_EVENTS_BUZZER | CARD_REMOVAL_EVENTS_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER) {
+				operation |= READER_POWER_ON_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED) {
 				operation |= LED_CARD_OPERATION_BLINK;
 			} else {
@@ -78,26 +99,24 @@ public class Acr1255UReader extends AcrReader {
 	public static List<AcrDefaultLEDAndBuzzerBehaviour> parseBehaviour(int operation) {
 		List<AcrDefaultLEDAndBuzzerBehaviour> behaviours = new ArrayList<AcrDefaultLEDAndBuzzerBehaviour>();
 
-		if ((operation & ICC_ACTIVATION_STATUS_LED) != 0) {
-			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.ICC_ACTIVATION_STATUS_LED);
+		if ((operation & BATTERY_CHARGING_STATUS_LED) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED);
 		}
-
 		if ((operation & PICC_POLLING_STATUS_LED) != 0) {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED);
 		}
-
-		if ((operation & CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER) != 0) {
-			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER);
+		if ((operation & PICC_ACTIVATION_STATUS_LED) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED);
 		}
-
-		if ((operation & CONTACTLESS_CHIP_RESET_INDICATION_BUZZER) != 0) {
-			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER);
+		if ((operation & CARD_INSERTION_EVENTS_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER);
 		}
-
-		if ((operation & EXCLUSIVE_MODE_STATUS_BUZZER) != 0) {
-			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.EXCLUSIVE_MODE_STATUS_BUZZER);
+		if ((operation & CARD_REMOVAL_EVENTS_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER);
 		}
-
+		if ((operation & READER_POWER_ON_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER);
+		}
 		if ((operation & LED_CARD_OPERATION_BLINK) != 0) {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED);
 		}
@@ -164,6 +183,12 @@ public class Acr1255UReader extends AcrReader {
 		if ((operation & POLL_TOPAZ) != 0) {
 			values.add(AcrPICC.POLL_TOPAZ);
 		}
+		if ((operation & POLL_CALYPSO) != 0) {
+			values.add(AcrPICC.POLL_INNOVATRON);
+		}
+		if ((operation & POLL_SRIX) != 0) {
+			values.add(AcrPICC.POLL_SRI_OR_SRIX);
+		}
 
 		return values;
 	}
@@ -190,6 +215,15 @@ public class Acr1255UReader extends AcrReader {
 			}
 			case POLL_TOPAZ: {
 				picc |= Acr1255UReader.POLL_TOPAZ;
+				break;
+			}
+			case POLL_INNOVATRON: {
+				// Calypso
+				picc |= Acr1255UReader.POLL_CALYPSO;
+				break;
+			}
+			case POLL_SRI_OR_SRIX: {
+				picc |= Acr1255UReader.POLL_SRIX;
 				break;
 			}
 			default: {

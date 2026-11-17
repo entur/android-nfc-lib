@@ -22,7 +22,6 @@ public class IAcr1552UBinder extends IAcr1552UReaderControl.Stub {
 	private volatile IAcr1552UCommandWrapper wrapper;
 
 	public IAcr1552UBinder() {
-		attachInterface(this, IAcr1252UReaderControl.class.getName());
 	}
 
 	public void setCommands(ACR1552Commands reader) {

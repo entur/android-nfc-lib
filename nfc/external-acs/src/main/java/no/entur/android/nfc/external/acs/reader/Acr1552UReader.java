@@ -40,14 +40,23 @@ public class Acr1552UReader extends AcrReader {
 	private static final int POWER_80_PERCENT = 0x04;
 	private static final int POWER_100_PERCENT = 0x05;
 
-	public static final int LED_GREEN = 1 << 1;
-	public static final int LED_BLUE = 1;
+	// LED status as read (E0 00 00 29 00). The reference manual has bit 0 blue, bit 1 green, as for writing, but on a reader
+	// (firmware 1.01.01) the green LED, lit by writing bit 1, reads back as bit 0.
+	public static final int LED_GREEN = 1;
+	public static final int LED_BLUE = 1 << 1;
 
+	// LED control as written (E0 00 00 29 01), per the reference manual (checked on a reader): bit 0 blue, bit 1 green
+	private static final int LED_CONTROL_BLUE = 1;
+	private static final int LED_CONTROL_GREEN = 1 << 1;
+
+	// UI behaviour (E0 00 00 21), per the ACR1552U reference manual 1.09: bits 1, 2, 5, 6 and 7 need ACR1552U-M firmware 1.06.00 or
+	// later; on older firmware, the reader leaves them unset (setDefaultLEDAndBuzzerBehaviour returns false)
 	private static final int UI_ACCESSING_LED = 1;
 	private static final int UI_PICC_POLLING_STATUS_LED = 1 << 1;
 	private static final int UI_PICC_ACTIVATION_STATUS_LED = 1 << 2;
 	private static final int UI_PRESENCE_EVENT_BUZZER = 1 << 3;
 	private static final int UI_REMOVAL_EVENT_BUZZER = 1 << 4;
+	private static final int UI_POWER_UP_EVENT_BUZZER = 1 << 5;
 
 	protected IAcr1552UReaderControl readerControl;
 
@@ -71,6 +80,8 @@ public class Acr1552UReader extends AcrReader {
 				operation |= UI_PRESENCE_EVENT_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER) {
 				operation |= UI_REMOVAL_EVENT_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER) {
+				operation |= UI_POWER_UP_EVENT_BUZZER;
 			} else {
 				throw new IllegalArgumentException("Behaviour " + type + " not supported");
 			}
@@ -99,6 +110,10 @@ public class Acr1552UReader extends AcrReader {
 
 		if ((operation & UI_REMOVAL_EVENT_BUZZER) != 0) {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER);
+		}
+
+		if ((operation & UI_POWER_UP_EVENT_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER);
 		}
 
 		return behaviours;
@@ -311,9 +326,9 @@ public class Acr1552UReader extends AcrReader {
 			int operation = 0;
 			for (AcrLED type : types) {
 				if (type == AcrLED.GREEN) {
-					operation |= LED_GREEN;
+					operation |= LED_CONTROL_GREEN;
 				} else if (type == AcrLED.BLUE) {
-					operation |= LED_BLUE;
+					operation |= LED_CONTROL_BLUE;
 				} else {
 					throw new IllegalArgumentException("LED " + type + " not supported");
 				}
@@ -328,7 +343,8 @@ public class Acr1552UReader extends AcrReader {
 
 	/**
 	 *
-	 * Set RF power
+	 * Set RF power. Needs ACR1552U-M firmware 1.03.03 or later, older firmware fails with a CCID error. The reader resets after
+	 * the power is set.
 	 *
 	 * @param percent power in percent
 	 * @return true if power was updated
@@ -347,7 +363,7 @@ public class Acr1552UReader extends AcrReader {
 	}
 
 	/**
-	 * Get RF power
+	 * Get RF power. Needs ACR1552U-M firmware 1.03.03 or later, older firmware fails with a CCID error.
 	 *
 	 * @return power in percent
 	 */

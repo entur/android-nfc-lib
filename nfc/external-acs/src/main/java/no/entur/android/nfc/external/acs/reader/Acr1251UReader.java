@@ -13,6 +13,7 @@ public class Acr1251UReader extends AcrReader {
 
 	private static final String TAG = Acr1251UReader.class.getName();
 
+	// PICC operating parameter (E0 00 00 20), per the ACR1251U API manual 1.14
 	private static final int POLL_TOPAZ = 1 << 4;
 	private static final int POLL_FELICA_424K = 1 << 3;
 	private static final int POLL_FELICA_212K = 1 << 2;

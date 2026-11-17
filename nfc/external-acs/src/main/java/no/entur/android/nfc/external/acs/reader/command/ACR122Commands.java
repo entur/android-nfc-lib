@@ -130,17 +130,17 @@ public class ACR122Commands extends ACRCommands {
 	public boolean setBuzzerForCardDetection(int slot, boolean enable) throws AcrReaderException {
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x52, (byte) (enable ? 0xFF : 0x00), 0x00 };
 
-		byte[] in = new byte[300];
-
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set buzzer for card detection to " + (enable ? "on" : "off"));
 
 			return true;
@@ -177,17 +177,17 @@ public class ACR122Commands extends ACRCommands {
 
 		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x41, (byte) (parameter), 0x00 };
 
-		byte[] in = new byte[8];
-
+		// read the actual response (not a fixed size buffer), so that the status word is checked
+		byte[] in;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (isSuccessControl(in)) {
+		if (in.length >= 2 && isSuccessControl(in)) {
 			LOGGER.debug("Successfully set timeout parameter");
 
 			return true;
@@ -199,7 +199,7 @@ public class ACR122Commands extends ACRCommands {
 	}
 
 	public byte[] readStatus(int slot) throws AcrReaderException {
-		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x00, 0x00, 0x20, (byte) 0xD4, 0x04 };
+		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x00, 0x00, 0x02, (byte) 0xD4, 0x04 };
 
 		byte[] in;
 
@@ -213,12 +213,19 @@ public class ACR122Commands extends ACRCommands {
 
 		LOGGER.debug(ByteArrayHexStringConverter.toHexString(in));
 
+		// D5 05 [Err] [Field] [NbTg] [Tg] [BrRx] [BrTx] [Type] .. 90 00
+		if (in.length < 5) {
+			LOGGER.debug("Unexpected status response");
+
+			return in;
+		}
+
 		LOGGER.debug("Error Code: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
 
 		// LOGGER.debug(tmpStr.trim());
-		if ((in[3] == 0x00)) {
+		if ((in[4] == 0x00)) { // number of targets
 			LOGGER.debug("No Tag is in the field: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
-		} else {
+		} else if (in.length >= 9) {
 			// error code
 			LOGGER.debug("Error Code: " + Integer.toHexString(((Byte) in[2]).intValue() & 0xFF).toUpperCase());
 
