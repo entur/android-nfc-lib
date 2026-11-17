@@ -1,6 +1,5 @@
 package no.entur.android.nfc.websocket.server;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +14,7 @@ import javax.smartcardio.CardException;
  * <ul>
  *     <li>READ (0x30): READ BINARY FF B0 00 [page] 10, returns 16 bytes (4 pages)</li>
  *     <li>WRITE (0xA2): UPDATE BINARY FF D6 00 [page] 04 [data], returns ACK (0x0A)</li>
- *     <li>FAST_READ (0x3A): emulated using READ BINARY, returns (end - start + 1) pages</li>
+ *     <li>FAST_READ (0x3A): emulated using READ BINARY, returns (end - start + 1) pages; does not read beyond the end page</li>
  *     <li>GET_VERSION (0x60) and READ_SIG (0x3C): returned from the values read when the card was detected,
  *     see {@link #readVersionAndSignature(ExtendedCardTerminal)}; fail if not supported by the card or the reader</li>
  * </ul>
@@ -174,20 +173,7 @@ public class MifareUltralightPcscAdapter {
                 if(end < start) {
                     throw new IOException("Unexpected FAST_READ range " + start + " to " + end);
                 }
-                int length = (end - start + 1) * PAGE_SIZE;
-
-                ByteArrayOutputStream bout = new ByteArrayOutputStream(length + 4 * PAGE_SIZE);
-                for (int page = start; page <= end; page += 4) {
-                    byte[] data = read(page, transmitter);
-                    bout.write(data, 0, data.length);
-                }
-                byte[] pages = bout.toByteArray();
-                if(pages.length > length) {
-                    byte[] result = new byte[length];
-                    System.arraycopy(pages, 0, result, 0, length);
-                    return result;
-                }
-                return pages;
+                return fastRead(start, end, transmitter);
             }
             case GET_VERSION: {
                 checkLength(command, 1);
@@ -203,6 +189,32 @@ public class MifareUltralightPcscAdapter {
                 throw new IOException("Unsupported MIFARE Ultralight command " + ByteArrayHexStringConverter.toHexString(new byte[]{command[0]}));
             }
         }
+    }
+
+    /**
+     * Read pages using READ BINARY of 4 pages each, without reading beyond the last page (which might be the end of
+     * the memory, or followed by protected pages): the last read ends at the last page, reading some pages twice.
+     */
+
+    private byte[] fastRead(int start, int end, ApduTransmitter transmitter) throws IOException {
+        byte[] result = new byte[(end - start + 1) * PAGE_SIZE];
+
+        // pages before the first page can be read if the first page can
+        int lastReadPage = Math.max(0, end - 3);
+
+        int page = start;
+        while(page <= end) {
+            int readPage = Math.min(page, lastReadPage);
+
+            byte[] data = read(readPage, transmitter);
+
+            int offset = (page - readPage) * PAGE_SIZE;
+            int count = Math.min(data.length - offset, (end - page + 1) * PAGE_SIZE);
+            System.arraycopy(data, offset, result, (page - start) * PAGE_SIZE, count);
+
+            page += count / PAGE_SIZE;
+        }
+        return result;
     }
 
     private byte[] read(int page, ApduTransmitter transmitter) throws IOException {

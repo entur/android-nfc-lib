@@ -91,16 +91,34 @@ public class MifareUltralightPcscAdapterTest {
 
     @Test
     public void testFastRead() throws IOException {
-        // pages 0 to 5, i.e. 24 bytes, read in chunks of 4 pages
+        // pages 0 to 5, i.e. 24 bytes, read in chunks of 4 pages; the last chunk ends at page 5
         byte[] response = adapter.transceive(new byte[]{0x3A, 0x00, 0x05}, card);
 
         assertArrayEquals(Arrays.copyOfRange(card.memory, 0, 24), response);
-        assertEquals(Arrays.asList("FFB0000010", "FFB0000410"), card.apdus);
+        assertEquals(Arrays.asList("FFB0000010", "FFB0000210"), card.apdus);
 
         card.apdus.clear();
 
         assertArrayEquals(card.memory, adapter.transceive(new byte[]{0x3A, 0x00, 0x0F}, card));
         assertEquals(4, card.apdus.size());
+    }
+
+    @Test
+    public void testFastReadDoesNotReadBeyondLastPage() throws IOException {
+        // i.e. the last pages of the memory, or followed by protected pages
+        assertArrayEquals(Arrays.copyOfRange(card.memory, 40, 64), adapter.transceive(new byte[]{0x3A, 0x0A, 0x0F}, card));
+        assertEquals(Arrays.asList("FFB0000A10", "FFB0000C10"), card.apdus);
+
+        card.apdus.clear();
+
+        // less than 4 pages
+        assertArrayEquals(Arrays.copyOfRange(card.memory, 56, 64), adapter.transceive(new byte[]{0x3A, 0x0E, 0x0F}, card));
+        assertEquals(Arrays.asList("FFB0000C10"), card.apdus);
+
+        card.apdus.clear();
+
+        assertArrayEquals(Arrays.copyOfRange(card.memory, 0, 8), adapter.transceive(new byte[]{0x3A, 0x00, 0x01}, card));
+        assertEquals(Arrays.asList("FFB0000010"), card.apdus);
     }
 
     @Test
