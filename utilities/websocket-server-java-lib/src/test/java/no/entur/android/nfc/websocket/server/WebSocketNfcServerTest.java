@@ -1,5 +1,6 @@
 package no.entur.android.nfc.websocket.server;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -7,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,6 +23,9 @@ import javax.smartcardio.CardTerminal;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import no.entur.android.nfc.websocket.messages.NfcMessage;
+import no.entur.android.nfc.websocket.messages.card.CardLostException;
+import no.entur.android.nfc.websocket.messages.card.broadcast.CardLostMessage;
 import no.entur.android.nfc.websocket.messages.card.broadcast.CardPresentMessage;
 
 public class WebSocketNfcServerTest {
@@ -83,6 +88,9 @@ public class WebSocketNfcServerTest {
 
         private volatile boolean polling;
 
+        // GET_VERSION and READ_SIG responses, null if the card did not respond
+        private volatile List<byte[]> transparentResponses = Arrays.asList(fromHex("0004040201001303"), new byte[32]);
+
         private FakeReader(String name, String tag) {
             super(null);
             this.name = name;
@@ -107,7 +115,7 @@ public class WebSocketNfcServerTest {
         @Override
         public List<byte[]> transceiveTransparent(List<byte[]> commands) {
             // GET_VERSION and READ_SIG, which re-activates the card
-            return Arrays.asList(fromHex("0004040201001303"), new byte[32]);
+            return transparentResponses;
         }
 
         @Override
@@ -175,6 +183,58 @@ public class WebSocketNfcServerTest {
 
         // no card
         assertThrows(CardException.class, () -> attachment.transcieve(new byte[]{0x30, 0x04}));
+    }
+
+    @Test
+    public void testCardWhichDidNotAnswerGetVersionIsLost() throws Exception {
+        FakeReader reader = new FakeReader("Reader", "a");
+        // i.e. original MIFARE Ultralight: no response to GET_VERSION and READ_SIG
+        reader.transparentResponses = Arrays.asList(null, null);
+        WebSocketNfcServer server = server(reader);
+
+        List<NfcMessage> messages = new CopyOnWriteArrayList<>();
+        WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
+        assertTrue(attachment.onConnect(Collections.singletonList("a")));
+
+        FakeCard card = new FakeChannelCard();
+        attachment.cardConnected(card);
+
+        // like Android's own NFC reader, the card is lost
+        assertThrows(CardLostException.class, () -> attachment.transcieve(new byte[]{0x60}));
+        assertEquals(1, count(messages, CardLostMessage.class));
+
+        // until it is removed and presented again; removing it does not report it as lost again
+        assertThrows(CardLostException.class, () -> attachment.transcieve(new byte[]{0x30, 0x04}));
+        attachment.cardDisconnected(card);
+        assertEquals(1, count(messages, CardLostMessage.class));
+
+        FakeCard next = new FakeChannelCard();
+        attachment.cardConnected(next);
+
+        // the command reaches the card again (the fake card returns no data, so READ fails, but not as lost)
+        IOException e = assertThrows(IOException.class, () -> attachment.transcieve(new byte[]{0x30, 0x04}));
+        assertFalse(e instanceof CardLostException, e.toString());
+
+        attachment.cardDisconnected(next);
+        assertEquals(2, count(messages, CardLostMessage.class));
+    }
+
+    @Test
+    public void testCardWhichAnsweredGetVersionIsNotLost() throws Exception {
+        WebSocketNfcServer server = server(new FakeReader("Reader", "a"));
+
+        List<NfcMessage> messages = new CopyOnWriteArrayList<>();
+        WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
+        assertTrue(attachment.onConnect(Collections.singletonList("a")));
+
+        attachment.cardConnected(new FakeChannelCard());
+
+        assertArrayEquals(fromHex("0004040201001303"), attachment.transcieve(new byte[]{0x60}));
+        assertEquals(0, count(messages, CardLostMessage.class));
+    }
+
+    private static long count(List<NfcMessage> messages, Class<? extends NfcMessage> type) {
+        return messages.stream().filter(type::isInstance).count();
     }
 
     @Test

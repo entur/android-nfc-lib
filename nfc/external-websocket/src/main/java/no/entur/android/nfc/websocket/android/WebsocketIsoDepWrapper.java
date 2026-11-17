@@ -16,20 +16,17 @@ public class WebsocketIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 		this.cardClient = cardClient;
 	}
 
+	/**
+	 * @throws no.entur.android.nfc.websocket.messages.card.CardLostException if the card was lost
+	 * @throws IOException if the server was unable to transceive, or did not respond within the timeout
+	 */
+
 	public byte[] transceive(byte[] data) throws IOException {
-		return getResponse(cardClient.transcieve(data));
+		return cardClient.transcieveOrThrow(data);
 	}
 
 	public byte[] transceiveRaw(byte[] req) throws IOException {
-		return getResponse(cardClient.transcieve(req));
-	}
-
-	private static byte[] getResponse(byte[] response) throws IOException {
-		if(response == null) {
-			// server was unable to transceive, or no response within timeout
-			throw new IOException("Unable to transceive");
-		}
-		return response;
+		return cardClient.transcieveOrThrow(req);
 	}
 
     @Override

@@ -19,7 +19,6 @@ import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.AbstractForegroundService;
 import no.entur.android.nfc.external.service.tag.INFcTagBinder;
 import no.entur.android.nfc.external.service.tag.TagProxy;
-import no.entur.android.nfc.external.tag.DefaultTransceiveResultExceptionMapper;
 import no.entur.android.nfc.external.tag.IntentEnricher;
 import no.entur.android.nfc.external.tag.IsoDepTagServiceSupport;
 import no.entur.android.nfc.websocket.client.WebSocketClient;
@@ -45,8 +44,8 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     // applies the tag timeout to the current client
     protected WebsocketReaderTechnology readerTechnology = new WebsocketReaderTechnology();
 
-    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
-    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
+    private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, infcTagBinder, store, new WebsocketTransceiveResultExceptionMapper());
+    private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, infcTagBinder, store, new WebsocketTransceiveResultExceptionMapper());
 
     private volatile WebSocketClient client = null;
 

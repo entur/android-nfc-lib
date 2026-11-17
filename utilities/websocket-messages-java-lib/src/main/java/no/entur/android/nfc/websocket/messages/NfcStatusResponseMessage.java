@@ -11,6 +11,8 @@ public class NfcStatusResponseMessage extends NfcMessage {
 	public static final int STATUS_READER_UNABLE_TO_START_POLLING = 1001;
 
 	public static final int STATUS_CARD_UNABLE_TO_TRANSCIEVE = 2000;
+	// the card did not respond and is lost, see CardLostException
+	public static final int STATUS_CARD_LOST = 2001;
 
 	protected int status = STATUS_OK;
 

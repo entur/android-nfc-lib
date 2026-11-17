@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.java_websocket.WebSocket;
@@ -34,6 +35,7 @@ import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessage;
 import no.entur.android.nfc.websocket.messages.NfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessageReader;
+import no.entur.android.nfc.websocket.messages.card.CardLostException;
 import no.entur.android.nfc.websocket.messages.card.CardServer;
 import no.entur.android.nfc.websocket.messages.reader.ReaderServer;
 
@@ -104,6 +106,10 @@ public class WebSocketNfcServer extends WebSocketServer {
         private volatile boolean stripAppendedStatusWord;
         private final MifareUltralightPcscAdapter mifareUltralightPcscAdapter = new MifareUltralightPcscAdapter();
 
+        // whether the client was told that the current card is lost. A card which does not respond to a command
+        // is lost, like with Android's own NFC reader, until it is removed and presented again.
+        private final AtomicBoolean cardLost = new AtomicBoolean();
+
         @Override
         public void cardConnected(Card card) throws CardException {
             LOGGER.info("Card connected");
@@ -119,6 +125,7 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         private void connected(Card card) throws CardException {
+            this.cardLost.set(false);
             this.connection = new CardConnection(card);
 
             ATR atr = card.getATR();
@@ -197,7 +204,11 @@ public class WebSocketNfcServer extends WebSocketServer {
 
             reset(card);
 
-            cardServer.cardLost();
+            if(cardLost.compareAndSet(false, true)) {
+                cardServer.cardLost();
+            } else {
+                LOGGER.info("Card was already reported as lost");
+            }
         }
 
         /**
@@ -226,6 +237,22 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         public byte[] transcieve(byte[] command) throws IOException, CardException {
+            if(cardLost.get()) {
+                throw new CardLostException("Card was lost");
+            }
+            try {
+                return transcieveCard(command);
+            } catch (CardLostException e) {
+                // tell the client, the card is detected again when it is removed and presented again
+                if(cardLost.compareAndSet(false, true)) {
+                    LOGGER.info("Card lost: " + e.getMessage());
+                    cardServer.cardLost();
+                }
+                throw e;
+            }
+        }
+
+        private byte[] transcieveCard(byte[] command) throws IOException, CardException {
             // the polling thread might replace or clear the connection meanwhile, so use the same one throughout
             CardConnection connection = this.connection;
             if(connection == null) {

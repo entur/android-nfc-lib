@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.smartcardio.CardException;
 
+import no.entur.android.nfc.websocket.messages.card.CardLostException;
+
 /**
  * Translates native MIFARE Ultralight commands (as sent by Android's {@code MifareUltralight} and {@code NfcA})
  * to PC/SC storage card commands (PC/SC 2.01 part 3), and the responses back.
@@ -16,7 +18,8 @@ import javax.smartcardio.CardException;
  *     <li>WRITE (0xA2): UPDATE BINARY FF D6 00 [page] 04 [data], returns ACK (0x0A)</li>
  *     <li>FAST_READ (0x3A): emulated using READ BINARY, returns (end - start + 1) pages; does not read beyond the end page</li>
  *     <li>GET_VERSION (0x60) and READ_SIG (0x3C): returned from the values read when the card was detected,
- *     see {@link #readVersionAndSignature(ExtendedCardTerminal)}; fail if not supported by the card or the reader</li>
+ *     see {@link #readVersionAndSignature(ExtendedCardTerminal)}. If the card did not respond to them, the card is lost
+ *     ({@link CardLostException}), like with Android's own NFC reader. If the reader cannot read them, they fail.</li>
  * </ul>
  */
 
@@ -102,6 +105,9 @@ public class MifareUltralightPcscAdapter {
     private volatile byte[] version;
     private volatile byte[] signature;
 
+    // whether GET_VERSION and READ_SIG were sent to the card, so that null values mean that the card did not respond
+    private volatile boolean versionAndSignatureRead;
+
     /**
      * Read version (GET_VERSION) and signature (READ_SIG) via a transparent exchange, if supported by the terminal.
      * These are static for a card, so they are cached and returned for later commands. Reading them re-activates
@@ -120,6 +126,7 @@ public class MifareUltralightPcscAdapter {
         }
         this.version = responses.get(0);
         this.signature = responses.get(1);
+        this.versionAndSignatureRead = true;
         return true;
     }
 
@@ -143,6 +150,7 @@ public class MifareUltralightPcscAdapter {
     public void reset() {
         this.version = null;
         this.signature = null;
+        this.versionAndSignatureRead = false;
     }
 
     public byte[] transceive(byte[] command, ApduTransmitter transmitter) throws IOException {
@@ -178,12 +186,12 @@ public class MifareUltralightPcscAdapter {
             case GET_VERSION: {
                 checkLength(command, 1);
 
-                return getCached("GET_VERSION", version);
+                return getCached("GET_VERSION", version, versionAndSignatureRead);
             }
             case READ_SIG: {
                 checkLength(command, 2);
 
-                return getCached("READ_SIG", signature);
+                return getCached("READ_SIG", signature, versionAndSignatureRead);
             }
             default: {
                 throw new IOException("Unsupported MIFARE Ultralight command " + ByteArrayHexStringConverter.toHexString(new byte[]{command[0]}));
@@ -241,9 +249,14 @@ public class MifareUltralightPcscAdapter {
         return data;
     }
 
-    private static byte[] getCached(String name, byte[] value) throws IOException {
+    private static byte[] getCached(String name, byte[] value, boolean read) throws IOException {
         if(value == null) {
-            // not supported by the card (i.e. original MIFARE Ultralight) or the reader
+            if(read) {
+                // Not supported by the card (i.e. original MIFARE Ultralight), so the card did not respond and went
+                // to the IDLE state. Android's own NFC reader then loses the card, so do the same.
+                throw new CardLostException("Card did not respond to " + name);
+            }
+            // not supported by the reader, so unknown whether the card supports it
             throw new IOException(name + " not available");
         }
         return value.clone();

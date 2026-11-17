@@ -16,6 +16,8 @@ import java.util.List;
 
 import javax.smartcardio.ATR;
 
+import no.entur.android.nfc.websocket.messages.card.CardLostException;
+
 public class MifareUltralightPcscAdapterTest {
 
     // ATR of a MIFARE Ultralight paper ticket on an ACR1552U
@@ -181,19 +183,39 @@ public class MifareUltralightPcscAdapterTest {
 
     @Test
     public void testGetVersionNotSupportedByCard() throws Exception {
-        // i.e. original MIFARE Ultralight
+        // i.e. original MIFARE Ultralight: the card did not respond, so it is lost like with Android's own NFC reader
         assertTrue(adapter.readVersionAndSignature(transparentTerminal(Arrays.asList(null, null))));
         assertFalse(adapter.hasMifareUltralightVersion());
 
-        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x60}, card));
-        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x3C, 0x00}, card));
+        assertThrows(CardLostException.class, () -> adapter.transceive(new byte[]{0x60}, card));
+        assertThrows(CardLostException.class, () -> adapter.transceive(new byte[]{0x3C, 0x00}, card));
+        assertTrue(card.apdus.isEmpty());
+
+        // not known after reset
+        adapter.reset();
+        assertNotLost(() -> adapter.transceive(new byte[]{0x60}, card));
+    }
+
+    @Test
+    public void testReadSignatureNotSupportedByCard() throws Exception {
+        assertTrue(adapter.readVersionAndSignature(transparentTerminal(Arrays.asList(hex("0004030101000B03"), null))));
+
+        assertArrayEquals(hex("0004030101000B03"), adapter.transceive(new byte[]{0x60}, card));
+        assertThrows(CardLostException.class, () -> adapter.transceive(new byte[]{0x3C, 0x00}, card));
     }
 
     @Test
     public void testGetVersionNotSupportedByReader() throws Exception {
         assertFalse(adapter.readVersionAndSignature(transparentTerminal(null)));
 
-        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x60}, card));
+        // unknown whether the card supports it, so fail without losing the card
+        assertNotLost(() -> adapter.transceive(new byte[]{0x60}, card));
+        assertNotLost(() -> adapter.transceive(new byte[]{0x3C, 0x00}, card));
+    }
+
+    private static void assertNotLost(org.junit.jupiter.api.function.Executable executable) {
+        IOException e = assertThrows(IOException.class, executable);
+        assertFalse(e instanceof CardLostException, e.toString());
     }
 
     @Test

@@ -14,6 +14,8 @@ Supported Andorid tag types:
  * `MifareUltralight` (and `NfcA`), including NTAG - READ, WRITE and FAST_READ commands, translated to PC/SC storage card commands. 
    GET_VERSION and READ_SIG are read once when the card is detected (ACR 122U and ACR 1222L via PN532 InCommunicateThru, ACR 1252U and ACR 1552U via a PC/SC transparent session), and only for cards which support them.
    The ACR 1281U does not read GET_VERSION and READ_SIG, as its transparent session did not work reliably.
+   Like with Android's own NFC reader, a card which did not respond to GET_VERSION or READ_SIG (i.e. an original MIFARE Ultralight) 
+   is lost when the client sends that command (`TagLostException`), until the card is removed and presented again.
 
 ## Usage
 Run command
