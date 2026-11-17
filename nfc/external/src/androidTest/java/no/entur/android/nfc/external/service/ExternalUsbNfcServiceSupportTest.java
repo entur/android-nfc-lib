@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.after;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -17,6 +18,8 @@ import android.app.Instrumentation;
 import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -45,6 +48,7 @@ public class ExternalUsbNfcServiceSupportTest {
     private final Map<String, UsbDevice> devices = new HashMap<>();
     private final Object reader = new Object();
     private final CountDownLatch openLatch = new CountDownLatch(1);
+    private final CountDownLatch callbackLatch = new CountDownLatch(1);
 
     private UsbDevice device;
     private ExternalUsbNfcServiceSupport.ReaderAdapter readerAdapter;
@@ -78,6 +82,7 @@ public class ExternalUsbNfcServiceSupportTest {
     @After
     public void tearDown() {
         openLatch.countDown();
+        callbackLatch.countDown();
 
         instrumentation.runOnMainSync(() -> support.onDestroy());
     }
@@ -103,10 +108,7 @@ public class ExternalUsbNfcServiceSupportTest {
         // scanner found the device with permission already granted, and is opening it
         verify(readerAdapter, timeout(TIMEOUT)).openReader(device);
 
-        Intent intent = new Intent(ExternalUsbNfcServiceSupport.ACTION_USB_PERMISSION);
-        intent.putExtra(UsbManager.EXTRA_DEVICE, device);
-        intent.putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, true);
-        deliver(intent);
+        grantPermission(device);
 
         openLatch.countDown();
 
@@ -151,6 +153,66 @@ public class ExternalUsbNfcServiceSupportTest {
         assertEquals(0, service.getReceiverCount());
     }
 
+    @Test
+    public void testDetachOfReplacementReaderClosesIt() {
+        UsbDevice replacement = mock(UsbDevice.class);
+        when(replacement.getDeviceId()).thenReturn(1003);
+        when(replacement.getDeviceName()).thenReturn("/dev/bus/usb/001/003");
+
+        Object replacementReader = new Object();
+        when(readerAdapter.openReader(replacement)).thenReturn(replacementReader);
+
+        blockOpenReader();
+
+        startScanning();
+
+        verify(readerAdapter, timeout(TIMEOUT)).openReader(device);
+
+        // unplug the reader and plug in another while the first is still being opened,
+        // so that the replacement is opened after the first reader is closed
+        detach();
+        grantPermission(replacement);
+
+        openLatch.countDown();
+
+        verify(listener, timeout(TIMEOUT)).onReaderOpen(replacementReader, ExternalNfcReaderCallback.READER_STATUS_OK);
+
+        InOrder inOrder = inOrder(readerAdapter);
+        inOrder.verify(readerAdapter).closeReader(device);
+        inOrder.verify(readerAdapter).openReader(replacement);
+
+        detach(replacement);
+
+        verify(readerAdapter, timeout(TIMEOUT)).closeReader(replacement);
+    }
+
+    @Test
+    public void testDestroyWaitsForReaderOpenCallback() throws InterruptedException {
+        CountDownLatch inCallback = new CountDownLatch(1);
+        doAnswer(i -> {
+            inCallback.countDown();
+            callbackLatch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+            return null;
+        }).when(listener).onReaderOpen(reader, ExternalNfcReaderCallback.READER_STATUS_OK);
+
+        startScanning();
+
+        assertTrue(inCallback.await(TIMEOUT, TimeUnit.MILLISECONDS));
+
+        CountDownLatch destroyed = new CountDownLatch(1);
+        new Handler(Looper.getMainLooper()).post(() -> {
+            support.onDestroy();
+            destroyed.countDown();
+        });
+
+        // the callback might still be using the reader, so teardown must wait for it
+        assertFalse(destroyed.await(1000, TimeUnit.MILLISECONDS));
+
+        callbackLatch.countDown();
+
+        assertTrue(destroyed.await(TIMEOUT, TimeUnit.MILLISECONDS));
+    }
+
     private void blockOpenReader() {
         when(readerAdapter.openReader(device)).thenAnswer(i -> {
             assertTrue(openLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
@@ -163,12 +225,23 @@ public class ExternalUsbNfcServiceSupportTest {
     }
 
     private void detach() {
+        detach(device);
+    }
+
+    private void detach(UsbDevice device) {
         devices.remove(device.getDeviceName());
 
         Intent intent = new Intent(UsbManager.ACTION_USB_DEVICE_DETACHED);
         intent.putExtra(UsbManager.EXTRA_DEVICE, device);
 
         assertTrue(service.isRegistered(UsbManager.ACTION_USB_DEVICE_DETACHED));
+        deliver(intent);
+    }
+
+    private void grantPermission(UsbDevice device) {
+        Intent intent = new Intent(ExternalUsbNfcServiceSupport.ACTION_USB_PERMISSION);
+        intent.putExtra(UsbManager.EXTRA_DEVICE, device);
+        intent.putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, true);
         deliver(intent);
     }
 

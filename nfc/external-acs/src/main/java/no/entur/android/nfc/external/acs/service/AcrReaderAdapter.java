@@ -74,7 +74,7 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		this.acr1552Binder = new IAcr1552UBinder();
 	}
 
-	public void close() {
+	public synchronized void close() {
 		WrappedAcrReader reader = this.reader;
 		if(reader != null) {
 			closeReader(reader.getReaderWrapper().getDevice());
@@ -107,8 +107,9 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 		return new ACRCommands(reader);
 	}
 
+	// synchronized: the service closes the reader on destroy, while an open which completed after destroy closes it too
 	@Override
-	public void closeReader(UsbDevice device) {
+	public synchronized void closeReader(UsbDevice device) {
 		clearBinders();
 
 		WrappedAcrReader reader = this.reader;
@@ -164,7 +165,9 @@ public class AcrReaderAdapter implements ExternalUsbNfcServiceSupport.ReaderAdap
 
 			WrappedAcrReader wrappedAcrReader = new WrappedAcrReader(readerWrapper, usbAcrReader);
 
-			this.reader = wrappedAcrReader;
+			synchronized (this) {
+				this.reader = wrappedAcrReader;
+			}
 
 			success = true;
 

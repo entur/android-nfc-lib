@@ -212,22 +212,26 @@ public class ExternalUsbNfcServiceSupport {
 			}
 
 			if (reader != null) {
-				boolean destroyed;
-				synchronized (ExternalUsbNfcServiceSupport.this) {
-					destroyed = ExternalUsbNfcServiceSupport.this.destroyed;
-					if (!destroyed) {
-						connectedDevice = params[0];
+				// hold the lifecycle lock until the callback returns, so that onDestroy() waits for it
+				// and the reader is not closed while the callback is still using it
+				synchronized (lifecycleLock) {
+					boolean destroyed;
+					synchronized (ExternalUsbNfcServiceSupport.this) {
+						destroyed = ExternalUsbNfcServiceSupport.this.destroyed;
+						if (!destroyed) {
+							connectedDevice = params[0];
+						}
 					}
+					if (destroyed) {
+						LOGGER.debug("Service destroyed while opening reader " + params[0].getDeviceName() + ", closing it");
+
+						readerAdapter.closeReader(params[0]);
+
+						return result;
+					}
+
+					listener.onReaderOpen(reader, ExternalNfcReaderCallback.READER_STATUS_OK);
 				}
-				if (destroyed) {
-					LOGGER.debug("Service destroyed while opening reader " + params[0].getDeviceName() + ", closing it");
-
-					readerAdapter.closeReader(params[0]);
-
-					return result;
-				}
-
-				listener.onReaderOpen(reader, ExternalNfcReaderCallback.READER_STATUS_OK);
 			} else {
 				listener.onReaderClosed(nfcReaderStatusCode, nfcReaderStatusMessage);
 
@@ -251,8 +255,7 @@ public class ExternalUsbNfcServiceSupport {
 			try {
 				UsbDevice device = params[0];
 				synchronized (ExternalUsbNfcServiceSupport.this) {
-					openDevices.remove(device.getDeviceId());
-
+					// the detach receiver already removed the device from openDevices
 					if (connectedDevice != null && connectedDevice.getDeviceId() == device.getDeviceId()) {
 						connectedDevice = null;
 					}
@@ -261,8 +264,7 @@ public class ExternalUsbNfcServiceSupport {
 			} catch (Exception e) {
 				result = e;
 			} finally {
-				stopReceivingUsbDeviceDetachBroadcasts();
-
+				// the detach receiver stays registered, a replacement reader might already be opening
 				setNfcReaderStatus(ExternalNfcReaderCallback.READER_STATUS_USB_DEVICE_DISCONNECTED, null);
 
 				listener.onReaderClosed(ExternalNfcReaderCallback.READER_STATUS_USB_DEVICE_DISCONNECTED, null);
@@ -290,11 +292,15 @@ public class ExternalUsbNfcServiceSupport {
 	protected Scanner readerScanner;
 	protected boolean scanningForReader = false;
 
+	/** the detach receiver is registered before the first open, and stays registered until {@link #onDestroy()} */
 	protected boolean recievingDetachBroadcasts = false;
 
 	protected boolean detectReader = false;
 
 	protected boolean destroyed = false;
+
+	/** serializes the reader open callback with {@link #onDestroy()}; always taken before the monitor of this object */
+	private final Object lifecycleLock = new Object();
 
 	protected Set<Integer> refusedPermissionDevices = new HashSet<Integer>();
 	protected Set<Integer> requestPermissionDevices = new HashSet<Integer>();
@@ -499,10 +505,17 @@ public class ExternalUsbNfcServiceSupport {
 		}
 	}
 
+	/**
+	 * Stop scanning and listening for broadcasts. If a reader open callback is in progress, this waits for it to return, so
+	 * afterwards no callback is running or will run, and the reader can be closed.
+	 */
+
 	public void onDestroy() {
-		synchronized (this) {
-			destroyed = true;
-			detectReader = false;
+		synchronized (lifecycleLock) {
+			synchronized (this) {
+				destroyed = true;
+				detectReader = false;
+			}
 		}
 
 		stopReceivingPermissionBroadcasts();
