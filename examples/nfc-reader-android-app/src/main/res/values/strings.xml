@@ -65,6 +65,11 @@
     <string name="acr_controls_1552_rf_off_interval">RF off interval (when enabled)</string>
     <string name="acr_controls_1552_rf_off_interval_enable">Enable RF off interval between polls</string>
     <string name="acr_controls_1552_rf_power_firmware">RF power needs ACR1552U-M firmware 1.03.03 or later. Setting it resets the reader.</string>
+    <string name="acr_controls_timeout">Timeout</string>
+    <string name="acr_controls_timeout_parameter">Card response timeout</string>
+    <string name="acr_controls_timeout_none">No timeout</string>
+    <string name="acr_controls_timeout_wait">Wait for the card</string>
+    <string name="acr_controls_122_led_note">While automatic PICC polling is on, the reader keeps the red LED on.</string>
     <string name="acr_controls_1252_behaviour_note">Beep on card removal only works together with beep on card insertion.</string>
     <string name="acr_controls_1255_behaviour_note">Removal and power on beeps need firmware 2.04 or later. The red LED is on while charging, unless the charging status LED is off.</string>
     <string name="acr_controls_1552_behaviour_firmware">The polling and activation status LEDs and the power on beep need ACR1552U-M firmware 1.06.00 or later.</string>
