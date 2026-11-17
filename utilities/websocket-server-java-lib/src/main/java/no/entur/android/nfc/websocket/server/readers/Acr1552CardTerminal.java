@@ -16,6 +16,10 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(Acr1552CardTerminal.class);
 
+    // PICC polling type, first (high) byte; the second (low) byte holds PicoPass, ISO15693 and CTS
+    public static final int PICC_ISO14443_TYPE_A = POLL_ISO14443_TYPE_A << 8;
+    public static final int PICC_ISO14443_TYPE_B = POLL_ISO14443_TYPE_B << 8;
+
     public Acr1552CardTerminal(CardTerminal delegate) {
         super(delegate);
     }
@@ -26,9 +30,10 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
     }
 
     /**
-     * Set PICC operating parameter using escape command E0 00 01 20 02 [picc high] [picc low].
+     * Set PICC polling type using escape command E0 00 01 20 02 [picc high] [picc low].
+     * Note that ISO14443 type A and B are in the high byte, see {@link #PICC_ISO14443_TYPE_A}.
      *
-     * @param picc operating parameter (two bytes)
+     * @param picc polling type (two bytes)
      * @return true if the reader confirmed the new value
      */
 
@@ -55,7 +60,7 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICC(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B);
+        setPICC(PICC_ISO14443_TYPE_A | PICC_ISO14443_TYPE_B);
         setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING | AUTOMATIC_PICC_POLLING_ENFORCE_ISO14443A_PART_4);
     }
 

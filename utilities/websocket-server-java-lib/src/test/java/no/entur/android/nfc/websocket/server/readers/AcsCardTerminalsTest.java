@@ -87,8 +87,9 @@ public class AcsCardTerminalsTest {
 
     @Test
     public void testAcr1552() throws CardException {
-        assertCommands(Acr1552CardTerminal::new, "ACR1552U_V100",
-                Arrays.asList("E0000120020003", "E00000230181"),
+        // ISO14443 type A and B are in the first byte of the polling type (03 00); 00 03 would poll for PicoPass only
+        assertCommands(Acr1552CardTerminal::new, "ACR1552 R FW 1.01.01",
+                Arrays.asList("E0000120020300", "E00000230181"),
                 Arrays.asList("E00000230100"),
                 Arrays.asList("E000001800"));
     }
@@ -99,7 +100,7 @@ public class AcsCardTerminalsTest {
         FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1281 1S Dual Reader PICC", () -> new FakeCard(command -> new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}));
 
         assertFalse(new Acr1281CardTerminal(terminal).setAutomaticPICCPolling(0x81));
-        assertFalse(new Acr1552CardTerminal(terminal).setPICC(0x0003));
+        assertFalse(new Acr1552CardTerminal(terminal).setPICC(Acr1552CardTerminal.PICC_ISO14443_TYPE_A | Acr1552CardTerminal.PICC_ISO14443_TYPE_B));
 
         assertDisconnected(terminal);
     }
