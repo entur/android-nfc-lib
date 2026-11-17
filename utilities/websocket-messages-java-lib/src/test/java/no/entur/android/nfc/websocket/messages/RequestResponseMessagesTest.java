@@ -79,6 +79,19 @@ public class RequestResponseMessagesTest {
 	}
 
 	@Test
+	public void testRequestAfterCloseDoesNotWait() {
+		List<NfcMessage> remote = Collections.synchronizedList(new ArrayList<>());
+		RequestResponseMessages messages = new RequestResponseMessages((m) -> {}, remote::add);
+
+		messages.close();
+
+		long time = System.currentTimeMillis();
+		assertNull(messages.sendAndWaitForResponse(new CardApduRequestMessage(new byte[]{0x00}), 60000));
+		assertTrue(System.currentTimeMillis() - time < 5000);
+		assertTrue(remote.isEmpty());
+	}
+
+	@Test
 	public void testLockIgnoresSpuriousWakeup() throws Exception {
 		RequestResponseMessageLock lock = new RequestResponseMessageLock(new CardApduRequestMessage(new byte[]{0x00}));
 

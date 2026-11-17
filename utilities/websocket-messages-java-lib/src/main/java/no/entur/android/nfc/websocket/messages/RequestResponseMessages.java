@@ -11,6 +11,9 @@ public class RequestResponseMessages implements NfcMessageListener, Closeable {
 	
 	private Map<Integer, RequestResponseMessageLock> inflight = new ConcurrentHashMap<>();
 
+	// no responses after close, i.e. the web socket was closed
+	private volatile boolean closed;
+
 	public RequestResponseMessages(NfcMessageListener local, NfcMessageListener remote) {
 		this.local = local;
 		this.remote = remote;
@@ -24,9 +27,13 @@ public class RequestResponseMessages implements NfcMessageListener, Closeable {
 		
 		RequestResponseMessageLock lock = new RequestResponseMessageLock(message);
 		inflight.put(message.getId(), lock);
-		
-		remote.onMessage(message);
 		try {
+			// checked after registering, so that a concurrent close either sees the lock or is seen here
+			if(closed) {
+				return null;
+			}
+			remote.onMessage(message);
+
 			return lock.waitForMessage(duration);
 		} finally {
 			inflight.remove(message.getId());
@@ -48,6 +55,8 @@ public class RequestResponseMessages implements NfcMessageListener, Closeable {
 	}
 
 	public void close() {
+		closed = true;
+
 		for (Map.Entry<Integer, RequestResponseMessageLock> entry : inflight.entrySet()) {
 			entry.getValue().close();
 		}
