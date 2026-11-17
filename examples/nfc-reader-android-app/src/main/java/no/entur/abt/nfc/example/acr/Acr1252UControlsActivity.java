@@ -87,15 +87,12 @@ public class Acr1252UControlsActivity extends AbstractAcrControlsActivity<Acr125
 	@Override
 	protected List<String> getEscapeCommandPresets() {
 		return Arrays.asList(
-				// read the PICC operating parameter, and the ACR122U compatible one (other bit layout)
-				"E0 00 00 20 00", "FF 00 50 00 00",
-				// read the extended PICC operating parameter (fw 110.0+, Picopass in the second byte)
-				"E0 01 00 20 00",
-				// read the PICC type (fw 110.0+)
-				"E0 00 00 35 00",
-				// read the LED status, all LEDs off
-				"E0 00 00 29 00", "E0 00 00 29 01 00",
-				// buzzer on for 100 ms
-				"E0 00 00 28 01 0A");
+				"Read PICC operating parameter: E0 00 00 20 00",
+				// other bit layout
+				"Read PICC operating parameter (ACR122U compatible): FF 00 50 00 00",
+				// fw 110.0+, Picopass in the second byte
+				"Read PICC operating parameter (extended): E0 01 00 20 00",
+				// fw 110.0+
+				"Read PICC type: E0 00 00 35 00", "Read LED status: E0 00 00 29 00", "All LEDs off: E0 00 00 29 01 00", "Beep 100 ms: E0 00 00 28 01 0A");
 	}
 }

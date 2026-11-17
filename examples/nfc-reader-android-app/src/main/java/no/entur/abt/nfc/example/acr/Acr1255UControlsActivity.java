@@ -67,14 +67,8 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 	@Override
 	protected List<String> getEscapeCommandPresets() {
 		return Arrays.asList(
-				// automatic polling on / off
-				"E0 00 00 40 01", "E0 00 00 40 00",
-				// read the LED status, all LEDs off
-				"E0 00 00 29 00", "E0 00 00 29 01 00",
-				// read the default LED and buzzer behaviour
-				"E0 00 00 21 00",
-				// buzzer on for 100 ms
-				"E0 00 00 28 01 0A");
+				"Automatic polling on: E0 00 00 40 01", "Automatic polling off: E0 00 00 40 00", "Read LED status: E0 00 00 29 00",
+				"All LEDs off: E0 00 00 29 01 00", "Read default LED and buzzer behaviour: E0 00 00 21 00", "Beep 100 ms: E0 00 00 28 01 0A");
 	}
 
 	/**

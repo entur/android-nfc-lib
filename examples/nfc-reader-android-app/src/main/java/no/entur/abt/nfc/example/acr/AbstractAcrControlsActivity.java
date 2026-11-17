@@ -241,7 +241,7 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 	}
 
 	/**
-	 * @return escape commands (hex) to offer as shortcuts
+	 * @return escape commands to offer as shortcuts, as "label: hex"
 	 */
 
 	protected List<String> getEscapeCommandPresets() {
@@ -263,9 +263,12 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 		addRow(button(getString(R.string.acr_controls_send), (v) -> sendEscapeCommand(reader, command.getText().toString())));
 
 		for (String preset : getEscapeCommandPresets()) {
-			Button button = button(preset, (v) -> {
-				command.setText(preset);
-				sendEscapeCommand(reader, preset);
+			int separator = preset.indexOf(':');
+			String label = separator == -1 ? null : preset.substring(0, separator).trim();
+			String hex = preset.substring(separator + 1).trim();
+			Button button = button(label == null ? hex : label + "\n" + hex, (v) -> {
+				command.setText(hex);
+				sendEscapeCommand(reader, hex);
 			});
 			button.setTypeface(Typeface.MONOSPACE);
 			button.setAllCaps(false);

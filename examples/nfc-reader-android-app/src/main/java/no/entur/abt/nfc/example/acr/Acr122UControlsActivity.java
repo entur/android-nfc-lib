@@ -11,7 +11,7 @@ import no.entur.android.nfc.external.acs.reader.AcrLED;
 import no.entur.android.nfc.external.acs.reader.AcrPICC;
 
 /**
- * ACR122U, per the API manual 2.04. The LEDs, timeout and antenna are not in the library API, so they use escape commands.
+ * ACR122U, per the API manual 2.04. The LEDs and the timeout are not in the library API, so they use escape commands.
  */
 
 public class Acr122UControlsActivity extends AbstractAcrControlsActivity<Acr122UReader> {
@@ -57,10 +57,6 @@ public class Acr122UControlsActivity extends AbstractAcrControlsActivity<Acr122U
 			}
 			return (value * 5) + " s";
 		}, null, (value) -> isSuccess(escape(reader, String.format(Locale.ROOT, "FF 00 41 %02X 00", value))));
-
-		addSection(getString(R.string.acr_controls_antenna));
-		// not readable: the Field byte of the PN532 GetGeneralStatus is an external RF field, not the reader's own
-		addSwitch(getString(R.string.acr_controls_antenna_field), null, (on) -> isSuccess(escape(reader, on ? "FF 00 00 00 04 D4 32 01 01" : "FF 00 00 00 04 D4 32 01 00")));
 	}
 
 	/**
@@ -92,16 +88,13 @@ public class Acr122UControlsActivity extends AbstractAcrControlsActivity<Acr122U
 
 	@Override
 	protected List<String> getEscapeCommandPresets() {
-		return Arrays.asList(
-				// read the PICC operating parameter
-				"FF 00 50 00 00",
-				// beep once for 100 ms (no LED change, buzzer during T1)
-				"FF 00 40 00 04 01 01 01 01",
-				// blink red / green 3 times with the buzzer, then green
-				"FF 00 40 DE 04 02 02 03 01",
-				// read the LED state
-				"FF 00 40 00 04 00 00 00 00",
-				// PN532 GetGeneralStatus
-				"FF 00 00 00 02 D4 04");
+		return Arrays.asList("Read PICC operating parameter: FF 00 50 00 00",
+				// no LED change, buzzer during T1
+				"Beep 100 ms: FF 00 40 00 04 01 01 01 01",
+				// red / green 3 times with the buzzer, then green
+				"Blink red / green with beep: FF 00 40 DE 04 02 02 03 01", "Read LED state: FF 00 40 00 04 00 00 00 00",
+				// the antenna field, only while automatic PICC polling is off: polling turns it on again
+				"Antenna off: FF 00 00 00 04 D4 32 01 00", "Antenna on: FF 00 00 00 04 D4 32 01 01",
+				"PN532 general status: FF 00 00 00 02 D4 04");
 	}
 }
