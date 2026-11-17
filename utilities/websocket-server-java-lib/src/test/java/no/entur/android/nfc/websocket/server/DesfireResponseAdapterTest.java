@@ -40,6 +40,36 @@ public class DesfireResponseAdapterTest {
     }
 
     @Test
+    public void testKeepResponsesToOtherCommands() {
+        // proprietary class ISO 7816-4 commands (i.e. GlobalPlatform), one data byte and the status word from the card
+        assertArrayEquals(hex("019000"), DesfireResponseAdapter.stripAppendedStatusWord(hex("80CA00CF00"), hex("019000")));
+        assertArrayEquals(hex("009000"), DesfireResponseAdapter.stripAppendedStatusWord(hex("8482000010"), hex("009000")));
+        // not a status code
+        assertArrayEquals(hex("019000"), DesfireResponseAdapter.stripAppendedStatusWord(SELECT_APPLICATION, hex("019000")));
+    }
+
+    @Test
+    public void testKeepReadData() {
+        // a successful read has data, here 2 bytes 90 00 (read 2 bytes from offset 0 of file 1)
+        assertArrayEquals(hex("009000"), DesfireResponseAdapter.stripAppendedStatusWord(hex("BD01000000020000"), hex("009000")));
+        assertArrayEquals(hex("009000"), DesfireResponseAdapter.stripAppendedStatusWord(hex("BB01000000010000"), hex("009000")));
+        // but an error is a single byte
+        assertArrayEquals(hex("F0"), DesfireResponseAdapter.stripAppendedStatusWord(hex("BD01000000020000"), hex("F09000")));
+    }
+
+    @Test
+    public void testIsNativeCommand() {
+        assertTrue(DesfireResponseAdapter.isNativeCommand(SELECT_APPLICATION));
+        assertTrue(DesfireResponseAdapter.isNativeCommand(hex("AF")));
+        assertFalse(DesfireResponseAdapter.isNativeCommand(hex("00A4040007")));
+        assertFalse(DesfireResponseAdapter.isNativeCommand(hex("905A00000300805700")));
+        assertFalse(DesfireResponseAdapter.isNativeCommand(hex("80CA00CF00")));
+        assertFalse(DesfireResponseAdapter.isNativeCommand(hex("FFB0000410")));
+        assertFalse(DesfireResponseAdapter.isNativeCommand(new byte[0]));
+        assertFalse(DesfireResponseAdapter.isNativeCommand(null));
+    }
+
+    @Test
     public void testIsDesfire() {
         assertTrue(DesfireResponseAdapter.isDesfire(hex("3B8180018080")));
         assertFalse(DesfireResponseAdapter.isDesfire(hex("3B8F8001804F0CA0000003060300030000000068")));

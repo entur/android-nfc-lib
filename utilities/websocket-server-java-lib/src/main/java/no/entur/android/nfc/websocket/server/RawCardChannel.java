@@ -17,6 +17,11 @@ import javax.smartcardio.CardException;
  * The jnasmartcardio provider treats every command as an ISO 7816 APDU: it rewrites the class byte if bit 8 is not set
  * (i.e. a native DESFire command 5A becomes 18), and expects a status word in the response (a native DESFire response
  * can be a single byte). So for contactless (T=1) cards, use its raw transmit instead.
+ * <br>
+ * Note that the raw transmit does not handle status words 61 xx (send GET RESPONSE) and 6C xx (resend with Le = xx)
+ * like the jnasmartcardio channel does, so these are returned to the client as-is. This is the same as for the
+ * Android {@code IsoDep.transceive}, which returns the card response untouched. Doing so here would misinterpret
+ * native responses (i.e. DESFire data ending in 61 xx).
  */
 
 public class RawCardChannel {
