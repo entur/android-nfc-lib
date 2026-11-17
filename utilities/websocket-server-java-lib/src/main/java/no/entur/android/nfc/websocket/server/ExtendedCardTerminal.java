@@ -46,4 +46,14 @@ public abstract class ExtendedCardTerminal extends CardTerminal {
     public List<byte[]> transceiveTransparent(List<byte[]> commands) throws CardException {
         return null;
     }
+
+    /**
+     * Whether the reader appends a status word 90 00 to card responses of a single byte (i.e. native DESFire responses).
+     *
+     * @return true if the status word is appended
+     */
+
+    public boolean isStatusWordAppendedToSingleByteResponses() {
+        return false;
+    }
 }

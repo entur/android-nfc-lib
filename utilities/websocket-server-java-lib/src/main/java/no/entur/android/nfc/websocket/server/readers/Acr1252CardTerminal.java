@@ -32,6 +32,12 @@ public class Acr1252CardTerminal extends AcsExtendedCardTerminal {
         return true;
     }
 
+    // verified on an ACR1252U, FW ACR1252U_V111.1: native DESFire SelectApplication returns 00 90 00
+    @Override
+    public boolean isStatusWordAppendedToSingleByteResponses() {
+        return true;
+    }
+
     @Override
     public void startPolling() throws CardException {
         setPICC(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B);

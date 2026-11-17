@@ -74,6 +74,9 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         // native MIFARE Ultralight commands must be translated to PC/SC commands
         private volatile boolean mifareUltralight;
+
+        // DESFire on a reader which appends a status word to single byte (native) responses
+        private volatile boolean stripAppendedStatusWord;
         private final MifareUltralightPcscAdapter mifareUltralightPcscAdapter = new MifareUltralightPcscAdapter();
 
         @Override
@@ -101,6 +104,7 @@ public class WebSocketNfcServer extends WebSocketServer {
             LOGGER.info("Got technologies " + technologies);
 
             this.mifareUltralight = technologies.contains("MifareUltralight");
+            this.stripAppendedStatusWord = DesfireResponseAdapter.isDesfire(atr.getBytes()) && cardTerminal.isStatusWordAppendedToSingleByteResponses();
 
             // empty if the UID could not be read
             byte[] uid = new byte[0];
@@ -170,6 +174,7 @@ public class WebSocketNfcServer extends WebSocketServer {
             this.card = null;
             this.cardChannel = null;
             this.mifareUltralight = false;
+            this.stripAppendedStatusWord = false;
 
             cardServer.cardLost();
         }
@@ -185,7 +190,11 @@ public class WebSocketNfcServer extends WebSocketServer {
                     // one native command might need several APDUs, so translate within the exclusive session
                     return mifareUltralightPcscAdapter.transceive(command, this::transmit);
                 }
-                return transmit(command);
+                byte[] response = transmit(command);
+                if(stripAppendedStatusWord) {
+                    response = DesfireResponseAdapter.stripAppendedStatusWord(command, response);
+                }
+                return response;
             } finally {
                 card.endExclusive();
             }
