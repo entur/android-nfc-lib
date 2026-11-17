@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
+import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1283LReader;
@@ -246,6 +247,34 @@ public class AcsReaderCommandsTest {
         assertArrayEquals(hex("E0000028" + "01FF"), command(reader));
 
         assertFalse(new ACR1252Commands("ACS ACR1252 1S CL Reader", reader("E10000000101")).setBuzzer(0, false));
+    }
+
+    @Test
+    public void testAcr1252Behaviour() {
+        // per the ACR1252U API manual 1.17; default 7F
+        assertEquals(Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER,
+                AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED,
+                AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), Acr1252UReader.parseBehaviour(0x3F));
+        assertEquals(Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.COLOR_SELECT_LED_RED, AcrDefaultLEDAndBuzzerBehaviour.COLOR_SELECT_LED_GREEN), Acr1252UReader.parseBehaviour(0xC0));
+
+        assertEquals(0x08, Acr1252UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER));
+        assertEquals(0x18, Acr1252UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER));
+        assertEquals(0x20, Acr1252UReader.serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER));
+        assertEquals(0x3F, Acr1252UReader.serializeBehaviour(Acr1252UReader.parseBehaviour(0x3F).toArray(new AcrDefaultLEDAndBuzzerBehaviour[0])));
+    }
+
+    @Test
+    public void testAcr1252PICC() throws Exception {
+        // E0 00 00 20, not the ACR122U compatible FF 00 50 / 51, which has another bit layout
+        ReaderWrapper reader = reader("E1000000015F");
+        assertEquals(Integer.valueOf(0x5F), new ACR1252Commands("ACS ACR1252 1S CL Reader", reader).getPICC(0));
+        assertArrayEquals(hex("E000002000"), command(reader));
+
+        reader = reader("E10000000111");
+        assertTrue(new ACR1252Commands("ACS ACR1252 1S CL Reader", reader).setPICC(0, 0x11));
+        assertArrayEquals(hex("E00000200111"), command(reader));
+
+        assertFalse(new ACR1252Commands("ACS ACR1252 1S CL Reader", reader("E10000000101")).setPICC(0, 0x11));
     }
 
     @Test

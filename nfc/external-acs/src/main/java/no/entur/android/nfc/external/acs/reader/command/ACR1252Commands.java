@@ -36,26 +36,29 @@ public class ACR1252Commands extends ACRCommands {
 		this.name = name;
 	}
 
+	/**
+	 * Read the PICC operating parameter (E0 00 00 20 00). Not the ACR122U compatible FF 00 50, which has another bit layout
+	 * (auto polling, ATS generation and polling interval in bits 5 to 7, and the card types in another order).
+	 */
+
 	public Integer getPICC(int slot) throws AcrReaderException {
-		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x50, 0x00, 0x00 };
+		byte[] command = new byte[] { (byte) 0xE0, 0x00, 0x00, 0x20, 0x00 };
 
-		byte[] in = new byte[2];
-
-		// reader.transmit(slot, out, out.length, in, in.length);
+		CommandAPDU response;
 		synchronized (reader) {
 			try {
-				reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo, pseudo.length, in, in.length);
+				response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
-		if (!isSuccessControl(in)) {
-			LOGGER.error("Unable to read PICC");
+		if (!isSuccess(response, 1)) {
+			LOGGER.error("Unable to read PICC: " + ByteArrayHexStringConverter.toHexString(response.getBytes()));
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		final int operation = in[1] & 0xFF;
+		final int operation = response.getData()[0] & 0xFF;
 
 		LOGGER.debug("Read PICC " + Integer.toHexString(operation));
 
@@ -75,37 +78,40 @@ public class ACR1252Commands extends ACRCommands {
 		return setPICC(slot, picc);
 	}
 
+	/**
+	 * Set the PICC operating parameter (E0 00 00 20 01 [parameter]), see {@link #getPICC(int)}.
+	 */
+
 	public Boolean setPICC(int slot, int picc) throws AcrReaderException {
 		if ((picc & 0xFF) != picc) {
-			throw new RuntimeException();
+			throw new IllegalArgumentException("Unexpected PICC " + Integer.toHexString(picc));
 		}
 
-		byte[] pseudo = new byte[] { (byte) 0xFF, 0x00, 0x51, (byte) picc, 0x00 };
+		CommandAPDU command = new CommandAPDU(0xE0, 0x00, 0x00, 0x20, new byte[] { (byte) picc });
 
-		byte[] in;
-
+		CommandAPDU response;
 		synchronized (reader) {
 			try {
-				in = reader.control(slot, Reader.IOCTL_CCID_ESCAPE, pseudo);
+				response = reader.control2(slot, Reader.IOCTL_CCID_ESCAPE, command);
 			} catch (ReaderException e) {
 				throw new AcrReaderException(e);
 			}
 		}
 
-		if (!isSuccessControl(in)) {
-			LOGGER.debug("Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(in));
+		if (!isSuccess(response, 1)) {
+			LOGGER.debug("Unable to set PICC: " + ByteArrayHexStringConverter.toHexString(response.getBytes()));
 
 			throw new IllegalArgumentException("Card responded with error code");
 		}
 
-		final int operation = in[1] & 0xFF;
+		final int operation = response.getData()[0] & 0xFF;
 
 		if (operation != picc) {
 			LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
 			return Boolean.FALSE;
 		} else {
-			LOGGER.debug("Updated PICC " + Integer.toHexString(operation) + " (" + Integer.toHexString(picc) + ")");
+			LOGGER.debug("Updated PICC " + Integer.toHexString(operation));
 
 			return Boolean.TRUE;
 		}

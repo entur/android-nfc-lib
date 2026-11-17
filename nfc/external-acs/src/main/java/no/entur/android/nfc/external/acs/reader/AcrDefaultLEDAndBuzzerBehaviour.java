@@ -26,12 +26,13 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 
 	/**
 	 * 1255: Card insertion and removal events buzzers. <br/>
-	 * 1252: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC). <br/>
-	 * 1252: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC). <br/>
+	 * 1252: Card Insertion and Removal Events Buzzer: To make a beep whenever a card insertion or removal event is detected (for both ICC and PICC);
+	 * the card insertion and card removal events buzzers in API manual 1.15 and later. <br/>
 	 */
 	CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER,
 
 	/**
+	 * 1252: Card Insertion Events Buzzer (API manual 1.15 and later). <br/>
 	 * 1255: Card Insertion Events Buzzer: To make a beep whenever a card insertion event is detected. <br/>
 	 * 1552: Presence Event (Short Buzzer Beep)
 	 */
@@ -39,6 +40,7 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	CARD_INSERTION_EVENT_BUZZER,
 
 	/**
+	 * 1252: Card Removal Events Buzzer, needs the card insertion events buzzer (API manual 1.15 and later). <br/>
 	 * 1255: Card Removal Events Buzzer: To make a beep whenever a card removal event is detected; needs the card insertion events
 	 * buzzer (firmware 2.04.xx and later). <br/>
 	 * 1552: Card Removal Event (Short Buzzer Beep)
@@ -47,7 +49,8 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	CARD_REMOVAL_EVENT_BUZZER,
 
 	/**
-	 * 1252: PN512 Reset Indication Buzzer: To make a beep when the PN512 is reset <br/>
+	 * 1252: PN512 Reset Indication Buzzer: To make a beep when the PN512 is reset (before API manual 1.15, the same bit is now the reader power on
+	 * buzzer) <br/>
 	 * 1281: Contactless Chip Reset Indication Buzzer: To make a beep when the contactless chip is reset. <br/>
 	 */
 
@@ -77,6 +80,7 @@ public enum AcrDefaultLEDAndBuzzerBehaviour {
 	 */
 	COLOR_SELECT_LED_RED,
 	/**
+	 * 1252: Reader Power ON Buzzer (API manual 1.15 and later). <br/>
 	 * 1255: Reader Power ON Buzzer: To make a beep when the reader is powered on (firmware 2.04.xx and later). <br/>
 	 * 1552: Power Up Event (Short Buzzer Beep) <br/>
 	 */

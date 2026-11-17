@@ -14,15 +14,20 @@ public class Acr1252UReader extends AcrReader {
 
 	private static final String TAG = Acr1252UReader.class.getName();
 
+	// default LED and buzzer behaviour (E0 00 00 21), per the ACR1252U API manual 1.17; default 7F.
+	// Before manual 1.15 bit 3 was the card insertion and removal buzzer, bit 4 RFU and bit 5 the PN512 reset indication buzzer.
 	private static final int CARD_OPERATION_BLINKING_LED = 1 << 0;
 	private static final int PICC_POLLING_STATUS_LED = 1 << 1;
 	private static final int PICC_ACTIVATION_STATUS_LED = 1 << 2;
-	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = 1 << 3;
-	// bit 4 RFU
-	private static final int RESET_INDICATION_BUZZER = 1 << 5;
+	private static final int CARD_INSERTION_EVENTS_BUZZER = 1 << 3;
+	// only takes effect if bit 3 is set
+	private static final int CARD_REMOVAL_EVENTS_BUZZER = 1 << 4;
+	private static final int READER_POWER_ON_BUZZER = 1 << 5;
 	private static final int COLOR_SELECT_LED_GREEN = 1 << 6;
 	private static final int COLOR_SELECT_LED_RED = 1 << 7;
 
+	// PICC operating parameter (E0 00 00 20); default 5F
+	private static final int POLL_SRIX = 1 << 6;
 	private static final int POLL_TOPAZ = 1 << 4;
 	private static final int POLL_FELICA_424K = 1 << 3;
 	private static final int POLL_FELICA_212K = 1 << 2;
@@ -48,10 +53,17 @@ public class Acr1252UReader extends AcrReader {
 				operation |= COLOR_SELECT_LED_RED;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.COLOR_SELECT_LED_GREEN) {
 				operation |= COLOR_SELECT_LED_GREEN;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER) {
+				operation |= READER_POWER_ON_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER) {
-				operation |= RESET_INDICATION_BUZZER;
+				// the same bit in API manuals before 1.15
+				operation |= READER_POWER_ON_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER) {
+				operation |= CARD_INSERTION_EVENTS_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER) {
+				operation |= CARD_REMOVAL_EVENTS_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER) {
-				operation |= CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER;
+				operation |= CARD_INSERTION_EVENTS_BUZZER | CARD_REMOVAL_EVENTS_BUZZER;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED) {
 				operation |= PICC_ACTIVATION_STATUS_LED;
 			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED) {
@@ -76,12 +88,16 @@ public class Acr1252UReader extends AcrReader {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.COLOR_SELECT_LED_GREEN);
 		}
 
-		if ((operation & RESET_INDICATION_BUZZER) != 0) {
-			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CONTACTLESS_CHIP_RESET_INDICATION_BUZZER);
+		if ((operation & READER_POWER_ON_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER);
 		}
 
-		if ((operation & CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER) != 0) {
-			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER);
+		if ((operation & CARD_REMOVAL_EVENTS_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER);
+		}
+
+		if ((operation & CARD_INSERTION_EVENTS_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER);
 		}
 
 		if ((operation & PICC_ACTIVATION_STATUS_LED) != 0) {
@@ -123,6 +139,9 @@ public class Acr1252UReader extends AcrReader {
 
 		ArrayList<AcrPICC> values = new ArrayList<AcrPICC>();
 
+		if ((operation & POLL_SRIX) != 0) {
+			values.add(AcrPICC.POLL_SRI_OR_SRIX);
+		}
 		if ((operation & POLL_TOPAZ) != 0) {
 			values.add(AcrPICC.POLL_TOPAZ);
 		}
@@ -156,6 +175,10 @@ public class Acr1252UReader extends AcrReader {
 			}
 			case POLL_TOPAZ: {
 				picc |= POLL_TOPAZ;
+				break;
+			}
+			case POLL_SRI_OR_SRIX: {
+				picc |= POLL_SRIX;
 				break;
 			}
 			case POLL_ISO14443_TYPE_A: {

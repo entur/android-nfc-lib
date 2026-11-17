@@ -1,8 +1,6 @@
 package no.entur.abt.nfc.example.acr;
 
 import android.view.View;
-import android.widget.RadioGroup;
-import android.widget.TextView;
 import androidx.appcompat.widget.SwitchCompat;
 
 import java.util.Arrays;
@@ -15,7 +13,6 @@ import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
 import no.entur.android.nfc.external.acs.reader.AcrAntennaFieldStatus;
 import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
 import no.entur.android.nfc.external.acs.reader.AcrBluetoothTransmissionPower;
-import no.entur.android.nfc.external.acs.reader.AcrCommunicationSpeed;
 import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrLED;
 import no.entur.android.nfc.external.acs.reader.AcrPICC;
@@ -43,7 +40,7 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 				reader::setAutomaticPICCPolling);
 		addSwitch(getString(R.string.acr_controls_automatic_polling), null, reader::setAutomaticPolling);
 
-		addAutomaticPPS(reader);
+		addAutomaticPPS(reader::getAutomaticPICCPollingSpeed, reader::setAutomaticPICCPollingSpeed);
 		addLEDs(reader);
 
 		addSection(getString(R.string.acr_controls_default_behaviour));
@@ -78,39 +75,6 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 				"E0 00 00 21 00",
 				// buzzer on for 100 ms
 				"E0 00 00 28 01 0A");
-	}
-
-	private void addAutomaticPPS(Acr1255UReader reader) {
-		addSection(getString(R.string.acr_controls_pps));
-		TextView current = addValueRow(getString(R.string.acr_controls_pps_current), "…");
-
-		List<AcrCommunicationSpeed> speeds = Arrays.asList(AcrCommunicationSpeed.RATE_106_KBPS, AcrCommunicationSpeed.RATE_212_KBPS, AcrCommunicationSpeed.RATE_424_KBPS);
-		RadioGroup[] groups = new RadioGroup[2];
-		Runnable[] reload = new Runnable[1];
-		Runnable apply = () -> {
-			AcrCommunicationSpeed tx = getSelected(groups[0]);
-			AcrCommunicationSpeed rx = getSelected(groups[1]);
-			if (tx != null && rx != null) {
-				run(getString(R.string.acr_controls_pps) + " = " + tx + ", " + rx, () -> reader.setAutomaticPICCPollingSpeed(tx, rx));
-				reload[0].run();
-			}
-		};
-		addSubheading(getString(R.string.acr_controls_pps_tx));
-		groups[0] = addRadioGroup(speeds, AcrLabels::label, apply);
-		addSubheading(getString(R.string.acr_controls_pps_rx));
-		groups[1] = addRadioGroup(speeds, AcrLabels::label, apply);
-
-		List<View> controls = getChildren(groups[0]);
-		controls.addAll(getChildren(groups[1]));
-
-		// max tx, current tx, max rx, current rx
-		reload[0] = load("read " + getString(R.string.acr_controls_pps), reader::getAutomaticPICCPollingSpeed, (speed) -> {
-			if (speed.size() >= 4) {
-				setSelected(groups[0], speed.get(0));
-				setSelected(groups[1], speed.get(2));
-				current.setText(getString(R.string.acr_controls_pps_value, AcrLabels.label(speed.get(1)), AcrLabels.label(speed.get(3))));
-			}
-		}, controls);
 	}
 
 	/**
