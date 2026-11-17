@@ -180,6 +180,41 @@ public class AcsCardTerminalsTest {
     }
 
     @Test
+    public void testTransceiveTransparentAcr122U() throws CardException {
+        // NTAG: both commands answered, via PN532 InCommunicateThru
+        FakeCardTerminal ntag = new FakeCardTerminal("ACS ACR122U 00 00", () -> new FakeCard(command -> {
+            String hex = toHex(command);
+            if(hex.equals("FF00000003D44260")) {
+                return fromHex("D54300" + NTAG216_VERSION + "9000");
+            }
+            if(hex.equals("FF00000004D4423C00")) {
+                return fromHex("D54300" + NTAG216_SIGNATURE + "9000");
+            }
+            return fromHex("6A81");
+        }));
+
+        List<byte[]> responses = new Acr122UCardTerminal(ntag).transceiveTransparent(Arrays.asList(new byte[]{0x60}, new byte[]{0x3C, 0x00}));
+
+        assertEquals(NTAG216_VERSION, toHex(responses.get(0)));
+        assertEquals(NTAG216_SIGNATURE, toHex(responses.get(1)));
+        assertEquals(Arrays.asList("FF00000003D44260", "FF00000004D4423C00"), takeCommands(ntag));
+
+        // original MIFARE Ultralight: no response (status 01), so the card is selected again after each command
+        FakeCardTerminal ultralight = new FakeCardTerminal("ACS ACR122U 00 00", () -> new FakeCard(command -> {
+            if(toHex(command).equals("FF00000004D44A0100")) {
+                return fromHex("D54B010100440007048FE97AED2E809000");
+            }
+            return fromHex("D543019000");
+        }));
+
+        responses = new Acr122UCardTerminal(ultralight).transceiveTransparent(Arrays.asList(new byte[]{0x60}, new byte[]{0x3C, 0x00}));
+
+        assertEquals(null, responses.get(0));
+        assertEquals(null, responses.get(1));
+        assertEquals(Arrays.asList("FF00000003D44260", "FF00000004D44A0100", "FF00000004D4423C00", "FF00000004D44A0100"), takeCommands(ultralight));
+    }
+
+    @Test
     public void testTransceiveTransparentEndsSessionOnError() {
         FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(command -> {
             if(toHex(command).equals("FFC20000028100")) {
