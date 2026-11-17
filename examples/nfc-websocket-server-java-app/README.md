@@ -1,9 +1,12 @@
 # nfc-websocket-server-java-app
 Server which offers up websocket traffic to locally connected external NFC readers.
 
-Supported readers:
+Supported readers (ACS):
 
  * ACR 1252U
+ * ACR 122U, ACR 1222L, ACR 1251U, ACR 1255U-J1 (USB), ACR 1281U, ACR 1283L, ACR 1552U - untested with actual hardware
+
+Other readers can be added by overriding `ExtendedCardTerminalFactory.createTerminal(..)`.
 
 Supported Andorid tag types:
 
