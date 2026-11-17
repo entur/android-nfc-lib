@@ -3,6 +3,7 @@ package no.entur.android.nfc.websocket.server;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -140,6 +141,38 @@ public class CardPollingServerTest {
 
             terminal.setCardPresent(false);
             assertTrue(listener.disconnectedLatch.await(5, TimeUnit.SECONDS));
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testCardIsDisconnectedWhenPresenceCheckFails() throws Exception {
+        TestCardListener listener = new TestCardListener(0, 1, 1);
+
+        // i.e. the reader is unplugged while the card is present
+        FakeCardTerminal failing = new FakeCardTerminal("Reader") {
+            @Override
+            public boolean isCardPresent() throws CardException {
+                if(!listener.connected.isEmpty()) {
+                    throw new CardException("Reader gone");
+                }
+                return super.isCardPresent();
+            }
+        };
+
+        CardPollingServer server = new CardPollingServer(failing);
+        server.setListener(listener);
+        server.start();
+        try {
+            failing.setCardPresent(true);
+            assertTrue(listener.connectedLatch.await(5, TimeUnit.SECONDS));
+
+            // the listener is told, so that it can release i.e. a reconnected card
+            assertTrue(listener.disconnectedLatch.await(5, TimeUnit.SECONDS));
+            assertSame(listener.connected.get(0), listener.disconnected.get(0));
+
+            waitForDisconnected(failing.getConnected().get(0));
         } finally {
             server.stop();
         }

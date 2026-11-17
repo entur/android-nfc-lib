@@ -85,7 +85,7 @@ public class CardPollingServer implements Runnable {
                         while(isActive()) {
                             try {
                                 Thread.sleep(100);
-                                if(!cardTerminal.isCardPresent()) {
+                                if(!isCardPresent(listener, card, connected)) {
                                     if(connected) {
                                         listener.cardDisconnected(card);
                                     }
@@ -94,7 +94,7 @@ public class CardPollingServer implements Runnable {
                                 }
                             } catch (InterruptedException e) {
                                 Thread.interrupted();
-                                if(!cardTerminal.isCardPresent()) {
+                                if(!isCardPresent(listener, card, connected)) {
                                     if(connected) {
                                         listener.cardDisconnected(card);
                                     }
@@ -131,6 +131,27 @@ public class CardPollingServer implements Runnable {
             }
         }
         LOGGER.info("Stop polling for card");
+    }
+
+    /**
+     * Check whether the connected card is still present. If the check fails (i.e. the reader was unplugged),
+     * the listener is told that the card was disconnected first, so that it can release what it holds for the card
+     * (i.e. a reconnected card), as polling stops.
+     */
+
+    private boolean isCardPresent(CardListener listener, Card card, boolean connected) throws CardException {
+        try {
+            return cardTerminal.isCardPresent();
+        } catch (CardException | RuntimeException e) {
+            if(connected) {
+                try {
+                    listener.cardDisconnected(card);
+                } catch (RuntimeException listenerException) {
+                    e.addSuppressed(listenerException);
+                }
+            }
+            throw e;
+        }
     }
 
     /**
