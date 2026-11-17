@@ -128,6 +128,16 @@ public class AcsCardTerminalsTest {
             return new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, (byte) 0x81};
         }));
         assertDoesNotThrow(new Acr1252CardTerminal(pollingOnly)::startPolling);
+
+        // the ACR1281U needs the enforce ISO14443-4 bit, otherwise a DESFire is only activated at layer 3 (no ISO-DEP)
+        FakeCardTerminal notEnforced = new FakeCardTerminal("ACS ACR1281 1S Dual Reader 00 01", () -> new FakeCard(command -> {
+            if(command[3] == 0x23) {
+                // automatic polling on, but not enforcing ISO14443-4
+                return new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, 0x01};
+            }
+            return new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, command[5]};
+        }));
+        assertThrows(CardException.class, new Acr1281CardTerminal(notEnforced)::startPolling);
     }
 
     @Test
