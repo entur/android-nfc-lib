@@ -32,6 +32,7 @@ import jnasmartcardio.Smartcardio;
 import no.entur.android.nfc.websocket.messages.ByteArrayHexStringConverter;
 import no.entur.android.nfc.websocket.messages.CompositeNfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessage;
+import no.entur.android.nfc.websocket.messages.NfcMessageListener;
 import no.entur.android.nfc.websocket.messages.NfcMessageReader;
 import no.entur.android.nfc.websocket.messages.card.CardServer;
 import no.entur.android.nfc.websocket.messages.reader.ReaderServer;
@@ -59,7 +60,31 @@ public class WebSocketNfcServer extends WebSocketServer {
 
     private CardTerminalsPollingServer cardTerminalsPollingServer;
 
-    private class Attachment implements CardListener, CardServer.Listener, ReaderServer.Listener {
+    /**
+     * A card connection, possibly reconnected. Replaced as a whole, so that the card and channel always match.
+     */
+
+    private static final class CardConnection {
+
+        private final Card card;
+        private final CardChannel channel;
+
+        private CardConnection(Card card) {
+            this.card = card;
+            this.channel = card.getBasicChannel();
+        }
+
+        private byte[] transmit(byte[] command) throws IOException {
+            try {
+                // as-is, so that i.e. native DESFire commands and responses are not mangled
+                return RawCardChannel.transmit(card, channel, command);
+            } catch (CardException e) {
+                throw new IOException(e);
+            }
+        }
+    }
+
+    class Attachment implements CardListener, CardServer.Listener, ReaderServer.Listener {
 
         private CardServer cardServer;
 
@@ -67,10 +92,10 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         private CompositeNfcMessageListener compositeNfcMessageListener;
 
-        private PooledCardTerminal pooledCardTerminal;
+        private volatile PooledCardTerminal pooledCardTerminal;
 
-        private Card card;
-        private CardChannel cardChannel;
+        // set by the polling thread, used by the web socket thread
+        private volatile CardConnection connection;
 
         // native MIFARE Ultralight commands must be translated to PC/SC commands
         private volatile boolean mifareUltralight;
@@ -82,14 +107,25 @@ public class WebSocketNfcServer extends WebSocketServer {
         @Override
         public void cardConnected(Card card) throws CardException {
             LOGGER.info("Card connected");
-            this.card = card;
+            try {
+                connected(card);
+            } catch (CardException | RuntimeException e) {
+                // the polling server does not report a card as disconnected if connecting it failed,
+                // so release a reconnected card here
+                reset(card);
+
+                throw e;
+            }
+        }
+
+        private void connected(Card card) throws CardException {
+            this.connection = new CardConnection(card);
 
             ATR atr = card.getATR();
 
-            this.cardChannel = card.getBasicChannel();
             ExtendedCardTerminal cardTerminal = pooledCardTerminal.getCardTerminal();
 
-            List<String> technologies = new ArrayList<>(cardTerminal.identifyTechnologies(card, cardChannel));
+            List<String> technologies = new ArrayList<>(cardTerminal.identifyTechnologies(card, connection.channel));
 
             mifareUltralightPcscAdapter.reset();
             if(MifareUltralightPcscAdapter.isMifareUltralightCandidate(atr.getHistoricalBytes())) {
@@ -110,10 +146,10 @@ public class WebSocketNfcServer extends WebSocketServer {
             byte[] uid = new byte[0];
 
             // note: might have been reconnected
-            Card current = this.card;
-            current.beginExclusive();
+            CardConnection current = this.connection;
+            current.card.beginExclusive();
             try {
-                ResponseAPDU response = cardChannel.transmit(new CommandAPDU(GET_TAG_ID));
+                ResponseAPDU response = current.channel.transmit(new CommandAPDU(GET_TAG_ID));
                 if (isSuccess(response)) {
                     uid = response.getData();
 
@@ -124,7 +160,7 @@ public class WebSocketNfcServer extends WebSocketServer {
             } catch (CardException e) {
                 LOGGER.info("Unable to read UID", e);
             } finally {
-                current.endExclusive();
+                current.card.endExclusive();
             }
 
             cardServer.cardPresent(technologies, atr.getBytes(), atr.getHistoricalBytes(), uid);
@@ -151,9 +187,7 @@ public class WebSocketNfcServer extends WebSocketServer {
                 if(!cardTerminal.waitForCardPresent(REACTIVATION_TIMEOUT)) {
                     throw new CardException("Card not present after re-activation");
                 }
-                Card reconnected = cardTerminal.connect("*");
-                this.card = reconnected;
-                this.cardChannel = reconnected.getBasicChannel();
+                this.connection = new CardConnection(cardTerminal.connect("*"));
             }
         }
 
@@ -161,22 +195,30 @@ public class WebSocketNfcServer extends WebSocketServer {
         public void cardDisconnected(Card card) {
             LOGGER.info("Card disconnected");
 
-            // disconnect the card if it was reconnected, the polling server disconnects the original card
-            Card current = this.card;
-            if(current != null && current != card) {
+            reset(card);
+
+            cardServer.cardLost();
+        }
+
+        /**
+         * Forget the card, disconnecting it if it was reconnected; the polling server disconnects the original card.
+         *
+         * @param card the original card
+         */
+
+        private void reset(Card card) {
+            CardConnection current = this.connection;
+            this.connection = null;
+            this.mifareUltralight = false;
+            this.stripAppendedStatusWord = false;
+
+            if(current != null && current.card != card) {
                 try {
-                    current.disconnect(false);
+                    current.card.disconnect(false);
                 } catch (Exception e) {
                     LOGGER.debug("Problem disconnecting reconnected card", e);
                 }
             }
-
-            this.card = null;
-            this.cardChannel = null;
-            this.mifareUltralight = false;
-            this.stripAppendedStatusWord = false;
-
-            cardServer.cardLost();
         }
 
         public boolean isSuccess(ResponseAPDU in) {
@@ -184,28 +226,29 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         public byte[] transcieve(byte[] command) throws IOException, CardException {
-            card.beginExclusive();
+            // the polling thread might replace or clear the connection meanwhile, so use the same one throughout
+            CardConnection connection = this.connection;
+            if(connection == null) {
+                throw new CardException("No card");
+            }
+            connection.card.beginExclusive();
             try {
                 if(mifareUltralight) {
                     // one native command might need several APDUs, so translate within the exclusive session
-                    return mifareUltralightPcscAdapter.transceive(command, this::transmit);
+                    return mifareUltralightPcscAdapter.transceive(command, connection::transmit);
                 }
-                byte[] response = transmit(command);
+                byte[] response = connection.transmit(command);
                 if(stripAppendedStatusWord) {
                     response = DesfireResponseAdapter.stripAppendedStatusWord(command, response);
                 }
                 return response;
             } finally {
-                card.endExclusive();
-            }
-        }
-
-        private byte[] transmit(byte[] command) throws IOException {
-            try {
-                // as-is, so that i.e. native DESFire commands and responses are not mangled
-                return RawCardChannel.transmit(card, cardChannel, command);
-            } catch (CardException e) {
-                throw new IOException(e);
+                try {
+                    connection.card.endExclusive();
+                } catch (Exception e) {
+                    // i.e. the card was removed; do not hide the response or the original problem
+                    LOGGER.debug("Problem ending exclusive access", e);
+                }
             }
         }
 
@@ -217,6 +260,13 @@ public class WebSocketNfcServer extends WebSocketServer {
                 LOGGER.info("Already connected to reader " + current.getCardTerminal().getName());
 
                 return true;
+            }
+
+            if(current != null) {
+                // another reader, or the current one was closed: return the current reader to the pool first
+                LOGGER.info("Release reader " + current.getCardTerminal().getName());
+
+                release();
             }
 
             PooledCardTerminal borrow = cardTerminalsPollingPool.borrow(tags);
@@ -231,14 +281,30 @@ public class WebSocketNfcServer extends WebSocketServer {
             return false;
         }
 
+        /**
+         * End polling and return the reader to the pool.
+         */
+
+        void release() {
+            try {
+                onEndPolling();
+            } catch (CardException e) {
+                LOGGER.info("Problem ending polling", e);
+            }
+            onDisconnect();
+        }
+
         @Override
         public boolean onDisconnect() {
             LOGGER.info("on disconnect reader");
 
             PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
-            if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
-                cardTerminalsPollingPool.unborrow(pooledCardTerminal);
+            if(pooledCardTerminal != null) {
                 this.pooledCardTerminal = null;
+
+                if(!pooledCardTerminal.isClosed()) {
+                    cardTerminalsPollingPool.unborrow(pooledCardTerminal);
+                }
             }
 
             return true;
@@ -261,19 +327,19 @@ public class WebSocketNfcServer extends WebSocketServer {
         @Override
         public boolean onEndPolling() throws CardException {
 
-            Card card = this.card;
-            if(card != null) {
+            CardConnection connection = this.connection;
+            if(connection != null) {
                 LOGGER.info("Disconnect card");
                 try {
-                    card.beginExclusive();
-                    card.disconnect(true);
+                    connection.card.beginExclusive();
+                    connection.card.disconnect(true);
                     // end exclusive not necessary here
                     //card.endExclusive();
                     LOGGER.info("Disconnected card");
                 } catch(Exception e) {
                     LOGGER.info("Disconnected card", e);
                 } finally {
-                    this.card = null;
+                    this.connection = null;
                 }
             }
 
@@ -315,8 +381,18 @@ public class WebSocketNfcServer extends WebSocketServer {
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         LOGGER.info("onOpen");
 
+        conn.setAttachment(createAttachment(new WebSocketNfcMessageWriter(conn)));
+    }
+
+    /**
+     * Create the state for a client connection.
+     *
+     * @param writer sends messages to the client
+     * @return attachment
+     */
+
+    Attachment createAttachment(NfcMessageListener writer) {
         Attachment attachment = new Attachment();
-        WebSocketNfcMessageWriter writer = new WebSocketNfcMessageWriter(conn);
         attachment.cardServer = new CardServer(writer);
         attachment.readerServer = new ReaderServer(writer);
 
@@ -328,7 +404,11 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         attachment.readerServer.setListener(attachment);
 
-        conn.setAttachment(attachment);
+        return attachment;
+    }
+
+    CardTerminalsPollingPool getCardTerminalsPollingPool() {
+        return cardTerminalsPollingPool;
     }
 
     @Override
@@ -337,13 +417,7 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         Attachment attachment = conn.getAttachment();
         if(attachment != null) {
-
-            try {
-                attachment.onEndPolling();
-            } catch (CardException e) {
-                LOGGER.info("Problem ending polling", e);
-            }
-            attachment.onDisconnect();
+            attachment.release();
         }
     }
 
