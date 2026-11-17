@@ -27,7 +27,8 @@ public class CardClient implements NfcMessageListener {
 
 	private final RequestResponseMessages messages;
 
-	private long timeout;
+	// set by the tag technology timeout, i.e. from another thread
+	private volatile long timeout;
 
 	private volatile Listener listener;
 

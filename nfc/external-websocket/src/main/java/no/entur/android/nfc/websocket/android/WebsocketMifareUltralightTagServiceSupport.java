@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.entur.android.nfc.external.ExternalNfcTagCallback;
 import no.entur.android.nfc.external.service.tag.TagProxy;
 import no.entur.android.nfc.external.service.tag.TagProxyStore;
 import no.entur.android.nfc.external.service.tag.TagTechnology;
@@ -41,7 +42,19 @@ public class WebsocketMifareUltralightTagServiceSupport extends AbstractTagServi
 
         TagProxy tagProxy = store.add(slotNumber, technologies);
 
-        Intent intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, MifareUltralightTagFactory.TYPE_ULTRALIGHT, uid, atr, tagService, extras);
+        Intent intent;
+        try {
+            intent = mifareUltralightTagFactory.getTag(tagProxy.getHandle(), slotNumber, MifareUltralightTagFactory.TYPE_ULTRALIGHT, uid, atr, tagService, extras);
+        } catch (Exception e) {
+            // i.e. not an NXP tag id; do not keep a tag which was never broadcast
+            LOGGER.info("Problem creating mifare ultralight tag", e);
+
+            store.remove(tagProxy);
+
+            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+
+            return null;
+        }
 
         LOGGER.debug("Broadcast mifare ultralight");
 

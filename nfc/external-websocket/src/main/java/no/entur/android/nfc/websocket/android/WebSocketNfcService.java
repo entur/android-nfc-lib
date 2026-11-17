@@ -40,7 +40,10 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     //binder given to client
     private final IBinder binder = new LocalBinder();
 
-    protected WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
+    protected WebSocketClientFactory factory = new WebSocketClientFactory(2000, WebsocketReaderTechnology.DEFAULT_TIMEOUT);
+
+    // applies the tag timeout to the current client
+    protected WebsocketReaderTechnology readerTechnology = new WebsocketReaderTechnology();
 
     private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
     private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
@@ -132,7 +135,7 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
 
         LOGGER.info("onCreate");
 
-        this.infcTagBinder.setReaderTechnology(new WebsocketReaderTechnology());
+        this.infcTagBinder.setReaderTechnology(readerTechnology);
     }
 
     @Override
@@ -160,6 +163,7 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
             synchronized (this) {
                 this.client = c;
             }
+            readerTechnology.setCardClient(c.getCardClient());
             listener.setClient(c);
 
             broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
@@ -246,6 +250,7 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
                 return;
             }
             this.client = null;
+            readerTechnology.setCardClient(null);
 
             // card lost will not be received from a closed client, so lose the tag now
             TagProxy proxy = this.currentTagProxy;
@@ -329,6 +334,8 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
                 // card lost was not received
                 this.currentTagProxy = null;
                 previous.close();
+
+                sendTagLeftField(previous);
             }
 
             if(technologies.contains("IsoDep")) {

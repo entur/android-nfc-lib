@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 import no.entur.android.nfc.external.service.tag.TagProxy;
+import no.entur.android.nfc.wrapper.ErrorCodes;
+import no.entur.android.nfc.wrapper.tech.TagTechnology;
 import no.entur.android.nfc.websocket.client.WebSocketClient;
 import no.entur.android.nfc.websocket.client.WebSocketClientFactory;
 import no.entur.android.nfc.websocket.client.WebSocketClientListener;
@@ -36,6 +38,10 @@ public class WebSocketNfcServiceTest {
 
     private static final List<String> ISO_DEP = Collections.singletonList("IsoDep");
     private static final byte[] UID = new byte[]{0x04, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+
+    private static final List<String> MIFARE_ULTRALIGHT = Collections.singletonList("MifareUltralight");
+    private static final byte[] ULTRALIGHT_ATR = new byte[]{0x3B, (byte) 0x8F, (byte) 0x80, 0x01, (byte) 0x80, 0x4F, 0x0C, (byte) 0xA0, 0x00, 0x00, 0x03, 0x06, 0x03, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x68};
+    private static final byte[] ULTRALIGHT_HISTORICAL_BYTES = new byte[]{(byte) 0x80, 0x4F, 0x0C, (byte) 0xA0, 0x00, 0x00, 0x03, 0x06, 0x03, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00};
 
     private WebSocketNfcService service;
     private WebSocketClientFactory factory;
@@ -107,6 +113,81 @@ public class WebSocketNfcServiceTest {
         // a late card lost from the closed connection does not send another tag left field
         cardListener.onCardLost();
         verify(service, times(1)).sendTagLeftField(any());
+    }
+
+    @Test
+    public void testMifareUltralightWithoutUid() {
+        CardClient.Listener cardListener = connectAndBeginPolling();
+
+        // the server sends an empty UID if it could not be read
+        cardListener.onCardPresent(client.getCardClient(), MIFARE_ULTRALIGHT, ULTRALIGHT_ATR, ULTRALIGHT_HISTORICAL_BYTES, new byte[0]);
+
+        currentTag();
+    }
+
+    @Test
+    public void testTagWhichCannotBeCreatedIsNotKept() {
+        CardClient.Listener cardListener = connectAndBeginPolling();
+
+        // i.e. not an NXP UID
+        cardListener.onCardPresent(client.getCardClient(), MIFARE_ULTRALIGHT, ULTRALIGHT_ATR, ULTRALIGHT_HISTORICAL_BYTES, new byte[]{0x05, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66});
+
+        assertTrue(service.store.getItems().isEmpty());
+
+        // the next card works
+        cardListener.onCardPresent(client.getCardClient(), MIFARE_ULTRALIGHT, ULTRALIGHT_ATR, ULTRALIGHT_HISTORICAL_BYTES, UID);
+        currentTag();
+    }
+
+    @Test
+    public void testCardPresentWithoutCardLostSendsTagLeftField() {
+        CardClient.Listener cardListener = connectAndBeginPolling();
+
+        cardListener.onCardPresent(client.getCardClient(), ISO_DEP, null, null, UID);
+        TagProxy first = currentTag();
+
+        // card lost was not received
+        cardListener.onCardPresent(client.getCardClient(), ISO_DEP, null, null, UID);
+
+        assertFalse(first.isPresent());
+        verify(service).sendTagLeftField(first);
+    }
+
+    @Test
+    public void testTimeoutIsAppliedToCardClient() throws Exception {
+        WebsocketReaderTechnology readerTechnology = service.readerTechnology;
+
+        connectAndBeginPolling();
+        verify(client.getCardClient()).setTimeout(WebsocketReaderTechnology.DEFAULT_TIMEOUT);
+
+        assertEquals(ErrorCodes.SUCCESS, readerTechnology.setTimeout(TagTechnology.ISO_DEP, 5000));
+        assertEquals(5000, readerTechnology.getTimeout(TagTechnology.ISO_DEP));
+        verify(client.getCardClient()).setTimeout(5000);
+
+        // the remote reader adds a network round trip, so not less than the default
+        readerTechnology.setTimeout(TagTechnology.ISO_DEP, 100);
+        verify(client.getCardClient(), times(2)).setTimeout(WebsocketReaderTechnology.DEFAULT_TIMEOUT);
+        readerTechnology.setTimeout(TagTechnology.ISO_DEP, 5000);
+
+        // the next connection gets the same timeout
+        WebSocketClient next = newClient();
+        when(factory.connect(eq("ws://next"), any())).thenReturn(next);
+        assertTrue(service.connect("ws://next"));
+        verify(next.getCardClient()).setTimeout(5000);
+
+        readerTechnology.resetTimeouts();
+        verify(next.getCardClient()).setTimeout(WebsocketReaderTechnology.DEFAULT_TIMEOUT);
+    }
+
+    private WebSocketClient client;
+
+    private CardClient.Listener connectAndBeginPolling() {
+        client = newClient();
+        when(factory.connect(eq("ws://reader"), any())).thenReturn(client);
+
+        assertTrue(service.connect("ws://reader"));
+        assertTrue(service.beginPolling());
+        return captureCardListener(client);
     }
 
     private TagProxy currentTag() {
