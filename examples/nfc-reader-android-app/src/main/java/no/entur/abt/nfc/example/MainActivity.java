@@ -462,6 +462,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         if(tag != null) {
             showTagDetails(true);
 
+            // identification runs in the background, do not show the result for a previous tag
+            tagDetailIdentify.setText("");
+
             setTagDetailTechTypes(tag);
 
             String readerId = "-";
@@ -478,7 +481,15 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     }
 
     private void setTagDetailsIdentify(Tag tag, Intent intent) throws IOException {
-        List<NfcTargetAnalyzeResult> results = nfcTargetAnalyzer.analyze(tag, intent);
+        List<NfcTargetAnalyzeResult> results;
+        try {
+            results = nfcTargetAnalyzer.analyze(tag, intent);
+        } catch (IOException | RuntimeException e) {
+            runOnUiThread(() -> {
+                tagDetailIdentify.setText(R.string.tagDetailIdentifyFailed);
+            });
+            throw e;
+        }
 
         if(results.isEmpty()) {
             LOGGER.info("Empty analyzer result");

@@ -143,6 +143,127 @@ public class MifareUltralightPcscAdapterTest {
         assertFalse(MifareUltralightPcscAdapter.isMifareUltralight(new byte[0]));
     }
 
+    @Test
+    public void testGetVersionAndReadSignature() throws Exception {
+        byte[] version = hex("0004040201001303");
+        byte[] signature = new byte[32];
+        Arrays.fill(signature, (byte) 0x42);
+
+        assertTrue(adapter.readVersionAndSignature(transparentTerminal(Arrays.asList(version, signature))));
+        assertTrue(adapter.hasMifareUltralightVersion());
+
+        assertArrayEquals(version, adapter.transceive(new byte[]{0x60}, card));
+        assertArrayEquals(signature, adapter.transceive(new byte[]{0x3C, 0x00}, card));
+        // answered from cache, nothing sent to the card
+        assertTrue(card.apdus.isEmpty());
+
+        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x60, 0x00}, card));
+        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x3C}, card));
+    }
+
+    @Test
+    public void testGetVersionNotSupportedByCard() throws Exception {
+        // i.e. original MIFARE Ultralight
+        assertTrue(adapter.readVersionAndSignature(transparentTerminal(Arrays.asList(null, null))));
+        assertFalse(adapter.hasMifareUltralightVersion());
+
+        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x60}, card));
+        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x3C, 0x00}, card));
+    }
+
+    @Test
+    public void testGetVersionNotSupportedByReader() throws Exception {
+        assertFalse(adapter.readVersionAndSignature(transparentTerminal(null)));
+
+        assertThrows(IOException.class, () -> adapter.transceive(new byte[]{0x60}, card));
+    }
+
+    @Test
+    public void testHasMifareUltralightVersion() throws Exception {
+        // MIFARE Ultralight EV1
+        assertTrue(adapter.readVersionAndSignature(transparentTerminal(Arrays.asList(hex("0004030101000B03"), null))));
+        assertTrue(adapter.hasMifareUltralightVersion());
+
+        // other vendor
+        assertTrue(adapter.readVersionAndSignature(transparentTerminal(Arrays.asList(hex("0005040201001303"), null))));
+        assertFalse(adapter.hasMifareUltralightVersion());
+
+        adapter.reset();
+        assertFalse(adapter.hasMifareUltralightVersion());
+    }
+
+    @Test
+    public void testIsMifareUltralightCandidate() {
+        // MIFARE Ultralight paper ticket
+        assertTrue(MifareUltralightPcscAdapter.isMifareUltralightCandidate(new ATR(ULTRALIGHT_ATR).getHistoricalBytes()));
+        // NTAG216 on an ACR1552U, not identified by the reader
+        assertTrue(MifareUltralightPcscAdapter.isMifareUltralightCandidate(new ATR(hex("3B868001804F03F000003B")).getHistoricalBytes()));
+
+        // MIFARE Classic 1K
+        assertFalse(MifareUltralightPcscAdapter.isMifareUltralightCandidate(new ATR(hex("3B8F8001804F0CA000000306030001000000006A")).getHistoricalBytes()));
+        // DESFire
+        assertFalse(MifareUltralightPcscAdapter.isMifareUltralightCandidate(new ATR(hex("3B8180018080")).getHistoricalBytes()));
+        assertFalse(MifareUltralightPcscAdapter.isMifareUltralightCandidate(null));
+    }
+
+    private static ExtendedCardTerminal transparentTerminal(List<byte[]> responses) {
+        return new FakeExtendedCardTerminal(responses);
+    }
+
+    private static class FakeExtendedCardTerminal extends ExtendedCardTerminal {
+
+        private final List<byte[]> responses;
+
+        FakeExtendedCardTerminal(List<byte[]> responses) {
+            super(new FakeCardTerminal("Fake"));
+            this.responses = responses;
+        }
+
+        @Override
+        public List<byte[]> transceiveTransparent(List<byte[]> commands) {
+            assertEquals(Arrays.asList("60", "3C00"), commands.stream().map(MifareUltralightPcscAdapterTest::toHex).collect(java.util.stream.Collectors.toList()));
+            return responses;
+        }
+
+        @Override
+        public void startPolling() {
+        }
+
+        @Override
+        public void stopPolling() {
+        }
+
+        @Override
+        public List<String> identifyTechnologies(javax.smartcardio.Card card, javax.smartcardio.CardChannel channel) {
+            return java.util.Collections.emptyList();
+        }
+
+        @Override
+        public String getName() {
+            return "Fake";
+        }
+
+        @Override
+        public javax.smartcardio.Card connect(String protocol) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isCardPresent() {
+            return false;
+        }
+
+        @Override
+        public boolean waitForCardPresent(long timeout) {
+            return false;
+        }
+
+        @Override
+        public boolean waitForCardAbsent(long timeout) {
+            return false;
+        }
+    }
+
     private static byte[] hex(String hex) {
         byte[] bytes = new byte[hex.length() / 2];
         for (int i = 0; i < bytes.length; i++) {

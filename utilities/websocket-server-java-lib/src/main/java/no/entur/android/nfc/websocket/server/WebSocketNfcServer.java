@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,13 @@ public class WebSocketNfcServer extends WebSocketServer {
 
     private static final byte[] GET_TAG_ID = new byte[] { (byte) 0xFF, (byte) 0xCA, 0x00, 0x00, 0x00 };
 
+    // the reader detects the card again after a transparent session
+    private static final long REACTIVATION_TIMEOUT = 2000;
+
+    private static String toHexString(byte[] bytes) {
+        return bytes != null ? ByteArrayHexStringConverter.toHexString(bytes) : "-";
+    }
+
     private final static Logger LOGGER = LoggerFactory.getLogger(WebSocketNfcServer.class);
 
     private final NfcMessageReader reader = new NfcMessageReader();
@@ -78,7 +86,17 @@ public class WebSocketNfcServer extends WebSocketServer {
             this.cardChannel = card.getBasicChannel();
             ExtendedCardTerminal cardTerminal = pooledCardTerminal.getCardTerminal();
 
-            List<String> technologies = cardTerminal.identifyTechnologies(card, cardChannel);
+            List<String> technologies = new ArrayList<>(cardTerminal.identifyTechnologies(card, cardChannel));
+
+            mifareUltralightPcscAdapter.reset();
+            if(MifareUltralightPcscAdapter.isMifareUltralightCandidate(atr.getHistoricalBytes())) {
+                readVersionAndSignature(cardTerminal);
+
+                if(mifareUltralightPcscAdapter.hasMifareUltralightVersion() && !technologies.contains("MifareUltralight")) {
+                    // i.e. NTAG
+                    technologies.add("MifareUltralight");
+                }
+            }
 
             LOGGER.info("Got technologies " + technologies);
 
@@ -87,7 +105,9 @@ public class WebSocketNfcServer extends WebSocketServer {
             // empty if the UID could not be read
             byte[] uid = new byte[0];
 
-            card.beginExclusive();
+            // note: might have been reconnected
+            Card current = this.card;
+            current.beginExclusive();
             try {
                 ResponseAPDU response = cardChannel.transmit(new CommandAPDU(GET_TAG_ID));
                 if (isSuccess(response)) {
@@ -100,15 +120,53 @@ public class WebSocketNfcServer extends WebSocketServer {
             } catch (CardException e) {
                 LOGGER.info("Unable to read UID", e);
             } finally {
-                card.endExclusive();
+                current.endExclusive();
             }
 
             cardServer.cardPresent(technologies, atr.getBytes(), atr.getHistoricalBytes(), uid);
         }
 
+        /**
+         * Read GET_VERSION and READ_SIG via the reader, if supported. This re-activates the card,
+         * so reconnect afterwards.
+         */
+
+        private void readVersionAndSignature(ExtendedCardTerminal cardTerminal) throws CardException {
+            boolean reactivated;
+            try {
+                reactivated = mifareUltralightPcscAdapter.readVersionAndSignature(cardTerminal);
+            } catch (CardException e) {
+                LOGGER.warn("Unable to read version and signature", e);
+
+                // might have been re-activated
+                reactivated = true;
+            }
+            if(reactivated) {
+                LOGGER.info("Read version " + toHexString(mifareUltralightPcscAdapter.getVersion()) + " and signature " + toHexString(mifareUltralightPcscAdapter.getSignature()) + ", reconnect");
+
+                if(!cardTerminal.waitForCardPresent(REACTIVATION_TIMEOUT)) {
+                    throw new CardException("Card not present after re-activation");
+                }
+                Card reconnected = cardTerminal.connect("*");
+                this.card = reconnected;
+                this.cardChannel = reconnected.getBasicChannel();
+            }
+        }
+
         @Override
         public void cardDisconnected(Card card) {
             LOGGER.info("Card disconnected");
+
+            // disconnect the card if it was reconnected, the polling server disconnects the original card
+            Card current = this.card;
+            if(current != null && current != card) {
+                try {
+                    current.disconnect(false);
+                } catch (Exception e) {
+                    LOGGER.debug("Problem disconnecting reconnected card", e);
+                }
+            }
+
             this.card = null;
             this.cardChannel = null;
             this.mifareUltralight = false;
@@ -134,14 +192,9 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         private byte[] transmit(byte[] command) throws IOException {
-            ByteBuffer outputBuffer = ByteBuffer.allocate(1024);
             try {
-                int count = cardChannel.transmit(ByteBuffer.wrap(command), outputBuffer);
-
-                byte[] response = new byte[count];
-                System.arraycopy(outputBuffer.array(), 0, response , 0, response .length);
-
-                return response;
+                // as-is, so that i.e. native DESFire commands and responses are not mangled
+                return RawCardChannel.transmit(card, cardChannel, command);
             } catch (CardException e) {
                 throw new IOException(e);
             }

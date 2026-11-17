@@ -2,6 +2,10 @@ package no.entur.android.nfc.websocket.server;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.smartcardio.CardException;
 
 /**
  * Translates native MIFARE Ultralight commands (as sent by Android's {@code MifareUltralight} and {@code NfcA})
@@ -12,6 +16,8 @@ import java.io.IOException;
  *     <li>READ (0x30): READ BINARY FF B0 00 [page] 10, returns 16 bytes (4 pages)</li>
  *     <li>WRITE (0xA2): UPDATE BINARY FF D6 00 [page] 04 [data], returns ACK (0x0A)</li>
  *     <li>FAST_READ (0x3A): emulated using READ BINARY, returns (end - start + 1) pages</li>
+ *     <li>GET_VERSION (0x60) and READ_SIG (0x3C): returned from the values read when the card was detected,
+ *     see {@link #readVersionAndSignature(ExtendedCardTerminal)}; fail if not supported by the card or the reader</li>
  * </ul>
  */
 
@@ -30,6 +36,12 @@ public class MifareUltralightPcscAdapter {
     public static final int READ = 0x30;
     public static final int WRITE = 0xA2;
     public static final int FAST_READ = 0x3A;
+    public static final byte GET_VERSION = 0x60;
+    public static final byte READ_SIG = 0x3C;
+
+    private static final byte VENDOR_NXP = 0x04;
+    private static final byte PRODUCT_TYPE_MIFARE_ULTRALIGHT = 0x03;
+    private static final byte PRODUCT_TYPE_NTAG = 0x04;
 
     public static final byte ACK = 0x0A;
 
@@ -48,6 +60,15 @@ public class MifareUltralightPcscAdapter {
      */
 
     public static boolean isMifareUltralight(byte[] historicalBytes) {
+        if(!isPcscStorageCard(historicalBytes)) {
+            return false;
+        }
+        int cardName = ((historicalBytes[9] & 0xFF) << 8) | (historicalBytes[10] & 0xFF);
+
+        return cardName == CARD_NAME_MIFARE_ULTRALIGHT || cardName == CARD_NAME_MIFARE_ULTRALIGHT_C;
+    }
+
+    private static boolean isPcscStorageCard(byte[] historicalBytes) {
         if(historicalBytes == null || historicalBytes.length < 11) {
             return false;
         }
@@ -59,9 +80,70 @@ public class MifareUltralightPcscAdapter {
                 return false;
             }
         }
-        int cardName = ((historicalBytes[9] & 0xFF) << 8) | (historicalBytes[10] & 0xFF);
+        return true;
+    }
 
-        return cardName == CARD_NAME_MIFARE_ULTRALIGHT || cardName == CARD_NAME_MIFARE_ULTRALIGHT_C;
+    /**
+     * Check whether a card might be a MIFARE Ultralight or NTAG, so that its version is worth reading:
+     * either identified as MIFARE Ultralight, or a card without ISO-DEP which the reader did not identify
+     * (i.e. an NTAG216 on an ACR1552U has historical bytes 80 4F 03 F0 00 00).
+     *
+     * @param historicalBytes historical bytes from the ATR
+     * @return true if candidate
+     */
+
+    public static boolean isMifareUltralightCandidate(byte[] historicalBytes) {
+        if(isMifareUltralight(historicalBytes)) {
+            return true;
+        }
+        return historicalBytes != null && historicalBytes.length >= 2 && historicalBytes[0] == (byte) 0x80 && historicalBytes[1] == 0x4F && !isPcscStorageCard(historicalBytes);
+    }
+
+    // cached GET_VERSION and READ_SIG responses, null if not available
+    private volatile byte[] version;
+    private volatile byte[] signature;
+
+    /**
+     * Read version (GET_VERSION) and signature (READ_SIG) via a transparent exchange, if supported by the terminal.
+     * These are static for a card, so they are cached and returned for later commands. Reading them re-activates
+     * the card, so this is done before the card is used.
+     *
+     * @param terminal terminal
+     * @return true if the transparent exchange was performed, so any connection to the card must be reestablished
+     */
+
+    public boolean readVersionAndSignature(ExtendedCardTerminal terminal) throws CardException {
+        reset();
+
+        List<byte[]> responses = terminal.transceiveTransparent(Arrays.asList(new byte[]{GET_VERSION}, new byte[]{READ_SIG, 0x00}));
+        if(responses == null) {
+            return false;
+        }
+        this.version = responses.get(0);
+        this.signature = responses.get(1);
+        return true;
+    }
+
+    /**
+     * @return true if the version is from a NXP MIFARE Ultralight (EV1 and later) or NTAG
+     */
+
+    public boolean hasMifareUltralightVersion() {
+        byte[] version = this.version;
+        return version != null && version.length >= 3 && version[1] == VENDOR_NXP && (version[2] == PRODUCT_TYPE_MIFARE_ULTRALIGHT || version[2] == PRODUCT_TYPE_NTAG);
+    }
+
+    public byte[] getVersion() {
+        return version;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public void reset() {
+        this.version = null;
+        this.signature = null;
     }
 
     public byte[] transceive(byte[] command, ApduTransmitter transmitter) throws IOException {
@@ -107,6 +189,16 @@ public class MifareUltralightPcscAdapter {
                 }
                 return pages;
             }
+            case GET_VERSION: {
+                checkLength(command, 1);
+
+                return getCached("GET_VERSION", version);
+            }
+            case READ_SIG: {
+                checkLength(command, 2);
+
+                return getCached("READ_SIG", signature);
+            }
             default: {
                 throw new IOException("Unsupported MIFARE Ultralight command " + ByteArrayHexStringConverter.toHexString(new byte[]{command[0]}));
             }
@@ -135,6 +227,14 @@ public class MifareUltralightPcscAdapter {
         byte[] data = new byte[response.length - 2];
         System.arraycopy(response, 0, data, 0, data.length);
         return data;
+    }
+
+    private static byte[] getCached(String name, byte[] value) throws IOException {
+        if(value == null) {
+            // not supported by the card (i.e. original MIFARE Ultralight) or the reader
+            throw new IOException(name + " not available");
+        }
+        return value.clone();
     }
 
     private static void checkLength(byte[] command, int length) throws IOException {

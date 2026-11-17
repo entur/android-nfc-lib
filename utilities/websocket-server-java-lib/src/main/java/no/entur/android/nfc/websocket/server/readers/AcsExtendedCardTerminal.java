@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -224,6 +225,153 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
         LOGGER.debug("Updated " + name + " " + Integer.toHexString(value));
 
         return true;
+    }
+
+    /**
+     * Whether the reader supports PC/SC part 3 transparent sessions via escape commands (verified per reader).
+     */
+
+    protected boolean isTransparentSessionSupported() {
+        return false;
+    }
+
+    /**
+     * Exchange native commands using a PC/SC part 3 transparent session, sent as escape commands:
+     * start session, switch protocol to ISO 14443-A layer 3, exchange each command, end session.
+     * Switching protocol re-activates the card.
+     */
+
+    @Override
+    public List<byte[]> transceiveTransparent(List<byte[]> commands) throws CardException {
+        if(!isTransparentSessionSupported()) {
+            return null;
+        }
+        try {
+            return transceiveTransparentSession(commands);
+        } finally {
+            try {
+                restoreAfterTransparentSession();
+            } catch (CardException e) {
+                LOGGER.warn("Problem restoring card after transparent session", e);
+            }
+        }
+    }
+
+    /**
+     * Restore normal card handling after a transparent session, i.e. have the reader detect the card again.
+     */
+
+    protected void restoreAfterTransparentSession() throws CardException {
+    }
+
+    private List<byte[]> transceiveTransparentSession(List<byte[]> commands) throws CardException {
+        Card ca = delegate.connect("DIRECT");
+        try {
+            ca.beginExclusive();
+            try {
+                checkTransparentStatus(ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_START_SESSION));
+                try {
+                    checkTransparentStatus(ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_SWITCH_PROTOCOL_ISO14443A_LAYER_3));
+
+                    List<byte[]> responses = new ArrayList<>(commands.size());
+                    for (byte[] command : commands) {
+                        if(command.length > 127) {
+                            throw new AcsCardException("Command too long for transparent exchange");
+                        }
+                        byte[] exchange = new byte[7 + command.length];
+                        exchange[0] = (byte) 0xFF;
+                        exchange[1] = (byte) 0xC2;
+                        exchange[2] = 0x00;
+                        exchange[3] = 0x01; // transparent exchange
+                        exchange[4] = (byte) (2 + command.length);
+                        exchange[5] = (byte) 0x95; // transceive data object
+                        exchange[6] = (byte) command.length;
+                        System.arraycopy(command, 0, exchange, 7, command.length);
+
+                        responses.add(getTransparentResponse(ca.transmitControlCommand(SCARD_CTL_CODE, exchange)));
+                    }
+                    return responses;
+                } finally {
+                    try {
+                        ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_END_SESSION);
+                    } catch (CardException e) {
+                        LOGGER.warn("Problem ending transparent session", e);
+                    }
+                }
+            } finally {
+                ca.endExclusive();
+            }
+        } finally {
+            disconnect(ca);
+        }
+    }
+
+    protected static final byte[] TRANSPARENT_START_SESSION = new byte[]{(byte) 0xFF, (byte) 0xC2, 0x00, 0x00, 0x02, (byte) 0x81, 0x00};
+    protected static final byte[] TRANSPARENT_END_SESSION = new byte[]{(byte) 0xFF, (byte) 0xC2, 0x00, 0x00, 0x02, (byte) 0x82, 0x00};
+    protected static final byte[] TRANSPARENT_SWITCH_PROTOCOL_ISO14443A_LAYER_3 = new byte[]{(byte) 0xFF, (byte) 0xC2, 0x00, 0x02, 0x04, (byte) 0x8F, 0x02, 0x00, 0x03};
+
+    private static void checkTransparentStatus(byte[] response) throws AcsCardException {
+        if(!isTransparentSuccess(response)) {
+            throw new AcsCardException("Transparent session failed: " + ByteArrayHexStringConverter.toHexString(response));
+        }
+    }
+
+    // response is data objects, then SW1 SW2. The generic error status data object C0 03 00 90 00 indicates success.
+    private static boolean isTransparentSuccess(byte[] response) {
+        if(response == null || response.length < 2 || (response[response.length - 2] & 0xFF) != 0x90 || response[response.length - 1] != 0x00) {
+            return false;
+        }
+        byte[] status = getDataObject(response, 0xC0);
+
+        return status != null && status.length == 3 && status[0] == 0x00 && (status[1] & 0xFF) == 0x90 && status[2] == 0x00;
+    }
+
+    /**
+     * @param response transparent exchange response
+     * @return card response (data object 97), or null if the card did not respond
+     */
+
+    protected static byte[] getTransparentResponse(byte[] response) {
+        if(!isTransparentSuccess(response)) {
+            return null;
+        }
+        return getDataObject(response, 0x97);
+    }
+
+    // simple BER-TLV with single byte tags, excluding the trailing status word
+    protected static byte[] getDataObject(byte[] response, int tag) {
+        int offset = 0;
+        int limit = response.length - 2;
+        while(offset + 2 <= limit) {
+            int t = response[offset] & 0xFF;
+            int length = response[offset + 1] & 0xFF;
+            int valueOffset = offset + 2;
+            if(length == 0x81) {
+                if(valueOffset >= limit) {
+                    return null;
+                }
+                length = response[valueOffset] & 0xFF;
+                valueOffset++;
+            } else if(length == 0x82) {
+                if(valueOffset + 1 >= limit) {
+                    return null;
+                }
+                length = ((response[valueOffset] & 0xFF) << 8) | (response[valueOffset + 1] & 0xFF);
+                valueOffset += 2;
+            } else if(length > 0x7F) {
+                return null;
+            }
+            if(valueOffset + length > limit) {
+                return null;
+            }
+            if(t == tag) {
+                byte[] value = new byte[length];
+                System.arraycopy(response, valueOffset, value, 0, length);
+                return value;
+            }
+            offset = valueOffset + length;
+        }
+        return null;
     }
 
     protected static void disconnect(Card card) {

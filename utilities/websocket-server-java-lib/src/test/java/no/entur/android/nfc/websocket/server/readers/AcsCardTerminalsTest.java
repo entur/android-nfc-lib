@@ -120,6 +120,76 @@ public class AcsCardTerminalsTest {
         assertDisconnected(terminal);
     }
 
+    // responses captured from an ACR1552U (FW 1.01.01) with an NTAG216 and an original MIFARE Ultralight
+    private static final String NTAG216_VERSION = "0004040201001303";
+    private static final String NTAG216_SIGNATURE = "78575BA6DC2A4CB972513599E2B74FED2E40308F882C15EF22A8780851968E30";
+
+    @Test
+    public void testTransceiveTransparent() throws CardException {
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(command -> {
+            String hex = toHex(command);
+            switch (hex) {
+                case "FFC20000028100": // start session
+                case "FFC20000028200": // end session
+                    return fromHex("C0030090009000");
+                case "FFC20002048F020003": // switch protocol
+                    return fromHex("C0030090008F01009000");
+                case "FFC2000103950160": // GET_VERSION
+                    return fromHex("C00300900092010096020000" + "9708" + NTAG216_VERSION + "9000");
+                case "FFC200010495023C00": // READ_SIG
+                    return fromHex("C00300900092010096020000" + "9720" + NTAG216_SIGNATURE + "9000");
+                case "FFC2000103950130": // card does not respond, i.e. not supported
+                    return fromHex("C0030164019000");
+                case "E00000230100": // automatic polling off
+                    return fromHex("E10000000100");
+                case "E00000230101": // automatic polling on
+                    return fromHex("E10000000101");
+                default:
+                    return fromHex("6A81");
+            }
+        }));
+
+        List<byte[]> responses = new Acr1552CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60}, new byte[]{0x3C, 0x00}, new byte[]{0x30}));
+
+        assertEquals(NTAG216_VERSION, toHex(responses.get(0)));
+        assertEquals(NTAG216_SIGNATURE, toHex(responses.get(1)));
+        assertEquals(null, responses.get(2));
+
+        // then the card is detected again by toggling automatic polling
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC200010495023C00", "FFC2000103950130", "FFC20000028200", "E00000230100", "E00000230101"), takeCommands(terminal));
+    }
+
+    @Test
+    public void testTransceiveTransparentEndsSessionOnError() {
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(command -> {
+            if(toHex(command).equals("FFC20000028100")) {
+                return fromHex("C0030090009000");
+            }
+            // i.e. switch protocol failed
+            return fromHex("C0030164019000");
+        }));
+
+        assertThrows(CardException.class, () -> new Acr1552CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60})));
+
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC20000028200", "E00000230100"), takeCommands(terminal));
+    }
+
+    @Test
+    public void testTransceiveTransparentNotSupported() throws CardException {
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1281 1S Dual Reader PICC");
+
+        assertEquals(null, new Acr1281CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60})));
+        assertTrue(terminal.getConnected().isEmpty());
+    }
+
+    private static byte[] fromHex(String hex) {
+        byte[] bytes = new byte[hex.length() / 2];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+        }
+        return bytes;
+    }
+
     @Test
     public void testIdentifyTechnologies() {
         Acr1552CardTerminal reader = new Acr1552CardTerminal(new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC"));

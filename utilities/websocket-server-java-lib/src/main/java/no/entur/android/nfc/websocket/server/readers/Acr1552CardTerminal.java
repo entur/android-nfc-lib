@@ -29,6 +29,26 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
         return getFirmwareUsingEscapeCommand();
     }
 
+    // verified on an ACR1552U, FW 1.01.01
+    @Override
+    protected boolean isTransparentSessionSupported() {
+        return true;
+    }
+
+    /**
+     * After a transparent session, the card stays activated in a generic mode where i.e. READ BINARY is not supported,
+     * so have the reader detect the card again by toggling automatic polling (which is on while polling for cards).
+     */
+
+    @Override
+    protected void restoreAfterTransparentSession() throws CardException {
+        setAutomaticPICCPolling(0);
+        delegate.waitForCardAbsent(CARD_ABSENT_TIMEOUT);
+        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING);
+    }
+
+    private static final long CARD_ABSENT_TIMEOUT = 1000;
+
     /**
      * Set PICC polling type using escape command E0 00 01 20 02 [picc high] [picc low].
      * Note that ISO14443 type A and B are in the high byte, see {@link #PICC_ISO14443_TYPE_A}.

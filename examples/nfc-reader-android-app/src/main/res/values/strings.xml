@@ -43,6 +43,7 @@
 
     <string name="tagDetailIdentifyTitle">Identified as</string>
     <string name="tagDetailIdentifyUnknown">Unknown</string>
+    <string name="tagDetailIdentifyFailed">Unable to identify</string>
     <string name="preferences_network_summary">Network configuration</string>
     <string name="preferences_network_title">Network</string>
     <string name="preferences_mqtt_broker_host">MQTT broker host</string>

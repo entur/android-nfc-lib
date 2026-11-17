@@ -11,7 +11,8 @@ Other readers can be added by overriding `ExtendedCardTerminalFactory.createTerm
 Supported Andorid tag types:
 
  * `IsoDep`
- * `MifareUltralight` (and `NfcA`) - READ, WRITE and FAST_READ commands, translated to PC/SC storage card commands
+ * `MifareUltralight` (and `NfcA`), including NTAG - READ, WRITE and FAST_READ commands, translated to PC/SC storage card commands. 
+   GET_VERSION and READ_SIG are read once when the card is detected (ACR 1552U only, using a PC/SC transparent session), and only for cards which support them.
 
 ## Usage
 Run command
