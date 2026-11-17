@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,6 +15,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.smartcardio.ATR;
 import javax.smartcardio.Card;
@@ -40,6 +43,20 @@ public class WebSocketNfcServerTest {
      */
 
     private static class FakeChannelCard extends FakeCard {
+
+        // runs once when exclusive access begins, i.e. to change the current card while a command is handled
+        private volatile Runnable onBeginExclusive;
+
+        @Override
+        public void beginExclusive() throws CardException {
+            super.beginExclusive();
+
+            Runnable runnable = onBeginExclusive;
+            if(runnable != null) {
+                onBeginExclusive = null;
+                runnable.run();
+            }
+        }
 
         @Override
         public ATR getATR() {
@@ -91,6 +108,14 @@ public class WebSocketNfcServerTest {
         // GET_VERSION and READ_SIG responses, null if the card did not respond
         private volatile List<byte[]> transparentResponses = Arrays.asList(fromHex("0004040201001303"), new byte[32]);
 
+        // runs while the version and signature are read, i.e. to end polling meanwhile
+        private volatile Runnable onTransparent;
+
+        private volatile boolean cardPresent;
+
+        // i.e. the reader was unplugged
+        private volatile boolean presenceFails;
+
         private FakeReader(String name, String tag) {
             super(null);
             this.name = name;
@@ -115,6 +140,10 @@ public class WebSocketNfcServerTest {
         @Override
         public List<byte[]> transceiveTransparent(List<byte[]> commands) {
             // GET_VERSION and READ_SIG, which re-activates the card
+            Runnable runnable = onTransparent;
+            if(runnable != null) {
+                runnable.run();
+            }
             return transparentResponses;
         }
 
@@ -131,8 +160,11 @@ public class WebSocketNfcServerTest {
         }
 
         @Override
-        public boolean isCardPresent() {
-            return false;
+        public boolean isCardPresent() throws CardException {
+            if(presenceFails) {
+                throw new CardException("Reader gone");
+            }
+            return cardPresent;
         }
 
         @Override
@@ -174,7 +206,8 @@ public class WebSocketNfcServerTest {
         assertTrue(attachment.onConnect(Collections.singletonList("a")));
 
         FakeCard card = new FakeChannelCard();
-        assertThrows(IllegalStateException.class, () -> attachment.cardConnected(card));
+        CardListener listener = beginPolling(attachment);
+        assertThrows(IllegalStateException.class, () -> listener.cardConnected(card));
 
         // the polling server disconnects the original card, so only the reconnected card
         assertEquals(1, reader.connected.size());
@@ -196,8 +229,10 @@ public class WebSocketNfcServerTest {
         WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
         assertTrue(attachment.onConnect(Collections.singletonList("a")));
 
+        CardListener listener = beginPolling(attachment);
+
         FakeCard card = new FakeChannelCard();
-        attachment.cardConnected(card);
+        listener.cardConnected(card);
 
         // like Android's own NFC reader, the card is lost
         assertThrows(CardLostException.class, () -> attachment.transcieve(new byte[]{0x60}));
@@ -205,18 +240,164 @@ public class WebSocketNfcServerTest {
 
         // until it is removed and presented again; removing it does not report it as lost again
         assertThrows(CardLostException.class, () -> attachment.transcieve(new byte[]{0x30, 0x04}));
-        attachment.cardDisconnected(card);
+        listener.cardDisconnected(card);
         assertEquals(1, count(messages, CardLostMessage.class));
 
         FakeCard next = new FakeChannelCard();
-        attachment.cardConnected(next);
+        listener.cardConnected(next);
 
         // the command reaches the card again (the fake card returns no data, so READ fails, but not as lost)
         IOException e = assertThrows(IOException.class, () -> attachment.transcieve(new byte[]{0x30, 0x04}));
         assertFalse(e instanceof CardLostException, e.toString());
 
-        attachment.cardDisconnected(next);
+        listener.cardDisconnected(next);
         assertEquals(2, count(messages, CardLostMessage.class));
+    }
+
+    @Test
+    public void testLostCardDoesNotLoseTheNextCard() throws Exception {
+        FakeReader reader = new FakeReader("Reader", "a");
+        // original MIFARE Ultralight
+        reader.transparentResponses = Arrays.asList(null, null);
+        WebSocketNfcServer server = server(reader);
+
+        List<NfcMessage> messages = new CopyOnWriteArrayList<>();
+        WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
+        assertTrue(attachment.onConnect(Collections.singletonList("a")));
+        CardListener listener = beginPolling(attachment);
+
+        FakeCard first = new FakeChannelCard();
+        listener.cardConnected(first);
+        FakeChannelCard reconnected = (FakeChannelCard) reader.connected.get(0);
+
+        // the next card answers GET_VERSION
+        reader.transparentResponses = Arrays.asList(fromHex("0004040201001303"), new byte[32]);
+
+        // the first card is removed, and the next card presented, while GET_VERSION is handled for the first card
+        FakeCard next = new FakeChannelCard();
+        reconnected.onBeginExclusive = () -> {
+            listener.cardDisconnected(first);
+            try {
+                listener.cardConnected(next);
+            } catch (CardException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        assertThrows(CardLostException.class, () -> attachment.transcieve(new byte[]{0x60}));
+
+        // the first card was reported lost once, when removed, and the next card is not lost
+        assertEquals(1, count(messages, CardLostMessage.class));
+        assertEquals(2, count(messages, CardPresentMessage.class));
+        assertArrayEquals(fromHex("0004040201001303"), attachment.transcieve(new byte[]{0x60}));
+    }
+
+    @Test
+    public void testCardDetectedWhilePollingEndsIsIgnored() throws Exception {
+        FakeReader reader = new FakeReader("Reader", "a");
+        WebSocketNfcServer server = server(reader);
+
+        List<NfcMessage> messages = new CopyOnWriteArrayList<>();
+        WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
+        assertTrue(attachment.onConnect(Collections.singletonList("a")));
+        CardListener listener = beginPolling(attachment);
+
+        // polling ends while the version and signature are read
+        reader.onTransparent = () -> {
+            try {
+                assertTrue(attachment.onEndPolling());
+            } catch (CardException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        FakeCard card = new FakeChannelCard();
+        listener.cardConnected(card);
+
+        // the card reconnected after reading the version is disconnected, and the client is not told about the card
+        assertEquals(1, reader.connected.size());
+        assertTrue(reader.connected.get(0).isDisconnected());
+        assertEquals(0, count(messages, CardPresentMessage.class));
+        assertThrows(CardException.class, () -> attachment.transcieve(new byte[]{0x30, 0x04}));
+
+        // a late removal is not reported either
+        listener.cardDisconnected(card);
+        assertEquals(0, count(messages, CardLostMessage.class));
+    }
+
+    @Test
+    public void testCardEventsFromPreviousReaderAreIgnored() throws Exception {
+        FakeReader first = new FakeReader("First", "a");
+        FakeReader second = new FakeReader("Second", "b");
+        WebSocketNfcServer server = server(first, second);
+
+        List<NfcMessage> messages = new CopyOnWriteArrayList<>();
+        WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
+        assertTrue(attachment.onConnect(Collections.singletonList("a")));
+        CardListener firstListener = beginPolling(attachment);
+
+        // connect to another reader, and a card is presented there
+        assertTrue(attachment.onConnect(Collections.singletonList("b")));
+        CardListener secondListener = beginPolling(attachment);
+        secondListener.cardConnected(new FakeChannelCard());
+
+        // late events from the first reader, i.e. still in flight
+        FakeCard late = new FakeChannelCard();
+        firstListener.cardConnected(late);
+        firstListener.cardDisconnected(late);
+
+        // do not change the current card, and the card reconnected for the late event is disconnected
+        assertEquals(1, count(messages, CardPresentMessage.class));
+        assertEquals(0, count(messages, CardLostMessage.class));
+        assertArrayEquals(fromHex("0004040201001303"), attachment.transcieve(new byte[]{0x60}));
+        assertTrue(first.connected.get(0).isDisconnected());
+        assertFalse(second.connected.get(0).isDisconnected());
+    }
+
+    @Test
+    public void testReconnectedCardIsDisconnectedWhenPresenceCheckFails() throws Exception {
+        FakeReader reader = new FakeReader("Reader", "a");
+        WebSocketNfcServer server = server(reader);
+
+        CountDownLatch lost = new CountDownLatch(1);
+        WebSocketNfcServer.Attachment attachment = server.createAttachment(message -> {
+            if(message instanceof CardPresentMessage) {
+                // the reader is unplugged while the card is present
+                reader.presenceFails = true;
+            } else if(message instanceof CardLostMessage) {
+                lost.countDown();
+            }
+        });
+        assertTrue(attachment.onConnect(Collections.singletonList("a")));
+        beginPolling(attachment);
+
+        reader.cardPresent = true;
+        assertTrue(lost.await(5, TimeUnit.SECONDS));
+
+        // the card connected by the polling server, and the card reconnected after reading the version
+        long deadline = System.currentTimeMillis() + 5000;
+        while(!(reader.connected.size() == 2 && reader.connected.get(0).isDisconnected() && reader.connected.get(1).isDisconnected()) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
+        assertEquals(2, reader.connected.size());
+        assertTrue(reader.connected.get(0).isDisconnected());
+        assertTrue(reader.connected.get(1).isDisconnected());
+    }
+
+    private final List<WebSocketNfcServer.Attachment> polling = new CopyOnWriteArrayList<>();
+
+    private CardListener beginPolling(WebSocketNfcServer.Attachment attachment) throws CardException {
+        assertTrue(attachment.onBeginPolling());
+        polling.add(attachment);
+
+        return attachment.getCardListener();
+    }
+
+    @AfterEach
+    public void releaseAttachments() {
+        // stop the polling threads
+        for (WebSocketNfcServer.Attachment attachment : polling) {
+            attachment.release();
+        }
     }
 
     @Test
@@ -227,7 +408,7 @@ public class WebSocketNfcServerTest {
         WebSocketNfcServer.Attachment attachment = server.createAttachment(messages::add);
         assertTrue(attachment.onConnect(Collections.singletonList("a")));
 
-        attachment.cardConnected(new FakeChannelCard());
+        beginPolling(attachment).cardConnected(new FakeChannelCard());
 
         assertArrayEquals(fromHex("0004040201001303"), attachment.transcieve(new byte[]{0x60}));
         assertEquals(0, count(messages, CardLostMessage.class));

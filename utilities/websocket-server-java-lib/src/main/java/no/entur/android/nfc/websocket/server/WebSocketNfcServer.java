@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.java_websocket.WebSocket;
@@ -63,17 +62,66 @@ public class WebSocketNfcServer extends WebSocketServer {
     private CardTerminalsPollingServer cardTerminalsPollingServer;
 
     /**
-     * A card connection, possibly reconnected. Replaced as a whole, so that the card and channel always match.
+     * A detected card, from when it is connected until it is removed or polling ends: the card connection (possibly
+     * reconnected, replaced as a whole so that the card and channel always match), and what is known about the card.
      */
 
     private static final class CardConnection {
 
+        // as connected by the polling server, which disconnects it
+        private final Card original;
+
+        // the original card, or reconnected after reading the version and signature
         private final Card card;
         private final CardChannel channel;
 
-        private CardConnection(Card card) {
+        private final ATR atr;
+        private final List<String> technologies;
+
+        // native MIFARE Ultralight commands must be translated to PC/SC commands
+        private final boolean mifareUltralight;
+        private final MifareUltralightPcscAdapter mifareUltralightPcscAdapter;
+
+        // DESFire on a reader which appends a status word to single byte (native) responses
+        private final boolean stripAppendedStatusWord;
+
+        // empty if the UID could not be read
+        private byte[] uid = new byte[0];
+
+        // whether the client was told that this card is lost. Guarded by the attachment lock.
+        private boolean lost;
+
+        private CardConnection(Card original, Card card, ATR atr, List<String> technologies, MifareUltralightPcscAdapter mifareUltralightPcscAdapter, boolean stripAppendedStatusWord) {
+            this.original = original;
             this.card = card;
             this.channel = card.getBasicChannel();
+            this.atr = atr;
+            this.technologies = technologies;
+            this.mifareUltralight = technologies.contains("MifareUltralight");
+            this.mifareUltralightPcscAdapter = mifareUltralightPcscAdapter;
+            this.stripAppendedStatusWord = stripAppendedStatusWord;
+        }
+
+        private byte[] transcieve(byte[] command) throws IOException, CardException {
+            card.beginExclusive();
+            try {
+                if(mifareUltralight) {
+                    // one native command might need several APDUs, so translate within the exclusive session
+                    return mifareUltralightPcscAdapter.transceive(command, this::transmit);
+                }
+                byte[] response = transmit(command);
+                if(stripAppendedStatusWord) {
+                    response = DesfireResponseAdapter.stripAppendedStatusWord(command, response);
+                }
+                return response;
+            } finally {
+                try {
+                    card.endExclusive();
+                } catch (Exception e) {
+                    // i.e. the card was removed; do not hide the response or the original problem
+                    LOGGER.debug("Problem ending exclusive access", e);
+                }
+            }
         }
 
         private byte[] transmit(byte[] command) throws IOException {
@@ -84,9 +132,27 @@ public class WebSocketNfcServer extends WebSocketServer {
                 throw new IOException(e);
             }
         }
+
+        /**
+         * Disconnect the card if it was reconnected; the polling server disconnects the original card.
+         */
+
+        private void disconnectReconnected() {
+            disconnectReconnected(original, card);
+        }
+
+        private static void disconnectReconnected(Card original, Card card) {
+            if(card != original) {
+                try {
+                    card.disconnect(false);
+                } catch (Exception e) {
+                    LOGGER.debug("Problem disconnecting reconnected card", e);
+                }
+            }
+        }
     }
 
-    class Attachment implements CardListener, CardServer.Listener, ReaderServer.Listener {
+    class Attachment implements CardServer.Listener, ReaderServer.Listener {
 
         private CardServer cardServer;
 
@@ -96,89 +162,139 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         private volatile PooledCardTerminal pooledCardTerminal;
 
-        // set by the polling thread, used by the web socket thread
+        // Guards the current polling session and card, and the card events sent to the client, so that events from
+        // a previous polling session or card cannot change or report on the current one.
+        private final Object lock = new Object();
+
+        // current polling session, if any. Guarded by lock.
+        private PollingSession session;
+
+        // current card, if any. Set by the polling thread (under lock), used by the web socket thread.
         private volatile CardConnection connection;
 
-        // native MIFARE Ultralight commands must be translated to PC/SC commands
-        private volatile boolean mifareUltralight;
+        /**
+         * Card events from polling one reader, from begin polling until end polling (also when connecting to another
+         * reader). Events from an ended session, i.e. still in flight when polling ended, are ignored, and cards
+         * reconnected for them are disconnected.
+         */
 
-        // DESFire on a reader which appends a status word to single byte (native) responses
-        private volatile boolean stripAppendedStatusWord;
-        private final MifareUltralightPcscAdapter mifareUltralightPcscAdapter = new MifareUltralightPcscAdapter();
+        private final class PollingSession implements CardListener {
 
-        // whether the client was told that the current card is lost. A card which does not respond to a command
-        // is lost, like with Android's own NFC reader, until it is removed and presented again.
-        private final AtomicBoolean cardLost = new AtomicBoolean();
+            private final PooledCardTerminal pooledCardTerminal;
 
-        @Override
-        public void cardConnected(Card card) throws CardException {
-            LOGGER.info("Card connected");
+            private PollingSession(PooledCardTerminal pooledCardTerminal) {
+                this.pooledCardTerminal = pooledCardTerminal;
+            }
+
+            @Override
+            public void cardConnected(Card card) throws CardException {
+                LOGGER.info("Card connected");
+
+                CardConnection connection = detect(pooledCardTerminal.getCardTerminal(), card);
+                try {
+                    synchronized (lock) {
+                        if(session != this) {
+                            LOGGER.info("Polling ended meanwhile, ignore card");
+
+                            connection.disconnectReconnected();
+
+                            return;
+                        }
+                        Attachment.this.connection = connection;
+
+                        cardServer.cardPresent(connection.technologies, connection.atr.getBytes(), connection.atr.getHistoricalBytes(), connection.uid);
+                    }
+                } catch (RuntimeException e) {
+                    // i.e. the client connection was closed meanwhile. The polling server does not report a card as
+                    // disconnected if connecting it failed, so forget the card here.
+                    synchronized (lock) {
+                        if(Attachment.this.connection == connection) {
+                            Attachment.this.connection = null;
+                        }
+                    }
+                    connection.disconnectReconnected();
+
+                    throw e;
+                }
+            }
+
+            @Override
+            public void cardDisconnected(Card card) {
+                LOGGER.info("Card disconnected");
+
+                synchronized (lock) {
+                    CardConnection current = Attachment.this.connection;
+                    if(session != this || current == null || current.original != card) {
+                        // i.e. polling ended meanwhile, which released the card
+                        LOGGER.info("Ignore card disconnected from previous polling");
+
+                        return;
+                    }
+                    Attachment.this.connection = null;
+
+                    current.disconnectReconnected();
+
+                    if(!current.lost) {
+                        current.lost = true;
+
+                        cardServer.cardLost();
+                    } else {
+                        LOGGER.info("Card was already reported as lost");
+                    }
+                }
+            }
+        }
+
+        /**
+         * Find out what the card is. Reading the version and signature re-activates the card, so then it is reconnected.
+         *
+         * @param cardTerminal reader
+         * @param card the card as connected by the polling server
+         * @return the card connection
+         */
+
+        private CardConnection detect(ExtendedCardTerminal cardTerminal, Card card) throws CardException {
+            ATR atr = card.getATR();
+
+            List<String> technologies = new ArrayList<>(cardTerminal.identifyTechnologies(card, card.getBasicChannel()));
+
+            MifareUltralightPcscAdapter mifareUltralightPcscAdapter = new MifareUltralightPcscAdapter();
+            Card current = card;
             try {
-                connected(card);
+                if(MifareUltralightPcscAdapter.isMifareUltralightCandidate(atr.getHistoricalBytes())) {
+                    Card reconnected = readVersionAndSignature(cardTerminal, mifareUltralightPcscAdapter);
+                    if(reconnected != null) {
+                        current = reconnected;
+                    }
+
+                    if(mifareUltralightPcscAdapter.hasMifareUltralightVersion() && !technologies.contains("MifareUltralight")) {
+                        // i.e. NTAG
+                        technologies.add("MifareUltralight");
+                    }
+                }
+
+                LOGGER.info("Got technologies " + technologies);
+
+                boolean stripAppendedStatusWord = DesfireResponseAdapter.isDesfire(atr.getBytes()) && cardTerminal.isStatusWordAppendedToSingleByteResponses();
+
+                CardConnection connection = new CardConnection(card, current, atr, technologies, mifareUltralightPcscAdapter, stripAppendedStatusWord);
+                connection.uid = readUid(connection);
+                return connection;
             } catch (CardException | RuntimeException e) {
-                // the polling server does not report a card as disconnected if connecting it failed,
-                // so release a reconnected card here
-                reset(card);
+                CardConnection.disconnectReconnected(card, current);
 
                 throw e;
             }
         }
 
-        private void connected(Card card) throws CardException {
-            this.cardLost.set(false);
-            this.connection = new CardConnection(card);
-
-            ATR atr = card.getATR();
-
-            ExtendedCardTerminal cardTerminal = pooledCardTerminal.getCardTerminal();
-
-            List<String> technologies = new ArrayList<>(cardTerminal.identifyTechnologies(card, connection.channel));
-
-            mifareUltralightPcscAdapter.reset();
-            if(MifareUltralightPcscAdapter.isMifareUltralightCandidate(atr.getHistoricalBytes())) {
-                readVersionAndSignature(cardTerminal);
-
-                if(mifareUltralightPcscAdapter.hasMifareUltralightVersion() && !technologies.contains("MifareUltralight")) {
-                    // i.e. NTAG
-                    technologies.add("MifareUltralight");
-                }
-            }
-
-            LOGGER.info("Got technologies " + technologies);
-
-            this.mifareUltralight = technologies.contains("MifareUltralight");
-            this.stripAppendedStatusWord = DesfireResponseAdapter.isDesfire(atr.getBytes()) && cardTerminal.isStatusWordAppendedToSingleByteResponses();
-
-            // empty if the UID could not be read
-            byte[] uid = new byte[0];
-
-            // note: might have been reconnected
-            CardConnection current = this.connection;
-            current.card.beginExclusive();
-            try {
-                ResponseAPDU response = current.channel.transmit(new CommandAPDU(GET_TAG_ID));
-                if (isSuccess(response)) {
-                    uid = response.getData();
-
-                    LOGGER.info("Read UID " + ByteArrayHexStringConverter.toHexString(uid));
-                } else {
-                    LOGGER.info("Unable to read UID");
-                }
-            } catch (CardException e) {
-                LOGGER.info("Unable to read UID", e);
-            } finally {
-                current.card.endExclusive();
-            }
-
-            cardServer.cardPresent(technologies, atr.getBytes(), atr.getHistoricalBytes(), uid);
-        }
-
         /**
          * Read GET_VERSION and READ_SIG via the reader, if supported. This re-activates the card,
          * so reconnect afterwards.
+         *
+         * @return the reconnected card, or null if not re-activated
          */
 
-        private void readVersionAndSignature(ExtendedCardTerminal cardTerminal) throws CardException {
+        private Card readVersionAndSignature(ExtendedCardTerminal cardTerminal, MifareUltralightPcscAdapter mifareUltralightPcscAdapter) throws CardException {
             boolean reactivated;
             try {
                 reactivated = mifareUltralightPcscAdapter.readVersionAndSignature(cardTerminal);
@@ -188,48 +304,39 @@ public class WebSocketNfcServer extends WebSocketServer {
                 // might have been re-activated
                 reactivated = true;
             }
-            if(reactivated) {
-                LOGGER.info("Read version " + toHexString(mifareUltralightPcscAdapter.getVersion()) + " and signature " + toHexString(mifareUltralightPcscAdapter.getSignature()) + ", reconnect");
-
-                if(!cardTerminal.waitForCardPresent(REACTIVATION_TIMEOUT)) {
-                    throw new CardException("Card not present after re-activation");
-                }
-                this.connection = new CardConnection(cardTerminal.connect("*"));
+            if(!reactivated) {
+                return null;
             }
-        }
+            LOGGER.info("Read version " + toHexString(mifareUltralightPcscAdapter.getVersion()) + " and signature " + toHexString(mifareUltralightPcscAdapter.getSignature()) + ", reconnect");
 
-        @Override
-        public void cardDisconnected(Card card) {
-            LOGGER.info("Card disconnected");
-
-            reset(card);
-
-            if(cardLost.compareAndSet(false, true)) {
-                cardServer.cardLost();
-            } else {
-                LOGGER.info("Card was already reported as lost");
+            if(!cardTerminal.waitForCardPresent(REACTIVATION_TIMEOUT)) {
+                throw new CardException("Card not present after re-activation");
             }
+            return cardTerminal.connect("*");
         }
 
         /**
-         * Forget the card, disconnecting it if it was reconnected; the polling server disconnects the original card.
-         *
-         * @param card the original card
+         * @return the UID, or empty if it could not be read
          */
 
-        private void reset(Card card) {
-            CardConnection current = this.connection;
-            this.connection = null;
-            this.mifareUltralight = false;
-            this.stripAppendedStatusWord = false;
+        private byte[] readUid(CardConnection connection) throws CardException {
+            connection.card.beginExclusive();
+            try {
+                ResponseAPDU response = connection.channel.transmit(new CommandAPDU(GET_TAG_ID));
+                if (isSuccess(response)) {
+                    byte[] uid = response.getData();
 
-            if(current != null && current.card != card) {
-                try {
-                    current.card.disconnect(false);
-                } catch (Exception e) {
-                    LOGGER.debug("Problem disconnecting reconnected card", e);
+                    LOGGER.info("Read UID " + ByteArrayHexStringConverter.toHexString(uid));
+
+                    return uid;
                 }
+                LOGGER.info("Unable to read UID");
+            } catch (CardException e) {
+                LOGGER.info("Unable to read UID", e);
+            } finally {
+                connection.card.endExclusive();
             }
+            return new byte[0];
         }
 
         public boolean isSuccess(ResponseAPDU in) {
@@ -237,45 +344,54 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         public byte[] transcieve(byte[] command) throws IOException, CardException {
-            if(cardLost.get()) {
-                throw new CardLostException("Card was lost");
-            }
-            try {
-                return transcieveCard(command);
-            } catch (CardLostException e) {
-                // tell the client, the card is detected again when it is removed and presented again
-                if(cardLost.compareAndSet(false, true)) {
-                    LOGGER.info("Card lost: " + e.getMessage());
-                    cardServer.cardLost();
-                }
-                throw e;
-            }
-        }
-
-        private byte[] transcieveCard(byte[] command) throws IOException, CardException {
             // the polling thread might replace or clear the connection meanwhile, so use the same one throughout
             CardConnection connection = this.connection;
             if(connection == null) {
                 throw new CardException("No card");
             }
-            connection.card.beginExclusive();
+            synchronized (lock) {
+                if(connection.lost) {
+                    throw new CardLostException("Card was lost");
+                }
+            }
             try {
-                if(mifareUltralight) {
-                    // one native command might need several APDUs, so translate within the exclusive session
-                    return mifareUltralightPcscAdapter.transceive(command, connection::transmit);
+                return connection.transcieve(command);
+            } catch (CardLostException e) {
+                cardLost(connection, e);
+
+                throw e;
+            }
+        }
+
+        /**
+         * A card which does not respond to a command is lost, like with Android's own NFC reader, until it is removed
+         * and presented again. Tell the client, unless the card was removed (and reported) or polling ended meanwhile.
+         */
+
+        private void cardLost(CardConnection connection, CardLostException e) {
+            synchronized (lock) {
+                if(connection.lost) {
+                    return;
                 }
-                byte[] response = connection.transmit(command);
-                if(stripAppendedStatusWord) {
-                    response = DesfireResponseAdapter.stripAppendedStatusWord(command, response);
+                connection.lost = true;
+
+                if(this.connection == connection) {
+                    LOGGER.info("Card lost: " + e.getMessage());
+
+                    cardServer.cardLost();
+                } else {
+                    LOGGER.info("Previous card lost: " + e.getMessage());
                 }
-                return response;
-            } finally {
-                try {
-                    connection.card.endExclusive();
-                } catch (Exception e) {
-                    // i.e. the card was removed; do not hide the response or the original problem
-                    LOGGER.debug("Problem ending exclusive access", e);
-                }
+            }
+        }
+
+        /**
+         * @return the card listener for the current polling session, or null if not polling
+         */
+
+        CardListener getCardListener() {
+            synchronized (lock) {
+                return session;
             }
         }
 
@@ -342,7 +458,16 @@ public class WebSocketNfcServer extends WebSocketServer {
             PooledCardTerminal pooledCardTerminal = this.pooledCardTerminal;
             if(pooledCardTerminal != null && !pooledCardTerminal.isClosed()) {
                 LOGGER.info("Begin polling " + pooledCardTerminal.getCardTerminal().getName());
-                pooledCardTerminal.setListener(this);
+                PollingSession session;
+                synchronized (lock) {
+                    session = this.session;
+                    if(session == null || session.pooledCardTerminal != pooledCardTerminal) {
+                        session = new PollingSession(pooledCardTerminal);
+                        this.session = session;
+                    }
+                    // else already polling, keep the session so that the current card is still handled
+                }
+                pooledCardTerminal.setListener(session);
                 pooledCardTerminal.startPolling();
                 return true;
             }
@@ -353,8 +478,14 @@ public class WebSocketNfcServer extends WebSocketServer {
 
         @Override
         public boolean onEndPolling() throws CardException {
+            CardConnection connection;
+            synchronized (lock) {
+                // card events still in flight from this polling session are ignored from now on
+                this.session = null;
 
-            CardConnection connection = this.connection;
+                connection = this.connection;
+                this.connection = null;
+            }
             if(connection != null) {
                 LOGGER.info("Disconnect card");
                 try {
@@ -365,8 +496,6 @@ public class WebSocketNfcServer extends WebSocketServer {
                     LOGGER.info("Disconnected card");
                 } catch(Exception e) {
                     LOGGER.info("Disconnected card", e);
-                } finally {
-                    this.connection = null;
                 }
             }
 
