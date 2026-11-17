@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Latest scan of a tag (by UID) on the phone and on each external reader.
+ * Latest scan of a tag (by UID) on the phone and on each external reader. Thread safe, as scans complete on other threads while
+ * the report is rendered; when also locking UltralightResults, lock it first.
  */
 
 public class TagRecord {
@@ -29,7 +30,7 @@ public class TagRecord {
 		return number;
 	}
 
-	public ScanResult getPhone() {
+	public synchronized ScanResult getPhone() {
 		return phone;
 	}
 
@@ -38,15 +39,15 @@ public class TagRecord {
 	 * @return the latest scan on that external reader, or null
 	 */
 
-	public ScanResult getExternal(String readerKey) {
+	public synchronized ScanResult getExternal(String readerKey) {
 		return externals.get(readerKey);
 	}
 
-	public List<ScanResult> getExternals() {
+	public synchronized List<ScanResult> getExternals() {
 		return new ArrayList<>(externals.values());
 	}
 
-	public List<ScanResult> getScans() {
+	public synchronized List<ScanResult> getScans() {
 		List<ScanResult> scans = new ArrayList<>();
 		if (phone != null) {
 			scans.add(phone);
@@ -55,7 +56,7 @@ public class TagRecord {
 		return scans;
 	}
 
-	public void set(ScanResult result) {
+	public synchronized void set(ScanResult result) {
 		if (result.source == ScanResult.Source.PHONE) {
 			this.phone = result;
 		} else {
@@ -69,7 +70,7 @@ public class TagRecord {
 	 * @return family, never null
 	 */
 
-	public TagFamily getFamily() {
+	public synchronized TagFamily getFamily() {
 		if (phone != null && phone.family != null) {
 			return phone.family;
 		}
@@ -85,7 +86,7 @@ public class TagRecord {
 	 * @return true if the family is not (yet) confirmed by the phone
 	 */
 
-	public boolean isFamilyProvisional() {
+	public synchronized boolean isFamilyProvisional() {
 		return phone == null || phone.family == null;
 	}
 }

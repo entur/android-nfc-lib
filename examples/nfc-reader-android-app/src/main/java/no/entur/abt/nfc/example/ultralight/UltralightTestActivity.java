@@ -67,7 +67,6 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 	private final UltralightResults results = UltralightResults.getInstance();
 	private final UltralightTagTester tester = new UltralightTagTester();
 	private final ReportRenderer renderer = new ReportRenderer();
-	private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.ROOT);
 
 	private Executor executor;
 
@@ -93,7 +92,7 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String reader = describeReader(intent);
-			results.addEvent(timeFormat.format(new Date()) + " " + reader + ": TECH_DISCOVERED, the reader saw a tag but did not deliver it");
+			results.addEvent(now() + " " + reader + ": TECH_DISCOVERED, the reader saw a tag but did not deliver it");
 			runOnUiThread(() -> {
 				externalStatus.setText(getString(R.string.ultralight_test_tech_discovered, reader));
 				render();
@@ -187,15 +186,6 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 			return;
 		}
 		String uid = UltralightResults.key(tag.getId());
-		UltralightTagTester.Session session = paused.remove(uid);
-		if (session != null && System.currentTimeMillis() - session.getPausedAt() < RESUME_MILLIS) {
-			// the same tag again, after the phone dropped it
-			scan(session.getResult(), phoneStatus, (progress) -> {
-				tester.resume(session, tag, progress);
-				return session;
-			});
-			return;
-		}
 
 		ScanResult result = new ScanResult();
 		result.source = ScanResult.Source.PHONE;
@@ -204,7 +194,21 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 		result.capability = ReaderCapability.PHONE;
 		result.uid = tag.getId();
 
-		scan(result, phoneStatus, (progress) -> tester.start(tag, intent, result, results.getReferenceFamily(tag.getId()), progress));
+		scan(result, phoneStatus, (progress) -> {
+			// look for a paused scan only now, after the previous scan on the phone has completed (and paused)
+			UltralightTagTester.Session session = paused.remove(uid);
+			if (session != null && System.currentTimeMillis() - session.getPausedAt() < RESUME_MILLIS) {
+				// the same tag again, after the phone dropped it
+				progress.onProgress("");
+				tester.resume(session, tag, progress);
+				return session;
+			}
+			if (isRepeated(result.readerKey, uid)) {
+				return null;
+			}
+			progress.onProgress("");
+			return tester.start(tag, intent, result, results.getReferenceFamily(tag.getId()), progress);
+		});
 	}
 
 	/**
@@ -225,7 +229,14 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 			return;
 		}
 
-		scan(result, externalStatus, (progress) -> tester.start(tag, intent, result, results.getReferenceFamily(tag.getId()), progress));
+		String uid = UltralightResults.key(tag.getId());
+		scan(result, externalStatus, (progress) -> {
+			if (isRepeated(result.readerKey, uid)) {
+				return null;
+			}
+			progress.onProgress("");
+			return tester.start(tag, intent, result, results.getReferenceFamily(tag.getId()), progress);
+		});
 	}
 
 	/**
@@ -237,15 +248,39 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 			return false;
 		}
 		String uid = UltralightResults.key(tag.getId());
-		results.addEvent(timeFormat.format(new Date()) + " " + name + ": ignored " + uid + ", not a MIFARE Ultralight / NTAG tag");
+		results.addEvent(now() + " " + name + ": ignored " + uid + ", not a MIFARE Ultralight / NTAG tag");
 		setStatus(status, getString(R.string.ultralight_test_ignored, name, uid));
 		runOnUiThread(this::render);
 		return true;
 	}
 
 	private interface Scan {
+		/**
+		 * @return the scan, or null if ignored
+		 */
 		UltralightTagTester.Session run(UltralightTagTester.Progress progress);
 	}
+
+	/**
+	 * An external reader might report the tag again after a command fails.
+	 */
+
+	private boolean isRepeated(String readerKey, String uid) {
+		Long last = lastScan.get(readerKey + uid);
+		if (last != null && System.currentTimeMillis() - last < IGNORE_REPEAT_MILLIS) {
+			LOGGER.info("Ignore repeated " + uid + " on " + readerKey);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Run a scan, one at a time per reader.
+	 *
+	 * @param result the result of a new scan, for the reader and the status
+	 * @param status status view
+	 * @param scan starts or resumes a scan
+	 */
 
 	private void scan(ScanResult result, TextView status, Scan scan) {
 		String uid = UltralightResults.key(result.uid);
@@ -266,30 +301,26 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 			}
 		}
 		try {
-			// an external reader might report the tag again after a command fails
-			Long last = lastScan.get(result.readerKey + uid);
-			if (last != null && System.currentTimeMillis() - last < IGNORE_REPEAT_MILLIS && result.memory.length == 0) {
-				LOGGER.info("Ignore repeated " + uid + " on " + name);
+			UltralightTagTester.Session session = scan.run((message) -> setStatus(status, getString(R.string.ultralight_test_reading, name, uid, message)));
+			if (session == null) {
 				return;
 			}
+			// a resumed scan has its own result
+			ScanResult scanned = session.getResult();
 
-			setStatus(status, getString(R.string.ultralight_test_reading, name, uid, ""));
-
-			UltralightTagTester.Session session = scan.run((message) -> setStatus(status, getString(R.string.ultralight_test_reading, name, uid, message)));
-
-			TagRecord record = results.add(result);
+			TagRecord record = results.add(scanned);
 
 			if (session.isAwaitingRediscovery()) {
 				paused.put(uid, session);
 				setStatus(status, getString(R.string.ultralight_test_dropped, name, uid));
 			} else {
-				lastScan.put(result.readerKey + uid, System.currentTimeMillis());
+				lastScan.put(scanned.readerKey + uid, System.currentTimeMillis());
 
 				String outcome;
-				if (result.lost) {
+				if (scanned.lost) {
 					outcome = getString(R.string.ultralight_test_lost);
 				} else {
-					int unexpected = ReportRenderer.unexpected(record, result);
+					int unexpected = ReportRenderer.unexpected(record, scanned);
 					outcome = unexpected == 0 ? getString(R.string.ultralight_test_as_expected) : getString(R.string.ultralight_test_unexpected, unexpected);
 				}
 				setStatus(status, getString(R.string.ultralight_test_done, name, uid, outcome));
@@ -384,6 +415,14 @@ public class UltralightTestActivity extends AppCompatActivity implements Externa
 			}
 		}
 		readersStatus.setText(getString(R.string.ultralight_test_readers, builder.toString()));
+	}
+
+	/**
+	 * @return the time as HH:mm:ss; SimpleDateFormat is not thread safe, and this is called on several threads
+	 */
+
+	private static String now() {
+		return String.format(Locale.ROOT, "%tT", System.currentTimeMillis());
 	}
 
 	private void setStatus(TextView status, String text) {

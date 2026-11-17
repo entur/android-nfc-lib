@@ -65,6 +65,8 @@ public class UltralightTagTester {
 
 		private byte[] firstPages;
 		private String memoryFailure;
+		/** the memory failure is because the tag was lost */
+		private boolean memoryLost;
 		private boolean authenticated;
 
 		private int nextStep;
@@ -147,24 +149,31 @@ public class UltralightTagTester {
 		session.nfcA = NfcA.get(tag);
 		result.lost = false;
 
-		// the tag is still there, so it did not answer the command, i.e. a NAK
+		if (session.memoryLost) {
+			// lost while reading the memory (i.e. after GET_VERSION), continue reading where it stopped
+			session.memoryFailure = null;
+			session.memoryLost = false;
+		}
+
+		// the tag is still there, so it did not answer the command, i.e. a NAK. Unless the command worked, and the tag was lost
+		// while reading the memory afterwards.
 		String noResponse = "no response, the tag was dropped and discovered again";
 		switch (paused) {
 		case GET_VERSION:
-			result.set(Check.GET_VERSION, Outcome.failed(noResponse));
+			failIfNotOk(result, Check.GET_VERSION, noResponse);
 			break;
 		case READ_SIG:
-			result.set(Check.READ_SIG, Outcome.failed(noResponse));
+			failIfNotOk(result, Check.READ_SIG, noResponse);
 			break;
 		case NFCA_GET_VERSION:
-			result.set(Check.NFCA_GET_VERSION, Outcome.failed(noResponse));
+			failIfNotOk(result, Check.NFCA_GET_VERSION, noResponse);
 			break;
 		case NFCA_FAST_READ:
-			result.set(Check.NFCA_FAST_READ, Outcome.failed(noResponse));
+			failIfNotOk(result, Check.NFCA_FAST_READ, noResponse);
 			break;
 		case AUTHENTICATE_FIRST:
 		case AUTHENTICATE:
-			result.set(Check.AUTH1, Outcome.failed(noResponse));
+			failIfNotOk(result, Check.AUTH1, noResponse);
 			break;
 		case PAGE_16:
 			// there is no page 16
@@ -174,6 +183,13 @@ public class UltralightTagTester {
 			break;
 		}
 		run(session, progress);
+	}
+
+	private static void failIfNotOk(ScanResult result, Check check, String message) {
+		Outcome outcome = result.get(check);
+		if (outcome == null || !outcome.isOk()) {
+			result.set(check, Outcome.failed(message));
+		}
 	}
 
 	private void run(Session session, Progress progress) {
@@ -225,7 +241,7 @@ public class UltralightTagTester {
 				result.set(Check.UID, uid(result.uid, data));
 				result.set(Check.BCC, bcc(data));
 				append(result, data, 4);
-				session.memoryFailure = readPages(mifareUltralight, result, initialPages);
+				readMemory(session, initialPages);
 				return Outcome.ok(null);
 			});
 			result.set(Check.READ, read);
@@ -254,7 +270,7 @@ public class UltralightTagTester {
 					// read the rest of the memory while the tag is still active
 					if (session.memoryFailure == null && result.family.getReadablePages() > result.pagesRead) {
 						progress.onProgress("reading pages");
-						session.memoryFailure = readPages(mifareUltralight, result, result.family.getReadablePages());
+						readMemory(session, result.family.getReadablePages());
 					}
 				}
 				return outcome;
@@ -352,7 +368,7 @@ public class UltralightTagTester {
 			if (!external && family != null && session.memoryFailure == null && family.getReadablePages() > result.pagesRead && !result.lost) {
 				progress.onProgress("reading pages");
 				Outcome outcome = command(result, mifareUltralight, () -> {
-					session.memoryFailure = readPages(mifareUltralight, result, family.getReadablePages());
+					readMemory(session, family.getReadablePages());
 					return Outcome.ok(null);
 				});
 				if (!outcome.isOk() && session.memoryFailure == null) {
@@ -479,6 +495,11 @@ public class UltralightTagTester {
 		} catch (Exception e) {
 			LOGGER.debug("Unable to set timeout", e);
 		}
+	}
+
+	private void readMemory(Session session, int pages) {
+		session.memoryFailure = readPages(session.mifareUltralight, session.result, pages);
+		session.memoryLost = session.memoryFailure != null && session.result.lost;
 	}
 
 	/**

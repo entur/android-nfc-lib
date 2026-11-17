@@ -34,9 +34,9 @@ public class ScanResult {
 	/** family seen in this scan (GET_VERSION or Ultralight C authentication), or null */
 	public TagFamily family;
 
-	/** pages read, starting at page 0 */
-	public byte[] memory = new byte[0];
-	public int pagesRead;
+	/** pages read, starting at page 0; replaced (not changed) when pages are added */
+	public volatile byte[] memory = new byte[0];
+	public volatile int pagesRead;
 	public int pagesExpected;
 
 	public final Map<Check, Outcome> outcomes = new EnumMap<>(Check.class);
@@ -54,7 +54,9 @@ public class ScanResult {
 	}
 
 	public byte[] getPage(int page) {
-		if (page >= pagesRead) {
+		// the scan might still add pages, so check against the same memory
+		byte[] memory = this.memory;
+		if (page >= pagesRead || (page + 1) * 4 > memory.length) {
 			return null;
 		}
 		byte[] result = new byte[4];

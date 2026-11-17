@@ -1,9 +1,7 @@
 package no.entur.abt.nfc.example.ultralight;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,7 +19,6 @@ public class ReportRenderer {
 			+ "ok? / fail? = no expectation, lost = tag removed too early (tap again), skip = not run, - = not applicable. "
 			+ "Expected is for the tag; readers which do not send a command to the tag are expected to fail it.";
 
-	private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.ROOT);
 
 	/**
 	 * @param header header
@@ -207,7 +204,8 @@ public class ReportRenderer {
 
 	private String scanText(ScanResult result) {
 		StringBuilder builder = new StringBuilder();
-		builder.append(timeFormat.format(new Date(result.time)));
+		// HH:mm:ss; SimpleDateFormat is not thread safe, and the report is rendered on several threads
+		builder.append(String.format(Locale.ROOT, "%tT", result.time));
 		if (result.source == ScanResult.Source.EXTERNAL) {
 			if (result.readerName != null) {
 				builder.append(", ").append(result.readerName);
