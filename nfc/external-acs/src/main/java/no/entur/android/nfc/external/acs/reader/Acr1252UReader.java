@@ -10,6 +10,17 @@ import java.util.List;
 
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1252UReaderControl;
 
+/**
+ * ACR1252U, per the API manual 1.17. Firmware dependent (as reported by the reader, for example ACR1252U_V111.1):
+ * <ul>
+ * <li>The default LED and buzzer behaviour bits changed in manual 1.15, no firmware version is given: before, bit 3 was the card
+ * insertion and removal buzzer, bit 4 RFU and bit 5 the PN512 reset buzzer. Firmware 111.1 has the new layout.</li>
+ * <li>Automatic PICC polling bit 3 was "activate the PICC when detected" in manual 1.08, and is RFU in 1.17.</li>
+ * <li>110.0 and later: get PICC data, the extended PICC operating parameter (Picopass) and read PICC type.</li>
+ * <li>111.1 and later: NXP MIFARE PICC selection (automatic PICC polling bit 6).</li>
+ * </ul>
+ */
+
 public class Acr1252UReader extends AcrReader {
 
 	private static final String TAG = Acr1252UReader.class.getName();

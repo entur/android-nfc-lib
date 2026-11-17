@@ -28,7 +28,7 @@ public class AcrLabels {
 		LABELS.put(AcrPICC.POLL_FELICA_212K, "FeliCa 212 kbps");
 		LABELS.put(AcrPICC.POLL_FELICA_424K, "FeliCa 424 kbps");
 		LABELS.put(AcrPICC.POLL_TOPAZ, "Topaz");
-		LABELS.put(AcrPICC.POLL_INNOVATRON, "Innovatron");
+		LABELS.put(AcrPICC.POLL_INNOVATRON, "Innovatron (Calypso)");
 		LABELS.put(AcrPICC.POLL_SRI_OR_SRIX, "SRI / SRIX");
 		LABELS.put(AcrPICC.POLL_PICOPASS_ISO14443B, "Picopass ISO 14443B");
 		LABELS.put(AcrPICC.POLL_PICOPASS_ISO15693, "Picopass ISO 15693");
@@ -41,6 +41,7 @@ public class AcrLabels {
 		LABELS.put(AcrAutomaticPICCPolling.ACTIVATE_PICC_WHEN_DETECTED, "Activate PICC when detected");
 		LABELS.put(AcrAutomaticPICCPolling.POLLING_ENABLE_EXTRA_MIFARE_TYPE_IDENTIFICATION, "Extra MIFARE type identification");
 		LABELS.put(AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4, "Enforce ISO 14443A part 4");
+		LABELS.put(AcrAutomaticPICCPolling.NXP_MIFARE_PICC_SELECTION, "NXP MIFARE PICC selection");
 		LABELS.put(AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_250, "250 ms");
 		LABELS.put(AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_500, "500 ms");
 		LABELS.put(AcrAutomaticPICCPolling.PICC_POLLING_INTERVAL_1000, "1 s");

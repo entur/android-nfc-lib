@@ -3,6 +3,7 @@ package no.entur.abt.nfc.example.acr;
 import android.view.View;
 import androidx.appcompat.widget.SwitchCompat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -29,12 +30,15 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 		addValue(getString(R.string.acr_controls_serial_number), reader::getSerialNumber);
 		addValue(getString(R.string.acr_controls_battery), reader::getBatteryLevel);
 		addValue(getString(R.string.acr_controls_antenna_field_status), reader::getAntennaFieldStatus);
+		if (isFirmwareAtLeast(2, 3) == Boolean.FALSE) {
+			addNote(getString(R.string.acr_controls_1255_fw203_note));
+		}
 	}
 
 	@Override
 	protected void addControls(Acr1255UReader reader) {
 		addSection(getString(R.string.acr_controls_picc));
-		addFlags(AcrPICC.class, Arrays.asList(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B, AcrPICC.POLL_FELICA_212K, AcrPICC.POLL_FELICA_424K, AcrPICC.POLL_TOPAZ), null, reader::getPICC, reader::setPICC);
+		addFlags(AcrPICC.class, Arrays.asList(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B, AcrPICC.POLL_FELICA_212K, AcrPICC.POLL_FELICA_424K, AcrPICC.POLL_TOPAZ, AcrPICC.POLL_INNOVATRON, AcrPICC.POLL_SRI_OR_SRIX), null, reader::getPICC, reader::setPICC);
 		addSection(getString(R.string.acr_controls_polling));
 		addFlags(AcrAutomaticPICCPolling.class, Arrays.asList(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_NO_PICC_FOUND, AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_PICC_IS_INACTIVE, AcrAutomaticPICCPolling.POLLING_ENABLE_EXTRA_MIFARE_TYPE_IDENTIFICATION, AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4), getString(R.string.acr_controls_polling_interval), POLLING_INTERVALS, null, reader::getAutomaticPICCPolling,
 				reader::setAutomaticPICCPolling);
@@ -45,7 +49,17 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 
 		addSection(getString(R.string.acr_controls_default_behaviour));
 		addNote(getString(R.string.acr_controls_1255_behaviour_note));
-		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER, AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED), null, reader::getDefaultLEDAndBuzzerBehaviour,
+		Boolean fw204 = isFirmwareAtLeast(2, 4);
+		if (fw204 != Boolean.TRUE) {
+			addNote(getString(R.string.acr_controls_1255_fw204_note));
+		}
+		List<AcrDefaultLEDAndBuzzerBehaviour> behaviours = new ArrayList<>(Arrays.asList(AcrDefaultLEDAndBuzzerBehaviour.BATTERY_CHARGING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED, AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_EVENT_BUZZER));
+		if (fw204 != Boolean.FALSE) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_REMOVAL_EVENT_BUZZER);
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.READER_POWER_ON_BUZZER);
+		}
+		behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED);
+		addFlags(AcrDefaultLEDAndBuzzerBehaviour.class, behaviours, null, reader::getDefaultLEDAndBuzzerBehaviour,
 				reader::setDefaultLEDAndBuzzerBehaviour);
 
 		addDefaultBehaviourBits(reader, BEHAVIOUR_BITS);
@@ -62,7 +76,8 @@ public class Acr1255UControlsActivity extends AbstractAcrControlsActivity<Acr125
 
 	// per the ACR1255U-J1 reference manual 1.13
 	private static final String[] BEHAVIOUR_BITS = { "Bit 0 battery charging status LED", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
-			"Bit 3 card insertion buzzer", "Bit 4 card removal buzzer", "Bit 5 reader power on buzzer", "Bit 6 (RFU)", "Bit 7 card operation blink LED" };
+			"Bit 3 card insertion buzzer (before fw 2.04: insertion and removal)", "Bit 4 card removal buzzer (fw 2.04+)", "Bit 5 reader power on buzzer (fw 2.04+)",
+			"Bit 6 (RFU)", "Bit 7 card operation blink LED" };
 
 	@Override
 	protected List<String> getEscapeCommandPresets() {

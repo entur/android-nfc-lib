@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import no.entur.abt.nfc.example.MainApplication;
 import no.entur.abt.nfc.example.R;
@@ -110,6 +112,15 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 
 	private String readerId;
 	private String renderedReaderId;
+
+	// the trailing version number of a firmware string
+	private static final Pattern FIRMWARE_VERSION = Pattern.compile("(\\d+(?:\\.\\d+)*)\\s*$");
+
+	// incremented on every render, so that a firmware read for an earlier render is ignored
+	private int renderGeneration;
+
+	// firmware of the rendered reader, read before the controls are added; null if it could not be read
+	private String firmware;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -231,13 +242,82 @@ public abstract class AbstractAcrControlsActivity<T extends AcrReader> extends A
 
 		addValueRow(getString(R.string.acr_controls_name), reader.getName());
 		addValueRow(getString(R.string.acr_controls_id), reader.getId());
-		addValue(getString(R.string.acr_controls_firmware), reader::getFirmware);
-		addValue(getString(R.string.acr_controls_slots), reader::getNumberOfSlots);
-		addReaderDetails(reader);
+		TextView firmwareView = addValueRow(getString(R.string.acr_controls_firmware), "…");
 
-		addControls(reader);
+		// the controls can depend on the firmware, so read it first
+		int generation = ++renderGeneration;
+		readerExecutor.execute(() -> {
+			String value;
+			try {
+				value = reader.getFirmware();
+				log("read Firmware -> " + value);
+			} catch (Exception e) {
+				Log.w(LOG_TAG, "read Firmware", e);
+				log("read Firmware failed: " + e);
+				value = null;
+			}
+			String finalValue = value;
+			runOnUiThread(() -> {
+				if (generation != renderGeneration || isDestroyed()) {
+					return;
+				}
+				firmware = finalValue;
+				firmwareView.setText(finalValue != null ? finalValue : "-");
 
-		addEscapeCommand(reader);
+				addValue(getString(R.string.acr_controls_slots), reader::getNumberOfSlots);
+				addReaderDetails(reader);
+
+				addControls(reader);
+
+				addEscapeCommand(reader);
+			});
+		});
+	}
+
+	/**
+	 * @return the firmware of the reader, or null if it could not be read
+	 */
+
+	protected String getFirmware() {
+		return firmware;
+	}
+
+	/**
+	 * Compare the firmware version, the trailing number of the firmware, for example 111.1 in ACR1252U_V111.1 or 1.16.03 in
+	 * ACR1255U-J1 SWV 1.16.03.
+	 *
+	 * @param version version numbers, for example 2, 3 for 2.03
+	 * @return whether the firmware is this version or later, or null if the firmware version is unknown
+	 */
+
+	protected Boolean isFirmwareAtLeast(int... version) {
+		int[] current = parseFirmwareVersion(firmware);
+		if (current == null) {
+			return null;
+		}
+		for (int i = 0; i < version.length; i++) {
+			int number = i < current.length ? current[i] : 0;
+			if (number != version[i]) {
+				return number > version[i];
+			}
+		}
+		return true;
+	}
+
+	static int[] parseFirmwareVersion(String firmware) {
+		if (firmware == null) {
+			return null;
+		}
+		Matcher matcher = FIRMWARE_VERSION.matcher(firmware);
+		if (!matcher.find()) {
+			return null;
+		}
+		String[] parts = matcher.group(1).split("\\.");
+		int[] version = new int[parts.length];
+		for (int i = 0; i < parts.length; i++) {
+			version[i] = Integer.parseInt(parts[i]);
+		}
+		return version;
 	}
 
 	/**

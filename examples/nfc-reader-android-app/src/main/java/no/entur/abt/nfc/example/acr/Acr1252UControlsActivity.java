@@ -1,6 +1,7 @@
 package no.entur.abt.nfc.example.acr;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -19,11 +20,13 @@ import no.entur.android.nfc.external.acs.reader.AcrPICC;
 public class Acr1252UControlsActivity extends AbstractAcrControlsActivity<Acr1252UReader> {
 
 	private static final String[] POLLING_BITS = { "Bit 0 auto PICC polling", "Bit 1 antenna off if no PICC found", "Bit 2 antenna off if PICC is inactive",
-			"Bit 3 (RFU)", "Bit 4 poll interval (low)", "Bit 5 poll interval (high)", "Bit 6 NXP MIFARE PICC selection (fw 111.1+)", "Bit 7 enforce ISO 14443A part 4" };
+			"Bit 3 (RFU; manual 1.08: activate the PICC when detected)", "Bit 4 poll interval (low)", "Bit 5 poll interval (high)",
+			"Bit 6 NXP MIFARE PICC selection (fw 111.1+)", "Bit 7 enforce ISO 14443A part 4" };
 
+	// changed in manual 1.15, without a firmware version
 	private static final String[] BEHAVIOUR_BITS = { "Bit 0 card operation blink LED", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
-			"Bit 3 card insertion buzzer", "Bit 4 card removal buzzer (needs bit 3)", "Bit 5 reader power on buzzer", "Bit 6 green LED for status",
-			"Bit 7 red LED for status" };
+			"Bit 3 card insertion buzzer (before manual 1.15: insertion and removal)", "Bit 4 card removal buzzer, needs bit 3 (before manual 1.15: RFU)",
+			"Bit 5 reader power on buzzer (before manual 1.15: PN512 reset)", "Bit 6 green LED for status", "Bit 7 red LED for status" };
 
 	@Override
 	protected Class<Acr1252UReader> getReaderType() {
@@ -45,7 +48,12 @@ public class Acr1252UControlsActivity extends AbstractAcrControlsActivity<Acr125
 		addFlags(AcrPICC.class, Arrays.asList(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_ISO14443_TYPE_B, AcrPICC.POLL_FELICA_212K, AcrPICC.POLL_FELICA_424K, AcrPICC.POLL_TOPAZ, AcrPICC.POLL_SRI_OR_SRIX), null, reader::getPICC, reader::setPICC);
 
 		addSection(getString(R.string.acr_controls_polling));
-		addFlags(AcrAutomaticPICCPolling.class, Arrays.asList(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_NO_PICC_FOUND, AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_PICC_IS_INACTIVE, AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4), getString(R.string.acr_controls_polling_interval), POLLING_INTERVALS, null, reader::getAutomaticPICCPolling,
+		List<AcrAutomaticPICCPolling> polling = new ArrayList<>(Arrays.asList(AcrAutomaticPICCPolling.AUTO_PICC_POLLING, AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_NO_PICC_FOUND, AcrAutomaticPICCPolling.TURN_ANTENNA_FIELD_IF_PICC_IS_INACTIVE));
+		if (isFirmwareAtLeast(111, 1) != Boolean.FALSE) {
+			polling.add(AcrAutomaticPICCPolling.NXP_MIFARE_PICC_SELECTION);
+		}
+		polling.add(AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4);
+		addFlags(AcrAutomaticPICCPolling.class, polling, getString(R.string.acr_controls_polling_interval), POLLING_INTERVALS, null, reader::getAutomaticPICCPolling,
 				reader::setAutomaticPICCPolling);
 
 		addSection(getString(R.string.acr_controls_polling_bits));
@@ -69,13 +77,16 @@ public class Acr1252UControlsActivity extends AbstractAcrControlsActivity<Acr125
 
 	@Override
 	protected List<String> getEscapeCommandPresets() {
-		return Arrays.asList(
-				"Read PICC operating parameter: E0 00 00 20 00",
-				// other bit layout
-				"Read PICC operating parameter (ACR122U compatible): FF 00 50 00 00",
-				// fw 110.0+, Picopass in the second byte
-				"Read PICC operating parameter (extended): E0 01 00 20 00",
-				// fw 110.0+
-				"Read PICC type: E0 00 00 35 00", "Read LED status: E0 00 00 29 00", "All LEDs off: E0 00 00 29 01 00", "Beep 100 ms: E0 00 00 28 01 0A");
+		List<String> presets = new ArrayList<>();
+		presets.add("Read PICC operating parameter: E0 00 00 20 00");
+		// other bit layout
+		presets.add("Read PICC operating parameter (ACR122U compatible): FF 00 50 00 00");
+		if (isFirmwareAtLeast(110) != Boolean.FALSE) {
+			// Picopass in the second byte
+			presets.add("Read PICC operating parameter (extended): E0 01 00 20 00");
+			presets.add("Read PICC type: E0 00 00 35 00");
+		}
+		presets.addAll(Arrays.asList("Read LED status: E0 00 00 29 00", "All LEDs off: E0 00 00 29 01 00", "Beep 100 ms: E0 00 00 28 01 0A"));
+		return presets;
 	}
 }

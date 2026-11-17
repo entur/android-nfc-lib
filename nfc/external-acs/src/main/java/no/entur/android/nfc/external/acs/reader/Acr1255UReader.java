@@ -13,6 +13,18 @@ import java.util.Set;
 
 import no.entur.android.nfc.external.acs.reader.bind.IAcr1255UReaderControl;
 
+/**
+ * ACR1255U-J1, per the reference manual 1.13. Firmware dependent (as reported by the reader, for example SWV 1.16.03):
+ * <ul>
+ * <li>2.01.00 and later: extended APDUs over Bluetooth.</li>
+ * <li>2.03.xx and later: the default LED and buzzer behaviour, automatic PICC polling, PICC operating parameter, automatic PPS and
+ * Tx power are saved in non-volatile memory; with older firmware they are reset when the reader is powered off. Reading the sleep
+ * mode option and the Tx power, and the battery level (Bluetooth only).</li>
+ * <li>2.04.xx and later: the card removal and power on buzzers of the default LED and buzzer behaviour, read PICC type and get
+ * PICC data.</li>
+ * </ul>
+ */
+
 public class Acr1255UReader extends AcrReader {
 
 	private static final String TAG = Acr1255UReader.class.getName();
@@ -39,6 +51,8 @@ public class Acr1255UReader extends AcrReader {
 	private static final int POLL_FELICA_212K = 1 << 2;
 	private static final int POLL_FELICA_424K = 1 << 3;
 	private static final int POLL_TOPAZ = 1 << 4;
+	private static final int POLL_CALYPSO = 1 << 5;
+	private static final int POLL_SRIX = 1 << 6;
 
 	private static final int RATE_106K = 0;
 	private static final int RATE_212K = 1;
@@ -169,6 +183,12 @@ public class Acr1255UReader extends AcrReader {
 		if ((operation & POLL_TOPAZ) != 0) {
 			values.add(AcrPICC.POLL_TOPAZ);
 		}
+		if ((operation & POLL_CALYPSO) != 0) {
+			values.add(AcrPICC.POLL_INNOVATRON);
+		}
+		if ((operation & POLL_SRIX) != 0) {
+			values.add(AcrPICC.POLL_SRI_OR_SRIX);
+		}
 
 		return values;
 	}
@@ -195,6 +215,15 @@ public class Acr1255UReader extends AcrReader {
 			}
 			case POLL_TOPAZ: {
 				picc |= Acr1255UReader.POLL_TOPAZ;
+				break;
+			}
+			case POLL_INNOVATRON: {
+				// Calypso
+				picc |= Acr1255UReader.POLL_CALYPSO;
+				break;
+			}
+			case POLL_SRI_OR_SRIX: {
+				picc |= Acr1255UReader.POLL_SRIX;
 				break;
 			}
 			default: {

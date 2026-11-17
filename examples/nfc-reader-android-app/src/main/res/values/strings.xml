@@ -71,7 +71,9 @@
     <string name="acr_controls_timeout_wait">Wait for the card</string>
     <string name="acr_controls_122_led_note">While automatic PICC polling is on, the reader keeps the red LED on.</string>
     <string name="acr_controls_1252_behaviour_note">Beep on card removal only works together with beep on card insertion.</string>
-    <string name="acr_controls_1255_behaviour_note">Removal and power on beeps need firmware 2.04 or later. The red LED is on while charging, unless the charging status LED is off.</string>
+    <string name="acr_controls_1255_behaviour_note">The red LED is on while charging, unless the charging status LED is off.</string>
+    <string name="acr_controls_1255_fw204_note">The removal and power on beeps need firmware 2.04 or later. With older firmware, the insertion beep also beeps on removal.</string>
+    <string name="acr_controls_1255_fw203_note">With firmware before 2.03 the settings are not saved: the reader resets them when it is powered off. The battery level, Tx power and sleep mode cannot be read.</string>
     <string name="acr_controls_1552_behaviour_firmware">The polling and activation status LEDs and the power on beep need ACR1552U-M firmware 1.06.00 or later.</string>
 
     <string name="mainActivityLabel">External NFC Reader Service</string>

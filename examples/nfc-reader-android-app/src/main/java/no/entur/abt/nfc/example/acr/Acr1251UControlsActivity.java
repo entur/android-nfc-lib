@@ -23,6 +23,11 @@ public class Acr1251UControlsActivity extends AbstractAcrControlsActivity<Acr125
 	private static final int LED_GREEN = 1 << 1;
 
 	// the default LED and buzzer behaviour bits differ between firmware 205 and below, and 206 and above
+	private static final String[] BEHAVIOUR_BITS_205 = { "Bit 0 SAM activation status LED", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
+			"Bit 3 card insertion / removal buzzer", "Bit 4 (RFU)", "Bit 5 (RFU)", "Bit 6 (RFU)", "Bit 7 card operation blink LED" };
+	private static final String[] BEHAVIOUR_BITS_206 = { "Bit 0 card operation blink LED", "Bit 1 PICC polling status LED", "Bit 2 PICC activation status LED",
+			"Bit 3 card insertion / removal buzzer", "Bit 4 (RFU)", "Bit 5 reader power on buzzer", "Bit 6 green LED for status", "Bit 7 red LED for status" };
+	// unknown firmware
 	private static final String[] BEHAVIOUR_BITS = { "Bit 0 card operation blink LED (fw 206+), SAM activation LED (fw 205-)", "Bit 1 PICC polling status LED",
 			"Bit 2 PICC activation status LED", "Bit 3 card insertion / removal buzzer", "Bit 4 (RFU)", "Bit 5 reader power on buzzer (fw 206+)",
 			"Bit 6 green LED for status (fw 206+)", "Bit 7 red LED for status (fw 206+), card operation blink LED (fw 205-)" };
@@ -65,7 +70,8 @@ public class Acr1251UControlsActivity extends AbstractAcrControlsActivity<Acr125
 			return escapeValue(reader, String.format(Locale.ROOT, "E0 00 00 29 01 %02X", value)) == value;
 		});
 
-		addDefaultBehaviourBits(reader, BEHAVIOUR_BITS);
+		Boolean fw206 = isFirmwareAtLeast(206);
+		addDefaultBehaviourBits(reader, fw206 == null ? BEHAVIOUR_BITS : fw206 ? BEHAVIOUR_BITS_206 : BEHAVIOUR_BITS_205);
 	}
 
 	/**

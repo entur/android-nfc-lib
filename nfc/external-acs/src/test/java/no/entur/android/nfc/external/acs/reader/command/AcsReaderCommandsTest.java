@@ -24,6 +24,10 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import no.entur.android.nfc.external.acs.reader.Acr1222LReader;
+import no.entur.android.nfc.external.acs.reader.command.remote.IAcr1255UCommandWrapper;
+import no.entur.android.nfc.external.acs.reader.bind.IAcr1255UReaderControl;
+import no.entur.android.nfc.external.acs.reader.AcrAutomaticPICCPolling;
+import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.Acr1252UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1255UReader;
 import no.entur.android.nfc.external.acs.reader.Acr1281UReader;
@@ -148,6 +152,32 @@ public class AcsReaderCommandsTest {
         Acr1552UReader reader = new Acr1552UReader("ACS ACR1552 1S CL Reader", "acs-1", control);
 
         assertEquals(Collections.singletonList(AcrLED.BLUE), reader.getLEDs());
+    }
+
+    @Test
+    public void testAcr1255PICC() throws Exception {
+        // per the ACR1255U-J1 reference manual 1.13: bit 5 Calypso, bit 6 SRIX
+        ReaderWrapper readerWrapper = reader("E10000000161");
+        IAcr1255UCommandWrapper wrapper = new IAcr1255UCommandWrapper(new ACR1255UsbCommands("ACS ACR1255U-J1", readerWrapper));
+        IAcr1255UReaderControl control = mock(IAcr1255UReaderControl.class);
+        when(control.setPICC(anyInt())).thenAnswer((i) -> wrapper.setPICC(i.getArgument(0)));
+        when(control.getPICC()).thenAnswer((i) -> wrapper.getPICC());
+
+        Acr1255UReader reader = new Acr1255UReader("ACS ACR1255U-J1", "acs-1", control);
+
+        assertTrue(reader.setPICC(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_INNOVATRON, AcrPICC.POLL_SRI_OR_SRIX));
+        assertArrayEquals(hex("E00000200161"), command(readerWrapper));
+
+        assertEquals(Arrays.asList(AcrPICC.POLL_ISO14443_TYPE_A, AcrPICC.POLL_INNOVATRON, AcrPICC.POLL_SRI_OR_SRIX), reader.getPICC());
+    }
+
+    @Test
+    public void testAutomaticPICCPollingMifareSelection() {
+        // ACR1252U firmware 111.1+: bit 6
+        assertTrue(AcrAutomaticPICCPolling.parse(0x41).contains(AcrAutomaticPICCPolling.NXP_MIFARE_PICC_SELECTION));
+        assertFalse(AcrAutomaticPICCPolling.parse(0x01).contains(AcrAutomaticPICCPolling.NXP_MIFARE_PICC_SELECTION));
+        assertEquals(0xC1, AcrAutomaticPICCPolling.serialize(new AcrAutomaticPICCPolling[] { AcrAutomaticPICCPolling.AUTO_PICC_POLLING,
+                AcrAutomaticPICCPolling.NXP_MIFARE_PICC_SELECTION, AcrAutomaticPICCPolling.ENFORCE_ISO14443A_PART_4 }));
     }
 
     @Test
