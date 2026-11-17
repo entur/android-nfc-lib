@@ -118,15 +118,16 @@ public abstract class AbstractAcsUsbService extends AbstractService implements E
 	public void onDestroy() {
 		super.onDestroy();
 
-		broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
-
-		externalNfcReaderStatusSupport.onPause();
-
+		// waits for a reader open callback in progress, so its broadcasts come before the stopped broadcast
 		if(support != null) {
 			support.onDestroy();
 		}
 
 		acrReaderAdapter.close();
+
+		broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STOPPED);
+
+		externalNfcReaderStatusSupport.onPause();
 	}
 
 	public void onTagPresent(ReaderWrapper reader, int slot) {
