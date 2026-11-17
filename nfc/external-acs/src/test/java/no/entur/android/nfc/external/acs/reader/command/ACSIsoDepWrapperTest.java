@@ -3,6 +3,7 @@ package no.entur.android.nfc.external.acs.reader.command;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -16,6 +17,8 @@ import com.acs.smartcard.ReaderException;
 import org.junit.Test;
 
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
+import no.entur.android.nfc.external.acs.reader.ReaderCommandException;
+import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
 
 public class ACSIsoDepWrapperTest {
 
@@ -50,9 +53,52 @@ public class ACSIsoDepWrapperTest {
     }
 
     @Test
+    public void testTransceiveRawSelectsTagAgainIfNoResponse() throws Exception {
+        ReaderWrapper reader = mock(ReaderWrapper.class);
+        when(reader.getReaderName()).thenReturn("ACS ACR122U PICC Interface");
+        PassthroughCommandException noResponse = new PassthroughCommandException("Got status 1", 1);
+        when(reader.transmitPassThrough(1, GET_VERSION)).thenThrow(noResponse);
+
+        ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, 1);
+
+        try {
+            wrapper.transceiveRaw(GET_VERSION);
+            fail();
+        } catch (PassthroughCommandException e) {
+            assertSame(noResponse, e);
+        }
+        // i.e. an Ultralight does not answer GET_VERSION and goes to the IDLE state
+        verify(reader).selectPassThroughTarget(1);
+    }
+
+    @Test
+    public void testTransceiveRawDoesNotSelectTagAgainIfReaderProblem() throws Exception {
+        ReaderWrapper reader = mock(ReaderWrapper.class);
+        when(reader.getReaderName()).thenReturn("ACS ACR1222L 3S CL Reader");
+        when(reader.transmitPassThrough(0, GET_VERSION)).thenThrow(new ReaderCommandException("Unable to issue command"));
+
+        ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, 0);
+
+        try {
+            wrapper.transceiveRaw(GET_VERSION);
+            fail();
+        } catch (ReaderCommandException e) {
+            // expected
+        }
+        verify(reader, never()).selectPassThroughTarget(anyInt());
+    }
+
+    @Test
     public void testPassThroughReaders() {
+        // PN53x based
         assertTrue(ReaderWrapper.supportsPassThrough("ACS ACR122U PICC Interface"));
+        assertTrue(ReaderWrapper.supportsPassThrough("ACS ACR122"));
         assertTrue(ReaderWrapper.supportsPassThrough("ACS ACR1222 3S PICC Reader"));
+        assertTrue(ReaderWrapper.supportsPassThrough("ACS ACR1222L 3S CL Reader"));
+        // not verified
+        assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1281 1S Dual Reader"));
+        assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1251 1S CL Reader"));
+        assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1552 1S CL Reader PICC"));
         // these answer 63 00 or are not PN53x based
         assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1252 1S CL Reader PICC"));
         assertFalse(ReaderWrapper.supportsPassThrough("ACS ACR1255U-J1 PICC"));

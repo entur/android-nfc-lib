@@ -57,14 +57,81 @@ public class ReaderWrapper {
 
 	/**
 	 * Whether raw tag commands can be sent via the PN53x InCommunicateThru pass-through
-	 * (see {@link #transmitPassThrough(int, byte[])}) for a reader.
+	 * (see {@link #transmitPassThrough(int, byte[])}) for a reader. Only for readers with a PN53x (compatible) chip: the ACR122U
+	 * (PN532) and the ACR1222L. Other readers do not get raw commands, which then fail without being sent; i.e. the ACR1252, ACR1255
+	 * and ACR1283 do not support the pass-through (the ACR1283 answers 63 00), and it is not verified for the others.
 	 *
-	 * @param readerName reader name
-	 * @return true if pass-through commands are supported (i.e. not for ACR1252, ACR1255 and ACR1283, the ACR1283 answers 63 00)
+	 * @param readerName reader name, i.e. ACS ACR122U PICC Interface or ACS ACR1222L 3S CL Reader
+	 * @return true if pass-through commands are supported
 	 */
 
 	public static boolean supportsPassThrough(String readerName) {
-		return readerName != null && !(readerName.contains("1255") || readerName.contains("1252") || readerName.contains("1283"));
+		return readerName != null && (readerName.contains("ACR1222") || readerName.matches(".*ACR122([^0-9].*)?"));
+	}
+
+	// PN53x InListPassiveTarget, one ISO 14443-A target at 106 kbps
+	private static final byte[] IN_LIST_PASSIVE_TARGET = new byte[] { (byte) 0xD4, 0x4A, 0x01, 0x00 };
+
+	/**
+	 * @return the PN53x InListPassiveTarget command (D4 4A 01 00), which selects the tag again
+	 */
+
+	public static byte[] getInListPassiveTarget() {
+		return IN_LIST_PASSIVE_TARGET.clone();
+	}
+
+	/**
+	 * Build a pass-through command, i.e. the PN53x InCommunicateThru (D4 42) as a pseudo-APDU.
+	 *
+	 * @param req tag command
+	 * @return FF 00 00 00 Lc D4 42 [tag command]
+	 */
+
+	public static byte[] inCommunicateThru(byte[] req) {
+		// see https://stackoverflow.com/questions/57609513/what-is-the-apdu-command-combination-for-ntag-213-tag
+		byte[] sub = new byte[2 + req.length];
+		// 0xD4 magic byte
+		// 0x42 InCommunicateThru from PN532
+		sub[0] = (byte) 0xD4;
+		sub[1] = (byte) 0x42;
+
+		System.arraycopy(req, 0, sub, 2, req.length);
+
+		return new CommandAPDU(0xFF, 0x00, 0x00, 0x00, sub, 0, sub.length).getBytes();
+	}
+
+	/**
+	 * Parse a pass-through response, i.e. D5 43 [status] [tag response] 90 00 for the PN53x InCommunicateThru.
+	 *
+	 * @param command the pass-through command
+	 * @param responseBytes the response
+	 * @return the tag response
+	 * @throws ReaderCommandException if the reader did not accept the command, or did not answer with an InCommunicateThru response
+	 * @throws PassthroughCommandException if the status is not 00, i.e. the tag did not respond
+	 */
+
+	public static byte[] parseInCommunicateThruResponse(byte[] command, byte[] responseBytes) {
+		ResponseAPDU response = new ResponseAPDU(responseBytes);
+
+		if (!response.isSuccess()) {
+			throw new ReaderCommandException("Unable to issue command " + ByteArrayHexStringConverter.toHexString(command) + ", response "
+					+ ByteArrayHexStringConverter.toHexString(responseBytes));
+		}
+		byte[] data = response.getData();
+		if (data.length < 3 || data[0] != (byte) 0xD5 || data[1] != 0x43) {
+			throw new ReaderCommandException("Unexpected response to command " + ByteArrayHexStringConverter.toHexString(command) + ", response "
+					+ ByteArrayHexStringConverter.toHexString(responseBytes));
+		}
+
+		int status = data[2] & 0xFF;
+		if (status != 0) {
+			throw new PassthroughCommandException("Got status " + status, status);
+		}
+
+		byte[] content = new byte[data.length - 3];
+		System.arraycopy(data, 3, content, 0, content.length);
+
+		return content;
 	}
 
 	public String getReaderName() {
@@ -213,81 +280,34 @@ public class ReaderWrapper {
 	}
 
 	public byte[] transmitPassThrough(int slotNumber, byte[] req) throws ReaderException {
-		byte[] sub = new byte[2 + req.length];
-		// 0xD4 magic byte
-		// 0x42 InCommunicateThru from PN532
+		byte[] command = inCommunicateThru(req);
 
-		sub[0] = (byte) 0xD4;
-		sub[1] = (byte) 0x42;
-
-		System.arraycopy(req, 0, sub, 2, req.length);
-		// https://stackoverflow.com/questions/57609513/what-is-the-apdu-command-combination-for-ntag-213-tag
-		// 0xD4 magic byte
-		// 0x42 InCommunicateThru from PN532
-
-		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x00, 0x00, sub, 0, sub.length);
-
-		byte[] responseBytes = transmit(slotNumber, command.getBytes());
-
-		ResponseAPDU response = new ResponseAPDU(responseBytes);
-
-		if (!response.isSuccess()) {
-			throw new ReaderCommandException("Unable to issue command " + ByteArrayHexStringConverter.toHexString(sub) + ", response "
-					+ ByteArrayHexStringConverter.toHexString(responseBytes));
-		}
-		byte[] data = response.getData();
-
-		if (LOG) {
-			log("Status " + (0xFF & data[2]));
-		}
-
-		if ((data[2] & 0xFF) != 0) {
-			throw new PassthroughCommandException("Got command error", (data[2] & 0xFF));
-		}
-
-		byte[] content = new byte[data.length - 3];
-		System.arraycopy(data, 3, content, 0, content.length);
-
-		return content;
+		return parseInCommunicateThruResponse(command, transmit(slotNumber, command));
 	}
 
 	public byte[] controlPassThrough(int slotNumber, int controlCode, byte[] req) throws ReaderException {
-		byte[] sub = new byte[2 + req.length];
-		// 0xD4 magic byte
-		// 0x42 InCommunicateThru from PN532
+		byte[] command = inCommunicateThru(req);
 
-		sub[0] = (byte) 0xD4;
-		sub[1] = (byte) 0x42;
+		return parseInCommunicateThruResponse(command, control(slotNumber, controlCode, command));
+	}
 
-		System.arraycopy(req, 0, sub, 2, req.length);
-		// https://stackoverflow.com/questions/57609513/what-is-the-apdu-command-combination-for-ntag-213-tag
-		// 0xD4 magic byte
-		// 0x42 InCommunicateThru from PN532
+	/**
+	 * Select the tag again via the pass-through (PN53x InListPassiveTarget). A tag which does not respond to a command goes to the
+	 * IDLE state, and the reader does not activate it again, so i.e. READ BINARY would fail.
+	 *
+	 * @param slotNumber slot number
+	 */
 
-		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x00, 0x00, sub, 0, sub.length);
-
-		byte[] responseBytes = control(slotNumber, controlCode, command.getBytes());
-
-		ResponseAPDU response = new ResponseAPDU(responseBytes);
-
-		if (!response.isSuccess()) {
-			throw new ReaderCommandException("Unable to issue command " + ByteArrayHexStringConverter.toHexString(sub) + ", response "
-					+ ByteArrayHexStringConverter.toHexString(responseBytes));
+	public void selectPassThroughTarget(int slotNumber) {
+		try {
+			transmit(slotNumber, inListPassiveTargetCommand());
+		} catch (Exception e) {
+			LOGGER.debug("Unable to select the tag again", e);
 		}
-		byte[] data = response.getData();
+	}
 
-		if (LOG) {
-			log("Status " + (0xFF & data[2]));
-		}
-
-		if ((data[2] & 0xFF) != 0) {
-			throw new PassthroughCommandException("Got command error", (data[2] & 0xFF));
-		}
-
-		byte[] content = new byte[data.length - 3];
-		System.arraycopy(data, 3, content, 0, content.length);
-
-		return content;
+	private static byte[] inListPassiveTargetCommand() {
+		return new CommandAPDU(0xFF, 0x00, 0x00, 0x00, IN_LIST_PASSIVE_TARGET, 0, IN_LIST_PASSIVE_TARGET.length).getBytes();
 	}
 
 	public int transmit(int slotNum, byte[] command, int length, byte[] response, int responseLength) throws ReaderException {

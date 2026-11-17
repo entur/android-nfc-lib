@@ -3,6 +3,7 @@ package no.entur.android.nfc.external.acs.tag;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -13,8 +14,10 @@ import org.nfctools.scio.Command;
 import org.nfctools.scio.Response;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
 public class AcsMifareUltralightCommandTechnologyTest {
@@ -26,6 +29,7 @@ public class AcsMifareUltralightCommandTechnologyTest {
     private static class FakeReaderWriter implements MfUlReaderWriter {
 
         private byte[] passthroughRequest;
+        private RuntimeException passthroughException;
         private int readStartPage = -1;
         private Command command;
         private Response response;
@@ -69,6 +73,9 @@ public class AcsMifareUltralightCommandTechnologyTest {
         @Override
         public byte[] transmitPassthrough(byte[] data) {
             this.passthroughRequest = data;
+            if (passthroughException != null) {
+                throw passthroughException;
+            }
 
             return VERSION;
         }
@@ -83,6 +90,50 @@ public class AcsMifareUltralightCommandTechnologyTest {
 
         assertArrayEquals(VERSION, result.getResponseOrThrow());
         assertArrayEquals(GET_VERSION, readerWriter.passthroughRequest);
+    }
+
+    @Test
+    public void testSelectTagAgainIfNoResponse() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        PassthroughCommandException noResponse = new PassthroughCommandException("Got status 1", 1);
+        readerWriter.passthroughException = noResponse;
+        readerWriter.response = new Response(0x90, 0x00, new byte[0]);
+        AtomicReference<Exception> mapped = new AtomicReference<>();
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> {
+            mapped.set(e);
+            return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+        }, true);
+
+        // i.e. an Ultralight does not answer GET_VERSION and goes to the IDLE state
+        TransceiveResult result = technology.transceive(GET_VERSION, true);
+
+        try {
+            result.getResponseOrThrow();
+            fail();
+        } catch (IOException e) {
+            // expected
+        }
+        assertSame(noResponse, mapped.get());
+        // InListPassiveTarget, as FF 00 00 00 04 D4 4A 01 00
+        assertEquals(0x00, readerWriter.command.getInstruction());
+        assertArrayEquals(ByteArrayHexStringConverter.hexStringToByteArray("D44A0100"), readerWriter.command.getData());
+    }
+
+    @Test
+    public void testSelectTagAgainProblemDoesNotReplaceError() throws Exception {
+        FakeReaderWriter readerWriter = new FakeReaderWriter();
+        PassthroughCommandException noResponse = new PassthroughCommandException("Got status 1", 1);
+        readerWriter.passthroughException = noResponse;
+        // no response set, so selecting the tag again fails
+        AtomicReference<Exception> mapped = new AtomicReference<>();
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> {
+            mapped.set(e);
+            return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
+        }, true);
+
+        technology.transceive(GET_VERSION, true);
+
+        assertSame(noResponse, mapped.get());
     }
 
     @Test

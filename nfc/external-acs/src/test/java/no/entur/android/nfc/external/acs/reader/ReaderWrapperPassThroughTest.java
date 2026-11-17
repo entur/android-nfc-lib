@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.withSettings;
@@ -52,6 +53,37 @@ public class ReaderWrapperPassThroughTest {
         } catch (PassthroughCommandException e) {
             assertEquals(1, e.getError());
         }
+    }
+
+    @Test
+    public void testTransmitPassThroughUnexpectedResponse() throws Exception {
+        ReaderWrapper wrapper = newReaderWrapper();
+
+        // a reader without the pass-through, i.e. only a status word, or another response
+        for (String hex : new String[] { "9000", "D5439000", "AABBCCDD9000" }) {
+            doReturn(ByteArrayHexStringConverter.hexStringToByteArray(hex)).when(wrapper).transmit(eq(0), any(byte[].class));
+            try {
+                wrapper.transmitPassThrough(0, new byte[] { 0x60 });
+                fail(hex);
+            } catch (ReaderCommandException e) {
+                // expected
+            }
+        }
+    }
+
+    @Test
+    public void testSelectPassThroughTarget() throws Exception {
+        ReaderWrapper wrapper = newReaderWrapper();
+        doReturn(ByteArrayHexStringConverter.hexStringToByteArray("D54B01014400070411223344556690009000")).when(wrapper).transmit(eq(1), any(byte[].class));
+
+        wrapper.selectPassThroughTarget(1);
+
+        // FF 00 00 00 Lc D4 4A (InListPassiveTarget) 01 00
+        verify(wrapper).transmit(1, ByteArrayHexStringConverter.hexStringToByteArray("FF00000004D44A0100"));
+
+        // a problem is not thrown
+        doThrow(new RuntimeException("Reader problem")).when(wrapper).transmit(eq(1), any(byte[].class));
+        wrapper.selectPassThroughTarget(1);
     }
 
     @Test

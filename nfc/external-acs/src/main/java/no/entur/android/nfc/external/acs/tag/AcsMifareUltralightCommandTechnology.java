@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagTechnology;
 import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
@@ -131,7 +133,22 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
+			if (e instanceof PassthroughCommandException) {
+				// the tag did not respond (i.e. a command it does not support), so it is in the IDLE state:
+				// select it again, so that later commands (i.e. READ) still work
+				selectAgain();
+			}
+
 			return exceptionMapper.mapException(e);
+		}
+	}
+
+	private void selectAgain() {
+		try {
+			// FF 00 00 00 04 D4 4A 01 00
+			readerWriter.transmit(new Command(0x00, 0x00, 0x00, ReaderWrapper.getInListPassiveTarget()));
+		} catch (Exception e) {
+			LOGGER.debug("Unable to select the tag again", e);
 		}
 	}
 
