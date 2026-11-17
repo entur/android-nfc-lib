@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import no.entur.android.nfc.NfcReaderCallbackSupport;
 import no.entur.android.nfc.detect.NfcTargetAnalyzeResult;
@@ -69,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
     private NfcReaderCallbackSupport nfcReaderCallbackSupport;
 
     private ThreadPoolExecutor threadPoolExecutor;
+
+    // incremented for each discovered tag, so that results for a previous tag are not shown
+    private final AtomicInteger tagGeneration = new AtomicInteger();
 
     private MainApplication mainApplication;
 
@@ -293,6 +297,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         tagPresent = true;
 
+        int generation = tagGeneration.incrementAndGet();
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -302,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         threadPoolExecutor.submit(() -> {
             try {
                 if(tag != null) {
-                    setTagDetailsIdentify(tag, intent);
+                    setTagDetailsIdentify(tag, intent, generation);
                     setContents(tag, intent);
                 }
             } catch(Exception e) {
@@ -317,6 +323,8 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         tagPresent = true;
 
+        int generation = tagGeneration.incrementAndGet();
+
         runOnUiThread(() -> {
             setTagPresent(true);
 
@@ -326,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         threadPoolExecutor.submit(() -> {
             try {
                 if(tag != null) {
-                    setTagDetailsIdentify(tag, intent);
+                    setTagDetailsIdentify(tag, intent, generation);
                     setContents(tag, intent);
                 }
             } catch(Exception e) {
@@ -480,13 +488,15 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         }
     }
 
-    private void setTagDetailsIdentify(Tag tag, Intent intent) throws IOException {
+    private void setTagDetailsIdentify(Tag tag, Intent intent, int generation) throws IOException {
         List<NfcTargetAnalyzeResult> results;
         try {
             results = nfcTargetAnalyzer.analyze(tag, intent);
         } catch (IOException | RuntimeException e) {
             runOnUiThread(() -> {
-                tagDetailIdentify.setText(R.string.tagDetailIdentifyFailed);
+                if(isCurrentTag(generation)) {
+                    tagDetailIdentify.setText(R.string.tagDetailIdentifyFailed);
+                }
             });
             throw e;
         }
@@ -494,7 +504,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         if(results.isEmpty()) {
             LOGGER.info("Empty analyzer result");
             runOnUiThread(() -> {
-                tagDetailIdentify.setText(R.string.tagDetailIdentifyUnknown);
+                if(isCurrentTag(generation)) {
+                    tagDetailIdentify.setText(R.string.tagDetailIdentifyUnknown);
+                }
             });
         } else {
             LOGGER.info("Got " + results.size() + " analyzer results");
@@ -509,10 +521,23 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
             LOGGER.info(builder.toString());
 
             runOnUiThread(() -> {
-                tagDetailIdentify.setText(builder.toString());
+                if(isCurrentTag(generation)) {
+                    tagDetailIdentify.setText(builder.toString());
+                }
             });
         }
 
+    }
+
+    /**
+     * Identification runs in the background, and might finish after the next tag was discovered.
+     *
+     * @param generation generation of the tag
+     * @return true if no other tag was discovered since
+     */
+
+    private boolean isCurrentTag(int generation) {
+        return generation == tagGeneration.get();
     }
 
     private void setContents(Tag tag, Intent intent) throws IOException {
