@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderCommandException;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagTechnology;
@@ -149,9 +150,10 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
-			if (e instanceof PassthroughCommandException) {
+			if (e instanceof PassthroughCommandException || e instanceof ReaderCommandException) {
 				// the tag did not respond (i.e. a command it does not support), so it is in the IDLE state:
-				// select it again, so that later commands (i.e. READ) still work
+				// select it again, so that later commands (i.e. READ) still work. Like the WebSocket server, for any failed
+				// pass-through command, not only for a status from the reader (i.e. 01 for time out).
 				selectAgain();
 			}
 

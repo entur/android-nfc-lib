@@ -5,21 +5,30 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.acs.smartcard.UnresponsiveCardException;
 
 import org.junit.Test;
 import org.nfctools.mf.block.DataBlock;
+import org.nfctools.api.TagType;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
 import org.nfctools.scio.Command;
 import org.nfctools.scio.Response;
+import org.nfctools.spi.acs.AcsTag;
+import org.nfctools.spi.acs.AcrMfUlReaderWriter;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.wrapper.TransceiveResult;
 
 public class AcsMifareUltralightCommandTechnologyTest {
@@ -127,6 +136,22 @@ public class AcsMifareUltralightCommandTechnologyTest {
         // InListPassiveTarget, as FF 00 00 00 04 D4 4A 01 00
         assertEquals(0x00, readerWriter.command.getInstruction());
         assertArrayEquals(ByteArrayHexStringConverter.hexStringToByteArray("D44A0100"), readerWriter.command.getData());
+    }
+
+    @Test
+    public void testSelectTagAgainViaReader() throws Exception {
+        // the commands as sent to the reader
+        ReaderWrapper reader = mock(ReaderWrapper.class);
+        when(reader.transmitPassThrough(1, GET_VERSION)).thenThrow(new PassthroughCommandException("Got status 1", 1));
+        when(reader.transmit(eq(1), any(byte[].class))).thenReturn(ByteArrayHexStringConverter.hexStringToByteArray("D54B0101004400070411223344556690009000"));
+
+        AcrMfUlReaderWriter readerWriter = new AcrMfUlReaderWriter(new AcsTag(TagType.MIFARE_ULTRALIGHT, null, reader, 1));
+        AcsMifareUltralightCommandTechnology technology = new AcsMifareUltralightCommandTechnology(readerWriter, (e) -> new TransceiveResult(TransceiveResult.RESULT_FAILURE, null), true);
+
+        technology.transceive(GET_VERSION, true);
+
+        // FF 00 00 00 Lc D4 4A (InListPassiveTarget) 01 00
+        verify(reader).transmit(1, ByteArrayHexStringConverter.hexStringToByteArray("FF00000004D44A0100"));
     }
 
     @Test

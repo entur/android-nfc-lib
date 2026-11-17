@@ -72,7 +72,7 @@ public class ACSIsoDepWrapperTest {
     }
 
     @Test
-    public void testTransceiveRawDoesNotSelectTagAgainIfReaderProblem() throws Exception {
+    public void testTransceiveRawSelectsTagAgainIfUnexpectedResponse() throws Exception {
         ReaderWrapper reader = mock(ReaderWrapper.class);
         when(reader.getReaderName()).thenReturn("ACS ACR1222L 3S CL Reader");
         when(reader.transmitPassThrough(0, GET_VERSION)).thenThrow(new ReaderCommandException("Unable to issue command"));
@@ -83,6 +83,24 @@ public class ACSIsoDepWrapperTest {
             wrapper.transceiveRaw(GET_VERSION);
             fail();
         } catch (ReaderCommandException e) {
+            // expected
+        }
+        verify(reader).selectPassThroughTarget(0);
+    }
+
+    @Test
+    public void testTransceiveRawDoesNotSelectTagAgainIfTransportProblem() throws Exception {
+        ReaderWrapper reader = mock(ReaderWrapper.class);
+        when(reader.getReaderName()).thenReturn("ACS ACR1222L 3S CL Reader");
+        // i.e. the tag or the reader was removed
+        when(reader.transmitPassThrough(0, GET_VERSION)).thenThrow(new ReaderException("Reader removed"));
+
+        ACSIsoDepWrapper wrapper = new ACSIsoDepWrapper(reader, 0);
+
+        try {
+            wrapper.transceiveRaw(GET_VERSION);
+            fail();
+        } catch (ReaderException e) {
             // expected
         }
         verify(reader, never()).selectPassThroughTarget(anyInt());

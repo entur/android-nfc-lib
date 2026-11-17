@@ -5,6 +5,7 @@ import android.os.Parcelable;
 import com.acs.smartcard.ReaderException;
 
 import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderCommandException;
 import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.tag.AbstractReaderIsoDepWrapper;
 
@@ -42,9 +43,10 @@ public class ACSIsoDepWrapper extends AbstractReaderIsoDepWrapper {
 		}
 		try {
 			return isoDep.transmitPassThrough(slotNum, req);
-		} catch (PassthroughCommandException e) {
+		} catch (PassthroughCommandException | ReaderCommandException e) {
 			// the tag did not respond (i.e. a command it does not support), so it is in the IDLE state:
-			// select it again, so that later commands (i.e. READ) still work
+			// select it again, so that later commands (i.e. READ) still work. Like the WebSocket server, for any failed
+			// pass-through command, not only for a status from the reader (i.e. 01 for time out).
 			isoDep.selectPassThroughTarget(slotNum);
 
 			throw e;
