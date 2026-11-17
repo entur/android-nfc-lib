@@ -17,6 +17,7 @@ import javax.smartcardio.CommandAPDU;
 
 import no.entur.android.nfc.websocket.server.ByteArrayHexStringConverter;
 import no.entur.android.nfc.websocket.server.ExtendedCardTerminal;
+import no.entur.android.nfc.websocket.server.MifareUltralightPcscAdapter;
 
 /**
  * Base class for ACS readers. Reader commands are sent as control commands over a direct connection, either as
@@ -260,6 +261,10 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
             ) {
                 return Arrays.asList("IsoDep");
             }
+        }
+
+        if(MifareUltralightPcscAdapter.isMifareUltralight(atr.getHistoricalBytes())) {
+            return Arrays.asList("MifareUltralight");
         }
 
         return Collections.emptyList();

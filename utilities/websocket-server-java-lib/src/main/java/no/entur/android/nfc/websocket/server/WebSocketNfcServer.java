@@ -64,6 +64,10 @@ public class WebSocketNfcServer extends WebSocketServer {
         private Card card;
         private CardChannel cardChannel;
 
+        // native MIFARE Ultralight commands must be translated to PC/SC commands
+        private volatile boolean mifareUltralight;
+        private final MifareUltralightPcscAdapter mifareUltralightPcscAdapter = new MifareUltralightPcscAdapter();
+
         @Override
         public void cardConnected(Card card) throws CardException {
             LOGGER.info("Card connected");
@@ -77,6 +81,8 @@ public class WebSocketNfcServer extends WebSocketServer {
             List<String> technologies = cardTerminal.identifyTechnologies(card, cardChannel);
 
             LOGGER.info("Got technologies " + technologies);
+
+            this.mifareUltralight = technologies.contains("MifareUltralight");
 
             // empty if the UID could not be read
             byte[] uid = new byte[0];
@@ -105,6 +111,7 @@ public class WebSocketNfcServer extends WebSocketServer {
             LOGGER.info("Card disconnected");
             this.card = null;
             this.cardChannel = null;
+            this.mifareUltralight = false;
 
             cardServer.cardLost();
         }
@@ -114,10 +121,20 @@ public class WebSocketNfcServer extends WebSocketServer {
         }
 
         public byte[] transcieve(byte[] command) throws IOException, CardException {
-
-            ByteBuffer outputBuffer = ByteBuffer.allocate(1024);
-
             card.beginExclusive();
+            try {
+                if(mifareUltralight) {
+                    // one native command might need several APDUs, so translate within the exclusive session
+                    return mifareUltralightPcscAdapter.transceive(command, this::transmit);
+                }
+                return transmit(command);
+            } finally {
+                card.endExclusive();
+            }
+        }
+
+        private byte[] transmit(byte[] command) throws IOException {
+            ByteBuffer outputBuffer = ByteBuffer.allocate(1024);
             try {
                 int count = cardChannel.transmit(ByteBuffer.wrap(command), outputBuffer);
 
@@ -127,8 +144,6 @@ public class WebSocketNfcServer extends WebSocketServer {
                 return response;
             } catch (CardException e) {
                 throw new IOException(e);
-            } finally {
-                card.endExclusive();
             }
         }
 

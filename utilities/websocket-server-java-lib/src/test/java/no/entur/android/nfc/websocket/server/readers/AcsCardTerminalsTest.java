@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
+import javax.smartcardio.ATR;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
@@ -116,6 +118,31 @@ public class AcsCardTerminalsTest {
         assertThrows(CardException.class, reader::getFirmware);
 
         assertDisconnected(terminal);
+    }
+
+    @Test
+    public void testIdentifyTechnologies() {
+        Acr1552CardTerminal reader = new Acr1552CardTerminal(new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC"));
+
+        // MIFARE Ultralight paper ticket
+        assertEquals(Arrays.asList("MifareUltralight"), reader.identifyTechnologies(cardWithAtr("3B8F8001804F0CA0000003060300030000000068"), null));
+        // DESFire
+        assertEquals(Arrays.asList("IsoDep"), reader.identifyTechnologies(cardWithAtr("3B8180018080"), null));
+        // MIFARE Classic 1K
+        assertEquals(Collections.emptyList(), reader.identifyTechnologies(cardWithAtr("3B8F8001804F0CA000000306030001000000006A"), null));
+    }
+
+    private static FakeCard cardWithAtr(String hex) {
+        byte[] atr = new byte[hex.length() / 2];
+        for (int i = 0; i < atr.length; i++) {
+            atr[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+        }
+        return new FakeCard() {
+            @Override
+            public ATR getATR() {
+                return new ATR(atr);
+            }
+        };
     }
 
     private static void assertCommands(TerminalFactory factory, String firmware, List<String> start, List<String> stop, List<String> getFirmware) throws CardException {
