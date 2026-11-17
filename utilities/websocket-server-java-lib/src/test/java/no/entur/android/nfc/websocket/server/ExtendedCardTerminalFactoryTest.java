@@ -91,7 +91,8 @@ public class ExtendedCardTerminalFactoryTest {
             }
         };
 
-        FakeCardTerminal terminal = new FakeCardTerminal("Custom Reader", () -> new FakeCard(command -> new byte[]{(byte) 0x90, 0x00}));
+        // confirms stopping automatic polling
+        FakeCardTerminal terminal = new FakeCardTerminal("Custom Reader", () -> new FakeCard(command -> new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, 0x00}));
 
         assertTrue(custom.create(terminal) instanceof Acr1251CardTerminal);
     }

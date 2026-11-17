@@ -25,10 +25,10 @@ public class Acr1281CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, 0xFF);
+        requireSetting("PICC", setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B));
         // enforce ISO14443-4, otherwise a DESFire is only activated at layer 3 (no ISO-DEP).
         // Verified on an ACR1281U (FW ACR1281U_V506.06): MIFARE Ultralight and NTAG cards are still detected.
-        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING | AUTOMATIC_PICC_POLLING_ENFORCE_ISO14443A_PART_4);
+        requireSetting("automatic polling", setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING | AUTOMATIC_PICC_POLLING_ENFORCE_ISO14443A_PART_4, AUTOMATIC_PICC_POLLING));
     }
 
     // verified on an ACR1281U, FW ACR1281U_V506.06: native DESFire SelectApplication returns A0 90 00

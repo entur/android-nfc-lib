@@ -143,6 +143,18 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
      */
 
     public boolean setPICC(int picc) throws CardException {
+        return setPICC(picc, 0xFF);
+    }
+
+    /**
+     * Set PICC operating parameter using pseudo-APDU FF 00 51 [picc] 00.
+     *
+     * @param picc operating parameter
+     * @param mask bits to compare in the response
+     * @return true if the reader confirmed the new value
+     */
+
+    public boolean setPICC(int picc, int mask) throws CardException {
         LOGGER.info("Set PICC " + Integer.toHexString(picc));
 
         if ((picc & 0xFF) != picc) {
@@ -160,7 +172,7 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
 
         final int operation = bytes[1] & 0xFF;
 
-        if (operation != picc) {
+        if ((operation & mask) != (picc & mask)) {
             LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + Integer.toHexString(operation));
 
             return false;
@@ -198,6 +210,18 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
      */
 
     public boolean setAutomaticPICCPolling(int value) throws CardException {
+        return setAutomaticPICCPolling(value, 0xFF);
+    }
+
+    /**
+     * Set automatic PICC polling using escape command E0 00 00 23 01 [value].
+     *
+     * @param value automatic PICC polling setting
+     * @param mask bits to compare in the response
+     * @return true if the reader confirmed the new value
+     */
+
+    public boolean setAutomaticPICCPolling(int value, int mask) throws CardException {
         LOGGER.info("Set automatic polling " + Integer.toHexString(value));
 
         if ((value & 0xFF) != value) {
@@ -207,7 +231,22 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
         // i.e. E1 00 00 00 01 <value>
         byte[] data = transmitEscapeCommand(0x00, 0x23, new byte[]{(byte) value});
 
-        return isExpectedValue("automatic polling", data, value, 0xFF);
+        return isExpectedValue("automatic polling", data, value, mask);
+    }
+
+    /**
+     * Fail if the reader did not confirm a setting needed for polling, so that polling is not reported as started
+     * while the reader does not detect cards.
+     *
+     * @param name setting name
+     * @param confirmed whether the reader confirmed the setting
+     * @throws AcsCardException if not confirmed
+     */
+
+    protected static void requireSetting(String name, boolean confirmed) throws AcsCardException {
+        if(!confirmed) {
+            throw new AcsCardException("Reader did not confirm the " + name + " setting");
+        }
     }
 
     private static boolean isExpectedValue(String name, byte[] data, int expected, int mask) {

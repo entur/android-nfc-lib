@@ -25,7 +25,7 @@ public class Acr1222LCardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, PICC_MASK);
+        requireSetting("PICC", setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, PICC_MASK));
     }
 
     @Override

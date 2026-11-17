@@ -55,6 +55,19 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public boolean setPICC(int picc) throws CardException {
+        return setPICC(picc, 0xFFFF);
+    }
+
+    /**
+     * Set PICC polling type using escape command E0 00 01 20 02 [picc high] [picc low].
+     *
+     * @param picc polling type (two bytes)
+     * @param mask bits to compare in the response (two bytes)
+     * @return true if the reader confirmed the new value
+     */
+
+    @Override
+    public boolean setPICC(int picc, int mask) throws CardException {
         LOGGER.info("Set PICC " + Integer.toHexString(picc));
 
         if ((picc & 0xFFFF) != picc) {
@@ -66,7 +79,7 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
         byte[] data = transmitEscapeCommand(0x01, 0x20, new byte[]{high, low});
 
-        if (data.length < 2 || data[0] != high || data[1] != low) {
+        if (data.length < 2 || ((((data[0] & 0xFF) << 8) | (data[1] & 0xFF)) & mask) != (picc & mask)) {
             LOGGER.warn("Unable to properly update PICC: Expected " + Integer.toHexString(picc) + " got " + ByteArrayHexStringConverter.toHexString(data));
 
             return false;
@@ -76,9 +89,9 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICC(PICC_ISO14443_TYPE_A | PICC_ISO14443_TYPE_B);
+        requireSetting("PICC", setPICC(PICC_ISO14443_TYPE_A | PICC_ISO14443_TYPE_B, PICC_ISO14443_TYPE_A | PICC_ISO14443_TYPE_B));
         // do not enforce ISO14443-4, so that i.e. MIFARE Ultralight cards are also detected
-        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING);
+        requireSetting("automatic polling", setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING, AUTOMATIC_PICC_POLLING));
     }
 
     @Override

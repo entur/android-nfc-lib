@@ -25,7 +25,7 @@ public class Acr122UCardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICC(AUTO_PICC_POLLING | AUTO_ATS_GENERATION | POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B);
+        requireSetting("PICC", setPICC(AUTO_PICC_POLLING | AUTO_ATS_GENERATION | POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, AUTO_PICC_POLLING | POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B));
     }
 
     @Override

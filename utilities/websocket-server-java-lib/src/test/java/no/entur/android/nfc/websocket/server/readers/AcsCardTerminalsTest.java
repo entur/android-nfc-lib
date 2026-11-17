@@ -1,5 +1,6 @@
 package no.entur.android.nfc.websocket.server.readers;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,9 +42,10 @@ public class AcsCardTerminalsTest {
 
     @Test
     public void testAcr1251() throws CardException {
+        // native PICC operating parameter and automatic polling; FF 00 51 03 would turn automatic polling off
         assertCommands(Acr1251CardTerminal::new, "ACR1251U_V205",
-                Arrays.asList("FF00510300"),
-                Arrays.asList("FF00510000"),
+                Arrays.asList("E00000200103", "E00000230101"),
+                Arrays.asList("E00000230100"),
                 Arrays.asList("FF00480000"));
     }
 
@@ -106,6 +108,25 @@ public class AcsCardTerminalsTest {
         assertFalse(new Acr1552CardTerminal(terminal).setPICC(Acr1552CardTerminal.PICC_ISO14443_TYPE_A | Acr1552CardTerminal.PICC_ISO14443_TYPE_B));
 
         assertDisconnected(terminal);
+    }
+
+    @Test
+    public void testStartPollingNotConfirmed() {
+        // reader responds with success, but polling stays off
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1281 1S Dual Reader PICC", () -> new FakeCard(command -> new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, 0x00}));
+
+        assertThrows(CardException.class, new Acr1281CardTerminal(terminal)::startPolling);
+        assertThrows(CardException.class, new Acr1252CardTerminal(terminal)::startPolling);
+        assertThrows(CardException.class, new Acr1552CardTerminal(terminal)::startPolling);
+
+        // other bits are not compared, i.e. the ACR1252U NXP MIFARE PICC selection bit needs firmware 111.1
+        FakeCardTerminal pollingOnly = new FakeCardTerminal("ACS ACR1252 1S CL Reader PICC", () -> new FakeCard(command -> {
+            if(command[0] == (byte) 0xFF) {
+                return new byte[]{(byte) 0x90, 0x03};
+            }
+            return new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, (byte) 0x81};
+        }));
+        assertDoesNotThrow(new Acr1252CardTerminal(pollingOnly)::startPolling);
     }
 
     @Test

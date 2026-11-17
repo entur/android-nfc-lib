@@ -4,7 +4,9 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
 /**
- * ACS ACR1251U. There is no automatic polling setting, so polling is stopped by not polling for any card types.
+ * ACS ACR1251U, per the API manual 1.14. Uses the native PICC operating parameter (E0 00 00 20) and automatic PICC
+ * polling (E0 00 00 23) escape commands, like the other ACS readers. Note that the ACR122U compatible PICC operating
+ * parameter (FF 00 51) has another bit layout, where bit 7 is automatic PICC polling.
  */
 
 public class Acr1251CardTerminal extends AcsExtendedCardTerminal {
@@ -20,11 +22,13 @@ public class Acr1251CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICC(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B);
+        requireSetting("PICC", setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B));
+        // do not enforce ISO14443-4, so that i.e. MIFARE Ultralight cards are also detected
+        requireSetting("automatic polling", setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING, AUTOMATIC_PICC_POLLING));
     }
 
     @Override
     public void stopPolling() throws CardException {
-        setPICC(0);
+        setAutomaticPICCPolling(0);
     }
 }

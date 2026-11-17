@@ -20,9 +20,9 @@ public class Acr1283CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, 0xFF);
+        requireSetting("PICC", setPICCUsingEscapeCommand(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B));
         // do not enforce ISO14443-4, so that i.e. MIFARE Ultralight cards are also detected
-        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING);
+        requireSetting("automatic polling", setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING, AUTOMATIC_PICC_POLLING));
     }
 
     @Override

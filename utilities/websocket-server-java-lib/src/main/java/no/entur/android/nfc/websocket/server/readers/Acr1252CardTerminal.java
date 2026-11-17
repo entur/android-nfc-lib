@@ -40,8 +40,10 @@ public class Acr1252CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     public void startPolling() throws CardException {
-        setPICC(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B);
-        setAutomaticPICCPolling(0b11000001);
+        // ACR122U compatible layout, but the card types are the same bits
+        requireSetting("PICC", setPICC(POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B, POLL_ISO14443_TYPE_A | POLL_ISO14443_TYPE_B));
+        // NXP MIFARE PICC selection (bit 6) needs firmware 111.1, so only compare automatic polling
+        requireSetting("automatic polling", setAutomaticPICCPolling(0b11000001, AUTOMATIC_PICC_POLLING));
     }
 
     @Override
