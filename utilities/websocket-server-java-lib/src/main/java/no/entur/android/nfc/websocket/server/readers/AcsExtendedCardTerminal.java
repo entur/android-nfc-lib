@@ -294,6 +294,9 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
      * Exchange native commands using a PC/SC part 3 transparent session, sent as escape commands:
      * start session, switch protocol to ISO 14443-A layer 3, exchange each command, end session.
      * Switching protocol re-activates the card.
+     * A card which does not respond to a command (i.e. not supported) goes to the IDLE state, so then the card is
+     * selected again by switching protocol. Otherwise the following commands fail, also after the session
+     * (verified on an ACR1252U with an original MIFARE Ultralight: READ BINARY returned 63 00).
      */
 
     @Override
@@ -350,12 +353,7 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
             try {
                 checkTransparentStatus(ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_START_SESSION));
                 try {
-                    byte[] switchProtocol = ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_SWITCH_PROTOCOL_ISO14443A_LAYER_3);
-                    if(!isTransparentSuccess(switchProtocol)) {
-                        // i.e. the ACR1281U reports no response for an NTAG216, but exchanges still work.
-                        // If the card cannot be reached, the exchanges return no response.
-                        LOGGER.warn("Unexpected switch protocol response " + ByteArrayHexStringConverter.toHexString(switchProtocol) + ", continue");
-                    }
+                    switchProtocol(ca);
 
                     List<byte[]> responses = new ArrayList<>(commands.size());
                     for (byte[] command : commands) {
@@ -372,7 +370,12 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
                         exchange[6] = (byte) command.length;
                         System.arraycopy(command, 0, exchange, 7, command.length);
 
-                        responses.add(getTransparentResponse(ca.transmitControlCommand(SCARD_CTL_CODE, exchange)));
+                        byte[] response = getTransparentResponse(ca.transmitControlCommand(SCARD_CTL_CODE, exchange));
+                        if(response == null) {
+                            // card did not respond, select it again
+                            switchProtocol(ca);
+                        }
+                        responses.add(response);
                     }
                     return responses;
                 } finally {
@@ -387,6 +390,15 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
             }
         } finally {
             disconnect(ca);
+        }
+    }
+
+    private static void switchProtocol(Card ca) throws CardException {
+        byte[] response = ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_SWITCH_PROTOCOL_ISO14443A_LAYER_3);
+        if(!isTransparentSuccess(response)) {
+            // i.e. the ACR1281U reports no response for an NTAG216, but exchanges still work.
+            // If the card cannot be reached, the exchanges return no response.
+            LOGGER.warn("Unexpected switch protocol response " + ByteArrayHexStringConverter.toHexString(response) + ", continue");
         }
     }
 

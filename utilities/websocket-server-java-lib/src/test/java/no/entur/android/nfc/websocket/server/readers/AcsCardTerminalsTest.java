@@ -178,8 +178,9 @@ public class AcsCardTerminalsTest {
         assertEquals(NTAG216_SIGNATURE, toHex(responses.get(1)));
         assertEquals(null, responses.get(2));
 
+        // the card is selected again after the command without response,
         // then the card is detected again by toggling automatic polling
-        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC200010495023C00", "FFC2000103950130", "FFC20000028200", "E00000230100", "E00000230101"), takeCommands(terminal));
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC200010495023C00", "FFC2000103950130", "FFC20002048F020003", "FFC20000028200", "E00000230100", "E00000230101"), takeCommands(terminal));
     }
 
     @Test
@@ -200,6 +201,25 @@ public class AcsCardTerminalsTest {
 
         assertEquals(NTAG216_VERSION, toHex(responses.get(0)));
         assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20000028200"), takeCommands(terminal));
+
+        // original MIFARE Ultralight: no response (captured from an ACR1252U), so the card is selected again after
+        // each command. Otherwise the card is in the IDLE state and READ BINARY fails after the session.
+        FakeCardTerminal ultralight = new FakeCardTerminal("ACS ACR1252 1S CL Reader [ACR1252 Dual Reader PICC]", () -> new FakeCard(command -> {
+            String hex = toHex(command);
+            if(hex.equals("FFC20002048F020003")) {
+                return fromHex("C0030090008F01009000");
+            }
+            if(hex.equals("FFC2000103950160") || hex.equals("FFC200010495023C00")) {
+                return fromHex("C0030164019000");
+            }
+            return fromHex("C0030090009000");
+        }));
+
+        responses = new Acr1252CardTerminal(ultralight).transceiveTransparent(Arrays.asList(new byte[]{0x60}, new byte[]{0x3C, 0x00}));
+
+        assertEquals(null, responses.get(0));
+        assertEquals(null, responses.get(1));
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20002048F020003", "FFC200010495023C00", "FFC20002048F020003", "FFC20000028200"), takeCommands(ultralight));
     }
 
     @Test
@@ -317,8 +337,8 @@ public class AcsCardTerminalsTest {
         List<byte[]> responses = new Acr1552CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60}));
         assertEquals(null, responses.get(0));
 
-        // session ended, then restore (automatic polling off fails here, so stops)
-        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20000028200", "E00000230100"), takeCommands(terminal));
+        // select again after no response, session ended, then restore (automatic polling off fails here, so stops)
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20002048F020003", "FFC20000028200", "E00000230100"), takeCommands(terminal));
     }
 
     @Test
