@@ -506,8 +506,9 @@ public class ExternalUsbNfcServiceSupport {
 	}
 
 	/**
-	 * Stop scanning and listening for broadcasts. If a reader open callback is in progress, this waits for it to return, so
-	 * afterwards no callback is running or will run, and the reader can be closed.
+	 * Stop scanning and listening for broadcasts. If {@link ExternalNfcReaderStatusListener#onReaderOpen} is running, this
+	 * waits for it to return; afterwards it is not called again, and the reader can be closed. This can block for as long
+	 * as the callback's reader commands take.
 	 */
 
 	public void onDestroy() {
