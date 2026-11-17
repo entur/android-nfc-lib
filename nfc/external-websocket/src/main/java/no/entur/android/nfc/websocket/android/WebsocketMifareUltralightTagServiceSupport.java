@@ -25,7 +25,7 @@ public class WebsocketMifareUltralightTagServiceSupport extends AbstractTagServi
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebsocketMifareUltralightTagServiceSupport.class);
 
-    protected MifareUltralightTagFactory mifareUltralightTagFactory = new MifareUltralightTagFactory();
+    protected MifareUltralightTagFactory mifareUltralightTagFactory = new WebsocketMifareUltralightTagFactory();
 
     protected TransceiveResultExceptionMapper exceptionMapper;
 

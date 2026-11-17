@@ -126,6 +126,17 @@ public class WebSocketNfcServiceTest {
     }
 
     @Test
+    public void testNtagWithGenericAtr() {
+        CardClient.Listener cardListener = connectAndBeginPolling();
+
+        // i.e. an NTAG216 on an ACR1552U, identified by the server from its version
+        cardListener.onCardPresent(client.getCardClient(), MIFARE_ULTRALIGHT, WebsocketMifareUltralightTagFactoryTest.GENERIC_NTAG_ATR, new byte[]{(byte) 0x80, 0x4F, 0x03, (byte) 0xF0, 0x00, 0x00}, UID);
+
+        // the tag's technologies include NfcA, see WebsocketMifareUltralightTagFactoryTest
+        currentTag();
+    }
+
+    @Test
     public void testTagWhichCannotBeCreatedIsNotKept() {
         CardClient.Listener cardListener = connectAndBeginPolling();
 
