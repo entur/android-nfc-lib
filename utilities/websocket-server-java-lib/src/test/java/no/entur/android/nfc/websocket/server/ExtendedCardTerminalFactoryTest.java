@@ -32,7 +32,7 @@ public class ExtendedCardTerminalFactoryTest {
         assertModel("ACS ACR1251 1S CL Reader PICC 00 00", Acr1251CardTerminal.class);
         assertModel("ACS ACR1252 Dual Reader PICC", Acr1252CardTerminal.class);
         assertModel("ACS ACR1255U-J1 PICC 00 00", Acr1255UCardTerminal.class);
-        assertModel("ACS ACR1281 1S Dual Reader PICC 00 00", Acr1281CardTerminal.class);
+        assertModel("ACS ACR1281 1S Dual Reader 00 01", Acr1281CardTerminal.class);
         assertModel("ACS ACR1283 4S CL Reader PICC 00 00", Acr1283CardTerminal.class);
         assertModel("ACS ACR1552 1S CL Reader PICC 00 00", Acr1552CardTerminal.class);
     }
@@ -48,6 +48,14 @@ public class ExtendedCardTerminalFactoryTest {
     }
 
     @Test
+    public void testAcr1281Slots() {
+        // contact (00) and SAM (02) slots of the dual reader
+        assertEquals(null, factory.createTerminal(new FakeCardTerminal("ACS ACR1281 1S Dual Reader 00 00")));
+        assertEquals(null, factory.createTerminal(new FakeCardTerminal("ACS ACR1281 1S Dual Reader 00 02")));
+        assertModel("ACS ACR1281 1S Dual Reader 00 01", Acr1281CardTerminal.class);
+    }
+
+    @Test
     public void testUnsupportedReader() {
         FakeCardTerminal terminal = new FakeCardTerminal("Yubico YubiKey OTP+FIDO+CCID 00 00");
 
@@ -56,7 +64,7 @@ public class ExtendedCardTerminalFactoryTest {
 
     @Test
     public void testCreateStopsPollingAndEnriches() throws CardException {
-        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1281 1S Dual Reader PICC 00 00", () -> new FakeCard(command -> new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, 0x00}));
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1281 1S Dual Reader 00 01", () -> new FakeCard(command -> new byte[]{(byte) 0xE1, 0x00, 0x00, 0x00, 0x01, 0x00}));
 
         ExtendedCardTerminal extendedCardTerminal = factory.create(terminal);
 

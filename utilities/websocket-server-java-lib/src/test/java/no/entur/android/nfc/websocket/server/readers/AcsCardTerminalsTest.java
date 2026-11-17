@@ -73,8 +73,9 @@ public class AcsCardTerminalsTest {
 
     @Test
     public void testAcr1281() throws CardException {
+        // enforce ISO14443-4, otherwise a DESFire is only activated at layer 3
         assertCommands(Acr1281CardTerminal::new, "ACR1281U_V521",
-                Arrays.asList("E00000200103", "E00000230101"),
+                Arrays.asList("E00000200103", "E00000230181"),
                 Arrays.asList("E00000230100"),
                 Arrays.asList("E000001800"));
     }
@@ -215,25 +216,28 @@ public class AcsCardTerminalsTest {
     }
 
     @Test
-    public void testTransceiveTransparentEndsSessionOnError() {
+    public void testTransceiveTransparentSwitchProtocolFailure() throws CardException {
         FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1552 1S CL Reader PICC", () -> new FakeCard(command -> {
-            if(toHex(command).equals("FFC20000028100")) {
+            if(toHex(command).equals("FFC20000028100") || toHex(command).equals("FFC20000028200")) {
                 return fromHex("C0030090009000");
             }
-            // i.e. switch protocol failed
+            // switch protocol and exchange: no response from card
             return fromHex("C0030164019000");
         }));
 
-        assertThrows(CardException.class, () -> new Acr1552CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60})));
+        // a failed switch protocol is not fatal (the ACR1281U reports it for an NTAG216, but exchanges work)
+        List<byte[]> responses = new Acr1552CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60}));
+        assertEquals(null, responses.get(0));
 
-        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC20000028200", "E00000230100"), takeCommands(terminal));
+        // session ended, then restore (automatic polling off fails here, so stops)
+        assertEquals(Arrays.asList("FFC20000028100", "FFC20002048F020003", "FFC2000103950160", "FFC20000028200", "E00000230100"), takeCommands(terminal));
     }
 
     @Test
     public void testTransceiveTransparentNotSupported() throws CardException {
-        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1281 1S Dual Reader PICC");
+        FakeCardTerminal terminal = new FakeCardTerminal("ACS ACR1283 4S CL Reader PICC 00 00");
 
-        assertEquals(null, new Acr1281CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60})));
+        assertEquals(null, new Acr1283CardTerminal(terminal).transceiveTransparent(Arrays.asList(new byte[]{0x60})));
         assertTrue(terminal.getConnected().isEmpty());
     }
 

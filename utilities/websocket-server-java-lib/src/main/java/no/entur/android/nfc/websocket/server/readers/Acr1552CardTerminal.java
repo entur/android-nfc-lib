@@ -42,12 +42,8 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
 
     @Override
     protected void restoreAfterTransparentSession() throws CardException {
-        setAutomaticPICCPolling(0);
-        delegate.waitForCardAbsent(CARD_ABSENT_TIMEOUT);
-        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING);
+        redetectCardByTogglingAutomaticPolling(AUTOMATIC_PICC_POLLING);
     }
-
-    private static final long CARD_ABSENT_TIMEOUT = 1000;
 
     /**
      * Set PICC polling type using escape command E0 00 01 20 02 [picc high] [picc low].

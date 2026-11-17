@@ -264,6 +264,21 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
     protected void restoreAfterTransparentSession() throws CardException {
     }
 
+    private static final long CARD_ABSENT_TIMEOUT = 1000;
+
+    /**
+     * Have the reader detect the card again by toggling automatic polling, i.e. after a transparent session
+     * which leaves the card in a state where card commands (i.e. READ BINARY) do not work.
+     *
+     * @param automaticPolling automatic polling value while polling for cards
+     */
+
+    protected void redetectCardByTogglingAutomaticPolling(int automaticPolling) throws CardException {
+        setAutomaticPICCPolling(0);
+        delegate.waitForCardAbsent(CARD_ABSENT_TIMEOUT);
+        setAutomaticPICCPolling(automaticPolling);
+    }
+
     private List<byte[]> transceiveTransparentSession(List<byte[]> commands) throws CardException {
         Card ca = delegate.connect("DIRECT");
         try {
@@ -271,7 +286,12 @@ public abstract class AcsExtendedCardTerminal extends ExtendedCardTerminal {
             try {
                 checkTransparentStatus(ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_START_SESSION));
                 try {
-                    checkTransparentStatus(ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_SWITCH_PROTOCOL_ISO14443A_LAYER_3));
+                    byte[] switchProtocol = ca.transmitControlCommand(SCARD_CTL_CODE, TRANSPARENT_SWITCH_PROTOCOL_ISO14443A_LAYER_3);
+                    if(!isTransparentSuccess(switchProtocol)) {
+                        // i.e. the ACR1281U reports no response for an NTAG216, but exchanges still work.
+                        // If the card cannot be reached, the exchanges return no response.
+                        LOGGER.warn("Unexpected switch protocol response " + ByteArrayHexStringConverter.toHexString(switchProtocol) + ", continue");
+                    }
 
                     List<byte[]> responses = new ArrayList<>(commands.size());
                     for (byte[] command : commands) {

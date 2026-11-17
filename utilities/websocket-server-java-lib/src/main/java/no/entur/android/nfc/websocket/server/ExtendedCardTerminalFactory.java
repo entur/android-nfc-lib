@@ -47,8 +47,12 @@ public class ExtendedCardTerminalFactory {
 
     // pcsc-lite reader names end with the reader index and the slot number
     private static boolean isNonZeroSlot(String name) {
+        return isOtherSlot(name, "00");
+    }
+
+    private static boolean isOtherSlot(String name, String slot) {
         Matcher matcher = PCSC_LITE_SLOT.matcher(name);
-        return matcher.matches() && !matcher.group(1).equals("00");
+        return matcher.matches() && !matcher.group(1).equals(slot);
     }
 
     protected ExtendedCardTerminal createTerminal(CardTerminal cardTerminal) {
@@ -78,6 +82,10 @@ public class ExtendedCardTerminalFactory {
             return new Acr1255UCardTerminal(cardTerminal);
         }
         if(name.contains("ACR1281")) {
+            if(isOtherSlot(name, "01")) {
+                // contact (00) and SAM (02) slots of the dual reader, i.e. ACS ACR1281 1S Dual Reader 00 00
+                return null;
+            }
             return new Acr1281CardTerminal(cardTerminal);
         }
         if(name.contains("ACR1283")) {
