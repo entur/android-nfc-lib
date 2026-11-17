@@ -10,9 +10,13 @@ public class CardPollingServer implements Runnable {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CardPollingServer.class);
 
-    private Thread thread;
+    // the active polling thread, if any. A stopped thread might still be finishing (i.e. blocked in a callback),
+    // so each thread checks whether it is still the active one, rather than sharing a single closed flag.
+    private volatile Thread thread;
 
-    private volatile boolean closed = true;
+    // the last stopped thread, which the next thread must wait for before connecting to a card,
+    // so that its cleanup (card disconnect) does not interfere with the next thread.
+    private Thread previous;
 
     private final CardTerminal cardTerminal;
 
@@ -28,6 +32,19 @@ public class CardPollingServer implements Runnable {
 
     @Override
     public void run() {
+        poll(null);
+    }
+
+    private boolean isActive() {
+        return thread == Thread.currentThread();
+    }
+
+    private void poll(Thread previous) {
+        if(previous != null) {
+            // wait outside of any monitor, as the previous thread might need it.
+            // Wait even if stopped, so that a chain of quick restarts waits for all previous threads.
+            awaitTermination(previous);
+        }
         LOGGER.info("Start polling for card");
 
         long timestamp = System.currentTimeMillis();
@@ -35,7 +52,7 @@ public class CardPollingServer implements Runnable {
         long counter = 0;
 
         main:
-        while(!closed) {
+        while(isActive()) {
             try {
                 if(cardTerminal.isCardPresent()) {
                     LOGGER.info("Card is present");
@@ -53,7 +70,7 @@ public class CardPollingServer implements Runnable {
                             LOGGER.warn("Problem handling card, wait for it to be removed", e);
                         }
 
-                        while(!closed) {
+                        while(isActive()) {
                             try {
                                 Thread.sleep(100);
                                 if(!cardTerminal.isCardPresent()) {
@@ -90,11 +107,11 @@ public class CardPollingServer implements Runnable {
             } catch (Exception e) {
                 LOGGER.error("Problem running", e);
 
-                // mark as closed so that polling can be started again
+                // mark as stopped so that polling can be started again
                 synchronized (this) {
                     if(thread == Thread.currentThread()) {
-                        closed = true;
                         thread = null;
+                        this.previous = Thread.currentThread();
                     }
                 }
 
@@ -102,6 +119,20 @@ public class CardPollingServer implements Runnable {
             }
         }
         LOGGER.info("Stop polling for card");
+    }
+
+    private static void awaitTermination(Thread previous) {
+        boolean interrupted = false;
+        while(previous.isAlive()) {
+            try {
+                previous.join();
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        }
+        if(interrupted) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void disconnect(Card card) {
@@ -114,13 +145,15 @@ public class CardPollingServer implements Runnable {
     }
 
     public synchronized void start() {
-        if(closed) {
-            closed = false;
-
+        if(thread == null) {
             LOGGER.info("Start background thread");
 
-            thread = new Thread(this);
-            thread.start();
+            Thread previous = this.previous;
+            this.previous = null;
+
+            Thread next = new Thread(() -> poll(previous));
+            thread = next;
+            next.start();
         } else {
             LOGGER.info("Background thread already started");
         }
@@ -129,11 +162,12 @@ public class CardPollingServer implements Runnable {
     public synchronized void stop() {
         LOGGER.info("Stop background thread");
 
-        closed = true;
-
-        if(thread != null) {
-            thread.interrupt();
+        Thread current = thread;
+        if(current != null) {
             thread = null;
+            previous = current;
+
+            current.interrupt();
         }
     }
 

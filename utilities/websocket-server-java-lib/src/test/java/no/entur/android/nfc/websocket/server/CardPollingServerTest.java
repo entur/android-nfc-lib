@@ -1,6 +1,8 @@
 package no.entur.android.nfc.websocket.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.smartcardio.Card;
 import javax.smartcardio.CardException;
@@ -129,6 +132,80 @@ public class CardPollingServerTest {
 
             assertTrue(listener.connectedLatch.await(5, TimeUnit.SECONDS));
         } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testRestartWhileCardCallbackIsBlocked() throws Exception {
+        // like the PC/SC terminal, return the same card while it is connected
+        AtomicReference<FakeCard> current = new AtomicReference<>();
+        FakeCardTerminal terminal = new FakeCardTerminal("Reader", () -> current.updateAndGet(c -> c == null || c.isDisconnected() ? new FakeCard() : c));
+
+        CountDownLatch blocked = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        List<Card> connected = new CopyOnWriteArrayList<>();
+        CountDownLatch secondConnected = new CountDownLatch(2);
+
+        CardListener listener = new CardListener() {
+            @Override
+            public void cardConnected(Card card) {
+                connected.add(card);
+                secondConnected.countDown();
+                if(connected.size() == 1) {
+                    blocked.countDown();
+                    // block, ignoring interrupts, like a native call or blocking send
+                    boolean interrupted = false;
+                    while(release.getCount() > 0) {
+                        try {
+                            release.await();
+                        } catch (InterruptedException e) {
+                            interrupted = true;
+                        }
+                    }
+                    if(interrupted) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+
+            @Override
+            public void cardDisconnected(Card card) {
+            }
+        };
+
+        CardPollingServer server = new CardPollingServer(terminal);
+        server.setListener(listener);
+        server.start();
+        try {
+            terminal.setCardPresent(true);
+            assertTrue(blocked.await(5, TimeUnit.SECONDS));
+
+            // restart while the first thread is blocked in the callback, card still present
+            server.stop();
+            server.start();
+
+            Thread.sleep(300);
+            // the new thread must not connect before the previous thread is done
+            assertEquals(1, connected.size());
+
+            release.countDown();
+
+            assertTrue(secondConnected.await(5, TimeUnit.SECONDS));
+
+            FakeCard first = (FakeCard) connected.get(0);
+            FakeCard second = (FakeCard) connected.get(1);
+
+            // the previous thread disconnected its card before the new thread connected
+            assertTrue(first.isDisconnected());
+            assertNotSame(first, second);
+
+            // the previous thread does not keep polling or disconnect the new card
+            Thread.sleep(300);
+            assertFalse(second.isDisconnected());
+            assertEquals(2, connected.size());
+        } finally {
+            release.countDown();
             server.stop();
         }
     }

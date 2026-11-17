@@ -40,15 +40,39 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     //binder given to client
     private final IBinder binder = new LocalBinder();
 
-    private WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
+    protected WebSocketClientFactory factory = new WebSocketClientFactory(2000, 1000);
 
     private IsoDepTagServiceSupport isoDepTagServiceSupport = new IsoDepTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
     private WebsocketMifareUltralightTagServiceSupport mifareUltralightTagServiceSupport = new WebsocketMifareUltralightTagServiceSupport(this, infcTagBinder, store, new DefaultTransceiveResultExceptionMapper());
 
     private volatile WebSocketClient client = null;
 
-    // tag currently in the field, if any
+    // tag currently in the field, if any; belongs to the current client.
+    // Guarded by this, along with changes to client, so that events from a previous client cannot modify it.
     private volatile TagProxy currentTagProxy = null;
+
+    /**
+     * Card listener for a single client, so that late card events from a previous client are ignored.
+     */
+
+    private class ClientCardListener implements CardClient.Listener {
+
+        private final WebSocketClient owner;
+
+        private ClientCardListener(WebSocketClient owner) {
+            this.owner = owner;
+        }
+
+        @Override
+        public void onCardLost() {
+            WebSocketNfcService.this.onCardLost(owner);
+        }
+
+        @Override
+        public void onCardPresent(CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
+            WebSocketNfcService.this.onCardPresent(owner, cardClient, technologies, atr, historicalBytes, uid);
+        }
+    }
 
     /**
      * Listener for a single client, so that a late close of a previous client does not clear the current client.
@@ -133,7 +157,9 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
 
             ClientListener listener = new ClientListener();
             WebSocketClient c = factory.connect(uri, listener);
-            this.client = c;
+            synchronized (this) {
+                this.client = c;
+            }
             listener.setClient(c);
 
             broadcast(ExternalNfcServiceCallback.ACTION_SERVICE_STARTED);
@@ -190,7 +216,7 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
     public boolean beginPolling() {
         WebSocketClient c = this.client;
         if(c != null) {
-            c.getCardClient().setListener(this);
+            c.getCardClient().setListener(new ClientCardListener(c));
 
             return c.getReaderClient().beginPolling();
         }
@@ -207,30 +233,70 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
 
     @Override
     public void onClosed() {
-        this.client = null;
+        WebSocketClient c = this.client;
+        if(c != null) {
+            onClientClosed(c);
+        }
     }
 
-    protected synchronized void onClientClosed(WebSocketClient c) {
-        // a previous client might close after a new client was connected
-        if(this.client == c) {
+    protected void onClientClosed(WebSocketClient c) {
+        synchronized (this) {
+            // a previous client might close after a new client was connected
+            if(this.client != c) {
+                return;
+            }
             this.client = null;
+
+            // card lost will not be received from a closed client, so lose the tag now
+            TagProxy proxy = this.currentTagProxy;
+            if(proxy != null) {
+                this.currentTagProxy = null;
+
+                proxy.close();
+
+                sendTagLeftField(proxy);
+            }
+        }
+
+        // no further card events from this client
+        CardClient cardClient = c.getCardClient();
+        if(cardClient != null) {
+            cardClient.setListener(null);
         }
     }
 
     @Override
     public void onCardLost() {
+        onCardLost(this.client);
+    }
+
+    protected void onCardLost(WebSocketClient owner) {
         LOGGER.info("onCardLost");
 
+        synchronized (this) {
+            if(owner == null || owner != this.client) {
+                LOGGER.info("Ignore card lost from previous connection");
+
+                return;
+            }
+
+            TagProxy proxy = this.currentTagProxy;
+            if(proxy != null) {
+                this.currentTagProxy = null;
+
+                // mark tag as no longer present
+                proxy.close();
+            }
+
+            sendTagLeftField(proxy);
+        }
+    }
+
+    protected void sendTagLeftField(TagProxy proxy) {
         Intent intent = new Intent();
         intent.setAction(ExternalNfcTagCallback.ACTION_TAG_LEFT_FIELD);
 
-        TagProxy proxy = this.currentTagProxy;
         if(proxy != null) {
-            this.currentTagProxy = null;
-
-            // mark tag as no longer present
-            proxy.close();
-
             byte[] uid = proxy.getUid();
             if(uid != null) {
                 intent.putExtra(NfcAdapter.EXTRA_ID, uid);
@@ -243,32 +309,44 @@ public class WebSocketNfcService extends AbstractForegroundService implements Ca
 
     @Override
     public void onCardPresent(CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
+        onCardPresent(this.client, cardClient, technologies, atr, historicalBytes, uid);
+    }
+
+    protected void onCardPresent(WebSocketClient owner, CardClient cardClient, List<String> technologies, byte[] atr, byte[] historicalBytes, byte[] uid) {
         LOGGER.info("onCardPresent: " + technologies);
 
         // TODO add reader id
 
-        TagProxy previous = this.currentTagProxy;
-        if(previous != null) {
-            // card lost was not received
-            this.currentTagProxy = null;
-            previous.close();
-        }
+        synchronized (this) {
+            if(owner == null || owner != this.client) {
+                LOGGER.info("Ignore card present from previous connection");
 
-        if(technologies.contains("IsoDep")) {
-            WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
-
-            this.currentTagProxy = isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
-        } else if(technologies.contains("MifareUltralight")) {
-            WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
-
-            TagProxy proxy = mifareUltralightTagServiceSupport.mifareUltralight(-1, wrapper, atr, uid, historicalBytes, IntentEnricher.identity());
-            if(proxy != null) {
-                proxy.setUid(uid);
+                return;
             }
-            this.currentTagProxy = proxy;
-        } else {
 
-            broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+            TagProxy previous = this.currentTagProxy;
+            if(previous != null) {
+                // card lost was not received
+                this.currentTagProxy = null;
+                previous.close();
+            }
+
+            if(technologies.contains("IsoDep")) {
+                WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
+
+                this.currentTagProxy = isoDepTagServiceSupport.card(-1, wrapper, uid, historicalBytes, IntentEnricher.identity());
+            } else if(technologies.contains("MifareUltralight")) {
+                WebsocketIsoDepWrapper wrapper = new WebsocketIsoDepWrapper(cardClient);
+
+                TagProxy proxy = mifareUltralightTagServiceSupport.mifareUltralight(-1, wrapper, atr, uid, historicalBytes, IntentEnricher.identity());
+                if(proxy != null) {
+                    proxy.setUid(uid);
+                }
+                this.currentTagProxy = proxy;
+            } else {
+
+                broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+            }
         }
     }
 
