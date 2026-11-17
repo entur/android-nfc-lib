@@ -14,6 +14,9 @@ import java.util.Arrays;
  * The appended status word cannot always be told apart from card data: the status OK (00) followed by two data bytes
  * 90 00 is the same as the status OK with an appended status word. Successful reads (ReadData and ReadRecords) always
  * return data, so these are kept as-is, but i.e. the last frame of a chained read (AdditionalFrame) is not.
+ * <br>
+ * Commands which are only in later DESFire versions (i.e. EV2 AuthenticateEV2First) are not treated as native, so
+ * their single byte responses keep the appended status word.
  */
 
 public class DesfireResponseAdapter {
@@ -57,7 +60,7 @@ public class DesfireResponseAdapter {
             0xDF, // DeleteFile
             // file level
             0xBD, // ReadData
-            0x8D, // ReadData (libfreefare)
+            0x8D, // ReadData per a libfreefare constant, but its ReadData sends BD, so not treated as a read
             0x3D, // WriteData
             0x6C, // GetValue
             0x0C, // Credit
@@ -72,7 +75,7 @@ public class DesfireResponseAdapter {
     );
 
     // reads, which return data if successful
-    private static final boolean[] READ_COMMANDS = codes(0xBD, 0x8D, 0xBB);
+    private static final boolean[] READ_COMMANDS = codes(0xBD, 0xBB);
 
     // DESFire EV1 status codes, as in nfcjlib (DESFireEV1.Response) and libfreefare
     private static final boolean[] STATUS_CODES = codes(

@@ -55,6 +55,8 @@ public class DesfireResponseAdapterTest {
         assertArrayEquals(hex("009000"), DesfireResponseAdapter.stripAppendedStatusWord(hex("BB01000000010000"), hex("009000")));
         // but an error is a single byte
         assertArrayEquals(hex("F0"), DesfireResponseAdapter.stripAppendedStatusWord(hex("BD01000000020000"), hex("F09000")));
+        // not confirmed as a read, so stripped like other native commands
+        assertArrayEquals(hex("00"), DesfireResponseAdapter.stripAppendedStatusWord(hex("8D01000000020000AABB"), hex("009000")));
     }
 
     @Test
