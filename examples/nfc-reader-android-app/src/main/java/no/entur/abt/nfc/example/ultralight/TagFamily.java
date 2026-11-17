@@ -92,25 +92,35 @@ public enum TagFamily {
 			return OTHER_GET_VERSION;
 		}
 		int productType = version[2] & 0xFF;
+		int productSubtype = version[3] & 0xFF;
+		int majorVersion = version[4] & 0xFF;
 		int storageSize = version[6] & 0xFF;
+		if (majorVersion != 0x01) {
+			// NTAG21x and Ultralight EV1 are version 1, other products have other memory maps (i.e. NTAG I2C is version 2)
+			return OTHER_GET_VERSION;
+		}
 		if (productType == 0x04) {
-			// NTAG
+			// NTAG, per the NXP datasheets: NTAG210 / 212 are subtype 01 (17 pF), NTAG213 / 215 / 216 subtype 02 (50 pF);
+			// other subtypes (i.e. NTAG213F / 216F, NTAG213 TT) have other memory maps
 			switch (storageSize) {
 			case 0x0B:
-				return NTAG210;
+				return productSubtype == 0x01 ? NTAG210 : OTHER_GET_VERSION;
 			case 0x0E:
-				return NTAG212;
+				return productSubtype == 0x01 ? NTAG212 : OTHER_GET_VERSION;
 			case 0x0F:
-				return NTAG213;
+				return productSubtype == 0x02 ? NTAG213 : OTHER_GET_VERSION;
 			case 0x11:
-				return NTAG215;
+				return productSubtype == 0x02 ? NTAG215 : OTHER_GET_VERSION;
 			case 0x13:
-				return NTAG216;
+				return productSubtype == 0x02 ? NTAG216 : OTHER_GET_VERSION;
 			default:
 				return OTHER_GET_VERSION;
 			}
 		} else if (productType == 0x03) {
-			// MIFARE Ultralight (EV1)
+			// MIFARE Ultralight EV1, per the NXP datasheet subtype 01 (17 pF, MF0ULx1) or 02 (50 pF, MF0ULHx1)
+			if (productSubtype != 0x01 && productSubtype != 0x02) {
+				return OTHER_GET_VERSION;
+			}
 			switch (storageSize) {
 			case 0x0B:
 				return ULTRALIGHT_EV1_MF0UL11;

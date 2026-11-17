@@ -28,6 +28,14 @@ public class UltralightReportTest {
 		assertEquals(TagFamily.NTAG216, TagFamily.fromVersion(hex("0004040201001303")));
 		assertEquals(TagFamily.ULTRALIGHT_EV1_MF0UL11, TagFamily.fromVersion(hex("0004030101000B03")));
 		assertEquals(TagFamily.ULTRALIGHT_EV1_MF0UL21, TagFamily.fromVersion(hex("0004030101000E03")));
+		// Ultralight EV1 50 pF (MF0ULH11 / MF0ULH21)
+		assertEquals(TagFamily.ULTRALIGHT_EV1_MF0UL11, TagFamily.fromVersion(hex("0004030201000B03")));
+		assertEquals(TagFamily.ULTRALIGHT_EV1_MF0UL21, TagFamily.fromVersion(hex("0004030201000E03")));
+		// other products with the same storage size: NTAG I2C 1k (version 2), NTAG216F (subtype 04), NTAG213 with another subtype
+		assertEquals(TagFamily.OTHER_GET_VERSION, TagFamily.fromVersion(hex("0004040502001303")));
+		assertEquals(TagFamily.OTHER_GET_VERSION, TagFamily.fromVersion(hex("0004040401001303")));
+		assertEquals(TagFamily.OTHER_GET_VERSION, TagFamily.fromVersion(hex("0004040101000F03")));
+		assertEquals(TagFamily.OTHER_GET_VERSION, TagFamily.fromVersion(hex("0004030301000B03")));
 		// unknown product, non-NXP, wrong length
 		assertEquals(TagFamily.OTHER_GET_VERSION, TagFamily.fromVersion(hex("0004050101000F03")));
 		assertEquals(TagFamily.OTHER_GET_VERSION, TagFamily.fromVersion(hex("0005040201000F03")));
@@ -36,10 +44,15 @@ public class UltralightReportTest {
 
 	@Test
 	public void testReaderCapability() {
-		assertEquals(ReaderCapability.ACS_RAW, ReaderCapability.fromAcsReaderName("ACS ACR122U PICC Interface"));
-		assertEquals(ReaderCapability.ACS_RAW, ReaderCapability.fromAcsReaderName("ACS ACR122"));
-		assertEquals(ReaderCapability.ACS_UNVERIFIED_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1222 3S PICC Reader"));
-		assertEquals(ReaderCapability.ACS_UNVERIFIED_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1552 1S CL Reader PICC"));
+		// pass-through, verified with this screen on an ACR1222L
+		assertEquals(ReaderCapability.ACS_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1222 3S PICC Reader"));
+		assertEquals(ReaderCapability.ACS_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1222L 3S CL Reader"));
+		// pass-through, not verified with this screen
+		assertEquals(ReaderCapability.ACS_UNVERIFIED_RAW, ReaderCapability.fromAcsReaderName("ACS ACR122U PICC Interface"));
+		assertEquals(ReaderCapability.ACS_UNVERIFIED_RAW, ReaderCapability.fromAcsReaderName("ACS ACR122"));
+		// no pass-through
+		assertEquals(ReaderCapability.ACS_NO_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1552 1S CL Reader PICC"));
+		assertEquals(ReaderCapability.ACS_NO_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1281 1S Dual Reader"));
 		assertEquals(ReaderCapability.ACS_NO_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1252 1S CL Reader PICC"));
 		assertEquals(ReaderCapability.ACS_NO_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1255U-J1 PICC"));
 		assertEquals(ReaderCapability.ACS_NO_RAW, ReaderCapability.fromAcsReaderName("ACS ACR1283U"));
