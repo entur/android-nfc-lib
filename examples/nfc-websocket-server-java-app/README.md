@@ -31,3 +31,16 @@ and wait a few seconds.
 
 ## No reader found
 Adjust the `sun.security.smartcardio.library` in `build.gradle` for this module.
+## ACR 122U not found (Linux)
+The kernel NFC driver `pn533_usb` might claim the ACR 122U (it is based on a NXP PN532), so `pcscd` cannot open it
+(`journalctl -u pcscd` shows `ACS ACR122U init failed`). Unload the kernel driver
+
+```sh
+sudo modprobe -r pn533_usb pn533 nfc
+```
+
+then reconnect the reader (or run `sudo systemctl restart pcscd`). To keep the kernel driver from claiming the reader again, blacklist it:
+
+```sh
+printf 'blacklist pn533_usb\nblacklist pn533\nblacklist nfc\n' | sudo tee /etc/modprobe.d/blacklist-pn533.conf
+```
