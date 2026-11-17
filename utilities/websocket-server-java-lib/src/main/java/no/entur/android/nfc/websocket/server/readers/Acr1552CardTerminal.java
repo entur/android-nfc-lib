@@ -61,7 +61,8 @@ public class Acr1552CardTerminal extends AcsExtendedCardTerminal {
     @Override
     public void startPolling() throws CardException {
         setPICC(PICC_ISO14443_TYPE_A | PICC_ISO14443_TYPE_B);
-        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING | AUTOMATIC_PICC_POLLING_ENFORCE_ISO14443A_PART_4);
+        // do not enforce ISO14443-4, so that i.e. MIFARE Ultralight cards are also detected
+        setAutomaticPICCPolling(AUTOMATIC_PICC_POLLING);
     }
 
     @Override

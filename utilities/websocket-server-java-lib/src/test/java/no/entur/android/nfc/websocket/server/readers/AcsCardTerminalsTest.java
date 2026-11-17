@@ -64,7 +64,7 @@ public class AcsCardTerminalsTest {
     @Test
     public void testAcr1255U() throws CardException {
         assertCommands(Acr1255UCardTerminal::new, "ACR1255U-J1 SWV 1.00",
-                Arrays.asList("E00000200103", "E00000230181"),
+                Arrays.asList("E00000200103", "E00000230101"),
                 Arrays.asList("E00000230100"),
                 Arrays.asList("E000001800"));
     }
@@ -72,7 +72,7 @@ public class AcsCardTerminalsTest {
     @Test
     public void testAcr1281() throws CardException {
         assertCommands(Acr1281CardTerminal::new, "ACR1281U_V521",
-                Arrays.asList("E00000200103", "E00000230181"),
+                Arrays.asList("E00000200103", "E00000230101"),
                 Arrays.asList("E00000230100"),
                 Arrays.asList("E000001800"));
     }
@@ -80,7 +80,7 @@ public class AcsCardTerminalsTest {
     @Test
     public void testAcr1283() throws CardException {
         assertCommands(Acr1283CardTerminal::new, "ACR1283L_V101",
-                Arrays.asList("E00000200103", "E00000230181"),
+                Arrays.asList("E00000200103", "E00000230101"),
                 Arrays.asList("E00000230100"),
                 Arrays.asList("E000001800"));
     }
@@ -89,7 +89,7 @@ public class AcsCardTerminalsTest {
     public void testAcr1552() throws CardException {
         // ISO14443 type A and B are in the first byte of the polling type (03 00); 00 03 would poll for PicoPass only
         assertCommands(Acr1552CardTerminal::new, "ACR1552 R FW 1.01.01",
-                Arrays.asList("E0000120020300", "E00000230181"),
+                Arrays.asList("E0000120020300", "E00000230101"),
                 Arrays.asList("E00000230100"),
                 Arrays.asList("E000001800"));
     }
