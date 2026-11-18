@@ -44,10 +44,14 @@ import java.util.List;
  */
 public final class ResponseAPDU implements java.io.Serializable {
 
+	// note: signed byte values; use as sw1 / sw2 constructor arguments or compare with raw response bytes, not with getSW1() / getSW2()
 	public final static int ADDITIONAL_FRAME = (byte) 0xAF;
 	public final static int OK = (byte) 0x90;
 
 	public static List<ResponseAPDU> getResponses(byte[] payload, int maxLength, int status) {
+		if (maxLength <= 7) {
+			throw new IllegalArgumentException("Expected max length > 7, got " + maxLength);
+		}
 		int chunkLength = maxLength - 7;
 
 		List<ResponseAPDU> results = new LinkedList<>();

@@ -71,7 +71,8 @@ public class ValueBlock extends Block {
 		if ((valueBlock[12] != ~valueBlock[13]) || (valueBlock[12] != valueBlock[14]) || (valueBlock[13] != valueBlock[15]))
 			throw new MfException("Not a valid value block. [" + NfcUtils.convertBinToASCII(valueBlock) + "]");
 
-		value = NfcUtils.bytesToInt(valueBlock, 0);
+		// value is stored least significant byte first
+		value = (valueBlock[0] & 0xFF) | (valueBlock[1] & 0xFF) << 8 | (valueBlock[2] & 0xFF) << 16 | (valueBlock[3] & 0xFF) << 24;
 		address = valueBlock[12];
 	}
 
@@ -85,7 +86,8 @@ public class ValueBlock extends Block {
 	 * @return
 	 */
 	public byte[] cypherValueBlock(int value, byte address) {
-		byte[] hexBin = NfcUtils.intTo4Bytes(value);
+		// value is stored least significant byte first
+		byte[] hexBin = new byte[] { (byte) value, (byte) (value >> 8), (byte) (value >> 16), (byte) (value >> 24) };
 		byte[] bin = new byte[MfConstants.BYTES_PER_BLOCK];
 		for (int x = 0; x < 4; x++) {
 			// Store the value in the first four bytes

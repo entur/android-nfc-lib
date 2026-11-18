@@ -114,8 +114,11 @@ public class HidServiceConnector {
 
     protected final Context context;
 
-    /** Flag indicating whether we have called bind on the service. */
+    /** Flag indicating whether the service is bound. */
     protected boolean bound;
+
+    /** Flag indicating whether we have called bind on the service. */
+    protected boolean bindRequested;
 
     protected HidMqttService.LocalBinder service;
 
@@ -197,6 +200,10 @@ public class HidServiceConnector {
 
         intent.putExtra(HidMqttService.MQTT_CLIENT_HOST, host);
 
+        if(identifier != null) {
+            intent.putExtra(HidMqttService.MQTT_CLIENT_IDENTIFIER, identifier);
+        }
+
         if(port != -1) {
             intent.putExtra(HidMqttService.MQTT_CLIENT_PORT, port);
         }
@@ -239,14 +246,19 @@ public class HidServiceConnector {
 
     public void bind() {
         if(!bound) {
+            bindRequested = true;
             context.bindService(new Intent(context, HidMqttService.class), connection, Context.BIND_AUTO_CREATE);
         }
     }
 
     public void unbind() {
-        if(connection != null) {
+        if(bindRequested) {
+            bindRequested = false;
             context.unbindService(connection);
         }
+        // onServiceDisconnected(..) is not called on unbind
+        bound = false;
+        service = null;
     }
 
     public boolean waitForBindToComplete() {
