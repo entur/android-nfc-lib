@@ -66,6 +66,12 @@
         </activity>
 
         <activity
+            android:name=".ultralight.UltralightTestActivity"
+            android:exported="false"
+            android:label="@string/ultralight_test_title"
+            android:theme="@style/Theme.AppCompat.Light" />
+
+        <activity
             android:screenOrientation="portrait"
             android:name=".SettingsActivity"
             android:label="@string/activity_title_preferences"

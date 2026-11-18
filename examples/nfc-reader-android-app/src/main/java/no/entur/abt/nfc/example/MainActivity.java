@@ -59,6 +59,8 @@ import no.entur.android.nfc.external.acs.reader.AcrDefaultLEDAndBuzzerBehaviour;
 import no.entur.android.nfc.external.acs.reader.AcrPICC;
 import no.entur.android.nfc.external.acs.reader.AcrReader;
 import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.abt.nfc.example.ultralight.UltralightResults;
+import no.entur.abt.nfc.example.ultralight.UltralightTestActivity;
 import no.entur.abt.nfc.example.utils.ParcelableExtraUtils;
 import no.entur.android.nfc.wrapper.Tag;
 import no.entur.android.nfc.wrapper.tech.IsoDep;
@@ -249,6 +251,12 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
             LOGGER.info("Got reader type " + reader.getClass().getName() + " in activity");
 
+            if(reader instanceof AcrReader) {
+                // so that the Ultralight / NTAG test knows the reader model, also when the reader was opened before the test was started
+                AcrReader acrReader = (AcrReader)reader;
+                UltralightResults.getInstance().readerOpened(acrReader.getId(), acrReader.getName());
+            }
+
             // example: attempt to talk to a SAM on ACR 1252
             if(reader instanceof AcrReader) {
                 AcrReader acrReader = (AcrReader)reader;
@@ -364,7 +372,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
     @Override
     public void onExternalNfcReaderClosed(Intent intent) {
-        // do nothing
+        String readerId = intent.getStringExtra(ExternalNfcReaderCallback.EXTRAS_READER_ID);
+        if(readerId != null) {
+            UltralightResults.getInstance().readerClosed(readerId);
+        }
         runOnUiThread(() -> {
             setReaderOpen(false);
         });
@@ -799,6 +810,10 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
         mainApplication.setExternalHidNfcReader(true);
     }
 
+    public void openUltralightTest(View view) {
+        startActivity(new Intent(this, UltralightTestActivity.class));
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
@@ -819,6 +834,9 @@ public class MainActivity extends AppCompatActivity implements ExternalNfcTagCal
 
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.action_ultralight_test) {
+            Intent intent = new Intent(this, UltralightTestActivity.class);
             startActivity(intent);
         }
 

@@ -28,10 +28,10 @@ import org.nfctools.mf.ul.MfUlReaderWriter;
 
 import com.acs.smartcard.ReaderException;
 
-import no.entur.android.nfc.util.ByteArrayHexStringConverter;
+import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.acs.reader.command.ACSIsoDepWrapper;
-import no.entur.android.nfc.CommandAPDU;
-import no.entur.android.nfc.ResponseAPDU;
 
 public class NfcNtag {
 
@@ -106,7 +106,8 @@ public class NfcNtag {
 
 		byte[] resp = transceive(req);
 
-		return resp[0] + resp[1] * 256 + resp[2] * 65536;
+		// 24-bit counter, LSB first
+		return (resp[0] & 0xFF) | (resp[1] & 0xFF) << 8 | (resp[2] & 0xFF) << 16;
 	}
 
 	// NTAG PWD_AUTH
@@ -193,42 +194,17 @@ public class NfcNtag {
 	}
 
 	private byte[] transceive(byte[] req) throws MfException, ReaderException {
-
-		byte[] sub = new byte[2 + req.length];
-		// 0xD4 magic byte
-		// 0x42 InCommunicateThru from PN532
-
-		sub[0] = (byte) 0xD4;
-		sub[1] = (byte) 0x42;
-
-		System.arraycopy(req, 0, sub, 2, req.length);
-		// 0xD4 magic byte
-		// 0x42 InCommunicateThru from PN532
-
 		// see https://stackoverflow.com/questions/44237726/how-to-authenticate-ntag213-with-acr122u
+		// no selecting the tag again if it does not respond, see sectorSelect(..)
+		byte[] command = ReaderWrapper.inCommunicateThru(req);
 
-		CommandAPDU command = new CommandAPDU(0xFF, 0x00, 0x00, 0x00, sub, 0, sub.length);
+		byte[] responseBytes = reader.transceive(command);
 
-		byte[] responseBytes = reader.transceive(command.getBytes());
-
-		ResponseAPDU response = new ResponseAPDU(responseBytes);
-
-		if (!response.isSuccess()) {
-			throw new MfException("Unable to issue command " + ByteArrayHexStringConverter.toHexString(sub) + ", response "
-					+ ByteArrayHexStringConverter.toHexString(responseBytes));
+		try {
+			return ReaderWrapper.parseInCommunicateThruResponse(command, responseBytes);
+		} catch (ReaderCommandException | PassthroughCommandException e) {
+			throw new MfException(e.getMessage());
 		}
-		byte[] data = response.getData();
-
-		// Log.d(TAG, "Status " + (0xFF & data[2]));
-
-		if ((data[2] & 0xFF) != 0) {
-			throw new MfException("Got status " + (data[2] & 0xFF));
-		}
-
-		byte[] content = new byte[data.length - 3];
-		System.arraycopy(data, 3, content, 0, content.length);
-
-		return content;
 	}
 
 }

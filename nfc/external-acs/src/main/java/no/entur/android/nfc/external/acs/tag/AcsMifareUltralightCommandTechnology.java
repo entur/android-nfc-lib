@@ -4,14 +4,21 @@ import android.os.RemoteException;
 
 import com.acs.smartcard.UnresponsiveCardException;
 
+import org.nfctools.mf.MfException;
 import org.nfctools.mf.block.DataBlock;
 import org.nfctools.mf.block.MfBlock;
 import org.nfctools.mf.ul.MfUlReaderWriter;
+import org.nfctools.scio.Command;
+import org.nfctools.scio.Response;
+import org.nfctools.spi.acs.Apdu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import no.entur.android.nfc.external.acs.reader.PassthroughCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderCommandException;
+import no.entur.android.nfc.external.acs.reader.ReaderWrapper;
 import no.entur.android.nfc.external.service.tag.CommandTechnology;
 import no.entur.android.nfc.external.tag.AbstractTagTechnology;
 import no.entur.android.nfc.external.tag.TransceiveResultExceptionMapper;
@@ -31,10 +38,22 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 
 	private final MfUlReaderWriter readerWriter;
 	private final TransceiveResultExceptionMapper exceptionMapper;
+
+	// send commands other than READ and WRITE (i.e. GET_VERSION, READ_SIG) to the tag via the reader pass-through
+	private final boolean passthrough;
+
+	// whether the reader reads 4 pages (16 bytes) at once, or null if not known yet
+	private volatile Boolean fourPageReads;
+
 	public AcsMifareUltralightCommandTechnology(MfUlReaderWriter readerWriter, TransceiveResultExceptionMapper exceptionMapper) {
+		this(readerWriter, exceptionMapper, false);
+	}
+
+	public AcsMifareUltralightCommandTechnology(MfUlReaderWriter readerWriter, TransceiveResultExceptionMapper exceptionMapper, boolean passthrough) {
 		super(TagTechnology.MIFARE_ULTRALIGHT);
 		this.readerWriter = readerWriter;
 		this.exceptionMapper = exceptionMapper;
+		this.passthrough = passthrough;
 	}
 
 	public TransceiveResult transceive(byte[] data, boolean raw) throws RemoteException {
@@ -45,20 +64,7 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 			int pageOffset = data[1] & 0xFF;
 
 			try {
-				MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 4);
-
-				byte[] result = new byte[4 * PAGE_SIZE];
-
-				for (int i = 0; i < 4; i++) {
-					byte[] pageData = readBlock[i].getData();
-
-					result[i * 4] = pageData[0];
-					result[i * 4 + 1] = pageData[1];
-					result[i * 4 + 2] = pageData[2];
-					result[i * 4 + 3] = pageData[3];
-				}
-
-				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, result);
+				return new TransceiveResult(TransceiveResult.RESULT_SUCCESS, readFourPages(pageOffset));
 			} catch (Exception e) {
 				LOGGER.debug("Problem sending command", e);
 				return exceptionMapper.mapException(e);
@@ -83,9 +89,52 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 
 				return exceptionMapper.mapException(e);
 			}
+		} else if (passthrough) {
+			return getRawTransceiveResult(data);
 		} else {
 			return new TransceiveResult(TransceiveResult.RESULT_FAILURE, null);
 		}
+	}
+
+	/**
+	 * Read 4 pages, like the READ command. Near the end of the memory, the tag rolls over to page 0 (i.e. pages 40, 41, 0, 1 for a 42 page
+	 * NTAG203), so read all 4 pages in one go, so that the tag (not the reader) handles the end of the memory.
+	 * <br>
+	 * If the reader rejects reading 16 bytes, read one page at a time instead. A failed read cannot tell whether the reader or the tag
+	 * failed, so decide by what worked before: once reading 16 bytes worked, a failure is from the tag, and once reading one page at a time
+	 * worked after a failure, the reader does not read 16 bytes. Exceptions (i.e. the tag was removed) are not retried.
+	 *
+	 * @param pageOffset first page
+	 * @return 16 bytes
+	 */
+
+	private byte[] readFourPages(int pageOffset) throws Exception {
+		Boolean fourPageReads = this.fourPageReads;
+		if (fourPageReads != Boolean.FALSE) {
+			Response response = readerWriter.transmit(new Command(Apdu.INS_READ_BINARY, 0x00, pageOffset, 4 * PAGE_SIZE));
+			if (response != null && response.isSuccess() && response.getData() != null && response.getData().length == 4 * PAGE_SIZE) {
+				this.fourPageReads = Boolean.TRUE;
+
+				return response.getData();
+			}
+			if (fourPageReads == Boolean.TRUE) {
+				throw new MfException("Unable to read 4 pages from page " + pageOffset + ": " + response);
+			}
+			LOGGER.debug("Unable to read 4 pages at once from page " + pageOffset + ": " + response);
+		}
+
+		// fall back to reading one page at a time, this fails at the end of the memory
+		MfBlock[] readBlock = readerWriter.readBlock(pageOffset, 4);
+		if (fourPageReads == null) {
+			// the reader does not read 16 bytes
+			this.fourPageReads = Boolean.FALSE;
+		}
+
+		byte[] result = new byte[4 * PAGE_SIZE];
+		for (int i = 0; i < 4; i++) {
+			System.arraycopy(readBlock[i].getData(), 0, result, i * PAGE_SIZE, PAGE_SIZE);
+		}
+		return result;
 	}
 
     @Override
@@ -101,7 +150,23 @@ public class AcsMifareUltralightCommandTechnology extends AbstractTagTechnology 
 		} catch (Exception e) {
 			LOGGER.debug("Problem sending command", e);
 
+			if (e instanceof PassthroughCommandException || e instanceof ReaderCommandException) {
+				// the tag did not respond (i.e. a command it does not support), so it is in the IDLE state:
+				// select it again, so that later commands (i.e. READ) still work. Like the WebSocket server, for any failed
+				// pass-through command, not only for a status from the reader (i.e. 01 for time out).
+				selectAgain();
+			}
+
 			return exceptionMapper.mapException(e);
+		}
+	}
+
+	private void selectAgain() {
+		try {
+			// FF 00 00 00 04 D4 4A 01 00
+			readerWriter.transmit(new Command(0x00, 0x00, 0x00, ReaderWrapper.getInListPassiveTarget()));
+		} catch (Exception e) {
+			LOGGER.debug("Unable to select the tag again", e);
 		}
 	}
 

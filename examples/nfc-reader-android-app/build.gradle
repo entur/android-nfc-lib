@@ -55,6 +55,8 @@ dependencies {
 
     implementation "androidx.preference:preference:1.2.1"
 
+    testImplementation "junit:junit:${unitVersion}"
+
     androidTestImplementation "junit:junit:${unitVersion}"
 
     androidTestImplementation("com.adevinta.android:barista:${baristaVersion}") {
