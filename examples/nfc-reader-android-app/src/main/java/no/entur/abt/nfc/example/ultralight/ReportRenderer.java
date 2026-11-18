@@ -225,11 +225,17 @@ public class ReportRenderer {
 	}
 
 	private String familyText(TagRecord record) {
-		TagFamily family = record.getFamily();
+		TagFamily family;
+		boolean provisional;
+		// TagRecord locks on itself, so read both values in one go
+		synchronized (record) {
+			family = record.getFamily();
+			provisional = record.isFamilyProvisional();
+		}
 		if (!family.isKnown()) {
 			return "unknown";
 		}
-		if (record.isFamilyProvisional()) {
+		if (provisional) {
 			return family.getLabel() + " (provisional)";
 		}
 		return family.getLabel();

@@ -73,8 +73,8 @@ public class UltralightResults {
 
 	public synchronized TagFamily getReferenceFamily(byte[] uid) {
 		TagRecord record = records.get(key(uid));
-		if (record != null && !record.isFamilyProvisional()) {
-			return record.getFamily();
+		if (record != null) {
+			return record.getPhoneFamily();
 		}
 		return null;
 	}

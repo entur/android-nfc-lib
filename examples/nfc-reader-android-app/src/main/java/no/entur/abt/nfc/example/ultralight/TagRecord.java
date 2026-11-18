@@ -87,6 +87,14 @@ public class TagRecord {
 	 */
 
 	public synchronized boolean isFamilyProvisional() {
-		return phone == null || phone.family == null;
+		return getPhoneFamily() == null;
+	}
+
+	/**
+	 * @return the tag family as identified by the phone (the reference), or null if not (yet) known
+	 */
+
+	public synchronized TagFamily getPhoneFamily() {
+		return phone != null ? phone.family : null;
 	}
 }
