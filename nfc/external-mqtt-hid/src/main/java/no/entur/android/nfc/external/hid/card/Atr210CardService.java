@@ -8,6 +8,8 @@ import org.nfctools.api.TagType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 import no.entur.android.nfc.external.mqtt3.client.MqttServiceClient;
 import no.entur.android.nfc.external.ExternalNfcReaderCallback;
 import no.entur.android.nfc.external.ExternalNfcTagCallback;
@@ -112,6 +114,25 @@ public class Atr210CardService {
             });
         } else if(tagType == TagType.MIFARE_ULTRALIGHT) {
             Atr210IsoDepWrapper wrapper = new Atr210IsoDepWrapper(commands, logApdus);
+
+            if(cardContext.getUid() == null) {
+                // read the card uid manually
+                try {
+                    byte[] transceive = commands.transceive(new byte[]{(byte) 0x30, 0x00}); // Read 4 pages from page offset 0
+                    if(transceive != null && transceive.length == 16) {
+                        byte[] uid = new byte[7];
+                        System.arraycopy(transceive, 0, uid, 0, 3);
+                        System.arraycopy(transceive, 0, uid, 3, 4);
+                        cardContext.setUid(uid);
+                    }
+                } catch (Exception e) {
+                    LOGGER.info("Problem reading ultralight tag id", e);
+
+                    isoDepTagServiceSupport.broadcast(ExternalNfcTagCallback.ACTION_TECH_DISCOVERED);
+
+                    return;
+                }
+            }
 
             this.currentCard = ultralightTagServiceSupport.mifareUltralight(0, wrapper, cardContext.getAtr(), cardContext.getUid(), cardContext.getHistoricalBytes(), (intent) -> {
 
