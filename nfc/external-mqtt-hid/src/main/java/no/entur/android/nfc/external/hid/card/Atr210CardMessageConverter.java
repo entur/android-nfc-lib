@@ -1,7 +1,11 @@
 package no.entur.android.nfc.external.hid.card;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import no.entur.android.nfc.external.hid.dto.atr210.ApduCommand;
 import no.entur.android.nfc.external.hid.dto.atr210.NfcAdpuTransmitRequest;
@@ -14,6 +18,46 @@ import no.entur.android.nfc.util.ByteArrayHexStringConverter;
 
 public class Atr210CardMessageConverter implements CardAdpuMessageConverter<String, Atr210CardContext> {
 
+    private static final AtomicInteger COMMAND_ID = new AtomicInteger();
+
+    private static final int RECENT_COMMAND_IDS = 256;
+
+    /** recently issued command ids, to recognize late responses */
+    private static final Set<Integer> recentCommandIds = new LinkedHashSet<>();
+
+    /**
+     * @return a non-zero command id (1 - 65535)
+     */
+
+    protected static int nextCommandId() {
+        int id;
+        do {
+            id = COMMAND_ID.incrementAndGet() & 0xFFFF;
+        } while (id == 0);
+
+        synchronized (recentCommandIds) {
+            recentCommandIds.remove(id);
+            recentCommandIds.add(id);
+            if (recentCommandIds.size() > RECENT_COMMAND_IDS) {
+                Iterator<Integer> iterator = recentCommandIds.iterator();
+                iterator.next();
+                iterator.remove();
+            }
+        }
+        return id;
+    }
+
+    /**
+     * @param commandId command id
+     * @return true if the command id was issued recently, i.e. for an earlier request
+     */
+
+    protected static boolean isRecentCommandId(int commandId) {
+        synchronized (recentCommandIds) {
+            return recentCommandIds.contains(commandId);
+        }
+    }
+
     @Override
     public CardAdpuSynchronizedRequestMessageRequest<String, NfcAdpuTransmitRequest> createCardAdpuRequestMessage(byte[] message, Atr210CardContext context) {
         NfcAdpuTransmitRequest schema = new NfcAdpuTransmitRequest();
@@ -22,8 +66,8 @@ public class Atr210CardMessageConverter implements CardAdpuMessageConverter<Stri
         // do not set expected status (it is optional)
         ApduCommand command = new ApduCommand();
         command.setFrame(ByteArrayHexStringConverter.byteArrayToHexString(message));
-        // not relevant here
-        command.setCommandId(0);
+        // unique per request, so that a late response can be told apart from the response to the next request
+        command.setCommandId(nextCommandId());
 
         commands.add(command);
         schema.setCommands(commands);

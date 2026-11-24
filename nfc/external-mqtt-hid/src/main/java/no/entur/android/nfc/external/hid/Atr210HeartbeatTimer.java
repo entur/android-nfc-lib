@@ -24,20 +24,26 @@ public class Atr210HeartbeatTimer {
 		this.listener = service;
 	}
 
-	public void cancel() {
+	public synchronized void cancel() {
 		scheduledTask.cancel(false);
 	}
 
-	public void schedule() {
+	public synchronized void schedule() {
 		cancel();
 
 		scheduledTask = executorService.schedule(() -> timeout(), intervalInMillis + 1, TimeUnit.MILLISECONDS);
 	}
 
 	private void timeout() {
-		if(!listener.verifyHeartbeats()) {
-            cancel();
-        }
+		boolean readers = true;
+		try {
+			readers = listener.verifyHeartbeats();
+		} finally {
+			if(readers) {
+				// check again as long as there are readers
+				schedule();
+			}
+		}
 	}
 
     public void close() {
