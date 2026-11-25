@@ -32,4 +32,6 @@ interface IAcr1222LReaderControl {
 
 	byte[] getNumSlots();
 
+	byte[] setBuzzer(int duration);
+
 }

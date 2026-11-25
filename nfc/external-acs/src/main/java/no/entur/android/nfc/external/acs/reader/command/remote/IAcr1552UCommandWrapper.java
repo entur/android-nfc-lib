@@ -182,7 +182,8 @@ public class IAcr1552UCommandWrapper extends AcrRemoteCommandWriter {
 		try {
 			int[] response = commands.setAutomaticCommunicationSpeed(0, maxSpeed);
 
-			value = maxSpeed == (response[1] & 0xFF) ;
+			// the response is the configured max speed and the current speed, which can be lower
+			value = maxSpeed == (response[0] & 0xFF);
 		} catch (Exception e) {
 			LOGGER.debug("Problem setting automatic communcation speeds", e);
 

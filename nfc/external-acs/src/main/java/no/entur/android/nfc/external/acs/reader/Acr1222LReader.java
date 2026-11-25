@@ -13,6 +13,52 @@ import no.entur.android.nfc.external.acs.reader.bind.IAcr1222LReaderControl;
 
 public class Acr1222LReader extends AcrReader {
 
+	// default LED and buzzer behaviour (E0 00 00 21), per the ACR1222L API: bits 0, 3, 5 and 6 are RFU.
+	// Seen on a reader (firmware ACR1222L-U V312.05): the polling status LED (blinking blue / orange while no card is present)
+	// only shows when the activation status LED is also enabled. The activation status LED makes the card present indication
+	// (orange on, blue off) immediate; without it, the indication is slow. Bits 0 and 3 make no visible difference.
+	private static final int PICC_POLLING_STATUS_LED = 1 << 1;
+	private static final int PICC_ACTIVATION_STATUS_LED = 1 << 2;
+	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = 1 << 4;
+	private static final int CARD_OPERATION_BLINK_LED = 1 << 7;
+
+	public static int serializeBehaviour(AcrDefaultLEDAndBuzzerBehaviour... types) {
+		int operation = 0;
+
+		for (AcrDefaultLEDAndBuzzerBehaviour type : types) {
+			if (type == AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED) {
+				operation |= PICC_POLLING_STATUS_LED;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED) {
+				operation |= PICC_ACTIVATION_STATUS_LED;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER) {
+				operation |= CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER;
+			} else if (type == AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED) {
+				operation |= CARD_OPERATION_BLINK_LED;
+			} else {
+				throw new IllegalArgumentException("Behaviour " + type + " not supported");
+			}
+		}
+		return operation;
+	}
+
+	public static List<AcrDefaultLEDAndBuzzerBehaviour> parseBehaviour(int operation) {
+		List<AcrDefaultLEDAndBuzzerBehaviour> behaviours = new ArrayList<AcrDefaultLEDAndBuzzerBehaviour>();
+
+		if ((operation & PICC_POLLING_STATUS_LED) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED);
+		}
+		if ((operation & PICC_ACTIVATION_STATUS_LED) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.PICC_ACTIVATION_STATUS_LED);
+		}
+		if ((operation & CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER);
+		}
+		if ((operation & CARD_OPERATION_BLINK_LED) != 0) {
+			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.CARD_OPERATION_BLINK_LED);
+		}
+		return behaviours;
+	}
+
 	// PICC operating parameter, same as for the ACR122U
 	private static final int AUTO_PICC_POLLING = 1 << 7;
 	private static final int AUTO_ATS_GENERATION = 1 << 6;
@@ -203,13 +249,13 @@ public class Acr1222LReader extends AcrReader {
 			throw new AcrReaderException(e);
 		}
 
-		return Acr1283LReader.parseBehaviour(readInteger(response));
+		return parseBehaviour(readInteger(response));
 	}
 
 	public boolean setDefaultLEDAndBuzzerBehaviour(AcrDefaultLEDAndBuzzerBehaviour... types) {
 		byte[] response;
 		try {
-			int operation = Acr1283LReader.serializeBehaviour(types);
+			int operation = serializeBehaviour(types);
 
 			response = readerControl.setDefaultLEDAndBuzzerBehaviour(operation);
 		} catch (RemoteException e) {
@@ -307,6 +353,28 @@ public class Acr1222LReader extends AcrReader {
 
 		return readBoolean(response);
 
+	}
+
+	/**
+	 * Turn the buzzer on for the given duration.
+	 *
+	 * @param durationInMillis duration in milliseconds, 10 to 2550, in steps of 10
+	 * @return true if successful
+	 */
+
+	public boolean setBuzzerControlSingle(int durationInMillis) {
+		int duration = durationInMillis / 10;
+		if (duration < 1 || duration > 0xFF) {
+			throw new IllegalArgumentException("Expected duration 10 to 2550 ms, got " + durationInMillis);
+		}
+		byte[] response;
+		try {
+			response = readerControl.setBuzzer(duration);
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readBoolean(response);
 	}
 
 	public boolean lightDisplayBacklight(boolean value) {

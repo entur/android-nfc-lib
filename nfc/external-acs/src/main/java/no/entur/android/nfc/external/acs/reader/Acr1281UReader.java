@@ -281,7 +281,8 @@ public class Acr1281UReader extends AcrReader {
 
 		byte[] resultByteArray = readByteArray(response);
 
-		return resultByteArray[1] != 0;
+		// configured mode, current mode: return whether the configured mode is the requested mode (0 share, 1 exclusive)
+		return (resultByteArray[0] & 0xFF) == (shared ? 0x00 : 0x01);
 	}
 
 	public boolean getExclusiveMode() {

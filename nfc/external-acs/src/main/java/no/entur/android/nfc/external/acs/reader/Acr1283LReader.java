@@ -24,7 +24,9 @@ public class Acr1283LReader extends AcrReader {
 	// bit 0 RFU
 	private static final int PICC_POLLING_STATUS_LED = 1 << 1;
 	private static final int PICC_ACTIVATION_STATUS_LED = 1 << 2;
-	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = 1 << 3;
+	// The ACR1283L manual has the card insertion and removal buzzer at bit 3, but an ACR1283U (firmware V104.6I) beeps with bit 4,
+	// like the ACR1222L, and does nothing with bit 3. Set both, and read either as enabled.
+	private static final int CARD_INSERTION_AND_REMOVAL_EVENTS_BUZZER = (1 << 3) | (1 << 4);
 	// bit 4 RFU
 	// bit 5 RFU
 	// bit 6 RFU
@@ -55,7 +57,7 @@ public class Acr1283LReader extends AcrReader {
 	public static List<AcrDefaultLEDAndBuzzerBehaviour> parseBehaviour(int operation) {
 		List<AcrDefaultLEDAndBuzzerBehaviour> behaviours = new ArrayList<AcrDefaultLEDAndBuzzerBehaviour>();
 
-		if ((operation & PICC_ACTIVATION_STATUS_LED) != 0) {
+		if ((operation & PICC_POLLING_STATUS_LED) != 0) {
 			behaviours.add(AcrDefaultLEDAndBuzzerBehaviour.PICC_POLLING_STATUS_LED);
 		}
 
@@ -346,6 +348,29 @@ public class Acr1283LReader extends AcrReader {
 
 		return readBoolean(response);
 
+	}
+
+	/**
+	 * Turn the buzzer on for the given duration.
+	 *
+	 * @param durationInMillis duration in milliseconds, 10 to 2540, in steps of 10
+	 * @return true if successful
+	 */
+
+	public boolean setBuzzerControlSingle(int durationInMillis) {
+		int duration = durationInMillis / 10;
+		// 0xFF turns the buzzer on (until turned off)
+		if (duration < 1 || duration > 0xFE) {
+			throw new IllegalArgumentException("Expected duration 10 to 2540 ms, got " + durationInMillis);
+		}
+		byte[] response;
+		try {
+			response = readerControl.setBuzzer(duration);
+		} catch (RemoteException e) {
+			throw new AcrReaderException(e);
+		}
+
+		return readBoolean(response);
 	}
 
 	public boolean lightDisplayBacklight(boolean value) {

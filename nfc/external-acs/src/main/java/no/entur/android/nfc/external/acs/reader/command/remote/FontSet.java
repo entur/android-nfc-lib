@@ -3,7 +3,7 @@ package no.entur.android.nfc.external.acs.reader.command.remote;
 public enum FontSet {
 	FONT_1(1, 0x00, 2, 0x40),
 	FONT_2(2, 0x01, 2, 0x40),
-	FONT_3(3, 0x10, 4, 0x20);
+	FONT_3(3, 0x02, 4, 0x20);
 
 	private final int number;
 	private final int value;
