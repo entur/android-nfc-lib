@@ -36,7 +36,9 @@ public class CardTerminalsPollingPool implements CardTerminalsPollingListener {
         synchronized (current) {
             for (int i = 0; i < current.size(); i++) {
                 PooledCardTerminal pooledCardTerminal = current.get(i);
-                if (cardTerminal == pooledCardTerminal.getCardTerminal().getDelegate()) {
+                // match by name; the terminals list might return new instances on each call
+                CardTerminal delegate = pooledCardTerminal.getCardTerminal().getDelegate();
+                if (cardTerminal == delegate || cardTerminal.getName().equals(delegate.getName())) {
                     current.remove(i);
 
                     pooledCardTerminal.close();

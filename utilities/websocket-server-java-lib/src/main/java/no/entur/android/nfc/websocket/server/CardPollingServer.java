@@ -4,19 +4,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.smartcardio.Card;
+import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 
 public class CardPollingServer implements Runnable {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CardPollingServer.class);
 
-    private Thread thread;
+    // the active polling thread, if any. A stopped thread might still be finishing (i.e. blocked in a callback),
+    // so each thread checks whether it is still the active one, rather than sharing a single closed flag.
+    private volatile Thread thread;
 
-    private boolean closed = true;
+    // the last stopped thread, which the next thread must wait for before connecting to a card,
+    // so that its cleanup (card disconnect) does not interfere with the next thread.
+    private Thread previous;
 
     private final CardTerminal cardTerminal;
 
-    private CardListener listener;
+    private volatile CardListener listener;
 
     public CardPollingServer(CardTerminal cardTerminal) {
         this.cardTerminal = cardTerminal;
@@ -28,6 +33,19 @@ public class CardPollingServer implements Runnable {
 
     @Override
     public void run() {
+        poll(null);
+    }
+
+    private boolean isActive() {
+        return thread == Thread.currentThread();
+    }
+
+    private void poll(Thread previous) {
+        if(previous != null) {
+            // wait outside of any monitor, as the previous thread might need it.
+            // Wait even if stopped, so that a chain of quick restarts waits for all previous threads.
+            awaitTermination(previous);
+        }
         LOGGER.info("Start polling for card");
 
         long timestamp = System.currentTimeMillis();
@@ -35,32 +53,59 @@ public class CardPollingServer implements Runnable {
         long counter = 0;
 
         main:
-        while(!closed) {
+        while(isActive()) {
             try {
                 if(cardTerminal.isCardPresent()) {
                     LOGGER.info("Card is present");
-                    Card card = cardTerminal.connect("*");
+                    Card card;
+                    try {
+                        card = cardTerminal.connect("*");
+                    } catch (CardException e) {
+                        // i.e. the card was removed after the presence check. A problem with a single card must not
+                        // stop polling, but do not retry while the same card is present.
+                        LOGGER.warn("Unable to connect to card, wait for it to be removed", e);
 
-                    CardListener listener = this.listener; // defensive copy
-                    listener.cardConnected(card);
+                        waitForCardAbsent();
 
-                    while(!closed) {
+                        continue;
+                    }
+                    try {
+                        CardListener listener = this.listener; // defensive copy
+
+                        // a problem with a single card must not stop polling
+                        boolean connected = false;
                         try {
-                            Thread.sleep(100);
-                            if(!cardTerminal.isCardPresent()) {
-                                listener.cardDisconnected(card);
+                            listener.cardConnected(card);
 
-                                break;
-                            }
-                        } catch (InterruptedException e) {
-                            Thread.interrupted();
-                            if(!cardTerminal.isCardPresent()) {
-                                listener.cardDisconnected(card);
-
-                                break;
-                            }
-                            break main;
+                            connected = true;
+                        } catch (Exception e) {
+                            LOGGER.warn("Problem handling card, wait for it to be removed", e);
                         }
+
+                        while(isActive()) {
+                            try {
+                                Thread.sleep(100);
+                                if(!isCardPresent(listener, card, connected)) {
+                                    if(connected) {
+                                        listener.cardDisconnected(card);
+                                    }
+
+                                    break;
+                                }
+                            } catch (InterruptedException e) {
+                                Thread.interrupted();
+                                if(!isCardPresent(listener, card, connected)) {
+                                    if(connected) {
+                                        listener.cardDisconnected(card);
+                                    }
+
+                                    break;
+                                }
+                                break main;
+                            }
+                        }
+                    } finally {
+                        disconnect(card);
                     }
                 }
                 Thread.sleep(10);
@@ -74,33 +119,104 @@ public class CardPollingServer implements Runnable {
             } catch (Exception e) {
                 LOGGER.error("Problem running", e);
 
+                // mark as stopped so that polling can be started again
+                synchronized (this) {
+                    if(thread == Thread.currentThread()) {
+                        thread = null;
+                        this.previous = Thread.currentThread();
+                    }
+                }
+
                 break;
             }
         }
         LOGGER.info("Stop polling for card");
     }
 
-    public void start() {
-        if(closed) {
-            closed = false;
+    /**
+     * Check whether the connected card is still present. If the check fails (i.e. the reader was unplugged),
+     * the listener is told that the card was disconnected first, so that it can release what it holds for the card
+     * (i.e. a reconnected card), as polling stops.
+     */
 
+    private boolean isCardPresent(CardListener listener, Card card, boolean connected) throws CardException {
+        try {
+            return cardTerminal.isCardPresent();
+        } catch (CardException | RuntimeException e) {
+            if(connected) {
+                try {
+                    listener.cardDisconnected(card);
+                } catch (RuntimeException listenerException) {
+                    e.addSuppressed(listenerException);
+                }
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Wait for the card to be removed, or polling to be stopped. Reader problems are thrown,
+     * so that they stop polling like elsewhere.
+     */
+
+    private void waitForCardAbsent() throws CardException {
+        while(isActive() && cardTerminal.isCardPresent()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // stopped (checked by isActive), or a spurious interrupt
+                Thread.interrupted();
+            }
+        }
+    }
+
+    private static void awaitTermination(Thread previous) {
+        boolean interrupted = false;
+        while(previous.isAlive()) {
+            try {
+                previous.join();
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        }
+        if(interrupted) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void disconnect(Card card) {
+        try {
+            card.disconnect(false);
+        } catch (Exception e) {
+            // i.e. already disconnected when polling was ended
+            LOGGER.debug("Problem disconnecting card", e);
+        }
+    }
+
+    public synchronized void start() {
+        if(thread == null) {
             LOGGER.info("Start background thread");
 
-            thread = new Thread(this);
-            thread.start();
+            Thread previous = this.previous;
+            this.previous = null;
+
+            Thread next = new Thread(() -> poll(previous));
+            thread = next;
+            next.start();
         } else {
             LOGGER.info("Background thread already started");
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         LOGGER.info("Stop background thread");
 
-        closed = true;
-
-        if(thread != null) {
-            thread.interrupt();
+        Thread current = thread;
+        if(current != null) {
             thread = null;
+            previous = current;
+
+            current.interrupt();
         }
     }
 

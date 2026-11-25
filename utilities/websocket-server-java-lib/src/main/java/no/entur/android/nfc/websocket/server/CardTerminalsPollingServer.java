@@ -43,6 +43,10 @@ public class CardTerminalsPollingServer implements Runnable {
         this.cardTerminalsFilter = cardTerminalsFilter;
     }
 
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
     @Override
     public void run() {
         LOGGER.info("Start polling for readers");
@@ -105,7 +109,9 @@ public class CardTerminalsPollingServer implements Runnable {
 
                         try {
                             listener.connected(cardTerminal);
-                        } catch(CardException e) {
+                        } catch(Exception e) {
+                            // i.e. also unsupported readers (RuntimeException)
+                            // note: the reader stays in the current list, so it is not retried until it is reconnected
                             LOGGER.info("Unable to connect " + cardTerminal.getName() +", adding to ignore", e);
 
                             ignore.add(cardTerminal);
@@ -128,15 +134,19 @@ public class CardTerminalsPollingServer implements Runnable {
 
                 this.current = accept;
                 this.ignored = ignore;
+            } catch (Exception e) {
+                // for example if PC/SC is not available
+                LOGGER.error("Problem running", e);
+            }
 
+            // always wait before polling again, also after errors
+            try {
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
                 Thread.interrupted();
 
                 break;
                 // ignore
-            } catch (Exception e) {
-                LOGGER.error("Problem running", e);
             }
         }
         LOGGER.info("Stop polling for readers");

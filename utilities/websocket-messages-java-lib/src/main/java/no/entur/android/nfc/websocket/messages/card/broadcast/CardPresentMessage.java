@@ -37,18 +37,27 @@ public class CardPresentMessage extends NfcMessage {
     public void write(DataOutputStream dout) throws IOException {
         super.write(dout);
 
-        dout.writeInt(atr.length);
-        dout.write(atr);
+        // null is written as empty, i.e. read back as empty
+        writeBytes(dout, atr);
+        writeBytes(dout, historicalBytes);
+        writeBytes(dout, uid);
 
-        dout.writeInt(historicalBytes.length);
-        dout.write(historicalBytes);
+        if(technologies != null) {
+            dout.writeInt(technologies.size());
+            for (String technology : technologies) {
+                dout.writeUTF(technology);
+            }
+        } else {
+            dout.writeInt(0);
+        }
+    }
 
-        dout.writeInt(uid.length);
-        dout.write(uid);
-
-        dout.writeInt(technologies.size());
-        for (String technology : technologies) {
-            dout.writeUTF(technology);
+    private static void writeBytes(DataOutputStream dout, byte[] bytes) throws IOException {
+        if(bytes != null) {
+            dout.writeInt(bytes.length);
+            dout.write(bytes);
+        } else {
+            dout.writeInt(0);
         }
     }
 

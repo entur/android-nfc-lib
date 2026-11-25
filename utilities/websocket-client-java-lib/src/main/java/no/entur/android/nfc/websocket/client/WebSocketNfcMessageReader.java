@@ -35,10 +35,21 @@ public class WebSocketNfcMessageReader extends WebSocketListener {
 
     @Override
     public void onMessage(WebSocket webSocket, ByteString bytes) {
-        NfcMessage m = reader.parse(bytes.toByteArray());
+        // note: exceptions thrown from here make OkHttp fail (close) the web socket
+        NfcMessage m;
+        try {
+            m = reader.parse(bytes.toByteArray());
+        } catch (RuntimeException e) {
+            LOGGER.warn("Unable to parse message", e);
+            return;
+        }
         if(m != null) {
             LOGGER.info("onMessage " + m.getClass().getName() + "#" + m.getId());
-            delegate.onMessage(m);
+            try {
+                delegate.onMessage(m);
+            } catch (RuntimeException e) {
+                LOGGER.error("Problem handling message " + m.getClass().getName() + "#" + m.getId(), e);
+            }
         } else {
             LOGGER.warn("Unable to parse message");
         }

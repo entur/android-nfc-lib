@@ -33,7 +33,7 @@ public class WebSocketClientFactory {
 
         RequestResponseMessages requestResponseMessages = new RequestResponseMessages(local, sender);
 
-        DefaultWebSocketReader reader = new DefaultWebSocketReader(requestResponseMessages, client);
+        DefaultWebSocketReader reader = new DefaultWebSocketReader(requestResponseMessages, client, requestResponseMessages);
 
         reader.setListener(listener);
 

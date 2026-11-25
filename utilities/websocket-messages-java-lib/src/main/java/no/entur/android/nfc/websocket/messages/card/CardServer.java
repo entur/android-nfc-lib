@@ -54,6 +54,11 @@ public class CardServer implements NfcMessageListener {
 				byte[] transcieve = listener.transcieve(cardApduRequestMessage.getApdu());
 				LOGGER.info("<- " + ByteArrayHexStringConverter.toHexString(transcieve));
 				sender.onMessage(new CardApduResponseMessage(transcieve, cardApduRequestMessage.getId()));
+			} catch (CardLostException e) {
+				LOGGER.info("Card lost: " + e.getMessage());
+				CardApduResponseMessage m = new CardApduResponseMessage(null, cardApduRequestMessage.getId());
+				m.setStatus(CardApduResponseMessage.STATUS_CARD_LOST);
+				sender.onMessage(m);
 			} catch (Exception e) {
 				LOGGER.info("Problem sending APDU", e);
 				CardApduResponseMessage m = new CardApduResponseMessage(null, cardApduRequestMessage.getId());

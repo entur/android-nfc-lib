@@ -1,5 +1,6 @@
 package no.entur.android.nfc.websocket.messages.card;
 
+import java.io.IOException;
 import java.util.List;
 
 import no.entur.android.nfc.websocket.messages.NfcMessage;
@@ -27,9 +28,10 @@ public class CardClient implements NfcMessageListener {
 
 	private final RequestResponseMessages messages;
 
-	private long timeout;
+	// set by the tag technology timeout, i.e. from another thread
+	private volatile long timeout;
 
-	private Listener listener;
+	private volatile Listener listener;
 
 	public CardClient(RequestResponseMessages messages, long timeout) {
 		this.messages = messages;
@@ -44,20 +46,48 @@ public class CardClient implements NfcMessageListener {
 		this.timeout = timeout;
 	}
 
+	/**
+	 * @param message command
+	 * @return the response, or null if the server was unable to transceive (including if the card was lost)
+	 * or did not respond within the timeout
+	 */
+
 	public byte[] transcieve(byte[] message) {
-		NfcMessage response = messages.sendAndWaitForResponse(new CardApduRequestMessage(message), timeout);
-		
-		if(response != null) {
-			CardApduResponseMessage result = (CardApduResponseMessage)response;
-			if(result.getStatus() == 0) {
-				return result.getApdu();
-			}
+		try {
+			return transcieveOrThrow(message);
+		} catch (IOException e) {
+			return null;
 		}
-		return null;
+	}
+
+	/**
+	 * @param message command
+	 * @return the response
+	 * @throws CardLostException if the card was lost, i.e. it did not respond to the command
+	 * @throws IOException if the server was unable to transceive, or did not respond within the timeout
+	 */
+
+	public byte[] transcieveOrThrow(byte[] message) throws IOException {
+		NfcMessage response = messages.sendAndWaitForResponse(new CardApduRequestMessage(message), timeout);
+		if(response == null) {
+			throw new IOException("No response within " + timeout + "ms");
+		}
+		CardApduResponseMessage result = (CardApduResponseMessage)response;
+		if(result.getStatus() == CardApduResponseMessage.STATUS_OK) {
+			return result.getApdu();
+		}
+		if(result.getStatus() == CardApduResponseMessage.STATUS_CARD_LOST) {
+			throw new CardLostException("Card lost");
+		}
+		throw new IOException("Unable to transceive, status " + result.getStatus());
 	}
 
 	@Override
 	public void onMessage(NfcMessage message) {
+		Listener listener = this.listener; // defensive copy, might be removed when polling ends
+		if(listener == null) {
+			return;
+		}
 		if(message instanceof CardLostMessage) {
 			listener.onCardLost();
 		} else if(message instanceof CardPresentMessage) {

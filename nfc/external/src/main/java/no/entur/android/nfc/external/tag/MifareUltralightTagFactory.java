@@ -105,7 +105,8 @@ public class MifareUltralightTagFactory extends TagFactory {
 
 	public Intent getTag(int serviceHandle, int slotNumber, int type, byte[] id, byte[] atr, INfcTag tagService, IntentEnricher extras) {
 
-		if (id != null) {
+		// the id might be empty, i.e. if it could not be read
+		if (id != null && id.length > 0) {
 			if (id[0] != NXP_MANUFACTURER_ID) {
 				throw new IllegalArgumentException("Non-NXP tag id " + ByteArrayHexStringConverter.toHexString(id));
 			}

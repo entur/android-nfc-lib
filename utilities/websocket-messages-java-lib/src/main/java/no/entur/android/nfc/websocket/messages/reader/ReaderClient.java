@@ -24,7 +24,7 @@ public class ReaderClient implements NfcMessageListener {
 	
 	private long timeout;
 
-	private Listener listener;
+	private volatile Listener listener;
 	
 	public ReaderClient(RequestResponseMessages messages, long timeout) {
 		this.messages = messages;
@@ -96,7 +96,10 @@ public class ReaderClient implements NfcMessageListener {
 	@Override
 	public void onMessage(NfcMessage message) {
 		if(message instanceof ReaderDisconnectedMessage) {
-			listener.onReaderDisconnected();
+			Listener listener = this.listener; // defensive copy
+			if(listener != null) {
+				listener.onReaderDisconnected();
+			}
 		}
 	}
 
