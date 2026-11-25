@@ -49,12 +49,13 @@ public class AcrMfUlNTAGReaderWriter implements MfUlReaderWriter {
 		for (int i = 0; i < reads; i++) {
 			int range = Math.min(pagesPerRead, pagesToRead - (i * pagesPerRead));
 
-			byte[] data = ntag.fastRead(startPage + i * pagesPerRead, startPage + i * pagesPerRead + range);
+			// FAST_READ end address is inclusive
+			byte[] data = ntag.fastRead(startPage + i * pagesPerRead, startPage + i * pagesPerRead + range - 1);
 
 			for (int k = 0; k < range; k++) {
 				byte[] block = new byte[pageSize];
 				System.arraycopy(data, k * pageSize, block, 0, pageSize);
-				returnBlocks[(i * pageSize) + k] = new DataBlock(block);
+				returnBlocks[(i * pagesPerRead) + k] = new DataBlock(block);
 			}
 		}
 

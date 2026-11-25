@@ -27,7 +27,7 @@ public class MemoryLayout {
 	/** A MIFARE Ultralight C tag */
 	public static final int TYPE_ULTRALIGHT_C = 2;
 
-	public static final int TYPE_NTAG_203 = 2;
+	public static final int TYPE_NTAG_203 = 8;
 	public static final int TYPE_NTAG_210 = 3;
 	public static final int TYPE_NTAG_212 = 4;
 	public static final int TYPE_NTAG_213 = 5;
@@ -43,15 +43,15 @@ public class MemoryLayout {
 			new LockPage[] { new LockPage(2, new byte[] { 2, 3 }), new LockPage(0x28, new byte[] { 0, 1 }) }, 0, 41, 4, 0x27);
 
 	// 48 - 0x06
-	public static final MemoryLayout NTAG210 = new MemoryLayout(TYPE_NTAG_210, new LockPage[] { new LockPage(2, new byte[] { 2, 3 }) }, 0, 15, 4, 15);
+	public static final MemoryLayout NTAG210 = new MemoryLayout(TYPE_NTAG_210, new LockPage[] { new LockPage(2, new byte[] { 2, 3 }) }, 0, 0x13, 4, 15);
 
 	// 128 - 0x10
 	public static final MemoryLayout NTAG212 = new MemoryLayout(TYPE_NTAG_212,
-			new LockPage[] { new LockPage(2, new byte[] { 2, 3 }), new LockPage(0x24, new byte[] { 0, 1, 2 }) }, 0, 15, 4, 15);
+			new LockPage[] { new LockPage(2, new byte[] { 2, 3 }), new LockPage(0x24, new byte[] { 0, 1, 2 }) }, 0, 0x28, 4, 0x23);
 
 	// 144 - 0x12
 	public static final MemoryLayout NTAG213 = new MemoryLayout(TYPE_NTAG_213,
-			new LockPage[] { new LockPage(2, new byte[] { 2, 3 }), new LockPage(0x28, new byte[] { 0, 1, 2 }) }, 0, 40, 4, 0x23);
+			new LockPage[] { new LockPage(2, new byte[] { 2, 3 }), new LockPage(0x28, new byte[] { 0, 1, 2 }) }, 0, 0x2C, 4, 0x27);
 
 	public static final MemoryLayout NTAG213F = new MemoryLayout(TYPE_NTAG_213,
 			new LockPage[] { new LockPage(2, new byte[] { 2, 3 }), new LockPage(0x28, new byte[] { 0, 1, 2 }) }, 0, 44, 4, 0x27);
