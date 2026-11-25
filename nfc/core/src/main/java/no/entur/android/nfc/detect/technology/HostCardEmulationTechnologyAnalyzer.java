@@ -16,8 +16,8 @@ public class HostCardEmulationTechnologyAnalyzer implements TechnologyAnalyzer {
         if(tagTechnologies.hasIsoDep()) {
             IsoDep isoDep = tagTechnologies.getIsoDep();
             byte[] historicalBytes = isoDep.getHistoricalBytes();
-            if(historicalBytes == null || historicalBytes.length == 0) {
-                // TODO needs documentation
+            // host card emulation is NFC-A with empty historical bytes; historical bytes are null for NFC-B cards
+            if(historicalBytes != null && historicalBytes.length == 0) {
                 return new TechnologyAnalyzeResult("hce");
             }
         }

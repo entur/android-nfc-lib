@@ -12,41 +12,41 @@ public abstract class MifareClassic implements BasicTagTechnology {
     /**
      * The default factory key.
      */
-    public static byte[] KEY_DEFAULT =
+    public static final byte[] KEY_DEFAULT =
             {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
     /**
      * The well-known key for tags formatted according to the
      * MIFARE Application Directory (MAD) specification.
      */
-    byte[] KEY_MIFARE_APPLICATION_DIRECTORY =
+    public static final byte[] KEY_MIFARE_APPLICATION_DIRECTORY =
             {(byte)0xA0,(byte)0xA1,(byte)0xA2,(byte)0xA3,(byte)0xA4,(byte)0xA5};
     /**
      * The well-known key for tags formatted according to the
      * NDEF on MIFARE Classic specification.
      */
-    byte[] KEY_NFC_FORUM =
+    public static final byte[] KEY_NFC_FORUM =
             {(byte)0xD3,(byte)0xF7,(byte)0xD3,(byte)0xF7,(byte)0xD3,(byte)0xF7};
     /** A MIFARE Classic compatible card of unknown type */
-    public final int TYPE_UNKNOWN = -1;
+    public static final int TYPE_UNKNOWN = -1;
     /** A MIFARE Classic tag */
-    public final int TYPE_CLASSIC = 0;
+    public static final int TYPE_CLASSIC = 0;
     /** A MIFARE Plus tag */
-    public final int TYPE_PLUS = 1;
+    public static final int TYPE_PLUS = 1;
     /** A MIFARE Pro tag */
-    public final int TYPE_PRO = 2;
+    public static final int TYPE_PRO = 2;
     /** Tag contains 16 sectors, each with 4 blocks. */
-    public final int SIZE_1K = 1024;
+    public static final int SIZE_1K = 1024;
     /** Tag contains 32 sectors, each with 4 blocks. */
-    public final int SIZE_2K = 2048;
+    public static final int SIZE_2K = 2048;
     /**
      * Tag contains 40 sectors. The first 32 sectors contain 4 blocks and the last 8 sectors
      * contain 16 blocks.
      */
-    public final int SIZE_4K = 4096;
+    public static final int SIZE_4K = 4096;
     /** Tag contains 5 sectors, each with 4 blocks. */
-    public final int SIZE_MINI = 320;
+    public static final int SIZE_MINI = 320;
     /** Size of a MIFARE Classic block (in bytes) */
-    public final int BLOCK_SIZE = 16;
+    public static final int BLOCK_SIZE = 16;
 
     /**
      * Get an instance of {@link MifareClassicImpl} for the given tag.

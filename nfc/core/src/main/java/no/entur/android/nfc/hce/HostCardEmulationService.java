@@ -3,8 +3,10 @@ package no.entur.android.nfc.hce;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.nfc.NfcAdapter;
 import android.nfc.cardemulation.CardEmulation;
+import android.os.Build;
 
 /**
  *
@@ -24,14 +26,21 @@ public class HostCardEmulationService {
 		this.context = context;
 		this.aid = aid;
 
+		// enable / disable regardless of whether we are the default service
+		this.service = new ComponentName(context, serviceClass);
+		this.cardEmulation = getCardEmulation(context);
+	}
+
+	private static CardEmulation getCardEmulation(Context context) {
 		NfcAdapter defaultAdapter = NfcAdapter.getDefaultAdapter(context);
-		if (defaultAdapter != null) {
-			// enable / disable regardless of whether we are the default service
-			this.service = new ComponentName(context, serviceClass);
-			this.cardEmulation = CardEmulation.getInstance(defaultAdapter);
-		} else {
-			this.service = null;
-			this.cardEmulation = null;
+		if (defaultAdapter == null) {
+			return null;
+		}
+		try {
+			return CardEmulation.getInstance(defaultAdapter);
+		} catch (UnsupportedOperationException e) {
+			// NFC, but no host card emulation
+			return null;
 		}
 	}
 
@@ -69,11 +78,33 @@ public class HostCardEmulationService {
 	}
 
 	public boolean isEnabled() {
+		if (!isCardEmulation()) {
+			return false;
+		}
 		PackageManager pm = context.getPackageManager();
-		return pm.getComponentEnabledSetting(service) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+		int state = pm.getComponentEnabledSetting(service);
+		if (state == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT) {
+			// not changed, so as in the manifest
+			return isEnabledInManifest(pm);
+		}
+		return state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+	}
+
+	@SuppressWarnings("deprecation")
+	protected boolean isEnabledInManifest(PackageManager pm) {
+		try {
+			int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ? PackageManager.MATCH_DISABLED_COMPONENTS : PackageManager.GET_DISABLED_COMPONENTS;
+			ServiceInfo serviceInfo = pm.getServiceInfo(service, flags);
+			return serviceInfo.enabled && serviceInfo.applicationInfo.enabled;
+		} catch (PackageManager.NameNotFoundException e) {
+			return false;
+		}
 	}
 
 	public boolean isDefault() {
+		if (!isCardEmulation()) {
+			return false;
+		}
 		return cardEmulation.isDefaultServiceForAid(service, aid);
 	}
 

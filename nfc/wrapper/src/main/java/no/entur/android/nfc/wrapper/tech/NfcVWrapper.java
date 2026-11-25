@@ -24,6 +24,16 @@ public class NfcVWrapper extends NfcV {
 	}
 
 	@Override
+	public byte getResponseFlags() {
+		return delegate.getResponseFlags();
+	}
+
+	@Override
+	public byte getDsfId() {
+		return delegate.getDsfId();
+	}
+
+	@Override
 	public Tag getTag() {
 		return new TagWrapper(delegate.getTag());
 	}
